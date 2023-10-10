@@ -1,0 +1,235 @@
+---
+title: "Linseed 2 deconvolution pipeline, run on simulated data"
+output: 
+  html_document
+---
+
+
+# Preparation
+## Install Linseed 2 package
+```{r}
+unloadNamespace("linseed2")
+devtools::load_all()
+```
+
+## Load and preprocess data
+```{r}
+data_raw <- as.matrix(readRDS("../../../datasets/GTEX_LUNG/gene_counts.Rda"))
+data_raw <- remove_zero_rows(data_raw)
+data_raw <- linearize_dataset(data_raw)
+```
+
+```{r}
+rownames(data_raw)
+# AC000067.1, AC000067.1
+```
+
+# Linseed 2 deconvolution
+## Create Linseed 2 object
+```{r}
+# To calculate this step faster, reduce the dataset size to 10-20k genes
+lo2 <- Linseed2Solver$new()
+lo2$set_data(data_raw, gene_anno_lists = list(
+  HK = read_gene_list("../../../datasets/gene_annotation_lists/HK.txt"),
+  CC = read_gene_list("../../../datasets/gene_annotation_lists/CC.txt"),
+  CODING = read_gene_list("../../../datasets/gene_annotation_lists/CODING_ENSEMBL.txt")
+))
+lo2$plot_svd()
+```
+
+
+## Apply simple filters
+```{r, fig.height=4, fig.width=6}
+lo2$plot_mad()
+```
+
+```{r}
+colnames(fData(lo2$get_data()))
+```
+
+```{r}
+lo2$basic_filter(
+  log_mad_gt = 1, remove_true_cols_additional = c("RRNA", "HK", "CC"), keep_true_cols = c("CODING")
+)
+lo2$plot_mad()
+lo2$plot_svd()
+```
+
+```{r}
+lo2$st$filtering_log$stats_df
+```
+
+## Calculate the projection onto solution plane, filter outliers and noise
+```{r}
+# Estimate the number of cell types by SVD plot and project
+lo2$plot_svd(NULL)
+```
+
+
+### Project and perform distance-based filtering
+```{r}
+lo2$project(10)
+```
+
+```{r}
+lo2$plot_svd()
+```
+
+```{r fig.width = 12, fig.height = 5}
+lo2$plot_projected("zero_distance", "zero_distance", use_dims = list(2:3, 4:5, 6:7))
+lo2$plot_projected("plane_distance", "plane_distance", use_dims = list(2:3, 4:5, 6:7))
+```
+
+```{r}
+lo2$plot_distance_distribution()
+```
+
+```{r}
+lo2$distance_filter(plane_d_lt = NULL, zero_d_lt = 0.025, genes = F)
+```
+
+Circle back to projection and iterate, until satisfied
+
+
+## Choose visualization parameters for further analysis with filtered data
+```{r fig.width = 12, fig.height = 5}
+# Choose neighbors parameters to generate the umap with different detail level
+# TODO: maybe add angles to umap
+lo2$run_umap(neighbors_X = 8, neighbors_Omega = 8)
+lo2$plot_projected(use_dims = NULL)
+```
+
+```{r}
+# Using just umap for further analysis
+lo2$set_display_dims(NULL)
+```
+
+This is the output of plot_projected now
+```{r fig.width = 12, fig.height = 5}
+lo2$plot_projected()
+```
+
+Checkpoint, just in case
+```{r}
+lo2$save_state("./linseed2_save_gtex_lung")
+```
+
+
+
+## Perform deconvolution
+
+### Find initial solution
+```{r fig.height = 5, fig.width = 11}
+lo2$init_solution("random")
+lo2$plot_projected()
+```
+
+
+### Optimize the solution
+```{r}
+# Choose hinge_H according to the number of genes, samples and intuition
+# Run this cell several times, until it converges
+# If something went wrong, you can init again and start from scratch
+# TODO: reset_to_iter function
+lo2$optim_solution(2000, optim_config(coef_hinge_H = 0.01, coef_hinge_W = 0.001, coef_der_X = 0.01, coef_der_Omega = 0.01))
+lo2$plot_error_history()
+```
+
+```{r fig.height = 5, fig.width = 11}
+# TODO: with_solution and with_history to accept subset
+lo2$plot_projected(use_dims = NULL)
+```
+
+```{r fig.height = 5, fig.width = 11}
+lo2$plot_projected(NULL, NULL, pt_opacity = 1, pt_size = 0.5, use_dims = list(NULL, 2:3, 4:5))
+```
+
+```{r}
+# More flexible visualizations are possible manually
+plot_projection_points(lo2$st$proj, pt_opacity = 0.8, pt_size = 0.1) %>% 
+  add_solution(lo2$st$solution_proj, lo2$st$proj) %>% 
+  add_solution_history(lo2$st$solution_proj, lo2$st$proj, pt_size = 0.5, pt_opacity = 1, step = 20, colored = T)
+```
+
+
+### Get final solution in original space
+```{r}
+solution <- lo2$finalize_solution()
+names(solution)
+```
+
+```{r}
+lo2$save_state()
+```
+
+```{r}
+# TODO: write functions for cell
+boxplot(t(lo2$get_solution()$H))
+unloadNamespace("linseed2")
+devtools::load_all()
+lo2 <- Linseed2Solver$from_state("./linseed2_save_gtex_lung/")
+lo2$plot_projected(NULL, NULL, pt_opacity = 1, pt_size = 0.5, use_dims = list(NULL, 2:3, 4:5))
+write.table(lo2$get_solution()$W, "lung_basis.tsv", sep = "\t", quote = F)
+write.table(t(lo2$get_solution()$H), "lung_proportions.tsv", sep = "\t", quote = F)
+cat_markers(lo2$get_marker_genes())
+```
+
+## Generating report
+```{r}
+lo2$set_display_dims(NULL)
+lo2$generate_summary()
+
+# Where is it?
+lo2$get_save_dir()
+```
+
+
+
+## Single cell enrichment
+
+### Load dataset
+```{r}
+library(Seurat)
+res <- load_ts_lung()
+ts_lung <- res[[1]]
+ts_lung_endo <- res[[2]]
+```
+
+```{r fig.width=10}
+DimPlot(ts_lung, reduction = "umap", group.by = "anno") + ggtitle("Cell Types")
+```
+
+```{r}
+clusters <- unique(ts_lung$anno)
+ts_lung$anno_2 <- plyr::mapvalues(
+  ts_lung$anno,
+  from = c(clusters),
+  to = c("pneumocytes", "neutrophils", "other", "other", "other", "macrophages", "other", "other", "monocytes", "ciliated")
+)
+Idents(ts_lung) <- "anno"
+```
+
+### Plot marker enrichment
+```{r fig.width=20, fig.height=15}
+linseed_markers <- lo2$get_marker_genes()
+so <- add_list_markers(ts_lung, linseed_markers)
+plot_marker_enrichment(so, names(linseed_markers), limits = c(0, 1.5))
+```
+
+
+
+## Optimization animation
+```{r}
+plot_solution_history_anim(
+  lo2$st$proj,
+  lo2$st$solution_proj,
+  use_dims = NULL,
+  gif_filename = "optim_gtex_lung_umap.gif",
+  nframes = 305
+)
+```
+
+
+Optimization result, umap
+![Optimization GIF, umap](optim_gtex_lung_umap.gif)
+

@@ -1,0 +1,19 @@
+.Rproj.user/
+.idea/
+src/RcppExports.cpp
+R/RcppExports.R
+.Rhistory
+*.tar.gz
+*.Rproj
+*.html
+*.gif
+*.so
+*.o
+*.uwot
+*.rds
+
+# For now
+# TODO: unignore data/*.rds
+data/
+man/
+drafts/

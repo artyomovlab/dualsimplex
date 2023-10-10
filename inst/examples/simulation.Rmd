@@ -1,0 +1,275 @@
+---
+title: "Linseed 2 deconvolution pipeline, run on simulated data"
+output: 
+  html_document
+---
+
+
+## Install Linseed 2 package
+```{r}
+unloadNamespace("linseed2")
+devtools::load_all()
+```
+
+## Create simulation
+```{r}
+n_ct <- 4
+
+set.seed(42)
+sim <- create_simulation(n_genes = 12000,
+                         n_samples = 100,
+                         n_cell_types = n_ct,
+                         with_marker_genes = FALSE)
+sim <- sim %>% add_noise(noise_deviation = 2.5)
+
+data_raw <- sim$data
+true_basis <- sim$basis
+true_proportions <- sim$proportions
+```
+
+
+# Linseed 2 deconvolution
+
+## Create Linseed 2 object
+```{r}
+lo2 <- Linseed2Solver$new()
+lo2$set_data(data_raw)
+lo2$plot_svd()
+```
+
+
+## Apply simple filters
+```{r, fig.height=5, fig.width=20}
+plot_numeric_features(lo2$get_data(), features = c("log_mad", "log_mean", "log_median", "log_sd"), ncol = 4)
+```
+
+```{r}
+# TODO: before and after filtering plots, more explicit noise removal
+# svd_d <- diag(lo2$st$proj$meta$Sigma)
+# vars <- svd_d[2:length(svd_d)]^2
+# variance_contrib <- vars / sum(vars)
+# df <- data.frame(
+#   dimension = 1:length(vars),
+#   variance = cumsum(vars / sum(vars))
+# )
+# ggplot(df, aes(x = dimension, y = variance)) + geom_point()
+```
+
+```{r}
+plot_feature(lo2$st$data, "log_mad")
+lo2$plot_svd()
+lo2$set_data(lo2$st$data[fData(lo2$st$data)$log_mad > 1, ])
+plot_feature(lo2$st$data, "log_mad")
+lo2$plot_svd()
+```
+
+
+## Calculate the projection onto solution plane, filter outliers and noise
+```{r}
+# Estimate the number of cell types by 
+# elbow point on last SVD plot
+# and project
+lo2$plot_svd()
+lo2$project(n_ct)
+```
+
+
+### View data, projected onto different dimensions
+```{r fig.width = 12, fig.height = 5}
+lo2$plot_projected("zero_distance", "zero_distance", use_dims = list(2:3, 3:4, 2:4))
+lo2$plot_projected("plane_distance", "plane_distance", use_dims = list(2:3, 3:4, 2:4))
+```
+
+See if outliers anything is visible better in UMAP 
+```{r fig.width = 12, fig.height = 5}
+# Choose neighbors parameters to generate umaps with different detail level
+lo2$run_umap(neighbors_X = 50, neighbors_Omega = 25)
+lo2$plot_projected("zero_distance", "zero_distance")
+lo2$plot_projected("plane_distance", "plane_distance")
+```
+
+### Distance-based filtering
+```{r, fig.height=4, fig.width=10}
+plot_numeric_features(lo2$get_data(), features = c("plane_distance", "zero_distance"), ncol = 2)
+plot_numeric_features(lo2$get_data(), genes = F, features = c("plane_distance", "zero_distance"), ncol = 2, bins = 30)
+```
+
+```{r}
+new_data <- lo2$st$data[fData(lo2$get_data())$plane_distance < 0.1, ]
+new_data
+```
+
+```{r}
+lo2$set_data(new_data)
+```
+
+Circle back to projection and iterate, until satisfied
+
+
+## Choose visualization parameters for further analysis with filtered data
+```{r fig.width = 12, fig.height = 5}
+# Choose neighbors parameters to generate the umap with different detail level
+lo2$run_umap(neighbors_X = 50, neighbors_Omega = 25)
+lo2$plot_projected(use_dims = NULL)
+```
+
+```{r}
+# NULL is for UMAP, and 3:4 looked good before
+lo2$set_display_dims(list(NULL, 3:4))
+```
+
+This is the output of plot_projected now
+```{r fig.width = 12, fig.height = 5}
+lo2$plot_projected()
+```
+
+Checkpoint, just in case
+```{r}
+lo2$save_state("./linseed2_save")
+```
+
+
+## Perform deconvolution
+```{r}
+lo2 <- Linseed2Solver$from_state("./linseed2_save")
+
+# Note: this wasn't saved, it's not included in state,
+# so we have to set it again
+lo2$set_display_dims(list(NULL, 3:4))
+```
+
+
+### Find initial solution
+```{r fig.height = 5, fig.width = 11}
+lo2$init_solution("random")
+lo2$plot_projected()
+```
+
+
+### Optimize the solution
+```{r}
+# Choose hinge_H according to the number of genes, samples and intuition
+# Run this cell several times, until it converges
+# If something went wrong, you can init again and start from scratch
+# TODO: reset to iteration option
+lo2$optim_solution(1000, optim_config(coef_hinge_H = 0.1))
+lo2$plot_error_history()
+```
+
+```{r fig.height = 5, fig.width = 11}
+lo2$plot_projected()
+```
+
+```{r fig.height = 5, fig.width = 11}
+# In case some lines are intersecting, set 
+# points color to NULL to make things clear
+# Unfortunately, ggplot doesn't allow to color both 
+# lines and points
+#
+# Also play with opacity and size if you need
+lo2$plot_projected(NULL, NULL, pt_opacity = 1, pt_size = 2)
+```
+
+```{r}
+# More flexible visualizations are possible manually
+plot_projection_points(lo2$st$proj, pt_opacity = 0.8, pt_size = 0.1) %>% 
+  add_solution(lo2$st$solution_proj, lo2$st$proj) %>% 
+  add_solution_history(lo2$st$solution_proj, lo2$st$proj, pt_size = 1.5, pt_opacity = 1, step = 20, colored = T)
+```
+
+```{r}
+# TODO: gradient map background for umap
+```
+
+
+### Get final solution in original space
+```{r}
+# Reverse projection, return to original space
+solution <- lo2$finalize_solution()
+names(solution)
+```
+
+```{r}
+# Checkpoint optimization and solution reversal
+lo2$save_state("./linseed2_save")
+```
+
+
+## Generating report
+Now a report can be generated, using all the information from the  
+```{r}
+# Note: unlike Linseed2Solver$from_state, the load_state method doesn't create 
+#  a new object, but updates the existing one. Particularly self$st on it.
+#  So, visualization parameters and save_dir are remembered.
+lo2$load_state()
+```
+
+```{r}
+# However, let's use only UMAP for our report
+lo2$set_display_dims(list(NULL, 3:4))
+
+# By the way, you can generate summary on earlier stages,
+#  reports will just be shorter
+lo2$generate_summary()
+
+# Where is it?
+lo2$get_save_dir()
+```
+
+```{r}
+# It won't allow you to make a mistake, so don't be afraid
+lo2$generate_summary("abc")
+```
+
+## Comparing with true data
+When true solution is available, we can compare linseed with it
+```{r}
+lo2 <- Linseed2Solver$from_state("./linseed2_save")
+solution <- lo2$get_solution()
+```
+
+```{r}
+ptb <- coerce_pred_true_basis(solution$W, true_basis[rownames(solution$W), ])
+ptp <- coerce_pred_true_props(solution$H, true_proportions)
+```
+
+```{r fig.width=20, fig.height=5}
+plot_ptp_scatter(ptp)
+plot_ptb_scatter(ptb)
+```
+
+```{r}
+plot_ptp_lines(ptp = ptp)
+```
+
+
+## Optimization animation
+```{r}
+# Note: it's a separate function, not inside lo2
+# It's separated mainly because it's slow and requires gifsky
+plot_solution_history_anim(
+  lo2$st$proj,
+  lo2$st$solution_proj,
+  use_dims = 3:4,
+  gif_filename = "optim_sim4_34.gif",
+  nframes = 305
+)
+plot_solution_history_anim(
+  lo2$st$proj,
+  lo2$st$solution_proj,
+  use_umap = T,
+  gif_filename = "optim_sim4_umap.gif",
+  nframes = 305
+)
+```
+
+
+Optimization result, dimensions 2 and 3
+![Optimization GIF, dimensions 2 and 3](optim_sim4_23.gif)
+
+Optimization result, dimensions 3 and 4
+![Optimization GIF, dimensions 3 and 4](optim_sim4_34.gif)
+
+Optimization result, umap
+![Optimization GIF, umap](optim_sim4_umap.gif)
+

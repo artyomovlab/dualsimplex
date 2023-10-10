@@ -1,0 +1,443 @@
+Linseed2Solver <- R6Class(
+  classname = "Linseed2Solver",
+  private = list(
+    display_dims = NULL,
+    save_dir = NULL,
+    reset_since = function(step) {
+      private$check_step_name(step)
+      reset_sel <- seq_along(self$st) >= which(names(self$st) == step)
+      self$st[reset_sel] <- list(NULL)
+    },
+    check_step_name = function(step) {
+      if (!step %in% names(self$st)) {
+        stop(paste("Internal error, steps misconfigured:", step))
+      }
+    },
+    set_data_first = function() {
+      if (is.null(self$st$data)) {
+        stop("Call set_data first")
+      }
+    },
+    project_first = function() {
+      if (is.null(self$st$n_cell_types)) {
+        stop("Call project first (see plot_svd for n_cell_types argument)")
+      }
+    },
+    initialize_first = function() {
+      if (is.null(self$st$solution_proj)) {
+        stop("Call init_solution first")
+      }
+    },
+    optimize_first = function() {
+      if (is.null(self$st$solution_proj$optim_history)) {
+        stop("Call optim_solution first")
+      }
+    },
+    finalize_first = function() {
+      if (is.null(self$st$solution)) {
+        stop("Call finalize_solution first")
+      }
+    },
+    add_filtering_log_step = function(step_name, filtering_params = NA) {
+      if (is.null(self$st$filtering_log)) {
+        self$st$filtering_log <- list(
+          stats_df = data.frame(matrix(ncol = 4, nrow = 0)),
+          object_log = list()
+        )
+        colnames(self$st$filtering_log$stats_df) <- c(
+          "step_name",
+          "n_genes",
+          "n_samples",
+          "filtering_params"
+        )
+      }
+      
+      step_num <- length(self$st$filtering_log$object_log) + 1
+      
+      self$st$filtering_log$stats_df[step_num, ] <- c(
+        paste(step_num, step_name, sep = "_"),
+        nrow(self$st$data),
+        ncol(self$st$data),
+        filtering_params
+      )
+      self$st$filtering_log$object_log[[step_num]] <- list(
+        Sigma = self$st$proj_full$meta$Sigma
+      )
+    },
+    resolve_color_col = function(color, genes) {
+      private$set_data_first()
+      anno <- get_anno(self$st$data, genes)
+      if (is.character(color) && length(color) == 1) {
+        if (!is.null(self$st$solution) && (color %in% colnames(self$st$solution$W))) {
+          name <- color
+          if (genes) {
+            color <- log(self$st$solution$W[, color] + 1)
+          } else {
+            color <- self$st$solution$H[color, ]
+          }
+        } else if (genes && !is.null(self$st$marker_genes) && (color == "markers")) {
+          name <- color
+          color <- which_marker(rownames(self$st$solution$W), self$st$marker_genes)
+        } else if (color %in% colnames(anno)) {
+          name <- color
+          color <- anno[, color]
+        } else {
+          name <- NULL
+        }
+      } else {
+        name <- NULL
+      }
+      return(list(color = color, name = name))
+    }
+  ),
+  public = list(
+    # Steps (order matters for private$reset_since)
+    st = list(
+      filtering_log = NULL,   # Auto calculated
+      data = NULL,            # Set by user
+      scaling = NULL,         # Auto calculated
+      proj_full = NULL,       # Auto calculated
+      n_cell_types = NULL,    # Set by user
+      dims = NULL,            # Auto calculated
+      proj = NULL,            # Auto calculated, proj$umap is triggered by user
+      solution_proj = NULL,   # Triggered by user
+      solution = NULL,        # Triggered by user
+      solution_orig = NULL,   # Auto calculated
+      marker_genes = NULL     # Auto calculated
+    ),
+    
+    set_data = function(data, gene_anno_lists = NULL) {
+      if (any(sapply(dimnames(data), is.null)))
+        stop("Genes and samples should be named")
+      if (any(sapply(dimnames(data), anyDuplicated))) 
+        stop("Gene and sample names should not contain duplicates")
+      
+      first_set = is.null(self$get_data())
+      
+      private$reset_since("data")
+      if (!inherits(data, "ExpressionSet"))
+        data <- create_eset(data)
+      self$st$data <- add_default_anno(data, gene_anno_lists)
+      self$st$scaling <- sinkhorn_scale(exprs(self$st$data))
+      self$st$proj_full <- svd_project(self$st$scaling, dims = NULL)
+      
+      if (first_set) private$add_filtering_log_step("initial")
+    },
+    plot_mad = function(data, ...) {
+      plot_feature(self$get_data(), "log_mad", ...)
+    },
+    basic_filter = function(
+      log_mad_gt = 0,
+      remove_true_cols_default = c("RPLS", "LOC", "ORF", "SNOR"),
+      remove_true_cols_additional = c(),
+      keep_true_cols = c()
+    ) {
+      private$set_data_first()
+      # private$check_filtering_log()
+      remove_true_cols <- c(remove_true_cols_default, remove_true_cols_additional)
+      new_data <- self$get_data()
+      new_data <- threshold_filter(new_data, "log_mad", log_mad_gt, keep_lower = F)
+      new_data <- bool_filter(new_data, remove_true_cols, genes = T, remove_true = T)
+      new_data <- bool_filter(new_data, keep_true_cols, genes = T, remove_true = F)
+      self$set_data(new_data)
+      private$add_filtering_log_step(
+        "basic_filters",
+        paste(
+          paste0("remove_true_cols = ", paste(remove_true_cols, collapse = " ")),
+          paste0("keep_true_cols = ", paste(keep_true_cols, collapse = " ")),
+          paste0("log_mad_gt = ", log_mad_gt),
+          sep = ", "
+        )
+      )
+    },
+    plot_svd = function(dims = self$st$dims) {
+      private$set_data_first()
+      plot_proj_svd(self$st$proj_full, dims)
+    },
+    project = function(n_cell_types) {
+      private$set_data_first()
+      private$reset_since("n_cell_types")
+      self$st$n_cell_types = n_cell_types
+      self$st$dims <- if (!is.null(n_cell_types)) 1:n_cell_types else NULL
+      self$st$proj <- svd_project(self$st$scaling, dims = self$st$dims)
+      self$st$data <- add_distances_anno(
+        self$st$data,
+        self$st$proj_full,
+        self$st$n_cell_types
+      )
+    },
+    plot_distances_distribution = function() {
+      private$project_first()
+      # TODO: maybe self$st$proj should be ExpressionSet with distances
+      show(plot_numeric_features(self$get_data(), features = c("plane_distance", "zero_distance"), ncol = 2))
+      show(plot_numeric_features(self$get_data(), genes = F, features = c("plane_distance", "zero_distance"), ncol = 2, bins = 30))
+      # TODO: ordered plots
+      plotlist <- list(
+        plot_feature_pair(self$get_data(), "plane_distance", "zero_distance", T, size = 0.1),
+        plot_feature_pair(self$get_data(), "plane_distance", "zero_distance", F, size = 0.1)
+      )
+      show(cowplot::plot_grid(plotlist = plotlist, ncol = 2))
+    },
+    distance_filter = function(
+      plane_d_lt = NULL,
+      zero_d_lt = NULL,
+      genes = T
+    ) {
+      private$project_first()
+      if (is.null(plane_d_lt) && is.null(zero_d_lt)) {
+        stop("Choose at least one distance to filter by")
+      }
+      new_data <- self$get_data()
+      
+      if (!is.null(plane_d_lt))
+        new_data <- threshold_filter(
+          new_data,
+          "plane_distance",
+          plane_d_lt,
+          genes
+        )
+      if (!is.null(zero_d_lt))
+        new_data <- threshold_filter(
+          new_data,
+          "zero_distance",
+          zero_d_lt,
+          genes
+        )
+      self$set_data(new_data)
+      private$add_filtering_log_step(
+        "distance_filter",
+        paste(
+          paste0("zero_d_lt = ", zero_d_lt),
+          paste0("plane_d_lt = ", plane_d_lt),
+          sep = ", "
+        )
+      )
+    },
+    run_umap = function(with_model = Sys.info()[["sysname"]] != "Darwin", neighbors_X = 50, neighbors_Omega = 10) {
+      private$project_first()
+      self$st$proj <- add_proj_umap(self$st$proj, with_model, neighbors_X, neighbors_Omega)
+    },
+    
+    # color_genes / color_samples can be: 
+    # - a set of names to be highlighted
+    # - a vector of values, the same length as the number of genes
+    # - a name of a column from annotation, default is zero_distance
+    # Important note: ggplot only allows to either draw history or color all the points
+    plot_projected = function(
+      color_genes = "zero_distance", color_samples = "zero_distance",
+      use_dims = private$display_dims, with_legend = NULL,
+      with_solution = TRUE, with_history = TRUE,
+      wrap = T, show_plots = T, ...
+    ) {
+      if (inherits(use_dims, "list")) {
+        plotlist <- lapply(use_dims, function(this_use_dims) {
+          self$plot_projected(
+            color_genes, color_samples, this_use_dims,
+            with_legend, with_solution, with_history, 
+            wrap, show_plots, ...
+          )
+        })
+        if (show_plots) {
+          for (plot in plotlist) { show(plot) }
+          return(invisible(NULL))
+        } else {
+          return(plotlist)
+        }
+      }
+      private$project_first()
+      
+      color_genes <- private$resolve_color_col(color_genes, T)
+      color_samples <- private$resolve_color_col(color_samples, F)
+      
+      plt_X <- plot_projection_points(self$st$proj, use_dims, "X", color = color_genes$color, color_name = color_genes$name, ...)
+      plt_Omega <- plot_projection_points(self$st$proj, use_dims, "Omega", color = color_samples$color, color_name = color_samples$name, ...)
+      
+      if (!is.null(self$st$solution_proj)) {
+        if (("optim_history" %in% names(self$st$solution_proj)) && with_history) {
+          plt_X <- plt_X %>% add_solution_history(
+            self$st$solution_proj,
+            self$st$proj,
+            use_dims = use_dims,
+            spaces = "X",
+            colored = is.null(color_genes$name)
+          )
+          plt_Omega <- plt_Omega %>% add_solution_history(
+            self$st$solution_proj,
+            self$st$proj,
+            use_dims = use_dims,
+            spaces = "Omega",
+            colored = is.null(color_samples$name)
+          )
+        }
+        
+        if (with_solution) {
+          plt_X <- plt_X %>% add_solution(
+            self$st$solution_proj,
+            self$st$proj,
+            use_dims = use_dims,
+            spaces = "X"
+          )
+          
+          plt_Omega <- plt_Omega %>% add_solution(
+            self$st$solution_proj,
+            self$st$proj,
+            use_dims = use_dims,
+            spaces = "Omega"
+          )
+        }
+      }
+      
+      if (!is.null(with_legend) && with_legend) {
+        plt_X <- plt_X + theme(legend.position = "right")
+        plt_Omega <- plt_Omega + theme(legend.position = "right")
+      }
+      
+      plt_X <- plt_X + ggtitle(paste(self$st$proj$meta$M, "genes"))
+      plt_Omega <- plt_Omega + ggtitle(paste(self$st$proj$meta$N, "samples"))
+      
+      plotlist <- list(plt_X, plt_Omega)
+      return(if (wrap) cowplot::plot_grid(plotlist = plotlist) else plotlist)
+    },
+    
+    init_solution = function(strategy = "select_x", ...) {
+      private$project_first()
+      private$reset_since("solution_proj")
+      kwargs <- list(...)
+      self$st$solution_proj <- initialize_solution(self$st$proj, strategy, kwargs)
+    },
+    
+    optim_solution = function(
+      iterations = 10000,
+      config = OPTIM_CONFIG_DEFAULT
+    ) {
+      private$initialize_first()
+      self$st$solution_proj <- optimize_solution(
+        self$st$scaling,
+        self$st$proj,
+        self$st$solution_proj,
+        iterations,
+        config
+      )
+    },
+    
+    plot_error_history = function() {
+      private$optimize_first()
+      plot_errors(self$st$solution_proj)
+    },
+    
+    finalize_solution = function() {
+      private$initialize_first()
+      solution_scaled <- reverse_solution_projection(self$st$solution_proj, self$st$proj)
+      self$st$solution_no_corr <- reverse_solution_sinkhorn(solution_scaled, self$st$scaling)
+      self$st$solution <- list(
+        W = self$st$solution_no_corr$W,
+        H = self$st$solution_no_corr$H
+      )
+      self$st$solution$W[self$st$solution$W < 0] <- 0
+      self$st$solution$H[self$st$solution$H < 0] <- 0
+      
+      self$st$marker_genes <- get_signature_markers(self$st$solution$W)
+      return(self$st$solution)
+    },
+    
+    get_solution = function() {
+      private$finalize_first()
+      return(self$st$solution)
+    },
+    
+    get_ct_names = function() {
+      private$finalize_first()
+      return(rownames(self$st$solution$H))
+    },
+    
+    get_marker_genes = function() {
+      private$finalize_first()
+      return(self$st$marker_genes)
+    },
+    
+    set_display_dims = function(display_dims) {
+      private$display_dims <- display_dims
+    },
+    
+    ##### Saving to/Loading from files #####
+    set_save_dir = function(new_dir_path) {
+      if (!dir.exists(new_dir_path)) {
+        dir.create(new_dir_path, recursive = TRUE)
+      }
+      private$save_dir <- normalizePath(new_dir_path)
+    },
+    
+    get_save_dir = function() {
+      return(private$save_dir)
+    },
+    
+    getset_save_dir = function(new_dir_path = NULL) {
+      if (is.null(private$save_dir)) {
+        if (is.null(new_dir_path)) stop("Specify save_dir or call set_save_dir")
+        self$set_save_dir(new_dir_path)
+      } else if (!is.null(new_dir_path) && !private$save_dir == new_dir_path) {
+        stop("save_dir is not NULL and can only be changed via set_save_dir")
+      }
+      return(private$save_dir)
+    },
+    
+    save_state = function(save_dir = NULL) {
+      out_dir <- self$getset_save_dir(save_dir)
+      saveRDS(self$st, file.path(out_dir, "linseed2_state.rds"))
+      if (("umap" %in% names(self$st$proj)) && (!is.null(self$st$proj$umap$model))) {
+        fpath <- file.path(out_dir, "linseed2_umap_X.uwot")
+        if (file.exists(fpath)) file.remove(fpath)
+        uwot::save_uwot(self$st$proj$umap$model$X, fpath)
+        
+        fpath <- file.path(out_dir, "linseed2_umap_Omega.uwot")
+        if (file.exists(fpath)) file.remove(fpath)
+        uwot::save_uwot(self$st$proj$umap$model$Omega, fpath)
+      }
+      return(invisible())
+    },
+    
+    load_state = function(input_dir = NULL) {
+      if (is.null(input_dir)) {
+        if (!is.null(private$save_dir)) {
+          input_dir <- private$save_dir
+        } else {
+          stop("Current save_dir is null, specify input_dir or set_save_dir")
+        }
+      }
+      self$st <- readRDS(file.path(input_dir, "linseed2_state.rds"))
+      if (("umap" %in% names(self$st$proj)) && (!is.null(self$st$proj$umap$model))) {
+        self$st$proj$umap$model$X <- uwot::load_uwot(file.path(input_dir, "linseed2_umap_X.uwot"))
+        self$st$proj$umap$model$Omega <- uwot::load_uwot(file.path(input_dir, "linseed2_umap_Omega.uwot"))
+      }
+    },
+    
+    generate_summary = function(save_dir = NULL) {
+      out_dir <- self$getset_save_dir(save_dir)
+
+      rmd_path <- system.file("extdata", "solver_summary.Rmd", package = "linseed2")
+      output_file <- file.path(out_dir, "linseed2_solver_summary.html")
+      
+      old_wd <- getwd()
+      on.exit(setwd(old_wd), add = TRUE)
+      setwd(out_dir)
+      
+      rmarkdown::render(
+        input = rmd_path,
+        output_file = output_file,
+        params = list(
+          lo2 = self
+        )
+      )
+    },
+    ##### Getters #####
+    get_data = function() {
+      return(self$st$data)
+    }
+  )
+)
+
+Linseed2Solver$from_state <- function(input_dir) {
+  lo2 <- Linseed2Solver$new()
+  lo2$load_state(input_dir)
+  return(lo2)
+}
