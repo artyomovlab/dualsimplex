@@ -132,6 +132,10 @@ reverse_solution_projection <- function(solution_proj, proj) {
 ############ PLOTTING ############
 plot_proj_svd <- function(proj, dims = NULL) {
   svd_d <- diag(proj$meta$Sigma)
+  return(plot_svd_d(svd_d, dims))
+}
+
+plot_svd_d <- function(svd_d, dims = NULL) {
   vars <- svd_d^2
   df <- data.frame(
     dimension = 1:length(vars),
@@ -140,7 +144,7 @@ plot_proj_svd <- function(proj, dims = NULL) {
   if (is.null(dims)) {
     dims = 1:length(svd_d)
   }
-  ggplot(data = df[dims,], aes(x = dimension, y = variance)) +
+  return(ggplot(data = df[dims,], aes(x = dimension, y = variance)) +
     geom_point(
       aes(y = variance),
       size = 0.5,
@@ -165,5 +169,25 @@ plot_proj_svd <- function(proj, dims = NULL) {
       ),
       legend.position = "none"
     ) +
-    scale_x_continuous(minor_breaks = dims, limits = c(min(dims), max(dims)))
+    scale_x_continuous(minor_breaks = dims, limits = c(min(dims), max(dims))))
+}
+
+plot_svd_ds_matrix <- function(svd_ds) {
+  vars <- svd_ds ^ 2
+  vars <- t(apply(vars, 1, function(step_vars) {cumsum(step_vars / sum(step_vars))}))
+  vars <- as.data.frame(vars)
+  colnames(vars) <- 1:ncol(vars)
+  values <- colnames(vars)
+  if (is.null(rownames(svd_ds)))
+    rownames(svd_ds) <- 1:nrow(svd_ds)
+  vars[, "step"] <- as.factor(rownames(svd_ds))
+  to_plot <- tidyr::pivot_longer(
+    vars,
+    values,
+    names_to = "component",
+    values_to = "explained_variance"
+  )
+  to_plot$component <- as.integer(to_plot$component)
+  
+  return(ggplot(to_plot, aes(x = component, y = explained_variance, col = step)) + geom_line())
 }

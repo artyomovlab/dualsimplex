@@ -6,6 +6,8 @@ output:
     self_contained: yes
 params:
   lo2: !r NULL
+  with_animated_optim: !r FALSE
+  seurat_obj: !r NULL
 ---
 
 <style>
@@ -19,20 +21,21 @@ h4 {
 }
 </style>
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, fig.height = 5)
-devtools::load_all()
-```
-
 ```{r}
 if (is.null(lo2$st$data))
   stop("Nothing was calculated yet")
 ```
 
-Note: Dataset from the last set_data call is used.
-### Filtering log
+### Filtering history
+```{r}
+lo2$get_filtering_stats()
+```
+```{r}
+lo2$plot_svd_history()
+```
 
 ### Dataset
+Note: For further calculations, the resulting filtered dataset is used
 ```{r results='asis'}
 cat(nrow(lo2$get_data()), "genes x", ncol(lo2$get_data()), "samples")
 ```
@@ -41,14 +44,8 @@ cat(nrow(lo2$get_data()), "genes x", ncol(lo2$get_data()), "samples")
 lo2$plot_svd(NULL) + ggtitle("SVD explained variance")
 ```
 
-```{r fig.width=12, fig.height=3}
-devtools::load_all()
-plot_numeric_features(
-  lo2$get_data(),
-  T,
-  features = c("log_mean", "log_median", "log_sd", "log_mad"),
-  ncol = 4
-)
+```{r, fig.height=4, fig.width=6}
+lo2$plot_mad()
 ```
 
 
@@ -72,16 +69,7 @@ lo2$plot_projected("plane_distance", "plane_distance", with_legend = T, with_sol
 ```
 
 ```{r fig.width=12, fig.height=3}
-plot_numeric_features(lo2$get_data(), T, features = c("plane_distance", "zero_distance"), ncol = 4, label = "Gene distances", bins = 100)
-plot_numeric_features(lo2$get_data(), F, features = c("plane_distance", "zero_distance"), ncol = 4, label = "Sample distances", bins = 30)
-```
-
-```{r fig.width=8, fig.height=4}
-plotlist <- list(
-  plot_feature_pair(lo2$get_data(), "plane_distance", "zero_distance", T, size = 0.1),
-  plot_feature_pair(lo2$get_data(), "plane_distance", "zero_distance", F, size = 0.1)
-)
-cowplot::plot_grid(plotlist = plotlist, ncol = 2)
+lo2$plot_distances_distribution()
 ```
 
 
@@ -106,15 +94,40 @@ lo2$plot_projected(with_legend = F, with_solution = T, with_history = T)
 lo2$plot_projected(NULL, NULL, with_legend = F, with_solution = T, with_history = T)
 ```
 
+```{r, eval=has_optim && with_animated_optim}
+plot_solution_history_anim(
+  lo2$st$proj,
+  lo2$st$solution_proj,
+  use_dims = NULL,
+  gif_filename = "optim_umap.gif",
+  gif_dir = lo2$get_save_dir(),
+  nframes = 305 # TODO: calculate automatically
+)
+
+# TODO: Optimization result, umap
+# ![Optimization GIF, umap](optim_gtex_lung_umap.gif)
+```
+
+
+```{r}
+if (is.null(lo2$st$solution)) {
+  knittr::knit_exit()
+}
+```
+
 
 ### Solution
 ```{r}
 lo2$plot_projected(with_legend = F, with_solution = T, with_history = F)
 ```
 
-```{r fig.height=3, fig.width=6}
-plot_proportions_distribution(solution$H)
-plot_basis_distribution(solution$W)
+```{r fig.height=3, fig.width=12}
+lo2$plot_solution_distribution()
+```
+
+```{r}
+# TODO: ggplot and function
+boxplot(t(lo2$get_solution()$H))
 ```
 
 
@@ -138,16 +151,34 @@ for (ct in lo2$get_ct_names()) {
 lo2$plot_projected(color_genes = "markers", color_samples = NULL, with_solution = T, with_history = F)
 ```
 
+```{r, results="asis"}
+cat_markers(lo2$get_marker_genes())
+```
 
 ```{r}
-# TODO: filtering tables
-# TODO: heatmaps
-# TODO: save to phantasus
-# TODO: boxplots
-# TODO: gradient maps
-# TODO: save bases and signatures
+if (is.null(seurat_obj)) {
+  knittr::knit_exit()
+}
+```
 
+### Single cell enrichment
+```{r}
+Seurat::DimPlot(seurat_obj, reduction = "umap") + ggtitle("Clusters")
+```
+
+```{r}
+plot_height <- (ceiling(lo2$get_n_cell_types() / 4) * 5)
+```
+
+```{r fig.width=20, fig.height=plot_height, message=FALSE, warning=FALSE, results='hide'}
+# TODO: seurat_obj <- add_list_markers(seurat_obj, lo2$get_marker_genes())
+plot_marker_enrichment(seurat_obj, names(lo2$get_marker_genes()), limits = c(0, 1.5))
+```
+
+
+```{r}
+# TODO: heatmaps
+# TODO: gradient maps
 # TODO: multiple inits
-# TODO: proportions by 
 ```
 

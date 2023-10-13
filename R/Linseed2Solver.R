@@ -112,7 +112,7 @@ Linseed2Solver <- R6Class(
       if (any(sapply(dimnames(data), anyDuplicated))) 
         stop("Gene and sample names should not contain duplicates")
       
-      first_set = is.null(self$get_data())
+      first_set = is.null(self$st$data)
       
       private$reset_since("data")
       if (!inherits(data, "ExpressionSet"))
@@ -153,6 +153,18 @@ Linseed2Solver <- R6Class(
     plot_svd = function(dims = self$st$dims) {
       private$set_data_first()
       plot_proj_svd(self$st$proj_full, dims)
+    },
+    plot_svd_history = function() {
+      svd_ds <- lapply(self$st$filtering_log$object_log, function(x) {
+        diag(x$Sigma)
+      })
+      mlen <- max(sapply(svd_ds, length))
+      svd_ds <- lapply(svd_ds, function(x) {
+        c(x, rep(0, mlen - length(x)))
+      })
+      svd_ds <- matrix(unlist(svd_ds), ncol = mlen, byrow = T)
+      rownames(svd_ds) <- self$st$filtering_log$stats_df$step_name
+      return(plot_svd_ds_matrix(svd_ds))
     },
     project = function(n_cell_types) {
       private$set_data_first()
@@ -340,19 +352,23 @@ Linseed2Solver <- R6Class(
       return(self$st$solution)
     },
     
-    get_solution = function() {
-      private$finalize_first()
-      return(self$st$solution)
-    },
-    
-    get_ct_names = function() {
-      private$finalize_first()
-      return(rownames(self$st$solution$H))
-    },
-    
-    get_marker_genes = function() {
-      private$finalize_first()
-      return(self$st$marker_genes)
+    plot_solution_distribution = function() {
+      cowplot::plot_grid(plotlist = list(
+        plot_proportions_distribution(self$get_solution()$H) + ggtitle(
+          "Proportions, H",
+          paste0(
+            round(self$get_negative_ratios()$H * 100, 2),
+            "% matrix entries were negative before setting to zero"
+          )
+        ),
+        plot_basis_distribution(self$get_solution()$W) + ggtitle(
+          "Basis, W",
+          paste0(
+            round(self$get_negative_ratios()$W * 100, 2),
+            "% matrix entries were negative before setting to zero"
+          )
+        )
+      ))
     },
     
     set_display_dims = function(display_dims) {
@@ -393,7 +409,19 @@ Linseed2Solver <- R6Class(
         if (file.exists(fpath)) file.remove(fpath)
         uwot::save_uwot(self$st$proj$umap$model$Omega, fpath)
       }
+      if (!is.null(self$st$solution)) {
+        self$save_solution(out_dir)
+      }
       return(invisible())
+    },
+    
+    save_solution = function(save_dir = NULL) {
+      private$finalize_first()
+      out_dir <- self$getset_save_dir(save_dir)
+      W <- cbind(gene_name = rownames(self$st$solution$W), self$st$solution$W)
+      H <- cbind(sample_name = colnames(self$st$solution$H), t(self$st$solution$H))
+      write.table(W, file.path(out_dir, "basis.tsv"), sep = "\t", quote = F, row.names = F)
+      write.table(H, file.path(out_dir, "proportions.tsv"), sep = "\t", quote = F, row.names = F)
     },
     
     load_state = function(input_dir = NULL) {
@@ -411,7 +439,11 @@ Linseed2Solver <- R6Class(
       }
     },
     
-    generate_summary = function(save_dir = NULL) {
+    generate_summary = function(
+      save_dir = NULL,
+      seurat_obj = NULL,
+      with_animated_optim = F
+    ) {
       out_dir <- self$getset_save_dir(save_dir)
 
       rmd_path <- system.file("extdata", "solver_summary.Rmd", package = "linseed2")
@@ -425,19 +457,60 @@ Linseed2Solver <- R6Class(
         input = rmd_path,
         output_file = output_file,
         params = list(
-          lo2 = self
+          lo2 = self,
+          with_animated_optim = with_animated_optim,
+          seurat_obj = seurat_obj
         )
       )
+      if (!is.null(self$st$solution)) {
+        self$save_solution(out_dir)
+      }
     },
+    
     ##### Getters #####
     get_data = function() {
+      private$set_data_first()
       return(self$st$data)
+    },
+    get_filtering_stats = function() {
+      return(self$st$filtering_log$stats_df)
+    },
+    get_n_cell_types = function() {
+      private$project_first()
+      return(self$st$n_cell_types)
+    },
+    get_n_iters = function() {
+      private$optimize_first()
+      return(nrow(lo2$st$solution_proj$optim_history$errors_statistics))
+    },
+    get_negative_ratios = function() {
+      private$finalize_first()
+      return(list(
+        W = sum(self$st$solution_no_corr$W < 0) / length(self$st$solution_no_corr$W),
+        H = sum(self$st$solution_no_corr$H < 0) / length(self$st$solution_no_corr$H)
+      ))
+    },
+    get_solution = function() {
+      private$finalize_first()
+      return(self$st$solution)
+    },
+    get_ct_names = function() {
+      private$finalize_first()
+      return(rownames(self$st$solution$H))
+    },
+    
+    get_marker_genes = function() {
+      private$finalize_first()
+      return(self$st$marker_genes)
     }
   )
 )
 
-Linseed2Solver$from_state <- function(input_dir) {
+Linseed2Solver$from_state <- function(input_dir, save_there = F) {
   lo2 <- Linseed2Solver$new()
   lo2$load_state(input_dir)
+  if (save_there) {
+    lo2$set_save_dir(input_dir)
+  }
   return(lo2)
 }

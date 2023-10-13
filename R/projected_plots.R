@@ -293,6 +293,7 @@ plot_solution_history_anim <- function(
   height = 600,
   width = 1200,
   gif_filename = NULL,
+  gif_dir = NULL,
   nframes = 300,
   use_dims = NULL
 ) {
@@ -304,7 +305,7 @@ plot_solution_history_anim <- function(
     gganimate::transition_states(iter, transition_length = 2, wrap = F) +
     gganimate::ease_aes("linear")
   
-  if (is.null(gif_filename)) {
+  if (is.null(gif_filename) || is.null(gif_dir)) {
     gganimate::animate(plt, height = height, width = width, nframes = nframes)
   } else {
     gganimate::anim_save(gif_filename, plt, height = height, width = width, nframes = nframes)

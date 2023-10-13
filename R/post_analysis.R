@@ -18,8 +18,13 @@ plot_proportions_distribution <- function(H) {
   return(plt)
 }
 
-plot_basis_distribution <- function(W, max_expr = 25) {
-  to_plot <- as.data.frame(log(W + 1))
+plot_basis_distribution <- function(W, max_expr = 25, logp1 = T) {
+  if (logp1) {
+    to_plot <- log(W + 1)
+  } else {
+    to_plot <- W
+  }
+  to_plot <- as.data.frame(to_plot)
   to_plot <- tidyr::pivot_longer(
     to_plot,
     colnames(to_plot),
@@ -126,7 +131,7 @@ add_list_markers <- function(so, markers, assay = "RNA") {
 plot_marker_enrichment <- function(
   so, marker_names, ncol = 4, limits = NULL, ggadd = function(plt) plt, wrap = T
 ) {
-  p <- FeaturePlot(
+  p <- Seurat::FeaturePlot(
     so,
     features = paste0(marker_names, 1),
     #  label = T,
