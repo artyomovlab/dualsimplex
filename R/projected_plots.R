@@ -306,8 +306,8 @@ plot_solution_history_anim <- function(
     gganimate::ease_aes("linear")
   
   if (is.null(gif_filename) || is.null(gif_dir)) {
-    gganimate::animate(plt, height = height, width = width, nframes = nframes)
+    gganimate::animate(plt, height = height, width = width, nframes = nframes, renderer = gganimate::gifski_renderer())
   } else {
-    gganimate::anim_save(gif_filename, plt, height = height, width = width, nframes = nframes)
+    gganimate::anim_save(gif_filename, plt, height = height, width = width, nframes = nframes, renderer = gganimate::gifski_renderer())
   }
 }

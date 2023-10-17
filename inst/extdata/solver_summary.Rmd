@@ -51,7 +51,7 @@ lo2$plot_mad()
 
 ```{r}
 if (is.null(lo2$st$n_cell_types)) {
-  knittr::knit_exit()
+  knitr::knit_exit()
 }
 ```
 
@@ -75,7 +75,7 @@ lo2$plot_distances_distribution()
 
 ```{r}
 if (is.null(lo2$st$solution_proj)) {
-  knittr::knit_exit()
+  knitr::knit_exit()
 }
 has_optim = "optim_history" %in% names(lo2$st$solution_proj)
 ```
@@ -111,7 +111,7 @@ plot_solution_history_anim(
 
 ```{r}
 if (is.null(lo2$st$solution)) {
-  knittr::knit_exit()
+  knitr::knit_exit()
 }
 ```
 
@@ -157,7 +157,7 @@ cat_markers(lo2$get_marker_genes())
 
 ```{r}
 if (is.null(seurat_obj)) {
-  knittr::knit_exit()
+  knitr::knit_exit()
 }
 ```
 
