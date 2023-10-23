@@ -18,13 +18,15 @@ predicate_filter <- function(eset, predicate, genes = T) {
 
 bool_filter <- function(eset, by_cols, genes = T, remove_true = T) {
   sign <- if (remove_true) "!" else ""
-  eset <- predicate_filter(
-    eset,
-    paste0(
-      sign,
-      paste(by_cols, collapse = paste0(" & ", sign))
-    )
-  )
+  if (!is.null(by_cols)) {
+      eset <- predicate_filter(
+        eset,
+        paste0(
+          sign,
+          paste(by_cols, collapse = paste0(" & ", sign))
+        )
+      )
+  }
   return(eset)
 }
 

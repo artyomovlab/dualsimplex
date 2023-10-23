@@ -14,5 +14,8 @@ Imports:
     ggplot2,
     dplyr,
     R6,
-    Biobase
+    Metrics,
+    Biobase,
+    uwot (>= 0.1.11),
+    knitr
 LinkingTo: Rcpp, RcppArmadillo
