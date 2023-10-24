@@ -10,13 +10,13 @@ initializers <- list(
     if (!"marker_list" %in% names(kwargs)) {
       stop("Put marker_list in kwargs for marker_means init.")
     }
-    lapply(marker_list, function(ct_markers) {
-      sel <- ct_markers[ct_markers %in% rownames(X)]
-      if (sum(sel) == 0) stop("One or more cell types has zero markers present")
-      colMeans(X[sel, ])
+    mm <- lapply(kwargs$marker_list, function(ct_markers) {
+      sel <- ct_markers[ct_markers %in% rownames(proj$X)]
+      if (length(sel) == 0) stop("One or more cell types has zero markers present")
+      colMeans(proj$X[sel, ])
     })
-    X <- matrix(unlist(marker_means), ncol = length(marker_list), byrow = T)
-    return(set_solution_from_x(X))
+    X <- matrix(unlist(mm), ncol = length(kwargs$marker_list), byrow = T)
+    return(set_solution_from_x(X, proj))
   },
 
   select_x = function(proj, kwargs = list()) {
