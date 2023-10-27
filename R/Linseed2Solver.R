@@ -77,7 +77,7 @@ Linseed2Solver <- R6Class(
           }
         } else if (genes && !is.null(self$st$marker_genes) && (color == "markers")) {
           name <- color
-          color <- which_marker(rownames(self$st$solution$W), self$st$marker_genes)
+          color <- which_marker(rownames(self$st$data), self$st$marker_genes)
         } else if (color %in% colnames(anno)) {
           name <- color
           color <- anno[, color]
