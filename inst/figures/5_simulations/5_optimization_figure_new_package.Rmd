@@ -1,0 +1,327 @@
+
+# Should be just redo for Figure 5
+
+## Install linseedv2
+
+```{r}
+unloadNamespace("linseed2")
+devtools::load_all(path='../../linseed_code/linseed2/')
+```
+
+# Now Prepare picture for paper figure
+
+```{r}
+library(reshape2)
+library(ggplot2)
+library(dplyr)
+library(ggrepel)
+library(ggrastr)
+library(RColorBrewer)
+```
+
+```{r fig.height = 5, fig.width = 11}
+n_ct <- 3
+
+set.seed(3)
+sim <- create_simulation(n_genes = 10000,
+                         n_samples = 100,
+                         n_cell_types = n_ct,
+                         with_marker_genes = FALSE)
+#sim <- sim %>% add_noise(noise_deviation = 0)
+
+data_raw <- sim$data
+true_basis <- sim$basis
+true_proportions <- sim$proportions
+
+save_dir <- "./simulations_fig_5_save"
+
+lo2 <- Linseed2Solver$new()
+lo2$set_save_dir(save_dir)
+lo2$set_data(data_raw)
+
+plane_distance_threshold = 0.05 # Change here several times to see result, start with big and lower it
+lo2$project(3)
+lo2$distance_filter(plane_d_lt = plane_distance_threshold, zero_d_lt = NULL, genes = T)
+
+lo2$project(3)
+lo2$plot_svd_history()
+lo2$init_solution("random")
+lo2$plot_projected("zero_distance", "zero_distance",with_solution=TRUE, use_dims = list(2:3))
+```
+```{r}
+lo2$init_solution("random")
+lo2$plot_projected("plane_distance", "plane_distance",with_solution=TRUE, use_dims = list(2:3))
+
+```
+
+
+## Make 5 steps of optimization
+```{r}
+blocks <- 5
+iterations <- 5000
+
+
+for (i in 1:blocks) {
+  lo2$optim_solution(round(iterations/blocks), 
+                     optim_config(coef_hinge_H = 1,
+                                  coef_hinge_W = 10,
+                                  coef_der_X = 0.001, 
+                                  coef_der_Omega = 0.001
+                                  ))
+  curr_X <- lo2$st$solution_proj$X  # this is how we can extract solution on a fly
+  curr_Omega <- lo2$st$solution_proj$Omega # this is how we can extract solution on a fly
+}
+```
+
+```{r fig.height = 5, fig.width = 11}
+lo2$plot_projected("zero_distance", "zero_distance",with_solution=TRUE, use_dims = list(2:3))
+```
+```{r}
+lo2$plot_error_history()
+```
+```{r}
+lo2$save_state()
+```
+
+```{r}
+save_dir <- "./simulations_fig_5_save"
+lo2 <- Linseed2Solver$from_state(save_dir)
+
+# Note: this wasn't saved, it's not included in state,
+# so we have to set it again
+lo2$set_display_dims(list(NULL, 2:3)) 
+n_ct <- lo2$st$n_cell_types
+```
+
+## Errors how they are in paper
+
+```{r}
+plotErrorsWithRastr = function(metadata, variables = c("deconv_error","lamdba_error","beta_error",
+"D_h_error","D_w_error","total_error")) {
+  solution_proj <- metadata$st$solution_proj
+  error_statistics <- solution_proj$optim_history$errors_statistics
+  
+  toPlot <- data.frame(error_statistics[, variables] )
+
+  toPlot$iteration <- 0:(nrow(error_statistics)-1)
+  toPlot <- melt(toPlot,id.vars="iteration",measure.vars = variables)
+  plt <- ggplot(toPlot,aes(x=iteration,y=log10(value),color=variable)) +
+     rasterise(geom_point(size=0.2),dpi=600) +
+     rasterise(geom_line(), dpi=600) + theme_minimal() + labs(color="Errors")
+  return(plt)
+    }
+
+errors_plot <- plotErrorsWithRastr(lo2, variables = c("deconv_error",
+                                 "lamdba_error",
+                                 "beta_error",
+                                 "total_error")) + 
+  theme(text = element_text(size = 16))
+
+pdf("../figures/simulation_trajectory.pdf",
+    width = 5, height = 3)
+errors_plot
+dev.off()
+```
+## Triangles as how they are in paper
+
+
+```{r}
+
+plot_gradient <- function(toPlot, endpoints, colors) {
+  blocks <- max(endpoints$i)
+  print(blocks)
+  
+  plt <- ggplot(toPlot, aes(x=Y, y=Z)) +
+     rasterise(geom_point(color=colors[4],size=1,alpha=0.8), dpi=600)
+  for (j in 0:(blocks-1)) {
+    
+    for (c in 1:n_ct) {
+      plt <- plt + geom_line(data = endpoints %>% 
+                                  filter(i %in% c(j,j+1)) %>%
+                                  filter(k==c),
+                                size=1,
+                               color = 'gray44' )  
+    }
+  }
+
+  plt <- plt + geom_polygon(data=endpoints %>% filter(i==0),
+                        size=1, fill=NA, color = colors[7], linetype = "dashed")  # triangle init
+  plt <-  plt  + geom_polygon(data=endpoints %>% filter(i==blocks), 
+                              size=1, fill=NA, color = colors[6])  # triangle final
+  plt <-  plt + geom_point(data=endpoints %>% filter(i!=blocks),
+                           fill = colors[5],
+                           color = colors[4], size=3, shape = 21, stroke=1)   # trajectory points
+  plt <-  plt  + geom_point(data=endpoints %>% filter(i==blocks),
+                            fill = colors[6],
+                            color = colors[5], size=3, shape = 21, stroke=1) # final result points
+  plt <- plt + geom_label_repel(data = endpoints, size = 5,
+                                mapping = aes(label=i)) +        #label
+    theme_minimal(base_size = 25) + theme(axis.line= element_blank(),
+                            text = element_text(size = 16)) 
+  plt
+}
+```
+
+```{r}
+solution_start_end <- get_solution_history(lo2$st$solution_proj, iterations/blocks)
+X_hist <- as.data.frame(solution_start_end$X)
+Omega_hist <- as.data.frame(solution_start_end$Omega)
+
+colnames(X_hist) <- c("X","Y","Z", "k","i")
+colnames(Omega_hist) <- c("X","Y","Z", "k","i")
+X_hist$i <-  rep(0:blocks, each=3)
+Omega_hist$i <-  rep(0:blocks, each=3)
+```
+
+
+
+## X
+```{r}
+dims <- 3
+points_col <- brewer.pal(9,"Blues")
+
+## plot X  
+toPlot <- as.data.frame(lo2$st$proj$X)[,1:dims]
+colnames(toPlot) <- c("X","Y","Z")
+
+pltX <- plot_gradient(toPlot, X_hist, points_col)
+
+pltX <- pltX + xlab("R2") + ylab("R3")
+pdf("../figures/simulation_X.pdf",
+    width = 5, height = 4)
+pltX
+dev.off()
+```
+## Omega 
+
+```{r}
+## plot Omega  
+
+toPlot <- as.data.frame(lo2$st$proj$Omega)[,1:dims]
+colnames(toPlot) <- c("X","Y","Z")
+
+points_col <- brewer.pal(9,"Oranges")
+pltOmega <- plot_gradient(toPlot, Omega_hist, points_col)
+pltOmega <- pltOmega + xlab("S2") + ylab("S3")
+pdf("../figures/simulation_Omega.pdf",
+    width = 5, height = 4)
+pltOmega
+dev.off()
+```
+
+## Prepare basis/proportions plots
+```{r}
+solution <- lo2$finalize_solution()
+names(solution)
+solution <- lo2$get_solution()
+```
+
+```{r fig.width=20, fig.height=5}
+ptb <- coerce_pred_true_basis(solution$W, true_basis[rownames(solution$W), ])
+ptp <- coerce_pred_true_props(solution$H, true_proportions)
+plot_ptp_scatter(ptp)
+plot_ptb_scatter(ptb)
+```
+```{r}
+plot_ptp_lines(ptp = ptp)
+```
+
+
+## Same code, just rewrite with rastrerization 
+
+```{r}
+plot_ptp_scatter <- function(ptp) {
+  plot_list <- list()
+  cts <- rownames(ptp[[1]])
+  for (ct in cts) {
+    to_plot <- as.data.frame(list(
+      linseed = ptp[[1]][ct, ],
+      other = ptp[[2]][ct, ]
+    ))
+
+    rmse_value <- round(rmse(ptp[[1]][ct, ], ptp[[2]][ct, ]), 2)
+
+    mx <- 1
+
+    plot_list[[ct]] <- ggplot(to_plot, aes(x=other, y=linseed)) +
+      rasterise(geom_point(size = 5, shape = 1, colour = "black"),  dpi=600) +
+      ggtitle(paste0(ct)) +
+      geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "red", size = 1.5) +
+      xlab(NULL) +
+      ylab(NULL) +
+      xlim(0, mx) +
+      ylim(0, mx) +
+      theme_classic(base_size = 25)
+
+    plot_list[[ct]] <- plot_list[[ct]] + annotate(
+      geom = "text",
+      x = 0.8, y = 0.1,
+      label = paste0("RMSE = ", rmse_value),
+      size = 6, family = "sans", parse = FALSE
+    )
+  }
+
+  common_x_label <- "True cell type proportion in sample"
+  common_y_label <- "Estimated cell type proportion in sample"
+  common_plot <- cowplot::plot_grid(plotlist = plot_list, ncol = length(cts))
+
+  y.grob <- grid::textGrob(common_y_label, gp=grid::gpar(fontsize=20), rot=90)
+  x.grob <- grid::textGrob(common_x_label, gp=grid::gpar(fontsize=20))
+
+  gridExtra::grid.arrange(gridExtra::arrangeGrob(common_plot, left = y.grob, bottom = x.grob))
+}
+```
+
+```{r}
+plot_ptb_scatter <- function(ptb, max_expr = 25, pt_alpha = 0.2) {
+  plot_list <- list()
+  cts <- colnames(ptb[[1]])
+  for (ct in cts) {
+    to_plot <- as.data.frame(list(
+      linseed = log2(ptb[[1]][, ct] + 1),
+      other = log2(ptb[[2]][, ct] + 1)
+    ))
+
+    # Calculate RMSE value
+    rmse_value <- round(rmse(to_plot$linseed, to_plot$other), 2)
+
+    mx <- max(max_expr, max(max(to_plot$other, to_plot$linseed))) + 1
+    plot_list[[ct]] <- ggplot(to_plot, aes(x = other, y = linseed)) +
+       rasterise(geom_point(colour = adjustcolor("black", alpha.f = pt_alpha)),  dpi=600) +
+      annotate("text", x = 15, y = 2, label = paste0("RMSE = ", rmse_value),
+               hjust = 1, vjust = 0, size = 6, family = "sans") +
+      ggtitle(ct) +
+      geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "red", size = 1.5) +
+      xlab(NULL) +
+      ylab(NULL) +
+      xlim(0, mx) +
+      ylim(0, mx) +
+      theme_classic(base_size = 25)
+  }
+
+  common_x_label <- "Actual log2 gene expression"
+  common_y_label <- "Estimated log2 gene expression"
+
+  common_plot <- cowplot::plot_grid(plotlist = plot_list, ncol = length(cts))
+
+  y.grob <- grid::textGrob(common_y_label, gp = grid::gpar(fontsize = 20), rot = 90)
+
+  x.grob <- grid::textGrob(common_x_label, gp = grid::gpar(fontsize = 20))
+
+  gridExtra::grid.arrange(gridExtra::arrangeGrob(common_plot, left = y.grob, bottom = x.grob))
+}
+```
+
+
+# Combined figure
+
+```{r fig.width=20, fig.height=5}
+proportions_plot <- plot_ptp_scatter(ptp)
+expressions_plot <- plot_ptb_scatter(ptb)
+
+pdf("../figures/ratio_plots.pdf",
+    width = 18, height = 13)
+cowplot::plot_grid(plotlist = list(proportions_plot, expressions_plot), nrow = 2)
+dev.off()
+```
+

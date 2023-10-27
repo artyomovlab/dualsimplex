@@ -1,0 +1,415 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+# Repeat of partial figure GSE11058
+here we assume that data is already generated (see another file)
+You need to install CellMix to use dsa
+
+```{r}
+unloadNamespace("linseed2")
+devtools::load_all(path='../../linseed_code/linseed2/')
+```
+```{r}
+library(tibble)
+library(preprocessCore)
+library(parallel)
+library(e1071)
+source("additional_sources_used/CIBERSORT.R")
+```
+
+
+```{r}
+data_full <- readRDS("data_used/GSE11058_benchmark/single_run_data_full.rds") 
+bas <- readRDS("data_used/GSE11058_benchmark/single_run_bas.rds")
+props <- readRDS("data_used/GSE11058_benchmark/single_run_props.rds")
+
+print(paste("Dim for the whole data:", toString(dim(data_full))))
+print(paste("Dim for proportions (H):", toString(dim(props))))
+print(paste("Dim for basis (W):", toString(dim(bas))))
+```
+
+## Prepare markers
+```{r}
+DS_NAME <- "GSE11058"
+n_markers <- 20
+marker_list <- get_signature_markers(bas, n_marker_genes = 60)
+fc <- log(get_fold_change(bas))
+for (name in names(marker_list)) {
+  marker_list[[name]] <- marker_list[[name]][marker_list[[name]] %in% rownames(data_full)]
+}
+duplicated_markers <- unlist(marker_list)[duplicated(unlist(marker_list))]
+for (name in names(marker_list)) {
+  marker_list[[name]] <- marker_list[[name]][
+    (marker_list[[name]] %in% rownames(data_full)) &
+      !(marker_list[[name]] %in% duplicated_markers)
+  ]
+  marker_list[[name]] <- marker_list[[name]][1:min(n_markers, length(marker_list[[name]]))]
+}
+
+for (name in names(marker_list)) {
+  cat(name, ": ", length(marker_list[[name]]), "\n")
+}
+
+rev_mlist <- list()
+for (name in names(marker_list)) {
+  for (gene in marker_list[[name]])
+    rev_mlist[[gene]] <- name
+}
+
+ntypes <- length(marker_list)
+```
+
+```{r}
+res <- lapply(marker_list, function(x) apply(log2(data_full[x,] + 1), 1, unlist))
+boxplot(res, las=2)
+```
+```{r}
+library(reshape2)
+```
+
+```{r}
+res <- as.data.frame(lapply(marker_list, function(x) apply(as.matrix(log2(bas[x,] + 1)), 2, mean)))
+res$markers_for <- rownames(res)
+res <- melt(res, id = "markers_for")
+colnames(res) <- c("markers_for", "enrichment_in", "mean_log_expression")
+res$markers_for <- as.factor(res$markers_for)
+res$enrichment_in <- as.factor(res$enrichment_in)
+ggplot(
+  res,
+  aes(x = enrichment_in, y = mean_log_expression, group = markers_for, col = markers_for)
+) + geom_line() + geom_point() + scale_color_manual(values = colors_v)
+```
+```{r}
+data_reduced <- data_full[intersect(unlist(marker_list), rownames(data_full)), ]
+data_reduced_scaled <- sinkhorn_scale(data_reduced, 20)
+data_full_scaled <-  sinkhorn_scale(data_full, 20)
+proj_reduced <- svd_project(data_reduced_scaled, 1:ntypes)
+proj_full <- svd_project(data_full_scaled, 1:ntypes)
+
+
+```
+
+
+```{r fig.width=9, fig.height=7}
+this_proj <- proj_reduced
+rev_mlist <- list()
+for (name in names(marker_list)) {
+  for (gene in marker_list[[name]])
+    rev_mlist[[gene]] <- name
+}
+marker_labels <- rep(NA, length(rownames(this_proj$X)))
+names(marker_labels) <- rownames(this_proj$X)
+marker_labels[names(rev_mlist)] <- rev_mlist
+marker_labels <- unlist(marker_labels[rownames(this_proj$X)])
+lab <- marker_labels
+set.seed(7)
+
+to_plot <- as.data.frame(this_proj$X[, 2:ntypes])
+to_plot[["cell_type"]] <- lab
+ggplot(to_plot[is.na(lab),], aes_string(x="dim_2", y="dim_3", col="cell_type")) +
+    geom_point() +
+    geom_point(data=to_plot[!is.na(lab),], size=3, aes_string(col="cell_type")) + 
+    scale_color_manual(values = colors_v, na.value = alpha("grey70", 0.8)) + 
+    labs(col = "Cell type", x = "proj_X[*, 2]", y = "proj_X[*, 3]") +
+    theme_bw(base_family = "sans", base_size = 18) +
+    theme(axis.ticks = element_blank(),
+          axis.text = element_blank())
+```
+
+```{r}
+ax_settings <- list(title = '', autorange = T, showgrid = T, zeroline = F, showline = T, autotick = T, ticks = '', showticklabels = F)
+
+to_plot$color <- "grey70"
+to_plot$color[!is.na(to_plot$cell_type)] <- to_plot$cell_type[!is.na(to_plot$cell_type)]
+# Create the 3D scatter plot using plotly with conditional color mapping
+plotly::plot_ly(
+  to_plot,
+  x = ~dim_2,
+  y = ~dim_3,
+  z = ~dim_4,
+  color = ~color,
+  colors = c("grey70", colors_v),
+  opacity = 0.9,
+  size = 1,
+  type = "scatter3d",
+  mode = "markers"
+) %>%
+  plotly::layout(
+    scene = list(
+      xaxis = c(title = "proj_X[*, 2]", ax_settings),
+      yaxis = c(title = "proj_X[*, 3]", ax_settings),
+      zaxis = c(title = "proj_X[*, 4]", ax_settings)
+    )
+  )
+```
+# Init linseed in markers
+```{r}
+save_dir <- "./partial_fig_7_save/GSE11058_benchmark"
+lo2 <- Linseed2Solver$new()
+lo2$set_save_dir(save_dir)
+lo2$set_data(data_full)
+lo2$project(4)
+lo2$plot_svd_history()
+```
+
+```{r}
+lo2$init_solution("marker_means", marker_list=marker_list)
+lo2$plot_projected("zero_distance", "zero_distance", use_dims = list(3:4))
+```
+```{r}
+boxplot(t(props[, 13:24]))
+```
+
+```{r}
+lo2$run_umap(neighbors_X = 20, neighbors_Omega = 20)
+```
+
+```{r}
+lo2$st$marker_genes <- marker_list
+lo2$plot_projected(color_genes = "markers", color_samples = NULL,  with_solution = F, with_history = F, with_legend=T) +
+scale_color_manual(values = colors_v, na.value = adjustcolor("grey70", alpha.f = 0.7)) + 
+    labs(col = "Marker Cell Type", x = "UMAP1", y = "UMAP2") +
+    theme_bw(base_family = "sans", base_size = 18) +
+    theme(axis.ticks = element_blank(),
+          axis.text = element_blank())
+
+```
+```{r fig.width=9, fig.height=7}
+colors <-  which_marker(rownames(fData(lo2$st$data)), lo2$st$marker_genes)
+
+plot_projection_points(lo2$st$proj,  spaces = c("X"), pt_size = 2, color=colors) +
+  scale_color_manual(values = colors_v, na.value = adjustcolor("grey70", alpha.f = 0.7)) + 
+  labs(col = "Marker Cell Type", x = "UMAP1", y = "UMAP2") +
+  theme_bw(base_family = "sans", base_size = 18) +
+  theme(legend.position = "right", axis.ticks = element_blank(),
+        axis.text = element_blank())
+```
+
+
+
+
+
+```{r}
+ax_settings <- list(title = '', autorange = T, showgrid = T, zeroline = F, showline = T, autotick = T, ticks = '', showticklabels = F)
+to_plot <- as.data.frame(lo2$st$proj$X)
+to_plot$color <- as.character(colors)
+to_plot$color[is.na(to_plot$color)] <- "grey70"
+# to_plot$color <- "grey70"
+# to_plot$color[!is.na(to_plot$cell_type)] <- to_plot$cell_type[!is.na(to_plot$cell_type)]
+# Create the 3D scatter plot using plotly with conditional color mapping
+plotly::plot_ly(
+  to_plot,
+  x = ~dim_2,
+  y = ~dim_3,
+  z = ~dim_4,
+  color = ~color,
+  colors = c("grey70", colors_v),
+  opacity = 0.9,
+  size = 1,
+  type = "scatter3d",
+  mode = "markers"
+) %>%
+  plotly::layout(
+    scene = list(
+      xaxis = c(title = "R2", ax_settings),
+      yaxis = c(title = "R3", ax_settings),
+      zaxis = c(title = "R4", ax_settings)
+    )
+  )
+```
+
+
+
+## Multiple runs
+
+```{r}
+save_pt <- function(
+  this_H, this_W, model_n, rep_n, dir = "gse11058_partial_data", other_H = props, other_W = bas
+) {
+  other_H <- other_H[names(marker_list), ]
+  other_W <- other_W[, names(marker_list)]
+  ptp <- coerce_pred_true_props(this_H, other_H)
+  dir.create(file.path(dir, model_n))
+  saveRDS(ptp, paste0(dir, "/", model_n , "/", rep_n, "_ptp_", DS_NAME, ".rds"))
+  
+  if (!is.null(this_W)) {
+    ptb <- coerce_pred_true_basis(this_W, other_W)
+    # ptb[[1]] <- t(ptb[[1]])
+    # ptb[[2]] <- t(ptb[[2]])
+    # ptb[[1]][ptb[[1]] < 0] <- 0
+    # ptb[[1]] <- log2(ptb[[1]] + 1)
+    # ptb[[2]] <- log2(ptb[[2]] + 1)
+    
+    saveRDS(ptb, paste0(dir, "/", model_n, "/", rep_n, "_ptb_", DS_NAME, ".rds"))
+  }
+}
+
+read_pt <- function(model_n, rep_n, sig = DS_NAME, dir = "gse11058_partial_data") {
+  ptp_name <- paste0(dir, "/", model_n , "/", rep_n, "_ptp_", sig, ".rds")
+  ptp <- readRDS(ptp_name)
+  ptb_name <- paste0(dir, "/", model_n, "/", rep_n, "_ptb_", sig, ".rds")
+  ptb <- if (file.exists(ptb_name)&& !dir.exists(ptb_name)) readRDS(ptb_name) else NULL
+  list(ptp = ptp, ptb = ptb)
+}
+```
+
+
+```{r fig.width=20, fig.height=5}
+for (rep_n in seq(1, 5)) {
+  # Read data
+  data_full <- readRDS(paste0("data_used/GSE11058_benchmark/",rep_n,"_run_data_full.rds")) 
+  bas <- readRDS(paste0("data_used/GSE11058_benchmark/",rep_n,"_run_bas.rds"))
+  props <- readRDS(paste0("data_used/GSE11058_benchmark/",rep_n,"_run_props.rds"))
+  
+  # Get Signature markers from 'bas'
+  marker_list <- get_signature_markers(bas, n_marker_genes = 60)
+    fc <- log(get_fold_change(bas))
+  for (name in names(marker_list)) {
+    marker_list[[name]] <- marker_list[[name]][marker_list[[name]] %in% rownames(data_full)]
+  }
+  duplicated_markers <- unlist(marker_list)[duplicated(unlist(marker_list))]
+  for (name in names(marker_list)) {
+    marker_list[[name]] <- marker_list[[name]][
+      (marker_list[[name]] %in% rownames(data_full)) &
+        !(marker_list[[name]] %in% duplicated_markers)
+    ]
+    marker_list[[name]] <- marker_list[[name]][1:min(n_markers, length(marker_list[[name]]))]
+  }
+  for (name in names(marker_list)) {
+    cat(name, ": ", length(marker_list[[name]]), "\n")
+  }
+  rev_mlist <- list()
+  for (name in names(marker_list)) {
+    for (gene in marker_list[[name]])
+      rev_mlist[[gene]] <- name
+  }
+  
+  ntypes <- length(marker_list)
+  # Get reduced data (only marker rows present)
+  data <- data_full[intersect(unlist(marker_list), rownames(data_full)), ]
+  
+  # Run linseed2
+  lo2 <- Linseed2Solver$new()
+  lo2$set_save_dir(save_dir)
+  lo2$set_data(data)
+  lo2$project(4)
+  lo2$init_solution("marker_means", marker_list=marker_list)
+  lo2$optim_solution(3, 
+                     optim_config(coef_hinge_W = 0.0001,
+                                  coef_der_X = 0, 
+                                  coef_der_Omega = 0
+                                  ))
+  ## Extract solution for markers in original space
+  solution <- lo2$finalize_solution()
+  H_res <- solution$H
+  W_mark <- solution$W
+  X_mark <- - lo2$st$solution_proj$X  
+  Omega_mark <- t(lo2$st$solution_proj$Omega)
+  
+  ## Get W for the whole data based on proportions
+  res <- nnls_C__(t(H_res), t(data_full))
+  W_full <- t(res)
+  colnames(W_full) <- paste0("Cell_type_", 1:ntypes)
+  
+  ## Save result
+  save_pt(H_res, W_full, "linseed2", rep_n, dir=save_dir)
+  
+  # Run CIBERSORT
+  cib <- CIBERSORT(
+    as.data.frame(bas[rownames(data_full), ]),
+    as.data.frame(data_full),
+    perm = 0,
+    QN = T,
+    absolute = F
+    )
+  H_res <- t(cib)
+  H_res <- H_res[names(marker_list), ]
+  save_pt(H_res, NULL, "cib", rep_n,  dir=save_dir)
+  
+  # Run DSA (comment if no CellMix installed)
+  dsa <- CellMix::ged(as.matrix(data_full), 
+                      x = CellMix::MarkerList(marker_list), 
+                      "DSA", 
+                      verbose = F) 
+  H_res <- coef(dsa)
+  W_full <- basis(dsa)
+  save_pt(H_res, W_full, "dsa", rep_n,  dir=save_dir)
+  
+}
+```
+
+
+```{r fig.height=7, fig.width=5}
+models <- c("linseed2", "cib", "dsa")
+signatures <- list("GSE11058")
+
+total_rmses <- data.frame()
+for (rep_n in seq(1, 5)) {
+  this_dfs <- lapply(models, function(model) {
+    results <- lapply(signatures, function(sig) {
+      read_pt(model, rep_n, sig, dir=save_dir)$ptp
+    })
+    rmses <- sapply(results, function(res) {
+      sapply(rownames(res[[1]]), function(ct) rmse(res[[1]][ct, ], res[[2]][ct, ]))
+    })
+    colnames(rmses) <- signatures
+    rmses <- melt(rmses)
+    colnames(rmses) <- c("cell_type", "signature", "rmse")
+    if (model == "cib") {
+      rmses$model <- "CIBERSORT"
+    } else if (model == "dsa") {
+      rmses$model <- "DSA"
+    } else if (model == "linseed2") {
+      rmses$model <- "Linseed 2"
+    }
+    rmses$rep <- rep_n
+    rmses
+  })
+  total_rmses <- rbind(total_rmses, do.call(rbind, this_dfs))
+}
+rmses <- total_rmses
+rmses$cell_type <- factor(rmses$cell_type, levels = levels(rmses$cell_type)[order(levels(rmses$cell_type))])
+
+agg_data <- rmses %>%
+  group_by(cell_type, signature, model) %>%
+  summarize(mean_rmse = mean(rmse), 
+            sd_rmse = sd(rmse), 
+            n = n())
+
+ggplot(agg_data, aes(x = cell_type, y = mean_rmse, fill = cell_type)) +
+  geom_bar(stat = "identity", position = position_dodge()) +
+  geom_errorbar(aes(ymin = mean_rmse - sd_rmse/sqrt(n), 
+                    ymax = mean_rmse + sd_rmse/sqrt(n)), 
+                position = position_dodge(width = 0.9), 
+                width = 0.25) +
+  labs(y = label_wrap_gen(width = 25)("Mean RMSE, true vs. predicted proportions")) +
+  xlab("Cell type") +
+  scale_fill_manual(values = colors_m) +
+  theme_bw(base_family = "sans", base_size = 18) +
+  theme(legend.position = "none", strip.text.y = element_text(angle = 0), strip.background = element_blank()) +
+  facet_grid(rows = vars(model))
+```
+```{r}
+res <- read_pt("linseed2", 2,dir=save_dir,)
+ptp <- res$ptp
+ptb <- res$ptb
+```
+
+```{r}
+library(grid)
+library(gridExtra)
+```
+
+```{r, fig.width=20, fig.height=5}
+proportions_plot <- plot_ptp_scatter(ptp)
+```
+
+```{r, fig.width=20, fig.height=5}
+expressions_plot <- plot_ptb_scatter(ptb, max_expr = 18)
+```
+
+
+
+

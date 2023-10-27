@@ -1,0 +1,416 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+# Repeat of partial figure Brain
+
+```{r}
+unloadNamespace("linseed2")
+devtools::load_all(path='../../linseed_code/linseed2/')
+```
+
+
+```{r}
+library(CellMix) # to compare with
+library(Seurat)
+library(digest)
+library(biomaRt)
+library(tibble)
+library(preprocessCore) # needed for CellMix/DSA
+library(parallel) # needed for CellMix/DSA
+library(e1071) # needed for CellMix/DSA
+library(reshape2)
+source("additional_sources_used/CIBERSORT.R") # to compare with
+```
+## Load the full data and proportions
+```{r}
+
+mart <- useDataset("hsapiens_gene_ensembl", useMart("ensembl"))
+ex <- readRDS("data_used/brain_data/brain_merge2_grad.rds")
+props <- t(readRDS("data_used/brain_data/brain_merge2_grad_true_props.rds"))
+rownames(props)[rownames(props) == "OPC"] <- "OPCs"
+
+```
+
+## Load external markers
+```{r}
+## VL, NG, CA, ## possibly (LK, TS, F5, IP, DM, MM) but check column names carefully 
+DS_NAME <- "VL"
+n_markers <- 20
+load("data_used/brain_data/sigsBrain.rda")
+bas <- sigsBrain[[DS_NAME]]
+```
+
+
+```{r}
+colnames(bas)
+```
+```{r}
+print(paste("Dim for the whole data:", toString(dim(ex))))
+print(paste("Dim for proportions (H):", toString(dim(props))))
+print(paste("Dim for basis (W):", toString(dim(bas))))
+```
+
+## Change gene names, transform expression, get markers list
+
+util to process markers, set gene names
+```{r}
+extract_markers_remove_not_present_genes <- function (ex, bas, props) {
+  data_full <- ex
+  genes <- rownames(bas)
+  gene_names <- getBM(
+  filters = "ensembl_gene_id",
+  attributes = c("ensembl_gene_id", "hgnc_symbol"),
+  values = genes,
+  mart = mart)
+  rownames(gene_names) <- gene_names$ensembl_gene_id
+  new_rnames <- gene_names[rownames(bas), "hgnc_symbol"]
+  
+  # remove duplicated and not present in ensembl
+  bas <- bas[!(is.na(new_rnames) | (new_rnames == "") | duplicated(new_rnames)),]
+  rownames(bas) <- gene_names[rownames(bas), "hgnc_symbol"]
+  # ensure basis have same columns as rows in props ( Cell types the same)
+  bas <- bas[, rownames(props)]
+  #select  highly variable genes  in total data (by mad)
+  data_full <- data_full[log2(apply(data_full, 1, mad)) > 2, ]
+  data_full <- data_full[rownames(data_full) %in% rownames(bas), ]
+  # ensure basis have same rows as rows in expression data (Genes the same)
+  bas <- bas[rownames(data_full),]
+  cat(dim(data_full), "\n")
+  colnames(bas) <- gsub(" |-", "_", colnames(bas))
+  # Get markers by log fold change
+  marker_list <- get_signature_markers(bas, n_marker_genes = 60)
+  for (name in names(marker_list)) {
+    marker_list[[name]] <- marker_list[[name]][marker_list[[name]] %in% rownames(data_full)]
+  }
+  # Remove duplicated markers
+  duplicated_markers <- unlist(marker_list)[duplicated(unlist(marker_list))]
+  # Ensure markers are in the data
+  for (name in names(marker_list)) {
+    marker_list[[name]] <- marker_list[[name]][
+    (marker_list[[name]] %in% rownames(data_full)) &
+      !(marker_list[[name]] %in% duplicated_markers)
+  ]
+    marker_list[[name]] <- marker_list[[name]][1:min(n_markers,
+                                                     length(marker_list[[name]]))]
+  }
+  for (name in names(marker_list)) {
+    cat(name, ": ", length(marker_list[[name]]), "\n")
+  }
+  rev_mlist <- list()
+  for (name in names(marker_list)) {
+    for (gene in marker_list[[name]])
+      rev_mlist[[gene]] <- name
+  }
+  return (list(data_full=data_full, props=props, bas=bas, marker_list=marker_list, rev_mlist=rev_mlist))
+}
+```
+
+
+```{r}
+
+r <- extract_markers_remove_not_present_genes(ex, bas, props)
+data_full <- r$data_full
+props <- r$props
+bas <- r$bas
+marker_list <-  r$marker_list
+rev_mlist <- r$rev_mlist
+ntypes <- length(marker_list)
+```
+```{r}
+print(paste("Dim for the whole data:", toString(dim(data_full))))
+print(paste("Dim for proportions (H):", toString(dim(props))))
+print(paste("Dim for basis (W):", toString(dim(bas))))
+```
+
+
+## Visualize mean expression of markers colored by cell type
+
+```{r}
+res <- as.data.frame(lapply(marker_list, function(x) apply(as.matrix(log2(bas[x,] + 1)), 2, mean)))
+res$markers_for <- rownames(res)
+res <- melt(res, id = "markers_for")
+colnames(res) <- c("markers_for", "enrichment_in", "mean_log_expression")
+res$markers_for <- as.factor(res$markers_for)
+res$enrichment_in <- as.factor(res$enrichment_in)
+ggplot(
+  res,
+  aes(x = enrichment_in, y = mean_log_expression, group = markers_for, col = markers_for)
+) + geom_line() + geom_point() + scale_color_manual(values = colors_v)
+```
+## Make make reduced data (in original and projected space)
+```{r}
+data_reduced <- data_full[intersect(unlist(marker_list), rownames(data_full)), ]
+data_reduced_scaled <- sinkhorn_scale(data_reduced, 20)
+data_full_scaled <-  sinkhorn_scale(data_full, 20)
+proj_reduced <- svd_project(data_reduced_scaled, 1:ntypes)
+proj_full <- svd_project(data_full_scaled, 1:ntypes)
+
+
+```
+
+## Genes UMAP
+Sometimes UMAP tend to place markers separetely, play siwh set.seed() with different numbers to get better picture
+
+```{r fig.width=10, fig.height=7}
+
+
+data_normalized <- t(apply(data_full, 1, function(x) x / sum(x)))
+pca <- prcomp(data_normalized)
+plot(
+  1:length(pca$sdev),
+  cumsum(pca$sdev^2) / sum(pca$sdev^2),
+  type = "b",
+  xlab = "Principal Component",
+  ylab = "Cumulative Variance Explained"
+)
+
+n_components <- 7
+subset_pca <- pca$x[, 1:n_components]
+
+set.seed(7)
+um <- uwot::umap(subset_pca, ret_model = TRUE)
+genes_umap <- um$embedding
+
+marker_labels <- rep(NA, length(rownames(genes_umap)))
+lab <- marker_labels
+names(marker_labels) <- rownames(genes_umap)
+marker_labels[names(rev_mlist)] <- rev_mlist
+marker_labels <- unlist(marker_labels[rownames(genes_umap)])
+
+to_plot <- as.data.frame(genes_umap)
+to_plot[["cell_type"]] <- brain_ct_map_long[marker_labels]
+ggplot(to_plot[is.na(lab),], aes_string(x="V2", y="V1", col="cell_type")) +
+    geom_point() +
+    geom_point(data=to_plot[!is.na(lab),], size=3, aes_string(col="cell_type")) + 
+    scale_color_manual(values = colors_v, na.value = adjustcolor("grey70", alpha.f = 0.7)) + 
+    labs(col = "Marker Cell Type", x = "UMAP1", y = "UMAP2") +
+    theme_bw(base_family = "sans", base_size = 18) +
+    theme(axis.ticks = element_blank(),
+          axis.text = element_blank())
+```
+
+## Create linseed2 object
+
+```{r}
+save_dir <- "./partial_fig_7_save"
+lo2 <- Linseed2Solver$new()
+lo2$set_save_dir(save_dir)
+lo2$set_data(data_full)
+lo2$project(ntypes)
+lo2$plot_svd_history()
+
+
+```
+## Check umap of projected points
+
+```{r fig.width=10, fig.height=7}
+set.seed(7)
+lo2$run_umap(neighbors_X = 15, neighbors_Omega = 20)
+lo2$st$marker_genes <- marker_list
+colors <-  which_marker(rownames(fData(lo2$st$data)), lo2$st$marker_genes)
+
+plot_projection_points(lo2$st$proj,  spaces = c("X"), pt_size = 2, color=colors) +
+  scale_color_manual(values = colors_v, na.value = adjustcolor("grey70", alpha.f = 0.7)) + 
+  labs(col = "Marker Cell Type", x = "UMAP1", y = "UMAP2") +
+  theme_bw(base_family = "sans", base_size = 18) +
+  theme(legend.position = "right", axis.ticks = element_blank(),
+        axis.text = element_blank())
+```
+## Single cell enrichment of markers
+
+```{r}
+load("data_used/brain_data/SeuratObjects.rda")
+so <- obj$VL
+rm(obj)
+so <- ScaleData(so)
+so <- RunPCA(so)
+so <- RunUMAP(so, dims = 1:5)
+```
+
+```{r}
+so$orig.celltype[so$orig.celltype == "AST-FB" | so$orig.celltype == "AST-PP"] <- "Astrocytes"
+so$orig.celltype[startsWith(so$orig.celltype, "IN")] <- "Inhibitory"
+so$orig.celltype[so$orig.celltype %in% c("L2/3", "L4", "L5/6", "L5/6-CC", "Neu-mat")] <- "Excitatory"
+so$orig.celltype[so$orig.celltype %in% c("Neu-NRGN-I", "Neu-NRGN-II")] <- NA
+```
+
+```{r fig.width=5, fig.height=5}
+DimPlot(so, group.by = "orig.celltype") + NoAxes() + NoLegend() + ggtitle(NULL) + scale_colour_manual(values = alpha(colors_m, 1), na.value = alpha("grey70", 1))
+```
+```{r fig.height=5, fig.width=5}
+ml_sorted <- marker_list[sort(names(marker_list))]
+so <- add_list_markers(so, ml_sorted)
+plot_marker_enrichment(so, names(ml_sorted), ncol=7, limits = c(-0.2, 1), function(plt) {
+  plt + NoLegend() + ggtitle(NULL) + NoAxes()
+}, wrap = F)
+```
+
+## Multiple runs
+
+ util methods to save
+```{r}
+save_pt <- function(
+  this_H, this_W, model_n, rep_n, dir = "brain_partial_data", other_H = props, other_W = bas
+) {
+  other_H <- other_H[names(marker_list), ]
+  other_W <- other_W[, names(marker_list)]
+  ptp <- coerce_pred_true_props(this_H, other_H)
+  dir.create(file.path(dir, model_n))
+  saveRDS(ptp, paste0(dir, "/", model_n , "/", rep_n, "_ptp_", DS_NAME, ".rds"))
+  
+  if (!is.null(this_W)) {
+    ptb <- coerce_pred_true_basis(this_W, other_W)
+    # ptb[[1]] <- t(ptb[[1]])
+    # ptb[[2]] <- t(ptb[[2]])
+    # ptb[[1]][ptb[[1]] < 0] <- 0
+    # ptb[[1]] <- log2(ptb[[1]] + 1)
+    # ptb[[2]] <- log2(ptb[[2]] + 1)
+    
+    saveRDS(ptb, paste0(dir, "/", model_n, "/", rep_n, "_ptb_", DS_NAME, ".rds"))
+  }
+}
+
+read_pt <- function(model_n, rep_n, sig = DS_NAME, dir = "gse11058_partial_data") {
+  ptp_name <- paste0(dir, "/", model_n , "/", rep_n, "_ptp_", sig, ".rds")
+  ptp <- readRDS(ptp_name)
+  ptb_name <- paste0(dir, "/", model_n, "/", rep_n, "_ptb_", sig, ".rds")
+  ptb <- if (file.exists(ptb_name)&& !dir.exists(ptb_name)) readRDS(ptb_name) else NULL
+  list(ptp = ptp, ptb = ptb)
+}
+```
+
+
+```{r}
+save_dir <- "./partial_fig_7_save/brain"
+ dir.create(save_dir)
+for (rep_n in seq(1, 5)) {
+  print(rep_n)
+  # Read the data
+  ex <- readRDS("data_used/brain_data/brain_merge2_grad.rds")
+  props <- t(readRDS("data_used/brain_data/brain_merge2_grad_true_props.rds"))
+  rownames(props)[rownames(props) == "OPC"] <- "OPCs"
+  ## VL, NG, CA, LK, TS, F5, IP, DM, MM
+  DS_NAME <- "NG"
+  n_markers <- 20
+  bas <- sigsBrain[[DS_NAME]]
+  
+  r <- extract_markers_remove_not_present_genes(ex, bas, props)
+  data_full <- r$data_full
+  props <- r$props
+  bas <- r$bas
+  marker_list <-  r$marker_list
+  rev_mlist <- r$rev_mlist
+  ntypes <- length(marker_list)
+    
+  
+  # Work with reduced data below
+  data_reduced <- data_full[intersect(unlist(marker_list), rownames(data_full)), ]
+  
+  ## Solve with Linseed2
+  
+  # Run linseed2
+  lo2 <- Linseed2Solver$new()
+  lo2$set_save_dir(save_dir)
+  lo2$set_data(data_reduced)
+  lo2$project(ntypes)
+  lo2$init_solution("marker_means", marker_list=marker_list)
+  lo2$optim_solution(3, 
+                     optim_config(coef_hinge_W = 0.0001,
+                                  coef_der_X = 0, 
+                                  coef_der_Omega = 0
+                                  ))
+  ## Extract solution for markers in original space
+  solution <- lo2$finalize_solution()
+  H_res <- solution$H
+  W_mark <- solution$W
+  X_mark <- - lo2$st$solution_proj$X  
+  Omega_mark <- t(lo2$st$solution_proj$Omega)
+  
+  ## Get W for the whole data based on proportions
+  res <- nnls_C__(t(H_res), t(data_full))
+  W_full <- t(res)
+  colnames(W_full) <- paste0("Cell_type_", 1:ntypes)
+  
+  ## Save result
+  save_pt(H_res, W_full, "linseed2", rep_n, dir=save_dir)
+  print("CIBERSORT")
+  # Run CIBERSORT
+  cib <- CIBERSORT(
+    as.data.frame(bas[rownames(data_full), ]),
+    as.data.frame(data_full),
+    perm = 0,
+    QN = T,
+    absolute = F
+    )
+  H_res <- t(cib)
+  H_res <- H_res[names(marker_list), ]
+  save_pt(H_res, NULL, "cib", rep_n,  dir=save_dir)
+  
+  
+  print("DSA")
+  # Run DSA (comment if no CellMix installed)
+  dsa <- CellMix::ged(as.matrix(data_full), 
+                      x = CellMix::MarkerList(marker_list), 
+                      "DSA", 
+                      verbose = F) 
+  H_res <- coef(dsa)
+  W_full <- basis(dsa)
+  save_pt(H_res, W_full, "dsa", rep_n,  dir=save_dir)
+
+  }
+```
+```{r fig.height=7, fig.width=5}
+models <- c("linseed2", "dsa"
+           # , "cib"
+            )
+signatures <- list("VL", "NG", "CA")
+
+total_rmses <- data.frame()
+for (rep_n in seq(1, 5)) {
+  this_dfs <- lapply(models, function(model) {
+    results <- lapply(signatures, function(sig) {
+      read_pt(model, rep_n, sig,dir=save_dir)$ptp
+    })
+    rmses <- sapply(results, function(res) {
+      sapply(rownames(res[[1]]), function(ct) rmse(res[[1]][ct, ], res[[2]][ct, ]))
+    })
+    colnames(rmses) <- signatures
+    rmses <- melt(rmses)
+    colnames(rmses) <- c("cell_type", "signature", "rmse")
+    if (model == "cib") {
+      rmses$model <- "CIBERSORT"
+    } else if (model == "dsa") {
+      rmses$model <- "DSA"
+    } else if (model == "linseed2") {
+      rmses$model <- "Linseed 2"
+    }
+    rmses$rep <- rep_n
+    rmses
+  })
+  total_rmses <- rbind(total_rmses, do.call(rbind, this_dfs))
+}
+rmses <- total_rmses
+rmses$cell_type <- factor(rmses$cell_type, levels = levels(rmses$cell_type)[order(levels(rmses$cell_type))])
+rmses$cell_type <- factor(brain_ct_map_short[rmses$cell_type], levels = brain_ct_map_short)
+
+agg_data <- rmses %>%
+  group_by(cell_type, signature, model) %>%
+  summarize(mean_rmse = mean(rmse), 
+            sd_rmse = sd(rmse), 
+            n = n())
+
+ggplot(agg_data, aes(x = cell_type, y = mean_rmse, fill = cell_type)) +
+  geom_bar(stat = "identity", position = position_dodge()) +
+  geom_errorbar(aes(ymin = mean_rmse - sd_rmse/sqrt(n), 
+                    ymax = mean_rmse + sd_rmse/sqrt(n)), 
+                position = position_dodge(width = 0.9), 
+                width = 0.25) +  # Adjust width as needed
+  ylab("Mean RMSE, true vs. predicted proportions") +
+  xlab("Cell type") +
+  scale_fill_manual(values = colors_m) +
+  theme_bw(base_family = "sans", base_size = 18) +
+  theme(legend.position = "none") +
+  facet_grid(rows = vars(signature), cols = vars(model))
+```
+

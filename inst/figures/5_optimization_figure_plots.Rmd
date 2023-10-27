@@ -1,0 +1,406 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+
+
+```{r}
+library(stringr)
+```
+
+```{r}
+source('/app/scripts/OutputPlots.R')
+```
+```{r}
+library('Rcpp')
+library('GEOquery')
+
+
+SCRIPT.DIR <- "/app/scripts"
+
+TMP.DIR <- "/storage1/fs1/martyomov/Active/IndividualBackUps/denisk/deconvolution/tmp"
+
+
+source(file.path(SCRIPT.DIR,'SinkhornNNLSLinseedC.R'))
+
+# C++ backend (only optimization)
+sourceCpp(file.path(SCRIPT.DIR,'pipeline.cpp'),
+          cacheDir = TMP.DIR)
+```
+
+```{r}
+library(linseed)
+library(Rcpp)
+library(RColorBrewer)
+library(reshape2)
+library(ggplot2)
+library(dplyr)
+library(ggrepel)
+library(gridExtra)
+library(ggrastr)
+```
+
+```{r}
+plot_gradient <- function(toPlot, endpoints, colors) {
+  blocks <- max(endpoints$i)
+  plt <- ggplot(toPlot, aes(x=Y, y=Z)) +
+     rasterise(geom_point(color=colors[4],size=1,alpha=0.8), dpi=600)
+  
+ 
+  
+  for (j in 0:(blocks-1)) {
+    for (c in 1:tmp_snk$cell_types) {
+      plt <- plt + geom_line(data = endpoints %>% 
+                                  filter(i %in% c(j,j+1)) %>%
+                                  filter(k==c),
+                                size=1,
+                               color = 'gray44' )  
+    }
+  }
+
+  plt <- plt + geom_polygon(data=endpoints %>% filter(i==0),
+                        size=1, fill=NA, color = colors[7], linetype = "dashed")  # triangle init
+  plt <-  plt  + geom_polygon(data=endpoints %>% filter(i==blocks), 
+                              size=1, fill=NA, color = colors[6])  # triangle final
+  plt <-  plt + geom_point(data=endpoints %>% filter(i!=blocks),
+                           fill = colors[5],
+                           color = colors[4], size=3, shape = 21, stroke=1)   # trajectory points
+  plt <-  plt  + geom_point(data=endpoints %>% filter(i==blocks),
+                            fill = colors[6],
+                            color = colors[5], size=3, shape = 21, stroke=1) # final result points
+  plt <- plt + geom_label_repel(data = endpoints, size = 5,
+                                mapping = aes(label=i)) +        #label
+    theme_minimal() + theme(axis.line= element_blank(),
+                            text = element_text(size = 16)) 
+  plt
+}
+
+set.seed(42)
+```
+
+
+```{r}
+get_color_params <- function(to_plot, color, color_name) {
+  if (is.null(color)) {
+    return(list(
+      color_vec = NULL,
+      color_name = NULL,
+      color_scheme = "black"
+    ))
+  }
+  
+  if (is.null(color_name)) color_name <- "annotation"
+  if (length(color[[1]]) > 1) color <- unlist(color)
+  
+  if (length(color) == nrow(to_plot)) {
+    if (is.factor(color)) {
+      return(list(
+        color_vec = color,
+        color_name = color_name,
+        color_scheme = "factor"
+      ))
+    } else {
+      return(list(
+        color_vec = color,
+        color_name = color_name,
+        color_scheme = "direct"
+      ))
+    }
+  } else {
+    if (color_name == "annotation") color_name <- "highlight"
+    return(list(
+      color_vec = rownames(to_plot) %in% color,
+      color_name = "highlight",
+      color_scheme = "highlight"
+    ))
+  }
+}
+# This function deals with color and arguments cleaning
+plot_points_2d <- function(
+  points_2d,
+  color = NULL,
+  color_name = NULL,
+  order_by_color = TRUE,
+  ...
+) {
+  to_plot <- as.data.frame(points_2d)
+  x_col <- colnames(to_plot)[1]
+  y_col <- colnames(to_plot)[2]
+  
+  cp <- get_color_params(points_2d, color, color_name)
+  
+  if (cp$color_scheme != "black") {
+    to_plot[, cp$color_name] <- cp$color_vec
+    
+    if (order_by_color) 
+      to_plot <- to_plot[order(to_plot[, cp$color_name]), ]
+  }
+  
+  return(plot_points_2d_clean(
+    to_plot,
+    x_col,
+    y_col,
+    cp$color_name,
+    cp$color_scheme,
+    ...
+  ))
+}
+concat_data <- function(data_list, group_colname) {
+  merged <- lapply(1:length(data_list), function(i) {
+    this_data <- as.data.frame(data_list[[i]])
+    this_data[, group_colname] <- names(data_list)[[i]]
+    return(this_data)
+  })
+  merged <- as.data.frame(do.call(rbind, merged))
+  merged[, group_colname] <- factor(
+    merged[, group_colname],
+    levels = sort(unique(merged[, group_colname]), decreasing = T)
+  )
+  return(merged)
+}
+
+plot_points_2d_clean <- function(
+  to_plot,
+  x_col,
+  y_col,
+  color_col,
+  color_scheme,
+  pt_opacity = 0.2,
+  pt_size = 1
+) {
+  plt <- ggplot(to_plot, aes_string(x = x_col, y = y_col, color = color_col))
+  
+  if (color_scheme == "black" || color_scheme == "highlight") {
+    plt <- plt + geom_point(size = pt_size, color = "black", alpha = pt_opacity)
+    if (color_scheme == "highlight") {
+      plt <- plt + geom_point(
+        data = to_plot[to_plot[[color_col]], ],
+        size = pt_size * 2,
+        alpha = 1,
+        color = "green"
+      )
+    }
+  } else if (color_scheme == "direct") {
+    plt <- plt +
+      geom_point(size = pt_size, alpha = min(1, pt_opacity * 4)) +
+      scale_color_distiller(palette = "Spectral", name = color_col)
+  } else if (color_scheme == "factor") {
+    plt <- plt + geom_point(size = pt_size, color = "grey70", alpha = pt_opacity) +
+      geom_point(
+        data = to_plot[!is.na(to_plot[[color_col]]), ],
+        alpha = 1,
+        size = pt_size * 2
+      )
+  } else {
+    stop("Invalid color_scheme")
+  }
+  
+  plt <- plt + theme_minimal()
+  
+  return(plt)
+}
+```
+
+
+
+
+```{r}
+source('../kostya_examples/generateData.R')
+data <- generateMixedData(100,20000,3, noiseDeviation=0)
+tmp_snk <- SinkhornNNLSLinseed$new(dataset = "simulation", 
+                                   path = "simulation",
+                                   analysis_name = "simulation",
+                                   cell_types = 3,
+                                   coef_hinge_H = 0,
+                                   coef_hinge_W = 0,
+                                   coef_pos_D_h = 0,
+                                   coef_pos_D_w = 0,
+                                   coef_der_X = 0.01,
+                                   coef_der_Omega = 0.01,
+                                   global_iterations = 1000,
+                                   data=data$data)
+
+tmp_snk$scaleDataset(iterations = 20)
+tmp_snk$getSvdProjectionsNew()
+tmp_snk$calculateDistances()
+
+```
+```{r}
+tmp_snk$selectInitRandomCentered()
+tmp_snk$plotPoints2D()
+```
+```{r}
+toPlot_Omega
+```
+
+```{r}
+toPlot_X <- as.data.frame(tmp_snk$V_row %*% t(tmp_snk$R))[,2:3]
+colnames(toPlot_X) <- c("Y","Z")
+toPlot_Omega <- as.data.frame(t(tmp_snk$S %*% tmp_snk$V_column))[,2:3]
+    colnames(toPlot_Omega) <- c("Y","Z")
+
+points_2d <- list(
+    X = toPlot_X,
+    Omega = toPlot_Omega
+  )
+points_2d <- lapply(
+  points_2d,
+  function(pts) cbind(pts, point = 1:nrow(pts))
+)
+```
+```{r}
+plt <- plot_points_2d(toplot)
+plt <- plt + facet_wrap("space", scales = "free")
+plt
+```
+
+```{r}
+init_obj <- copy(tmp_snk)
+```
+
+
+
+
+
+```{r}
+blocks <- 5
+X_changes <- list()
+Omega_changes <- list()
+for (i in 1:blocks) {
+  tmp_snk$runGradientBlock(paste0("block",i),coef_der_X = 0.001,
+                           coef_der_Omega = 0.001,
+                           coef_hinge_H = 1, coef_hinge_W = 10,
+                           iterations = round(4000/blocks),
+                           startWithInit = (i==1))
+  X_changes[[i]] <- cbind(i,1:tmp_snk$cell_types,
+                          tmp_snk$X)
+  Omega_changes[[i]] <- cbind(i,1:tmp_snk$cell_types,
+                              t(tmp_snk$Omega))
+}
+```
+
+
+```{r}
+tmp_snk$plotPoints2D("current")
+```
+
+
+```{r}
+plotErrorsWithRastr = function(metadata, variables = c("deconv_error","lamdba_error","beta_error",
+"D_h_error","D_w_error","total_error")) {
+
+  toPlot <- data.frame(metadata$errors_statistics[,variables])
+  toPlot$iteration <- 0:(nrow(metadata$errors_statistics)-1)
+  toPlot <- melt(toPlot,id.vars="iteration",measure.vars = variables)
+  plt <- ggplot(toPlot,aes(x=iteration,y=log10(value),color=variable)) +
+     rasterise(geom_point(size=0.2),dpi=600) +
+     rasterise(geom_line(), dpi=600) + theme_minimal() + labs(color="Errors")
+  plt
+    }
+
+
+
+pdf("figures/simulation_trajectory.pdf",
+    width = 5, height = 3)
+plotErrorsWithRastr(tmp_snk, variables = c("deconv_error",
+                                 "lamdba_error",
+                                 "beta_error",
+                                 "total_error")) + 
+  theme(text = element_text(size = 16))
+dev.off()
+```
+```{r}
+X_new <- as.data.frame(do.call(rbind, X_changes))
+Omega_new <- as.data.frame(do.call(rbind, Omega_changes))
+i <- 0
+X_new <- rbind(X_new,
+               as.data.frame(cbind(i,1:tmp_snk$cell_types,
+                                   tmp_snk$init_X)))
+Omega_new <- rbind(Omega_new,
+                   as.data.frame(cbind(i,1:tmp_snk$cell_types,
+                                       t(tmp_snk$init_Omega))))
+
+dims <- 3
+points_col <- brewer.pal(9,"Blues")
+
+## plot X  
+toPlot <- as.data.frame(tmp_snk$V_row %*% t(tmp_snk$R))[,1:dims]
+colnames(toPlot) <- c("X","Y","Z")
+colnames(X_new) <- c("i","k","X","Y","Z")
+
+
+pltX <- plot_gradient(toPlot, X_new, points_col)
+pltX <- pltX + xlab("R2") + ylab("R3")
+pdf("figures/simulation_X.pdf",
+    width = 5, height = 4)
+pltX
+dev.off()
+```
+
+```{r}
+
+
+## plot Omega  
+toPlot <- as.data.frame(t(tmp_snk$S %*% tmp_snk$V_column))[,1:dims]
+colnames(toPlot) <- c("X","Y","Z")
+colnames(Omega_new) <- c("i","k","X","Y","Z")
+points_col <- brewer.pal(9,"Oranges")
+pltOmega <- plot_gradient(toPlot, Omega_new, points_col)
+pltOmega <- pltOmega + xlab("S2") + ylab("S3")
+pdf("figures/simulation_Omega.pdf",
+    width = 5, height = 4)
+pltOmega
+dev.off()
+```
+
+```{r}
+X_new
+```
+```{r}
+endpoints <-  X_new
+blocks <- max(endpoints$i)
+colors <- points_col
+plt <- ggplot(toPlot, aes(x=Y, y=Z),)
+
+for (j in 0:(blocks-1)) {
+  for (c in 1:tmp_snk$cell_types) {
+    plt <- plt + geom_line(data = endpoints %>% 
+                                filter(i %in% c(j,j+1)) %>%
+                                filter(k==c),
+                              size=1,
+                               color = colors[9],
+                              linetype = 'dashed')  
+
+  }
+}
+plt
+```
+
+```{r}
+t <-   endpoints %>% 
+                                filter(i %in% c(j,j+1)) %>%
+                                filter(k==c)
+```
+```{r}
+endpoints %>% filter(i!=blocks),
+               fill = colors[2]
+```
+```{r}
+blocks
+```
+
+```{r}
+t <-  endpoints %>% filter(i==blocks)
+```
+```{r}
+brewer.pal(11,"Paired")
+```
+```{r}
+t <-  endpoints %>% filter(i==blocks-1)
+```
+
