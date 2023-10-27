@@ -168,22 +168,21 @@ plot(
 n_components <- 7
 subset_pca <- pca$x[, 1:n_components]
 
-set.seed(7)
+set.seed(5)
 um <- uwot::umap(subset_pca, ret_model = TRUE)
 genes_umap <- um$embedding
 
-marker_labels <- rep(NA, length(rownames(genes_umap)))
-lab <- marker_labels
-names(marker_labels) <- rownames(genes_umap)
-marker_labels[names(rev_mlist)] <- rev_mlist
-marker_labels <- unlist(marker_labels[rownames(genes_umap)])
+ct_labels <- rep(NA, length(rownames(genes_umap)))
+names(ct_labels) <- rownames(genes_umap)
+ct_labels[names(rev_mlist)] <- rev_mlist
+ct_labels <- unlist(ct_labels[rownames(genes_umap)])
 
 to_plot <- as.data.frame(genes_umap)
-to_plot[["cell_type"]] <- brain_ct_map_long[marker_labels]
-ggplot(to_plot[is.na(lab),], aes_string(x="V2", y="V1", col="cell_type")) +
-    geom_point() +
-    geom_point(data=to_plot[!is.na(lab),], size=3, aes_string(col="cell_type")) + 
-    scale_color_manual(values = colors_v, na.value = adjustcolor("grey70", alpha.f = 0.7)) + 
+to_plot[["cell_type"]] <- brain_ct_map_long[ct_labels]
+ggplot(to_plot[is.na(ct_labels),], aes_string(x="V2", y="V1", col="cell_type")) +
+    geom_point(size=2) +
+    scale_color_manual(values = colors_v, na.value = adjustcolor("grey70", alpha.f = 0.7)) +
+      geom_point(data=to_plot[!is.na(ct_labels),], size=3, aes_string(col="cell_type")) +
     labs(col = "Marker Cell Type", x = "UMAP1", y = "UMAP2") +
     theme_bw(base_family = "sans", base_size = 18) +
     theme(axis.ticks = element_blank(),
