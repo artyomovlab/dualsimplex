@@ -17,6 +17,5 @@ R/RcppExports.R
 data/
 man/
 drafts/
-
 inst/figures/figures/*
 inst/figures/7_partial/data_used/*
