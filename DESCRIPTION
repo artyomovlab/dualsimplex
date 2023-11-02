@@ -12,6 +12,7 @@ Imports:
     RcppArmadillo,
     Matrix,
     ggplot2,
+    ggrastr,
     dplyr,
     R6,
     Metrics,

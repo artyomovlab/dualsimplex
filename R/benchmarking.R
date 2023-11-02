@@ -52,7 +52,7 @@ plot_ptp_scatter <- function(ptp) {
     mx <- 1
 
     plot_list[[ct]] <- ggplot(to_plot, aes(x=other, y=linseed)) +
-      geom_point(size = 5, shape = 1, colour = "black") +
+      rasterize_if_needed(geom_point(size = 5, shape = 1, colour = "black")) +
       ggtitle(paste0(ct)) +
       geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "red", size = 1.5) +
       xlab(NULL) +
@@ -93,7 +93,7 @@ plot_ptb_scatter <- function(ptb, max_expr = 25, pt_alpha = 0.2) {
 
     mx <- max(max_expr, max(max(to_plot$other, to_plot$linseed))) + 1
     plot_list[[ct]] <- ggplot(to_plot, aes(x = other, y = linseed)) +
-      geom_point(colour = adjustcolor("black", alpha.f = pt_alpha)) +
+      rasterize_if_needed(geom_point(colour = adjustcolor("black", alpha.f = pt_alpha))) +
       annotate("text", x = 15, y = 2, label = paste0("RMSE = ", rmse_value),
                hjust = 1, vjust = 0, size = 6, family = "sans") +
       ggtitle(ct) +
