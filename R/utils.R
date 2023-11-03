@@ -47,5 +47,10 @@ read_gene_list <- function(path) {
   genes_list <- stringr::str_split(genes_string, " ")[[1]]
   return(genes_list)
 }
+
+rasterize_if_needed <- function(plot) {
+  plot <- if(getOption("linseed-rasterize", default=FALSE)) ggrastr::rasterise(plot, dpi=600) else plot
+  return(plot)
+}
   
   
