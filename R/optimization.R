@@ -28,7 +28,6 @@ OPTIM_CONFIG_DEFAULT <- optim_config()
 
 optimize_solution <- function(
   # TODO: remove scaled data, this should work on proj level
-  scaling,
   proj,
   solution_proj,
   iterations,
@@ -36,12 +35,11 @@ optimize_solution <- function(
   block_name = NULL
 ) {
   # Cleaning inputs
-  if (!("X" %in% solution_proj) && ("Omega" %in% solution_proj)) {
+  if (!("X" %in% names(solution_proj)) && ("Omega" %in% names(solution_proj))) {
     stop("Both X and Omega must be initialized first in solution_proj")
   }
 
   n_cell_types <- proj$meta$K
-
 
   # Managing optimization history
   if (!"optim_history" %in% names(solution_proj)) {
@@ -52,10 +50,6 @@ optimize_solution <- function(
       points_statistics_Omega = NULL
     )
   }
-
-  step_errors_statistics <- matrix(0, nrow = iterations, ncol = 10)
-  step_points_statistics_X <- matrix(0, nrow = iterations, ncol = n_cell_types ^ 2)
-  step_points_statistics_Omega <- matrix(0, nrow = iterations, ncol = n_cell_types ^ 2)
 
   if (is.null(block_name)) {
     block_name <- paste0("block_", nrow(solution_proj$optim_history$blocks_statistics) + 1)
@@ -115,11 +109,11 @@ optimize_solution <- function(
 
   r_limits <- calc_r_limits(proj, config$limit_X, config$limit_Omega)
 
-  res_ <- derivative_stage2(
+  optimization_result <- derivative_stage2(
     solution_proj$X,
     t(solution_proj$Omega),
     solution_proj$D_w,
-    scaling$V_row,
+    proj$meta$Sigma, # Should be equal to SVRt
     proj$meta$R,
     proj$meta$S,
     config$coef_der_X,
@@ -132,10 +126,6 @@ optimize_solution <- function(
     proj$meta$N,
     proj$meta$M,
     iterations,
-    step_errors_statistics,
-    0,
-    step_points_statistics_X,
-    step_points_statistics_Omega,
     mean_radius_X,
     mean_radius_Omega,
     r_limits$R_limit_X,
@@ -143,25 +133,26 @@ optimize_solution <- function(
     config$cosine_thresh
   )
 
-  solution_proj$X <- res_[[1]]
-  solution_proj$Omega <- t(res_[[2]])
-  solution_proj$D_w <- res_[[3]]
-  solution_proj$D_h <- res_[[4]]
+  solution_proj$X <- optimization_result$new_X
+  solution_proj$Omega <- t(optimization_result$new_Omega)
+  solution_proj$D_w <- optimization_result$new_D_w
+  solution_proj$D_h <- optimization_result$new_D_h
 
   colnames(solution_proj$Omega) <- rownames(proj$meta$R)
   colnames(solution_proj$X) <- rownames(proj$meta$R)
 
   solution_proj$optim_history$errors_statistics <- rbind(
     solution_proj$optim_history$errors_statistics,
-    res_[[5]]
+      optimization_result$errors_statistics
   )
+
   solution_proj$optim_history$points_statistics_X <- rbind(
     solution_proj$optim_history$points_statistics_X,
-    res_[[6]]
+      optimization_result$points_statistics_X
   )
   solution_proj$optim_history$points_statistics_Omega <- rbind(
     solution_proj$optim_history$points_statistics_Omega,
-    res_[[7]]
+           optimization_result$points_statistics_Omega
   )
 
   colnames(solution_proj$optim_history$errors_statistics) <-
@@ -172,12 +163,11 @@ optimize_solution <- function(
       "D_h_error",
       "D_w_error",
       "total_error",
-      "orig_deconv_error",
       "neg_props_count",
       "neg_basis_count",
       "sum_d_w"
     )
-  return(solution_proj)
+  return (solution_proj)
 }
 
 

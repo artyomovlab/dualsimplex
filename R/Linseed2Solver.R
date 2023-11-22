@@ -324,7 +324,6 @@ Linseed2Solver <- R6Class(
     ) {
       private$initialize_first()
       self$st$solution_proj <- optimize_solution(
-        self$st$scaling,
         self$st$proj,
         self$st$solution_proj,
         iterations,
