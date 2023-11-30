@@ -167,7 +167,7 @@ optimize_solution <- function(
       "neg_basis_count",
       "sum_d_w"
     )
-  return (solution_proj)
+  return(solution_proj)
 }
 
 

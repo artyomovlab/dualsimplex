@@ -51,9 +51,9 @@ Linseed2Solver <- R6Class(
           "filtering_params"
         )
       }
-      
+
       step_num <- length(self$st$filtering_log$object_log) + 1
-      
+
       self$st$filtering_log$stats_df[step_num, ] <- c(
         paste(step_num, step_name, sep = "_"),
         nrow(self$st$data),
@@ -105,22 +105,22 @@ Linseed2Solver <- R6Class(
       solution_orig = NULL,   # Auto calculated
       marker_genes = NULL     # Auto calculated
     ),
-    
+
     set_data = function(data, gene_anno_lists = NULL) {
       if (any(sapply(dimnames(data), is.null)))
         stop("Genes and samples should be named")
-      if (any(sapply(dimnames(data), anyDuplicated))) 
+      if (any(sapply(dimnames(data), anyDuplicated)))
         stop("Gene and sample names should not contain duplicates")
-      
+
       first_set = is.null(self$st$data)
-      
+
       private$reset_since("data")
       if (!inherits(data, "ExpressionSet"))
         data <- create_eset(data)
       self$st$data <- add_default_anno(data, gene_anno_lists)
       self$st$scaling <- sinkhorn_scale(exprs(self$st$data))
       self$st$proj_full <- svd_project(self$st$scaling, dims = NULL)
-      
+
       if (first_set) private$add_filtering_log_step("initial")
     },
     plot_mad = function(data, ...) {
@@ -200,7 +200,7 @@ Linseed2Solver <- R6Class(
         stop("Choose at least one distance to filter by")
       }
       new_data <- self$get_data()
-      
+
       if (!is.null(plane_d_lt))
         new_data <- threshold_filter(
           new_data,
@@ -229,8 +229,8 @@ Linseed2Solver <- R6Class(
       private$project_first()
       self$st$proj <- add_proj_umap(self$st$proj, with_model, neighbors_X, neighbors_Omega)
     },
-    
-    # color_genes / color_samples can be: 
+
+    # color_genes / color_samples can be:
     # - a set of names to be highlighted
     # - a vector of values, the same length as the number of genes
     # - a name of a column from annotation, default is zero_distance
@@ -257,13 +257,13 @@ Linseed2Solver <- R6Class(
         }
       }
       private$project_first()
-      
+
       color_genes <- private$resolve_color_col(color_genes, T)
       color_samples <- private$resolve_color_col(color_samples, F)
-      
+
       plt_X <- plot_projection_points(self$st$proj, use_dims, "X", color = color_genes$color, color_name = color_genes$name, ...)
       plt_Omega <- plot_projection_points(self$st$proj, use_dims, "Omega", color = color_samples$color, color_name = color_samples$name, ...)
-      
+
       if (!is.null(self$st$solution_proj)) {
         if (("optim_history" %in% names(self$st$solution_proj)) && with_history) {
           plt_X <- plt_X %>% add_solution_history(
@@ -281,7 +281,7 @@ Linseed2Solver <- R6Class(
             colored = is.null(color_samples$name)
           )
         }
-        
+
         if (with_solution) {
           plt_X <- plt_X %>% add_solution(
             self$st$solution_proj,
@@ -289,7 +289,7 @@ Linseed2Solver <- R6Class(
             use_dims = use_dims,
             spaces = "X"
           )
-          
+
           plt_Omega <- plt_Omega %>% add_solution(
             self$st$solution_proj,
             self$st$proj,
@@ -298,26 +298,26 @@ Linseed2Solver <- R6Class(
           )
         }
       }
-      
+
       if (!is.null(with_legend) && with_legend) {
         plt_X <- plt_X + theme(legend.position = "right")
         plt_Omega <- plt_Omega + theme(legend.position = "right")
       }
-      
+
       plt_X <- plt_X + ggtitle(paste(self$st$proj$meta$M, "genes"))
       plt_Omega <- plt_Omega + ggtitle(paste(self$st$proj$meta$N, "samples"))
-      
+
       plotlist <- list(plt_X, plt_Omega)
       return(if (wrap) cowplot::plot_grid(plotlist = plotlist) else plotlist)
     },
-    
+
     init_solution = function(strategy = "select_x", ...) {
       private$project_first()
       private$reset_since("solution_proj")
       kwargs <- list(...)
       self$st$solution_proj <- initialize_solution(self$st$proj, strategy, kwargs)
     },
-    
+
     optim_solution = function(
       iterations = 10000,
       config = OPTIM_CONFIG_DEFAULT
@@ -330,12 +330,12 @@ Linseed2Solver <- R6Class(
         config
       )
     },
-    
+
     plot_error_history = function() {
       private$optimize_first()
       plot_errors(self$st$solution_proj)
     },
-    
+
     finalize_solution = function() {
       private$initialize_first()
       solution_scaled <- reverse_solution_projection(self$st$solution_proj, self$st$proj)
@@ -346,11 +346,11 @@ Linseed2Solver <- R6Class(
       )
       self$st$solution$W[self$st$solution$W < 0] <- 0
       self$st$solution$H[self$st$solution$H < 0] <- 0
-      
+
       self$st$marker_genes <- get_signature_markers(self$st$solution$W)
       return(self$st$solution)
     },
-    
+
     plot_solution_distribution = function() {
       cowplot::plot_grid(plotlist = list(
         plot_proportions_distribution(self$get_solution()$H) + ggtitle(
@@ -369,11 +369,11 @@ Linseed2Solver <- R6Class(
         )
       ))
     },
-    
+
     set_display_dims = function(display_dims) {
       private$display_dims <- display_dims
     },
-    
+
     ##### Saving to/Loading from files #####
     set_save_dir = function(new_dir_path) {
       if (!dir.exists(new_dir_path)) {
@@ -381,11 +381,11 @@ Linseed2Solver <- R6Class(
       }
       private$save_dir <- normalizePath(new_dir_path)
     },
-    
+
     get_save_dir = function() {
       return(private$save_dir)
     },
-    
+
     getset_save_dir = function(new_dir_path = NULL) {
       if (is.null(private$save_dir)) {
         if (is.null(new_dir_path)) stop("Specify save_dir or call set_save_dir")
@@ -395,7 +395,7 @@ Linseed2Solver <- R6Class(
       }
       return(private$save_dir)
     },
-    
+
     save_state = function(save_dir = NULL) {
       out_dir <- self$getset_save_dir(save_dir)
       saveRDS(self$st, file.path(out_dir, "linseed2_state.rds"))
@@ -403,7 +403,7 @@ Linseed2Solver <- R6Class(
         fpath <- file.path(out_dir, "linseed2_umap_X.uwot")
         if (file.exists(fpath)) file.remove(fpath)
         uwot::save_uwot(self$st$proj$umap$model$X, fpath)
-        
+
         fpath <- file.path(out_dir, "linseed2_umap_Omega.uwot")
         if (file.exists(fpath)) file.remove(fpath)
         uwot::save_uwot(self$st$proj$umap$model$Omega, fpath)
@@ -413,7 +413,7 @@ Linseed2Solver <- R6Class(
       }
       return(invisible())
     },
-    
+
     save_solution = function(save_dir = NULL) {
       private$finalize_first()
       out_dir <- self$getset_save_dir(save_dir)
@@ -422,7 +422,7 @@ Linseed2Solver <- R6Class(
       write.table(W, file.path(out_dir, "basis.tsv"), sep = "\t", quote = F, row.names = F)
       write.table(H, file.path(out_dir, "proportions.tsv"), sep = "\t", quote = F, row.names = F)
     },
-    
+
     load_state = function(input_dir = NULL) {
       if (is.null(input_dir)) {
         if (!is.null(private$save_dir)) {
@@ -437,7 +437,7 @@ Linseed2Solver <- R6Class(
         self$st$proj$umap$model$Omega <- uwot::load_uwot(file.path(input_dir, "linseed2_umap_Omega.uwot"))
       }
     },
-    
+
     generate_summary = function(
       save_dir = NULL,
       seurat_obj = NULL,
@@ -447,11 +447,11 @@ Linseed2Solver <- R6Class(
 
       rmd_path <- system.file("extdata", "solver_summary.Rmd", package = "linseed2")
       output_file <- file.path(out_dir, "linseed2_solver_summary.html")
-      
+
       old_wd <- getwd()
       on.exit(setwd(old_wd), add = TRUE)
       setwd(out_dir)
-      
+
       rmarkdown::render(
         input = rmd_path,
         output_file = output_file,
@@ -465,7 +465,7 @@ Linseed2Solver <- R6Class(
         self$save_solution(out_dir)
       }
     },
-    
+
     ##### Getters #####
     get_data = function() {
       private$set_data_first()
@@ -497,7 +497,7 @@ Linseed2Solver <- R6Class(
       private$finalize_first()
       return(rownames(self$st$solution$H))
     },
-    
+
     get_marker_genes = function() {
       private$finalize_first()
       return(self$st$marker_genes)
