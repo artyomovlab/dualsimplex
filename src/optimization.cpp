@@ -1,4 +1,5 @@
 #include "optimization.h"
+
 #include "matrix_utils.h"
 #include "nnls.h"
 
@@ -36,9 +37,7 @@ arma::uvec update_idx(const arma::mat& prev_X, const arma::mat& new_X, const dou
     return new_idx;
 }
 
-arma::mat hinge_der_proportions_C__(const arma::mat& H,
-                                    const arma::mat& R,
-                                    double precision_) {
+arma::mat hinge_der_proportions_C__(const arma::mat& H, const arma::mat& R, double precision_) {
     int m = H.n_rows;
     int n = H.n_cols;
 
@@ -90,7 +89,7 @@ Rcpp::List calcErrors(const arma::mat& X,
                       const arma::mat& Omega,
                       const arma::mat& D_w,
                       const arma::mat& D_h,
-                      const arma::mat& V_row,
+                      const arma::mat& SVRt,
                       const arma::mat& R,
                       const arma::mat& S,
                       const double coef_,
@@ -100,75 +99,79 @@ Rcpp::List calcErrors(const arma::mat& X,
                       const double coef_hinge_W,
                       const double coef_pos_D_h,
                       const double coef_pos_D_w) {
-    arma::mat V__ = S * V_row * R.t();
     arma::mat D_w_diag = diagmat(D_w);
 
-    double error_ = pow(norm(V__ - Omega * D_w_diag * X, "fro"), 2.0);
-    double orig_deconv_error = pow(norm(V_row - S.t() * Omega * D_w_diag * X * R, "fro"), 2);
+    double deconv_error = pow(norm(SVRt - Omega * D_w_diag * X, "fro"), 2.0);
+    // don't calculate since it is time consuming, should deliver the same minimum as th new one
+    // double orig_deconv_error = pow(norm(V_row - S.t() * Omega * D_w_diag * X * R, "fro"), 2);
     double lambda_error = coef_ * coef_hinge_H * hinge_C__(X * R);
     double beta_error = coef_ * coef_hinge_W * hinge_C__(S.t() * Omega);
     arma::mat A = arma::sum(R, 1);
     arma::mat B = arma::sum(S, 1);
     double D_h_error = coef_pos_D_h * pow(norm(X.t() * D_h - A, "fro"), 2);
     double D_w_error = coef_pos_D_w * pow(norm(Omega * D_w - B, "fro"), 2);
-    double new_error = error_ + lambda_error + beta_error + D_h_error + D_w_error;
+    double new_error = deconv_error + lambda_error + beta_error + D_h_error + D_w_error;
 
-    return Rcpp::List::create(Rcpp::Named("error_") = error_,
+    return Rcpp::List::create(Rcpp::Named("deconv_error") = deconv_error,
                               Rcpp::Named("lambda_error") = lambda_error,
                               Rcpp::Named("beta_error") = beta_error,
                               Rcpp::Named("D_h_error") = D_h_error,
                               Rcpp::Named("D_w_error") = D_w_error,
-                              Rcpp::Named("new_error") = new_error,
-                              Rcpp::Named("orig_deconv_error") = orig_deconv_error);
+                              Rcpp::Named("total_error") = new_error);
 }
 
-arma::field<arma::mat> derivative_stage2(const arma::mat& X,
-                                         const arma::mat& Omega,
-                                         const arma::mat& D_w,
-                                         const arma::mat& V_row,
-                                         const arma::mat& R,
-                                         const arma::mat& S,
-                                         const double coef_der_X,
-                                         const double coef_der_Omega,
-                                         const double coef_hinge_H,
-                                         const double coef_hinge_W,
-                                         const double coef_pos_D_h,
-                                         const double coef_pos_D_w,
-                                         const int cell_types,
-                                         const double N,
-                                         const double M,
-                                         const int global_iterations,
-                                         arma::mat& errors_statistics,
-                                         const int start_idx,
-                                         arma::mat& points_statistics_X,
-                                         arma::mat& points_statistics_Omega,
-                                         const double mean_radius_X,
-                                         const double mean_radius_Omega,
-                                         const double r_const_X,
-                                         const double r_const_Omega,
-                                         const double thresh) {
+Rcpp::List derivative_stage2(const arma::mat& X,
+                             const arma::mat& Omega,
+                             const arma::mat& D_w,
+                             const arma::mat& SVRt,
+                             const arma::mat& R,
+                             const arma::mat& S,
+                             const double coef_der_X,
+                             const double coef_der_Omega,
+                             const double coef_hinge_H,
+                             const double coef_hinge_W,
+                             const double coef_pos_D_h,
+                             const double coef_pos_D_w,
+                             const int cell_types,
+                             const double N,
+                             const double M,
+                             const int iterations,
+                             const double mean_radius_X,
+                             const double mean_radius_Omega,
+                             const double r_const_X,
+                             const double r_const_Omega,
+                             const double thresh) {
+    arma::mat errors_statistics(iterations, 9, arma::fill::zeros);
+    arma::mat points_statistics_X(iterations, cell_types * cell_types, arma::fill::zeros);
+    arma::mat points_statistics_Omega(iterations, cell_types * cell_types, arma::fill::zeros);
+
     arma::mat new_X = X;
     arma::mat new_Omega = Omega;
     arma::mat new_D_w = D_w;
     arma::mat new_D_h = new_D_w * (N / M);
     arma::mat jump_X, jump_Omega;
 
-    arma::mat V__ = S * V_row * R.t();
-    arma::mat B = join_cols(arma::vectorise(V__), coef_pos_D_w * arma::sum(S, 1));
-    arma::mat C = join_cols(arma::vectorise(V__), coef_pos_D_h * arma::sum(R, 1));
+    arma::vec vectorised_SVRt = arma::vectorise(SVRt);
+    arma::colvec sum_rows_R = arma::sum(R, 1);
+    arma::colvec sum_rows_S = arma::sum(S, 1);
+
+    arma::mat B = join_cols(vectorised_SVRt, coef_pos_D_w * sum_rows_S);
+    arma::mat C = join_cols(vectorised_SVRt, coef_pos_D_h * sum_rows_R);
     arma::mat der_X, der_Omega;
 
-    for (int itr_ = start_idx; itr_ < global_iterations + start_idx; itr_++) {
+    for (int itr_ = 0; itr_ < iterations; itr_++) {
         bool has_jump_X = false;
         bool has_jump_Omega = false;
+
         // derivative X
         der_X =
-            -2 * (diagmat(new_D_w) * new_Omega.t() * (V__ - new_Omega * diagmat(new_D_w) * new_X));
+            -2 * (diagmat(new_D_w) * new_Omega.t() * (SVRt - new_Omega * diagmat(new_D_w) * new_X));
         der_X += coef_hinge_H * hinge_der_proportions_C__(new_X * R, R);
-        der_X += coef_pos_D_h * 2 * new_D_h * (new_X.t() * new_D_h - arma::sum(R, 1)).t();
+        der_X += coef_pos_D_h * 2 * new_D_h * (new_X.t() * new_D_h - sum_rows_R).t();
         der_X.col(0).zeros();
         der_X = correctByNorm(der_X) * mean_radius_X;
 
+        // cosine threshold correction if needed
         if (thresh > 0) {
             arma::mat tmp_X = (new_X - coef_der_X * der_X).t();
             arma::mat tmp_X_2 = (new_X).t();
@@ -178,9 +181,9 @@ arma::field<arma::mat> derivative_stage2(const arma::mat& X,
                 der_X.rows(idx).zeros();
             }
         }
-
+        // Update X
         new_X = new_X - coef_der_X * der_X;
-
+        // threshold for length of the new X
         if (r_const_X > 0) {
             jump_X = jump_norm(new_X, r_const_X);
             new_X = new_X % jump_X;
@@ -197,9 +200,9 @@ arma::field<arma::mat> derivative_stage2(const arma::mat& X,
 
         // derivative Omega
         der_Omega =
-            -2 * (V__ - new_Omega * diagmat(new_D_w) * new_X) * new_X.t() * diagmat(new_D_w);
+            -2 * (SVRt - new_Omega * diagmat(new_D_w) * new_X) * new_X.t() * diagmat(new_D_w);
         der_Omega += coef_hinge_W * hinge_der_basis_C__(S.t() * new_Omega, S);
-        der_Omega += coef_pos_D_w * 2 * (new_Omega * new_D_w - arma::sum(S, 1)) * new_D_w.t();
+        der_Omega += coef_pos_D_w * 2 * (new_Omega * new_D_w - sum_rows_S) * new_D_w.t();
         der_Omega.row(0).zeros();
         der_Omega = correctByNorm(der_Omega) * mean_radius_Omega;
 
@@ -236,29 +239,29 @@ arma::field<arma::mat> derivative_stage2(const arma::mat& X,
 
         arma::uword neg_props = getNegative(new_X * R);
         arma::uword neg_basis = getNegative(S.t() * new_Omega);
-        double sum_ = accu(new_D_w) / V_row.n_rows;
+        double sum_ = accu(new_D_w) / M;
 
-        Rcpp::List err_ = calcErrors(new_X,
-                                     new_Omega,
-                                     new_D_w,
-                                     new_D_h,
-                                     V_row,
-                                     R,
-                                     S,
-                                     1,
-                                     coef_der_X,
-                                     coef_der_Omega,
-                                     coef_hinge_H,
-                                     coef_hinge_W,
-                                     coef_pos_D_h,
-                                     coef_pos_D_w);
-        errors_statistics.row(itr_) = arma::rowvec{err_["error_"],
-                                                   err_["lambda_error"],
-                                                   err_["beta_error"],
-                                                   err_["D_h_error"],
-                                                   err_["D_w_error"],
-                                                   err_["new_error"],
-                                                   err_["orig_deconv_error"],
+        Rcpp::List current_errors = calcErrors(new_X,
+                                               new_Omega,
+                                               new_D_w,
+                                               new_D_h,
+                                               SVRt,
+                                               R,
+                                               S,
+                                               1,
+                                               coef_der_X,
+                                               coef_der_Omega,
+                                               coef_hinge_H,
+                                               coef_hinge_W,
+                                               coef_pos_D_h,
+                                               coef_pos_D_w);
+
+        errors_statistics.row(itr_) = arma::rowvec{current_errors["deconv_error"],
+                                                   current_errors["lambda_error"],
+                                                   current_errors["beta_error"],
+                                                   current_errors["D_h_error"],
+                                                   current_errors["D_w_error"],
+                                                   current_errors["total_error"],
                                                    neg_props,
                                                    neg_basis,
                                                    sum_};
@@ -266,14 +269,11 @@ arma::field<arma::mat> derivative_stage2(const arma::mat& X,
         points_statistics_Omega.row(itr_) = new_Omega.as_row();
     }
 
-    arma::field<arma::mat> ret_(7, 1);
-    ret_(0, 0) = new_X;
-    ret_(1, 0) = new_Omega;
-    ret_(2, 0) = new_D_w;
-    ret_(3, 0) = new_D_h;
-    ret_(4, 0) = errors_statistics;
-    ret_(5, 0) = points_statistics_X;
-    ret_(6, 0) = points_statistics_Omega;
-
-    return ret_;
+    return Rcpp::List::create(Rcpp::Named("new_X") = new_X,
+                              Rcpp::Named("new_Omega") = new_Omega,
+                              Rcpp::Named("new_D_w") = new_D_w,
+                              Rcpp::Named("new_D_h") = new_D_h,
+                              Rcpp::Named("errors_statistics") = errors_statistics,
+                              Rcpp::Named("points_statistics_X") = points_statistics_X,
+                              Rcpp::Named("points_statistics_Omega") = points_statistics_Omega);
 }
