@@ -89,7 +89,7 @@ Rcpp::List reverse_sinkhorn_c_2(const arma::mat& result_H_row,
     arma::mat W_1 = W_2 * D_w_1_inv;
     arma::mat D_h_0_inv_pred_vec = nnls_C__(H_1.t(), ones_like_H); // final Dh0 could be found through the NNLS
     arma::mat H_0 = arma::diagmat(D_h_0_inv_pred_vec) * H_1;
-    arma::mat W_0 = arma::diagmat(1 / D_vs_row.col(0)) * H_1 * arma::diagmat(1/D_h_0_inv_pred_vec);
+    arma::mat W_0 = arma::diagmat(1 / D_vs_row.col(0)) * W_1 * arma::diagmat(1/D_h_0_inv_pred_vec);
 
     return Rcpp::List::create(Rcpp::Named("W") = W_0,
                               Rcpp::Named("H") = H_0);
