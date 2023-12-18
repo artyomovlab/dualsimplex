@@ -86,7 +86,7 @@ Rcpp::List reverse_sinkhorn_c_2(const arma::mat& result_H_row,
 
     temp_Mat = H_2 *  arma::diagmat(1 / D_vs_col.col(0));
     arma::mat D_w_1_inv =  arma::diagmat(arma::sum(temp_Mat, 1));// row normalizing matrix
-    arma::mat W_1 = W_2 * D_w_1_inv_vec;
+    arma::mat W_1 = W_2 * D_w_1_inv;
     arma::mat D_h_0_inv_pred_vec = nnls_C__(H_1.t(), ones_like_H); // final Dh0 could be found through the NNLS
     arma::mat H_0 = arma::diagmat(D_h_0_inv_pred_vec) * H_1;
     arma::mat W_0 = arma::diagmat(1 / D_vs_row.col(0)) * H_1 * arma::diagmat(1/D_h_0_inv_pred_vec);
