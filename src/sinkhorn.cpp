@@ -62,8 +62,6 @@ Rcpp::List reverse_sinkhorn_c_2(const arma::mat& result_H_row,
     arma::vec D_x_inv_vec(W_col.n_cols, arma::fill::zeros);
     arma::vec D_z_vec(H_row.n_rows, arma::fill::zeros);
 
-
-
     for (int i = iterations - 1; i >= 0; i--) {
         // step back in row normalized matrices H
         if (i != iterations - 1) {
@@ -73,23 +71,20 @@ Rcpp::List reverse_sinkhorn_c_2(const arma::mat& result_H_row,
         }
         // step back in col normalized matrces W
         if (i != 0) {
-            temp_Mat = arma::diagmat(1 / D_vs_row.col(i)) * W_col;
+            temp_Mat = arma::diagmat(1 / D_vs_row.col(`i`)) * W_col;
             arma::mat D_z = arma::diagmat(1 / arma::sum(temp_Mat, 0));  // col normalizing matrix temp_Mat
             W_col = temp_Mat * D_z;
         }
     }
     arma::mat H_1 =  H_row;
     arma::mat W_2 =  W_col;
-    // got W2 and H1
-    arma::mat D_h_1 = arma::diagmat(1 / arma::sum(H_1, 0));// col normalizing matrix
-    arma::mat H_2 = H_1 * D_h_1;
+    // get Dh_0 through the NNLS
+    arma::mat D_h_0_inv_pred_vec = nnls_C__(H_1.t(), ones_like_H);
+    // get Dw_1 through the NNLS
+    arma::mat D_w_0_inv_pred_vec = nnls_C__(W_2, ones_like_W);
 
-    temp_Mat = H_2 *  arma::diagmat(1 / D_vs_col.col(0));
-    arma::mat D_w_1_inv =  arma::diagmat(arma::sum(temp_Mat, 1));// row normalizing matrix
-    arma::mat W_1 = W_2 * D_w_1_inv;
-    arma::mat D_h_0_inv_pred_vec = nnls_C__(H_1.t(), ones_like_H); // final Dh0 could be found through the NNLS
     arma::mat H_0 = arma::diagmat(D_h_0_inv_pred_vec) * H_1;
-    arma::mat W_0 = arma::diagmat(1 / D_vs_row.col(0)) * W_1 * arma::diagmat(1/D_h_0_inv_pred_vec);
+    arma::mat W_0 = arma::diagmat(1 / D_vs_row.col(0)) * W_w * arma::diagmat(D_w_0_inv_pred_vec) * arma::diagmat(1/D_h_0_inv_pred_vec);
 
     return Rcpp::List::create(Rcpp::Named("W") = W_0,
                               Rcpp::Named("H") = H_0);
