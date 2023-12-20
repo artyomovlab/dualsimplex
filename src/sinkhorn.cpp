@@ -71,7 +71,7 @@ Rcpp::List reverse_sinkhorn_c_2(const arma::mat& result_H_row,
         }
         // step back in col normalized matrces W
         if (i != 0) {
-            temp_Mat = arma::diagmat(1 / D_vs_row.col(`i`)) * W_col;
+            temp_Mat = arma::diagmat(1 / D_vs_row.col(i)) * W_col;
             arma::mat D_z = arma::diagmat(1 / arma::sum(temp_Mat, 0));  // col normalizing matrix temp_Mat
             W_col = temp_Mat * D_z;
         }
