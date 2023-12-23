@@ -149,6 +149,15 @@ Rcpp::List derivative_stage2(const arma::mat& X,
     arma::mat new_Omega = Omega;
     arma::mat new_D_w = D_w;
     arma::mat new_D_h = new_D_w * (N / M);
+
+    arma::vec Sigma = arma::diagvec(SVRt);
+    arma::vec sqrt_Sigma = arma::sqrt(Sigma);
+    arma::vec sqrt_D_w = arma::sqrt(D_w);
+
+    arma::mat new_X =  arma::diagmat(sqrt_D_w) * X * arma::diagmat(1 / sqrt_Sigma);
+    arma::mat new_Omega =  arma::diagmat(1 / sqrt_Sigma) *  Omega * arma::diagmat(sqrt_D_w);
+
+
     arma::mat jump_X, jump_Omega;
 
     arma::vec vectorised_SVRt = arma::vectorise(SVRt);
@@ -164,85 +173,39 @@ Rcpp::List derivative_stage2(const arma::mat& X,
         bool has_jump_Omega = false;
 
         // derivative X
-        der_X =
-            -2 * (diagmat(new_D_w) * new_Omega.t() * (SVRt - new_Omega * diagmat(new_D_w) * new_X));
-        der_X += coef_hinge_H * hinge_der_proportions_C__(new_X * R, R);
-        der_X += coef_pos_D_h * 2 * new_D_h * (new_X.t() * new_D_h - sum_rows_R).t();
-        der_X.col(0).zeros();
-        der_X = correctByNorm(der_X) * mean_radius_X;
+        der_X = coef_hinge_H * hinge_der_proportions_C__(new_X * arma::diagmat(sqrt_Sigma)  * R, R);
+          //  -2 * (diagmat(new_D_w) * new_Omega.t() * (SVRt - new_Omega * diagmat(new_D_w) * new_X));
+        //der_X += coef_hinge_H * hinge_der_proportions_C__(new_X * R, R);
+        //der_X += coef_pos_D_h * 2 * new_D_h * (new_X.t() * new_D_h - sum_rows_R).t();
+        der_X.col(0) = arma::mean(der_X.col(0));
 
-        // cosine threshold correction if needed
-        if (thresh > 0) {
-            arma::mat tmp_X = (new_X - coef_der_X * der_X).t();
-            arma::mat tmp_X_2 = (new_X).t();
-            arma::uvec idx = update_idx(tmp_X, tmp_X_2, thresh);
-
-            if (idx.n_elem > 0) {
-                der_X.rows(idx).zeros();
-            }
-        }
         // Update X
         new_X = new_X - coef_der_X * der_X;
         // threshold for length of the new X
-        if (r_const_X > 0) {
-            jump_X = jump_norm(new_X, r_const_X);
-            new_X = new_X % jump_X;
-        }
 
-        arma::mat vec_mtx(cell_types * cell_types, cell_types, arma::fill::zeros);
-        for (int c = 0; c < cell_types; c++) {
-            vec_mtx.col(c) = arma::vectorise(new_Omega.col(c) * new_X.row(c));
-        }
-        arma::mat A = join_cols((M / N) * vec_mtx, coef_pos_D_h * new_X.t());
-
-        new_D_h = nnls_C__(A, C);
-        new_D_w = new_D_h * (M / N);
+        new_Omega = arma::inv(new_X);
 
         // derivative Omega
-        der_Omega =
-            -2 * (SVRt - new_Omega * diagmat(new_D_w) * new_X) * new_X.t() * diagmat(new_D_w);
-        der_Omega += coef_hinge_W * hinge_der_basis_C__(S.t() * new_Omega, S);
-        der_Omega += coef_pos_D_w * 2 * (new_Omega * new_D_w - sum_rows_S) * new_D_w.t();
-        der_Omega.row(0).zeros();
-        der_Omega = correctByNorm(der_Omega) * mean_radius_Omega;
-
-        if (thresh > 0) {
-            arma::mat tmp_Omega = new_Omega - coef_der_Omega * der_Omega;
-            arma::uvec idx2 = update_idx(tmp_Omega, new_Omega, thresh);
-
-            if (idx2.n_elem > 0) {
-                der_Omega.cols(idx2).zeros();
-            }
-        }
+        der_Omega = coef_hinge_W * hinge_der_basis_C__(S.t() * arma::diagmat(sqrt_Sigma) * new_Omega, S);
+      //      -2 * (SVRt - new_Omega * diagmat(new_D_w) * new_X) * new_X.t() * diagmat(new_D_w);
+//        der_Omega += coef_hinge_W * hinge_der_basis_C__(S.t() * new_Omega, S);
+//        der_Omega += coef_pos_D_w * 2 * (new_Omega * new_D_w - sum_rows_S) * new_D_w.t();
+        der_Omega.row(0) = arma::mean(der_Omega.row(0));
+//        der_Omega = correctByNorm(der_Omega) * mean_radius_Omega;
 
         new_Omega = new_Omega - coef_der_Omega * der_Omega;
+        new_X = arma::inv(new_Omega);
 
-        if (r_const_Omega > 0) {
-            arma::mat t_Omega = new_Omega.t();
-            jump_Omega = jump_norm(t_Omega, r_const_Omega);
-            jump_Omega = jump_Omega.t();
-            // has_jump_Omega = any(jump_Omega != 1);
-            new_Omega = new_Omega % jump_Omega;
-        }
-
-        vec_mtx.fill(arma::fill::zeros);
-        A.fill(arma::fill::zeros);
-
-        for (int c = 0; c < cell_types; c++) {
-            vec_mtx.col(c) = arma::vectorise(new_Omega.col(c) * new_X.row(c));
-        }
-        A = join_cols(vec_mtx, coef_pos_D_w * new_Omega);
-
-        new_D_w = nnls_C__(A, B);
-
+        new_D_w = new_X.col(0) / sqrt_Sigma * arma::sqrt(N);
+        new_D_w = pow(new_D_w, 2);
         new_D_h = new_D_w * (N / M);
 
         arma::uword neg_props = getNegative(new_X * R);
         arma::uword neg_basis = getNegative(S.t() * new_Omega);
         double sum_ = accu(new_D_w) / M;
 
-        Rcpp::List current_errors = calcErrors(new_X,
-                                               new_Omega,
+        Rcpp::List current_errors = calcErrors(arma::diagmat(1/new_D_w) * new_X * arma::diagmat(sqrt_Sigma),
+                                               arma::diagmat(sqrt_Sigma)* new_Omega * arma::diagmat(1/new_D_w),
                                                new_D_w,
                                                new_D_h,
                                                SVRt,
@@ -269,8 +232,9 @@ Rcpp::List derivative_stage2(const arma::mat& X,
         points_statistics_Omega.row(itr_) = new_Omega.as_row();
     }
 
-    return Rcpp::List::create(Rcpp::Named("new_X") = new_X,
-                              Rcpp::Named("new_Omega") = new_Omega,
+
+    return Rcpp::List::create(Rcpp::Named("new_X") = arma::diagmat(1/new_D_w) * new_X * arma::diagmat(sqrt_Sigma),
+                              Rcpp::Named("new_Omega") = rma::diagmat(sqrt_Sigma)* new_Omega * arma::diagmat(1/new_D_w),
                               Rcpp::Named("new_D_w") = new_D_w,
                               Rcpp::Named("new_D_h") = new_D_h,
                               Rcpp::Named("errors_statistics") = errors_statistics,
