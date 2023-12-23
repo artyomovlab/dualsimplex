@@ -154,8 +154,8 @@ Rcpp::List derivative_stage2(const arma::mat& X,
     arma::vec sqrt_Sigma = arma::sqrt(Sigma);
     arma::vec sqrt_D_w = arma::sqrt(D_w);
 
-    arma::mat new_X =  arma::diagmat(sqrt_D_w) * X * arma::diagmat(1 / sqrt_Sigma);
-    arma::mat new_Omega =  arma::diagmat(1 / sqrt_Sigma) *  Omega * arma::diagmat(sqrt_D_w);
+    new_X =  arma::diagmat(sqrt_D_w) * new_X * arma::diagmat(1 / sqrt_Sigma);
+    new_Omega =  arma::diagmat(1 / sqrt_Sigma) *  new_Omega * arma::diagmat(sqrt_D_w);
 
 
     arma::mat jump_X, jump_Omega;
