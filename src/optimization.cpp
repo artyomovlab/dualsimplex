@@ -149,7 +149,7 @@ Rcpp::List derivative_stage2(const arma::mat& X,
     arma::mat new_Omega = Omega;
     arma::mat new_D_w = D_w;
     arma::mat new_D_h = new_D_w * (N / M);
-    arma::mat sqrt_N(cell_types, 1);
+    arma::mat sqrt_N(cell_types, 1, arma::fill::ones);
     sqrt_N.fill(1/sqrt(N));
 
     arma::vec Sigma = arma::diagvec(SVRt);
