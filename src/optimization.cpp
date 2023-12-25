@@ -196,6 +196,8 @@ Rcpp::List derivative_stage2(const arma::mat& X,
 //        der_Omega += coef_pos_D_w * 2 * (new_Omega * new_D_w - sum_rows_S) * new_D_w.t();
         Rcpp::Rcout << "going to manual update der_Omega" << std::endl;
         der_Omega.row(0).fill(der_Omega.at(0, 0));
+        Rcpp::Rcout << "going to manual update der_Omega" << std::endl;
+
 //        der_Omega = correctByNorm(der_Omega) * mean_radius_Omega;
 
         new_Omega = new_Omega - coef_der_Omega * der_Omega;
