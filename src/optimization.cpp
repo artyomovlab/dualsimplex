@@ -180,7 +180,7 @@ Rcpp::List derivative_stage2(const arma::mat& X,
         //der_X += coef_hinge_H * hinge_der_proportions_C__(new_X * R, R);
         //der_X += coef_pos_D_h * 2 * new_D_h * (new_X.t() * new_D_h - sum_rows_R).t();
         Rcpp::Rcout << "going to manual update der_x" << std::endl;
-        der_X.col(0) = der_X.at(0,0);
+        der_X.col(0).fill(der_X.at(0,0));
 
 
         // Update X
@@ -195,7 +195,7 @@ Rcpp::List derivative_stage2(const arma::mat& X,
 //        der_Omega += coef_hinge_W * hinge_der_basis_C__(S.t() * new_Omega, S);
 //        der_Omega += coef_pos_D_w * 2 * (new_Omega * new_D_w - sum_rows_S) * new_D_w.t();
         Rcpp::Rcout << "going to manual update der_Omega" << std::endl;
-        der_Omega.row(0) = der_Omega.at(0, 0);
+        der_Omega.row(0).fill(der_Omega.at(0, 0));
 //        der_Omega = correctByNorm(der_Omega) * mean_radius_Omega;
 
         new_Omega = new_Omega - coef_der_Omega * der_Omega;
