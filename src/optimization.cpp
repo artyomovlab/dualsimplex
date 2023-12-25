@@ -204,7 +204,7 @@ Rcpp::List derivative_stage2(const arma::mat& X,
         Rcpp::Rcout << "going to get D_w from first column" << std::endl;
         new_D_w = new_X.col(0) / sqrt_Sigma;
         Rcpp::Rcout << "delete by sqrt N" << std::endl;
-        new_D_w = new_D_w *(1/sqrt_N);
+        new_D_w = new_D_w / sqrt_N;
         Rcpp::Rcout << "Square of this" << std::endl;
         new_D_w = arma::pow(new_D_w, 2);
         new_D_h = new_D_w * (N / M);
