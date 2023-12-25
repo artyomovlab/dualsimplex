@@ -196,21 +196,23 @@ Rcpp::List derivative_stage2(const arma::mat& X,
 //        der_Omega += coef_pos_D_w * 2 * (new_Omega * new_D_w - sum_rows_S) * new_D_w.t();
         Rcpp::Rcout << "going to manual update der_Omega" << std::endl;
         der_Omega.row(0).fill(der_Omega.at(0, 0));
-        Rcpp::Rcout << "going to manual update der_Omega" << std::endl;
 
 //        der_Omega = correctByNorm(der_Omega) * mean_radius_Omega;
 
         new_Omega = new_Omega - coef_der_Omega * der_Omega;
         new_X = arma::inv(new_Omega);
-
-        new_D_w = new_X.col(0) / sqrt_Sigma * (1/sqrt_N);
+        Rcpp::Rcout << "going to get D_w from first column" << std::endl;
+        new_D_w = new_X.col(0) / sqrt_Sigma;
+        Rcpp::Rcout << "delete by sqrt N" << std::endl;
+        new_D_w = new_D_w *(1/sqrt_N)
+        Rcpp::Rcout << "Square of this" << std::endl;
         new_D_w = arma::pow(new_D_w, 2);
         new_D_h = new_D_w * (N / M);
 
         arma::uword neg_props = getNegative(new_X * R);
         arma::uword neg_basis = getNegative(S.t() * new_Omega);
         double sum_ = accu(new_D_w) / M;
-
+        Rcpp::Rcout << "Errors" << std::endl;
         Rcpp::List current_errors = calcErrors(arma::diagmat(1/new_D_w) * new_X * arma::diagmat(sqrt_Sigma),
                                                arma::diagmat(sqrt_Sigma)* new_Omega * arma::diagmat(1/new_D_w),
                                                new_D_w,
