@@ -65,7 +65,6 @@ arma::mat hinge_der_basis_C__(const arma::mat& W, const arma::mat& S, double pre
         arma::vec t = W.col(j);
         res.col(j) = arma::sum(-S.cols(find(t < -precision_)), 1);
     }
-    //res.row(0).zeros();
 
     return res;
 }
