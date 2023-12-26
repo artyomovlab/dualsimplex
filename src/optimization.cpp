@@ -245,11 +245,7 @@ Rcpp::List derivative_stage2(const arma::mat& X,
         Rcpp::Rcout <<  new_D_w_omega << std::endl;
         new_D_w = (new_D_w_x + new_D_w_omega)/2;
         Rcpp::Rcout << "Took mean of these values as " << std::endl;
-        Rcpp::Rcout << new_D_w << std::
-
-
-
-
+        Rcpp::Rcout << new_D_w << std::endl;
         //Rcpp::Rcout << "delete by sqrt N" << std::endl;
       //  Rcpp::Rcout << "Square of this" << std::endl;
        // Rcpp::Rcout << "sqrt D_w from X is " << new_D_w << std::endl;
