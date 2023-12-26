@@ -202,11 +202,12 @@ Rcpp::List derivative_stage2(const arma::mat& X,
         new_Omega = new_Omega - coef_der_Omega * der_Omega;
         new_X = arma::inv(new_Omega);
        // Rcpp::Rcout << "going to get D_w from first column" << std::endl;
-        new_D_w = new_X.col(0) % sqrt_Sigma;
+        new_D_w = (new_X.col(0) % sqrt_Sigma) % sqrt_N;
         //Rcpp::Rcout << "delete by sqrt N" << std::endl;
-        new_D_w = new_D_w % sqrt_N;
       //  Rcpp::Rcout << "Square of this" << std::endl;
+        Rcpp::Rcout << "sqrt D_w from X is " << new_D_w << std::endl;
         new_D_w = arma::pow(new_D_w, 2);
+        Rcpp::Rcout << "D_w is " << new_D_w << std::endl;
         new_D_h = new_D_w * (N / M);
         //Rcpp::Rcout << "Negative values" << std::endl;
         arma::uword neg_props = getNegative(new_X * R);
