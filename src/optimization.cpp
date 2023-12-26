@@ -180,7 +180,7 @@ Rcpp::List derivative_stage2(const arma::mat& X,
         //der_X += coef_hinge_H * hinge_der_proportions_C__(new_X * R, R);
         //der_X += coef_pos_D_h * 2 * new_D_h * (new_X.t() * new_D_h - sum_rows_R).t();
         //Rcpp::Rcout << "going to manual update der_x" << std::endl;
-        der_X.col(0).fill(der_X.at(0,0));
+        //der_X.col(0).fill(der_X.at(0,0));
 
 
         // Update X
@@ -194,17 +194,17 @@ Rcpp::List derivative_stage2(const arma::mat& X,
       //      -2 * (SVRt - new_Omega * diagmat(new_D_w) * new_X) * new_X.t() * diagmat(new_D_w);
 //        der_Omega += coef_hinge_W * hinge_der_basis_C__(S.t() * new_Omega, S);
 //        der_Omega += coef_pos_D_w * 2 * (new_Omega * new_D_w - sum_rows_S) * new_D_w.t();
-        Rcpp::Rcout << "going to manual update der_Omega" << std::endl;
-        der_Omega.row(0).fill(der_Omega.at(0, 0));
+       // Rcpp::Rcout << "going to manual update der_Omega" << std::endl;
+        //der_Omega.row(0).fill(der_Omega.at(0, 0));
 
 //        der_Omega = correctByNorm(der_Omega) * mean_radius_Omega;
 
         new_Omega = new_Omega - coef_der_Omega * der_Omega;
         new_X = arma::inv(new_Omega);
        // Rcpp::Rcout << "going to get D_w from first column" << std::endl;
-        new_D_w = new_X.col(0) / sqrt_Sigma;
+        new_D_w = new_X.col(0) % sqrt_Sigma;
         //Rcpp::Rcout << "delete by sqrt N" << std::endl;
-        new_D_w = new_D_w / sqrt_N;
+        new_D_w = new_D_w % sqrt_N;
       //  Rcpp::Rcout << "Square of this" << std::endl;
         new_D_w = arma::pow(new_D_w, 2);
         new_D_h = new_D_w * (N / M);
