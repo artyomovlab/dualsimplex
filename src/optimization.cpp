@@ -46,7 +46,7 @@ arma::mat hinge_der_proportions_C__(const arma::mat& H, const arma::mat& R, doub
     for (int i = 0; i < m; i++) {
         for (int j = 0; j < n; j++) {
             if (H(i, j) < 0) {
-                for (int k = 1; k < m; k++) {
+                for (int k = 0; k < m; k++) {
                     TMP(j, k + i * m) = -R(k, j);
                 }
             }
