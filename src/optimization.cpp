@@ -170,6 +170,8 @@ Rcpp::List derivative_stage2(const arma::mat& X,
     arma::mat C = join_cols(vectorised_SVRt, coef_pos_D_h * sum_rows_R);
     arma::mat der_X, der_Omega;
 
+    Rcpp::Rcout << "Original X tilda" << new_X << std::endl;
+
     for (int itr_ = 0; itr_ < iterations; itr_++) {
         bool has_jump_X = false;
         bool has_jump_Omega = false;
@@ -195,6 +197,7 @@ Rcpp::List derivative_stage2(const arma::mat& X,
 
         // derivative Omega
         der_Omega = coef_hinge_W * hinge_der_basis_C__(S.t() * arma::diagmat(sqrt_Sigma) * new_Omega, S);
+        Rcpp::Rcout << "der_Omega" << der_Omega << std::endl;
       //      -2 * (SVRt - new_Omega * diagmat(new_D_w) * new_X) * new_X.t() * diagmat(new_D_w);
 //        der_Omega += coef_hinge_W * hinge_der_basis_C__(S.t() * new_Omega, S);
 //        der_Omega += coef_pos_D_w * 2 * (new_Omega * new_D_w - sum_rows_S) * new_D_w.t();
