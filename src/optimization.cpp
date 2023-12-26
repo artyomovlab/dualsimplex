@@ -209,6 +209,7 @@ Rcpp::List derivative_stage2(const arma::mat& X,
 //        Rcpp::Rcout << "now X is " << std::endl;
 //        Rcpp::Rcout << new_X << std::endl;
         new_Omega = arma::inv(new_X);
+        new_D_w_x = sqrt_Sigma % new_X.col(0) % sqrt_N;
         // derivative Omega
 //        der_Omega = -2 * (SVRt - new_Omega * new_X) * new_X.t();
 //        der_Omega += coef_hinge_W * hinge_der_basis_C__(S.t() * new_Omega, S);
@@ -226,7 +227,6 @@ Rcpp::List derivative_stage2(const arma::mat& X,
 //        Rcpp::Rcout << new_Omega << std::endl;
 
        // Rcpp::Rcout << "going to get D_w from first column" << std::endl;
-        new_D_w_x = sqrt_Sigma % new_X.col(0) % sqrt_N;
         new_D_w_omega = sqrt_Sigma % new_Omega.row(0).as_col() % sqrt_M;
 //        Rcpp::Rcout << "based on changed X sqrt D should be" << std::endl;
 //        Rcpp::Rcout <<  new_D_w_x << std::endl;
