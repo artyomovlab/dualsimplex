@@ -209,7 +209,7 @@ Rcpp::List derivative_stage2(const arma::mat& X,
         new_D_w = arma::pow(new_D_w, 2);
         Rcpp::Rcout << "D_w is " << new_D_w << std::endl;
         new_D_h = new_D_w * (N / M);
-        Rcpp::Rcout << "D_h is " << new_D_w << std::endl;
+        Rcpp::Rcout << "D_h is " << new_D_h << std::endl;
         //Rcpp::Rcout << "Negative values" << std::endl;
         arma::uword neg_props = getNegative(new_X * R);
         arma::uword neg_basis = getNegative(S.t() * new_Omega);
