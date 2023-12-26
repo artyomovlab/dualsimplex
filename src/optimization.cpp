@@ -176,6 +176,8 @@ Rcpp::List derivative_stage2(const arma::mat& X,
 
         // derivative X
         der_X = coef_hinge_H * hinge_der_proportions_C__(new_X * arma::diagmat(sqrt_Sigma)  * R, R);
+        Rcpp::Rcout << "Der_X" << der_X << std::endl;
+
           //  -2 * (diagmat(new_D_w) * new_Omega.t() * (SVRt - new_Omega * diagmat(new_D_w) * new_X));
         //der_X += coef_hinge_H * hinge_der_proportions_C__(new_X * R, R);
         //der_X += coef_pos_D_h * 2 * new_D_h * (new_X.t() * new_D_h - sum_rows_R).t();
