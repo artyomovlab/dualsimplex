@@ -170,6 +170,7 @@ Rcpp::List derivative_stage2(const arma::mat& X,
 
     new_X =  arma::diagmat(sqrt_D_w) * new_X * arma::diagmat(1 / sqrt_Sigma);
     new_Omega =  arma::diagmat(1 / sqrt_Sigma) *  new_Omega * arma::diagmat(sqrt_D_w);
+
     Rcpp::Rcout << "Original X tilda" << std::endl;
     Rcpp::Rcout <<  new_X << std::endl;
     Rcpp::Rcout << "Original Omega tilda"  << std::endl;
@@ -192,8 +193,10 @@ Rcpp::List derivative_stage2(const arma::mat& X,
         bool has_jump_X = false;
         bool has_jump_Omega = false;
         // derivative X
-        der_X = -2 * (new_Omega.t() * (SVRt - new_Omega * new_X));
-        der_X +=  coef_hinge_H * hinge_der_proportions_C__(new_X  * R, R);
+        //der_X = -2 * (new_Omega.t() * (SVRt - new_Omega * new_X));
+        //der_X +=  coef_hinge_H * hinge_der_proportions_C__(new_X  * R, R);
+
+        der_X =  coef_hinge_H * hinge_der_proportions_C__(new_X  * arma::diagmat(sqrt_Sigma)  * R, R);
 //        Rcpp::Rcout << "Der_X" << std::endl;
 //        Rcpp::Rcout << der_X << std::endl;
         der_X = correctByNorm(der_X) * mean_radius_X;
@@ -201,14 +204,15 @@ Rcpp::List derivative_stage2(const arma::mat& X,
 //        Rcpp::Rcout << der_X << std::endl;
 
         // Update X
-        new_X = new_X - coef_der_X * der_X;
+        new_X = new_X - coef_der_X * der_X * arma::diagmat(1 / sqrt_Sigma);
         // threshold for length of the new X
 //        Rcpp::Rcout << "now X is " << std::endl;
 //        Rcpp::Rcout << new_X << std::endl;
 
         // derivative Omega
-        der_Omega = -2 * (SVRt - new_Omega * new_X) * new_X.t();
-        der_Omega += coef_hinge_W * hinge_der_basis_C__(S.t() * new_Omega, S);
+//        der_Omega = -2 * (SVRt - new_Omega * new_X) * new_X.t();
+//        der_Omega += coef_hinge_W * hinge_der_basis_C__(S.t() * new_Omega, S);
+        der_Omega = coef_hinge_W * hinge_der_basis_C__(S.t() * arma::diagmat(sqrt_Sigma) *new_Omega, S);
 //        Rcpp::Rcout << "Der_Omega" << std::endl;
 //        Rcpp::Rcout << der_Omega << std::endl;
 
@@ -216,13 +220,13 @@ Rcpp::List derivative_stage2(const arma::mat& X,
 //        Rcpp::Rcout << " corrected der_Omega" << std::endl;
 //        Rcpp::Rcout << der_Omega << std::endl;
 
-        new_Omega = new_Omega - coef_der_Omega * der_Omega;
+        new_Omega = new_Omega - coef_der_Omega * arma::diagmat(1 / sqrt_Sigma) * der_Omega;
 //        Rcpp::Rcout << "now Omega is " << std::endl;
 //        Rcpp::Rcout << new_Omega << std::endl;
 
        // Rcpp::Rcout << "going to get D_w from first column" << std::endl;
-        new_D_w_x = new_X.col(0) % sqrt_N;
-        new_D_w_omega = new_Omega.row(0).as_col() % sqrt_M;
+        new_D_w_x = arma::diagmat(sqrt_Sigma) % new_X.col(0) % sqrt_N;
+        new_D_w_omega = arma::diagmat(sqrt_Sigma) % new_Omega.row(0).as_col() % sqrt_M;
 //        Rcpp::Rcout << "based on changed X sqrt D should be" << std::endl;
 //        Rcpp::Rcout <<  new_D_w_x << std::endl;
 //        Rcpp::Rcout << "based on changed Omega sqrt D should be" << std::endl;
@@ -235,8 +239,8 @@ Rcpp::List derivative_stage2(const arma::mat& X,
         arma::uword neg_props = getNegative(new_X * R);
         arma::uword neg_basis = getNegative(S.t() * new_Omega);
         double sum_ = accu(new_D_w) / M;
-        Rcpp::List current_errors = calcErrors(arma::diagmat(1/new_D_w_x) * new_X,
-                                               new_Omega * arma::diagmat(1/new_D_w_omega),
+        Rcpp::List current_errors = calcErrors(arma::diagmat(1/new_D_w_x) * new_X * arma::diagmat(sqrt_Sigma),
+                                               arma::diagmat(sqrt_Sigma)* new_Omega * arma::diagmat(1/new_D_w_omega),
                                                new_D_w,
                                                new_D_h,
                                                SVRt,
@@ -261,13 +265,13 @@ Rcpp::List derivative_stage2(const arma::mat& X,
                                                    sum_};
 
 
-        points_statistics_X.row(itr_) = (arma::diagmat(1/new_D_w_x) * new_X).as_row();
-        points_statistics_Omega.row(itr_) = (new_Omega * arma::diagmat(1/new_D_w_omega)).as_row();
+        points_statistics_X.row(itr_) = (arma::diagmat(1/new_D_w_x) * new_X * arma::diagmat(sqrt_Sigma)).as_row();
+        points_statistics_Omega.row(itr_) = (arma::diagmat(sqrt_Sigma) * new_Omega * arma::diagmat(1/new_D_w_omega)).as_row();
     }
 
 
-    return Rcpp::List::create(Rcpp::Named("new_X") = arma::diagmat(1/new_D_w_x) * new_X,
-                              Rcpp::Named("new_Omega") = new_Omega * arma::diagmat(1/new_D_w_omega),
+    return Rcpp::List::create(Rcpp::Named("new_X") = arma::diagmat(1/new_D_w_x) * new_X* arma::diagmat(sqrt_Sigma),
+                              Rcpp::Named("new_Omega") = * arma::diagmat(sqrt_Sigma) * new_Omega * arma::diagmat(1/new_D_w_omega),
                               Rcpp::Named("new_D_w") = new_D_w,
                               Rcpp::Named("new_D_h") = new_D_h,
                               Rcpp::Named("errors_statistics") = errors_statistics,
