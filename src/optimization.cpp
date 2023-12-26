@@ -271,7 +271,7 @@ Rcpp::List derivative_stage2(const arma::mat& X,
 
 
     return Rcpp::List::create(Rcpp::Named("new_X") = arma::diagmat(1/new_D_w_x) * new_X* arma::diagmat(sqrt_Sigma),
-                              Rcpp::Named("new_Omega") = * arma::diagmat(sqrt_Sigma) * new_Omega * arma::diagmat(1/new_D_w_omega),
+                              Rcpp::Named("new_Omega") = arma::diagmat(sqrt_Sigma) * new_Omega * arma::diagmat(1/new_D_w_omega),
                               Rcpp::Named("new_D_w") = new_D_w,
                               Rcpp::Named("new_D_h") = new_D_h,
                               Rcpp::Named("errors_statistics") = errors_statistics,
