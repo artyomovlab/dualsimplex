@@ -187,8 +187,6 @@ Rcpp::List derivative_stage2(const arma::mat& X,
         //der_X.col(0).fill(der_X.at(0,0));
         //der_X = correctByNorm(der_X) * mean_radius_X;
 
-
-
         // Update X
         new_X = new_X - coef_der_X * der_X;
         // threshold for length of the new X
