@@ -240,7 +240,7 @@ Rcpp::List derivative_stage2(const arma::mat& X,
        // Rcpp::Rcout << "going to get D_w from first column" << std::endl;
         new_D_w = (new_X.col(0) % sqrt_Sigma) % sqrt_N;
         new_D_w_x = (new_X.col(0) % sqrt_Sigma) % sqrt_N;
-        new_D_w_omega = (new_Omega.row(0).t % sqrt_Sigma) % sqrt_M;
+        new_D_w_omega = (new_Omega.row(0).as_col() % sqrt_Sigma) % sqrt_M;
         Rcpp::Rcout << "based on changed X sqrt D should be" << std::endl;
         Rcpp::Rcout <<  new_D_w_x << std::endl;
         Rcpp::Rcout << "based on changed Omega sqrt D should be" << std::endl;
