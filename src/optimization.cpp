@@ -150,7 +150,9 @@ Rcpp::List derivative_stage2(const arma::mat& X,
     arma::mat final_Omega = Omega;
     arma::mat new_D_w = D_w;
     arma::mat new_D_w_x = D_w;
+    arma::mat new_D_w_x_sqrt = arma::sqrt(new_D_w_x =);
     arma::mat new_D_w_omega = D_w;
+    arma::mat new_D_w_omega_sqrt = arma::sqrt(new_D_w_omega);
     arma::mat new_D_h = new_D_w * (N / M);
     arma::mat sqrt_N(cell_types, 1, arma::fill::ones);
     arma::mat sqrt_M(cell_types, 1, arma::fill::ones);
@@ -211,7 +213,8 @@ Rcpp::List derivative_stage2(const arma::mat& X,
         Rcpp::Rcout << "now X tilda is " << std::endl;
         Rcpp::Rcout << new_X << std::endl;
         new_Omega = arma::inv(new_X);
-        new_D_w_x = sqrt_Sigma % new_X.col(0) % sqrt_N;
+        new_D_w_x_sqrt = sqrt_Sigma % new_X.col(0) % sqrt_N;
+        new_D_w_x = arma::pow(new_D_w_x_sqrt, 2);
         // derivative Omega
 //        der_Omega = -2 * (SVRt - new_Omega * new_X) * new_X.t();
 //        der_Omega += coef_hinge_W * hinge_der_basis_C__(S.t() * new_Omega, S);
@@ -229,7 +232,8 @@ Rcpp::List derivative_stage2(const arma::mat& X,
         Rcpp::Rcout << new_Omega << std::endl;
 
        // Rcpp::Rcout << "going to get D_w from first column" << std::endl;
-        new_D_w_omega = sqrt_Sigma % new_Omega.row(0).as_col() % sqrt_M;
+        new_D_w_omega_sqrt = sqrt_Sigma % new_Omega.row(0).as_col() % sqrt_M;
+        new_D_w_omega = arma::pow(new_D_w_omega_sqrt, 2);
         Rcpp::Rcout << "based on changed X sqrt D should be" << std::endl;
         Rcpp::Rcout <<  new_D_w_x << std::endl;
         Rcpp::Rcout << "based on changed Omega sqrt D should be" << std::endl;
@@ -244,10 +248,10 @@ Rcpp::List derivative_stage2(const arma::mat& X,
         double sum_ = accu(new_D_w) / M;
 
         // result X and omega
-        final_X = arma::diagmat(1/new_D_w_x) * new_X * arma::diagmat(sqrt_Sigma);
+        final_X = arma::diagmat(1/new_D_w_x_sqrt) * new_X * arma::diagmat(sqrt_Sigma);
         Rcpp::Rcout << "now final X is " << std::endl;
         Rcpp::Rcout << final_X << std::endl;
-        final_Omega = arma::diagmat(sqrt_Sigma)* new_Omega * arma::diagmat(1/new_D_w_omega);
+        final_Omega = arma::diagmat(sqrt_Sigma)* new_Omega * arma::diagmat(1/new_D_w_omega_sqrt);
         Rcpp::Rcout << "now final Omega is " << std::endl;
         Rcpp::Rcout << final_Omega << std::endl;
 
