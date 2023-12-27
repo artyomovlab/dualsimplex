@@ -231,7 +231,7 @@ Rcpp::List derivative_stage2(const arma::mat& X,
         Rcpp::Rcout << (new_Omega.row(0).as_col() / new_D_w_omega_sqrt)* sqrt_Sigma.at(0) << std::endl;
 
         // correct D_w to make it the same matrix
-        new_D_w = new_D_w_x_sqrt * new_D_w_omega_sqrt;
+        new_D_w = new_D_w_x_sqrt % new_D_w_omega_sqrt;
         new_D_w_sqrt = arma::sqrt(new_D_w);
         new_X = arma::diagmat(1/new_D_w_x_sqrt)* arma::diagmat(new_D_w_sqrt) * new_X;
         new_Omega = new_Omega * arma::diagmat(1/new_D_w_omega_sqrt) * arma::diagmat(new_D_w_sqrt);
@@ -281,7 +281,7 @@ Rcpp::List derivative_stage2(const arma::mat& X,
         Rcpp::Rcout << (new_Omega.row(0).as_col() / new_D_w_x_sqrt)* sqrt_Sigma.at(0) << std::endl;
 
         // correct D_w to make it the same matrix
-        new_D_w = new_D_w_x_sqrt * new_D_w_omega_sqrt;
+        new_D_w = new_D_w_x_sqrt % new_D_w_omega_sqrt;
         new_D_w_sqrt = arma::sqrt(new_D_w);
         new_X = arma::diagmat(1/new_D_w_x_sqrt)* arma::diagmat(new_D_w_sqrt) * new_X;
         new_Omega = new_Omega * arma::diagmat(1/new_D_w_omega_sqrt) * arma::diagmat(new_D_w_sqrt);
