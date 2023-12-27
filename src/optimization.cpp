@@ -244,10 +244,10 @@ Rcpp::List derivative_stage2(const arma::mat& X,
         double sum_ = accu(new_D_w) / M;
 
         // result X and omega
-        final_X = arma::diagmat(1/new_D_w_x) * new_X * arma::diagmat(sqrt_Sigma)
+        final_X = arma::diagmat(1/new_D_w_x) * new_X * arma::diagmat(sqrt_Sigma);
         Rcpp::Rcout << "now final X is " << std::endl;
         Rcpp::Rcout << final_X << std::endl;
-        final_Omega = arma::diagmat(sqrt_Sigma)* new_Omega * arma::diagmat(1/new_D_w_omega)
+        final_Omega = arma::diagmat(sqrt_Sigma)* new_Omega * arma::diagmat(1/new_D_w_omega);
         Rcpp::Rcout << "now final Omega is " << std::endl;
         Rcpp::Rcout << final_Omega << std::endl;
 
