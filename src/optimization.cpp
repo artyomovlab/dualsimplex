@@ -231,7 +231,7 @@ Rcpp::List derivative_stage2(const arma::mat& X,
         // derivative Omega
 //        der_Omega = -2 * (SVRt - new_Omega * new_X) * new_X.t();
 //        der_Omega += coef_hinge_W * hinge_der_basis_C__(S.t() * new_Omega, S);
-        der_Omega = coef_hinge_W * hinge_der_basis_C__(S.t() * arma::diagmat(sqrt_Sigma) * new_Omega, S);
+        der_Omega = coef_hinge_W * arma::diagmat(1 / sqrt_Sigma) * hinge_der_basis_C__(S.t() * arma::diagmat(sqrt_Sigma) * new_Omega, S);
         Rcpp::Rcout << "Der_Omega" << std::endl;
         Rcpp::Rcout << der_Omega << std::endl;
 
@@ -239,7 +239,7 @@ Rcpp::List derivative_stage2(const arma::mat& X,
         Rcpp::Rcout << " corrected der_Omega" << std::endl;
         Rcpp::Rcout << der_Omega << std::endl;
 
-        new_Omega = new_Omega - coef_der_Omega * arma::diagmat(1 / sqrt_Sigma) * der_Omega;
+        new_Omega = new_Omega - coef_der_Omega * der_Omega;
         new_X = arma::inv(new_Omega);
         Rcpp::Rcout << "now Omega tilda is " << std::endl;
         Rcpp::Rcout << new_Omega << std::endl;
