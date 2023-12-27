@@ -219,10 +219,16 @@ Rcpp::List derivative_stage2(const arma::mat& X,
         new_D_w_x = arma::pow(new_D_w_x_sqrt, 2);
         Rcpp::Rcout << "based on step changed X D should be" << std::endl;
         Rcpp::Rcout <<  new_D_w_x << std::endl;
+        Rcpp::Rcout << "Check that we got sqrt(N) in column" << std::endl;
+        Rcpp::Rcout << (new_X.col(0) / new_D_w_x_sqrt)* sqrt_Sigma.at(0) << std::endl;
+
         new_D_w_omega_sqrt =  new_Omega.row(0).as_col() * sqrt_Sigma.at(0) * sqrt(M);
         new_D_w_omega = arma::pow(new_D_w_omega_sqrt, 2);
         Rcpp::Rcout << "based on inv X, Omega D should be" << std::endl;
         Rcpp::Rcout <<  new_D_w_omega << std::endl;
+        Rcpp::Rcout << "Check that we got sqrt(M) in row" << std::endl;
+        Rcpp::Rcout << (new_Omega.row(0).as_col() / new_D_w_omega_sqrt)* sqrt_Sigma.at(0) << std::endl;
+
 
         // derivative Omega
 //        der_Omega = -2 * (SVRt - new_Omega * new_X) * new_X.t();
