@@ -154,14 +154,10 @@ Rcpp::List derivative_stage2(const arma::mat& X,
     arma::mat new_D_w_omega = D_w;
     arma::mat new_D_w_omega_sqrt = arma::sqrt(new_D_w_omega);
     arma::mat new_D_h = new_D_w * (N / M);
-    arma::mat sqrt_N(cell_types, 1, arma::fill::ones);
-    arma::mat sqrt_M(cell_types, 1, arma::fill::ones);
-    sqrt_N.fill(sqrt(N));
-    sqrt_M.fill(sqrt(M));
     Rcpp::Rcout << "sqrt N" << std::endl;
-    Rcpp::Rcout <<  sqrt_N << std::endl;
+    Rcpp::Rcout <<  sqrt(N) << std::endl;
     Rcpp::Rcout << "sqrt M"  << std::endl;
-    Rcpp::Rcout << sqrt_M << std::endl;
+    Rcpp::Rcout << sqrt(M) << std::endl;
 
     arma::vec Sigma = arma::diagvec(SVRt);
     arma::vec sqrt_Sigma = arma::sqrt(Sigma);
@@ -219,17 +215,18 @@ Rcpp::List derivative_stage2(const arma::mat& X,
         new_Omega = arma::inv(new_X);
         Rcpp::Rcout << "now Omega tilda as inv to X is" << std::endl;
         Rcpp::Rcout << new_Omega << std::endl;
-        new_D_w_x_sqrt =  new_X.col(0) % sqrt_Sigma % sqrt_N;
+        new_D_w_x_sqrt =  new_X.col(0) * sqrt_Sigma.at(0) * sqrt(N);
         new_D_w_x = arma::pow(new_D_w_x_sqrt, 2);
         Rcpp::Rcout << "based on step changed X D should be" << std::endl;
         Rcpp::Rcout <<  new_D_w_x << std::endl;
-        new_D_w_omega_sqrt = sqrt_Sigma % new_Omega.row(0).as_col() % sqrt_M;
+        new_D_w_omega_sqrt =  new_Omega.row(0).as_col() * sqrt_Sigma.at(0) * sqrt(M);
         new_D_w_omega = arma::pow(new_D_w_omega_sqrt, 2);
         Rcpp::Rcout << "based on inv X, Omega D should be" << std::endl;
         Rcpp::Rcout <<  new_D_w_omega << std::endl;
 
         // derivative Omega
 //        der_Omega = -2 * (SVRt - new_Omega * new_X) * new_X.t();
+//        der_Omega += coef_hinge_W * hinge_der_basis_C__(S.t() * new_Omega, S);
 //        der_Omega += coef_hinge_W * hinge_der_basis_C__(S.t() * new_Omega, S);
         der_Omega = coef_hinge_W * arma::diagmat(1 / sqrt_Sigma) * hinge_der_basis_C__(S.t() * arma::diagmat(sqrt_Sigma) * new_Omega, S);
         Rcpp::Rcout << "Der_Omega" << std::endl;
@@ -247,12 +244,12 @@ Rcpp::List derivative_stage2(const arma::mat& X,
         Rcpp::Rcout << new_X << std::endl;
 
        // Rcpp::Rcout << "going to get D_w from first column" << std::endl;
-        new_D_w_omega_sqrt = sqrt_Sigma % new_Omega.row(0).as_col() % sqrt_M;
+        new_D_w_omega_sqrt = new_Omega.row(0).as_col() * sqrt_Sigma.at(0) * sqrt(M);
         new_D_w_omega = arma::pow(new_D_w_omega_sqrt, 2);
 
         Rcpp::Rcout << "based on step changed Omega D should be" << std::endl;
         Rcpp::Rcout <<  new_D_w_omega << std::endl;
-        new_D_w_x_sqrt =  new_X.col(0) % sqrt_Sigma % sqrt_N;
+        new_D_w_x_sqrt =  new_X.col(0) * sqrt_Sigma.at(0) * sqrt(N);
         new_D_w_x = arma::pow(new_D_w_x_sqrt, 2);
         Rcpp::Rcout << "based on inv X, Omega D should be" << std::endl;
         Rcpp::Rcout <<  new_D_w_x << std::endl;
