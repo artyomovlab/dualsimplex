@@ -233,8 +233,8 @@ Rcpp::List derivative_stage2(const arma::mat& X,
         // correct D_w to make it the same matrix
         new_D_w = new_D_w_x_sqrt * new_D_w_omega_sqrt;
         new_D_w_sqrt = arma::sqrt(new_D_w);
-        new_X = arma::diagmat(1/new_D_w_x_sqrt)* new_D_w_sqrt * new_X;
-        new_Omega = new_Omega * arma::diagmat(1/new_D_w_omega_sqrt) * new_D_w_sqrt;
+        new_X = arma::diagmat(1/new_D_w_x_sqrt)* arma::diagmat(new_D_w_sqrt) * new_X;
+        new_Omega = new_Omega * arma::diagmat(1/new_D_w_omega_sqrt) * arma::diagmat(new_D_w_sqrt);
         new_D_w_x_sqrt = new_D_w_sqrt;
         new_D_w_omega_sqrt = new_D_w_sqrt;
         Rcpp::Rcout << "Check that we got sqrt(N) in column of X" << std::endl;
@@ -273,7 +273,7 @@ Rcpp::List derivative_stage2(const arma::mat& X,
         Rcpp::Rcout << (new_Omega.row(0).as_col() / new_D_w_omega_sqrt)* sqrt_Sigma.at(0) << std::endl;
         new_D_w_x_sqrt =  new_X.col(0) * sqrt_Sigma.at(0) * sqrt(N);
         new_D_w_x = arma::pow(new_D_w_x_sqrt, 2);
-        Rcpp::Rcout << "based on inv X, Omega D should be" << std::endl;
+        Rcpp::Rcout << "based on inv Omega, X D should be" << std::endl;
         Rcpp::Rcout <<  new_D_w_x << std::endl;
         Rcpp::Rcout << "Check that we got sqrt(N) in column" << std::endl;
         Rcpp::Rcout << (new_X.col(0) / new_D_w_x_sqrt)* sqrt_Sigma.at(0) << std::endl;
@@ -283,8 +283,8 @@ Rcpp::List derivative_stage2(const arma::mat& X,
         // correct D_w to make it the same matrix
         new_D_w = new_D_w_x_sqrt * new_D_w_omega_sqrt;
         new_D_w_sqrt = arma::sqrt(new_D_w);
-        new_X = arma::diagmat(1/new_D_w_x_sqrt)* new_D_w_sqrt * new_X;
-        new_Omega = new_Omega * arma::diagmat(1/new_D_w_omega_sqrt) * new_D_w_sqrt;
+        new_X = arma::diagmat(1/new_D_w_x_sqrt)* arma::diagmat(new_D_w_sqrt) * new_X;
+        new_Omega = new_Omega * arma::diagmat(1/new_D_w_omega_sqrt) * arma::diagmat(new_D_w_sqrt);
         new_D_w_x_sqrt = new_D_w_sqrt;
         new_D_w_omega_sqrt = new_D_w_sqrt;
         Rcpp::Rcout << "Check that we got sqrt(N) in column of X" << std::endl;
