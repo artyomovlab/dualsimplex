@@ -111,9 +111,16 @@ transform_proj_umap <- function(points, proj) {
 }
 
 reverse_svd_projection <- function(X_space_pts, Omega_space_pts, proj) {
+  H_inf_ss <- X_space_pts %*% proj$meta$R
+  W_inf_gs <- t(proj$meta$S) %*% Omega_space_pts
+  H_inf_ss[H_inf_ss < 0] <- 0
+  W_inf_gs[W_inf_gs < 0] <- 0
+  W_inf_gs <-  W_inf_gs/colSums(W_inf_gs)
+  H_inf_ss <-  H_inf_ss/rowSums(H_inf_ss)
+
   return(list(
-    rownorm = X_space_pts %*% proj$meta$R,
-    colnorm = t(proj$meta$S) %*% Omega_space_pts
+    rownorm = H_inf_ss,
+    colnorm = W_inf_gs
   ))
 }
 
