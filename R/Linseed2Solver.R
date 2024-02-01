@@ -260,14 +260,14 @@ Linseed2Solver <- R6Class(
       color_genes = "zero_distance", color_samples = "zero_distance",
       use_dims = private$display_dims, with_legend = NULL,
       with_solution = TRUE, with_history = TRUE,
-      wrap = T, show_plots = T, ...
+      wrap = T, show_plots = T, from_iter = 1, to_iter = NULL, ...
     ) {
       if (inherits(use_dims, "list")) {
         plotlist <- lapply(use_dims, function(this_use_dims) {
           self$plot_projected(
             color_genes, color_samples, this_use_dims,
-            with_legend, with_solution, with_history, 
-            wrap, show_plots, ...
+            with_legend, with_solution, with_history,
+            wrap, show_plots, from_iter, to_iter, ...
           )
         })
         if (show_plots) {
@@ -292,14 +292,18 @@ Linseed2Solver <- R6Class(
             self$st$proj,
             use_dims = use_dims,
             spaces = "X",
-            colored = is.null(color_genes$name)
+            colored = is.null(color_genes$name),
+            from_iter = from_iter,
+            to_iter = to_iter
           )
           plt_Omega <- plt_Omega %>% add_solution_history(
             self$st$solution_proj,
             self$st$proj,
             use_dims = use_dims,
             spaces = "Omega",
-            colored = is.null(color_samples$name)
+            colored = is.null(color_samples$name),
+            from_iter = from_iter,
+            to_iter = to_iter
           )
         }
 
