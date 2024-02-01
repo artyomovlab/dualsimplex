@@ -24,7 +24,8 @@ bool_filter <- function(eset, by_cols, genes = T, remove_true = T) {
         paste0(
           sign,
           paste(by_cols, collapse = paste0(" & ", sign))
-        )
+        ),
+        genes
       )
   }
   return(eset)

@@ -105,8 +105,7 @@ Linseed2Solver <- R6Class(
       solution_orig = NULL,   # Auto calculated
       marker_genes = NULL     # Auto calculated
     ),
-
-    set_data = function(data, gene_anno_lists = NULL) {
+    set_data = function(data, gene_anno_lists = NULL, sample_anno_lists = NULL) {
       if (any(sapply(dimnames(data), is.null)))
         stop("Genes and samples should be named")
       if (any(sapply(dimnames(data), anyDuplicated)))
@@ -117,7 +116,7 @@ Linseed2Solver <- R6Class(
       private$reset_since("data")
       if (!inherits(data, "ExpressionSet"))
         data <- create_eset(data)
-      self$st$data <- add_default_anno(data, gene_anno_lists)
+      self$st$data <- add_default_anno(data, gene_anno_lists, sample_anno_lists)
       self$st$scaling <- sinkhorn_scale(exprs(self$st$data))
       self$st$proj_full <- svd_project(self$st$scaling, dims = NULL)
 
@@ -128,17 +127,21 @@ Linseed2Solver <- R6Class(
     },
     basic_filter = function(
       log_mad_gt = 0,
-      remove_true_cols_default = c("RPLS", "LOC", "ORF", "SNOR"),
+      remove_true_cols_default = NULL,
       remove_true_cols_additional = c(),
-      keep_true_cols = c()
+      keep_true_cols = c(),
+      genes = T
     ) {
+      if (genes && is.null(remove_true_cols_default)) {
+        remove_true_cols_default <- c("RPLS", "LOC", "ORF", "SNOR")
+      }
       private$set_data_first()
       # private$check_filtering_log()
       remove_true_cols <- c(remove_true_cols_default, remove_true_cols_additional)
       new_data <- self$get_data()
-      new_data <- threshold_filter(new_data, "log_mad", log_mad_gt, keep_lower = F)
-      new_data <- bool_filter(new_data, remove_true_cols, genes = T, remove_true = T)
-      new_data <- bool_filter(new_data, keep_true_cols, genes = T, remove_true = F)
+      new_data <- threshold_filter(new_data, "log_mad", log_mad_gt, genes = genes, keep_lower = F)
+      new_data <- bool_filter(new_data, remove_true_cols, genes = genes, remove_true = T)
+      new_data <- bool_filter(new_data, keep_true_cols, genes = genes, remove_true = F)
       self$set_data(new_data)
       private$add_filtering_log_step(
         "basic_filters",
@@ -154,7 +157,12 @@ Linseed2Solver <- R6Class(
       private$set_data_first()
       plot_proj_svd(self$st$proj_full, dims)
     },
-    plot_svd_history = function() {
+    plot_svd_history = function(
+      steps_sel = NULL,
+      n_dims = NULL,
+      cumulative = T,
+      variance = T
+    ) {
       svd_ds <- lapply(self$st$filtering_log$object_log, function(x) {
         diag(x$Sigma)
       })
@@ -164,7 +172,13 @@ Linseed2Solver <- R6Class(
       })
       svd_ds <- matrix(unlist(svd_ds), ncol = mlen, byrow = T)
       rownames(svd_ds) <- self$st$filtering_log$stats_df$step_name
-      return(plot_svd_ds_matrix(svd_ds))
+      if (!is.null(steps_sel)) {
+        svd_ds <- svd_ds[steps_sel, ]
+      }
+      if (!is.null(n_dims)) {
+        svd_ds <- svd_ds[, 1:n_dims]
+      }
+      return(plot_svd_ds_matrix(svd_ds, cumulative = cumulative, variance =  variance))
     },
     project = function(n_cell_types) {
       private$set_data_first()
@@ -178,11 +192,18 @@ Linseed2Solver <- R6Class(
         self$st$n_cell_types
       )
     },
+    plot_projection_diagnostics = function() {
+      plt1 <- self$plot_projected("zero_distance", "zero_distance")
+      plt2 <- self$plot_projected("plane_distance", "plane_distance")
+      plt3 <- self$plot_distances_distribution()
+      plt4 <- self$plot_svd()
+      return(list(plt1, plt2, plt3))
+    },
     plot_distances_distribution = function() {
       private$project_first()
       # TODO: maybe self$st$proj should be ExpressionSet with distances
-      show(plot_numeric_features(self$get_data(), features = c("plane_distance", "zero_distance"), ncol = 2))
-      show(plot_numeric_features(self$get_data(), genes = F, features = c("plane_distance", "zero_distance"), ncol = 2, bins = 30))
+      show(plot_numeric_features(self$get_data(), features = c("plane_distance", "zero_distance"), ncol = 2, labels = c("Plane distance", "Zero distance")))
+      show(plot_numeric_features(self$get_data(), genes = F, features = c("plane_distance", "zero_distance"), ncol = 2, labels = c("Plane distance", "Zero distance"), bins = 30))
       # TODO: ordered plots
       plotlist <- list(
         plot_feature_pair(self$get_data(), "plane_distance", "zero_distance", T, size = 0.1),
