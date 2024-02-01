@@ -30,6 +30,7 @@ if (is.null(lo2$st$data))
 ```{r}
 lo2$get_filtering_stats()
 ```
+
 ```{r}
 lo2$plot_svd_history()
 ```
@@ -138,6 +139,7 @@ for (ct in lo2$get_ct_names()) {
   show(lo2$plot_projected(
     ct,
     ct,
+    use_dims = NULL,
     pt_opacity = 1,
     with_legend = T,
     with_solution = T,
@@ -163,7 +165,7 @@ if (is.null(seurat_obj)) {
 
 ### Single cell enrichment
 ```{r}
-Seurat::DimPlot(seurat_obj, reduction = "umap") + ggtitle("Clusters")
+Seurat::DimPlot(seurat_obj) + ggtitle("Clusters")
 ```
 
 ```{r}
@@ -171,7 +173,7 @@ plot_height <- (ceiling(lo2$get_n_cell_types() / 4) * 5)
 ```
 
 ```{r fig.width=20, fig.height=plot_height, message=FALSE, warning=FALSE, results='hide'}
-# TODO: seurat_obj <- add_list_markers(seurat_obj, lo2$get_marker_genes())
+seurat_obj <- add_list_markers(seurat_obj, lo2$get_marker_genes())
 plot_marker_enrichment(seurat_obj, names(lo2$get_marker_genes()), limits = c(0, 1.5))
 ```
 
