@@ -262,8 +262,8 @@ Rcpp::List derivative_stage2(const arma::mat& X,
                                                    current_errors["D_h_error"],
                                                    current_errors["D_w_error"],
                                                    current_errors["total_error"],
-                                                   neg_props,
-                                                   neg_basis,
+                                                   static_cast<double>(neg_props),
+                                                   static_cast<double>(neg_basis),
                                                    sum_};
         points_statistics_X.row(itr_) = new_X.as_row();
         points_statistics_Omega.row(itr_) = new_Omega.as_row();
