@@ -103,7 +103,7 @@ transform_proj_umap <- function(points, proj) {
     ))
   }
   transformed <- points
-  transformed$X <- uwot::umap_transform(points$X[, 2:proj$meta$K], model = proj$umap$model$X)
+  transformed$X <- uwot::umap_transform(points$X[, 2:proj$meta$K], model = proj$umap$model$X, n_epochs = 100, learning_rate = 0.001)
   transformed$Omega <- uwot::umap_transform(points$Omega[, 2:proj$meta$K], model = proj$umap$model$Omega, n_epochs = 100, learning_rate = 0.001)
   colnames(transformed$X) <- c("umap_1", "umap_2")
   colnames(transformed$Omega) <- c("umap_1", "umap_2")
