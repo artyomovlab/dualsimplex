@@ -212,7 +212,7 @@ plot_errors <- function(
     "total_error"
   )
 ) {
-  to_plot <- data.frame(solution_proj$optim_history$errors_statistics[, variables])
+  to_plot <- data.frame(solution_proj$optim_history$errors_statistics[, variables, drop=F])
   to_plot$iteration <- 0:(nrow(solution_proj$optim_history$errors_statistics) - 1)
   to_plot <- reshape2::melt(to_plot, id.vars = "iteration", measure.vars = variables)
   plt <-
