@@ -1,13 +1,13 @@
 ---
-title: "Linseed 2 deconvolution pipeline, run on simulated data"
-output: 
+title: "DualSimplex deconvolution pipeline, run on simulated data"
+output:
   html_document
 ---
 
 
-## Install Linseed 2 package
+## Install DualSimplex package
 ```{r}
-unloadNamespace("linseed2")
+unloadNamespace("DualSimplex")
 devtools::load_all()
 ```
 
@@ -28,24 +28,24 @@ true_proportions <- sim$proportions
 ```
 
 
-# Linseed 2 deconvolution
+# DualSimplex deconvolution
 
-## Create Linseed 2 object
+## Create DualSimplex object
 ```{r}
-lo2 <- Linseed2Solver$new()
-lo2$set_data(data_raw)
-lo2$plot_svd()
+dso <- DualSimplexSolver$new()
+dso$set_data(data_raw)
+dso$plot_svd()
 ```
 
 
 ## Apply simple filters
 ```{r, fig.height=5, fig.width=20}
-plot_numeric_features(lo2$get_data(), features = c("log_mad", "log_mean", "log_median", "log_sd"), ncol = 4)
+plot_numeric_features(dso$get_data(), features = c("log_mad", "log_mean", "log_median", "log_sd"), ncol = 4)
 ```
 
 ```{r}
 # TODO: before and after filtering plots, more explicit noise removal
-# svd_d <- diag(lo2$st$proj$meta$Sigma)
+# svd_d <- diag(dso$st$proj$meta$Sigma)
 # vars <- svd_d[2:length(svd_d)]^2
 # variance_contrib <- vars / sum(vars)
 # df <- data.frame(
@@ -56,51 +56,51 @@ plot_numeric_features(lo2$get_data(), features = c("log_mad", "log_mean", "log_m
 ```
 
 ```{r}
-plot_feature(lo2$st$data, "log_mad")
-lo2$plot_svd()
-lo2$set_data(lo2$st$data[fData(lo2$st$data)$log_mad > 1, ])
-plot_feature(lo2$st$data, "log_mad")
-lo2$plot_svd()
+plot_feature(dso$st$data, "log_mad")
+dso$plot_svd()
+dso$set_data(dso$st$data[fData(dso$st$data)$log_mad > 1, ])
+plot_feature(dso$st$data, "log_mad")
+dso$plot_svd()
 ```
 
 
 ## Calculate the projection onto solution plane, filter outliers and noise
 ```{r}
-# Estimate the number of cell types by 
+# Estimate the number of cell types by
 # elbow point on last SVD plot
 # and project
-lo2$plot_svd()
-lo2$project(n_ct)
+dso$plot_svd()
+dso$project(n_ct)
 ```
 
 
 ### View data, projected onto different dimensions
 ```{r fig.width = 12, fig.height = 5}
-lo2$plot_projected("zero_distance", "zero_distance", use_dims = list(2:3, 3:4, 2:4))
-lo2$plot_projected("plane_distance", "plane_distance", use_dims = list(2:3, 3:4, 2:4))
+dso$plot_projected("zero_distance", "zero_distance", use_dims = list(2:3, 3:4, 2:4))
+dso$plot_projected("plane_distance", "plane_distance", use_dims = list(2:3, 3:4, 2:4))
 ```
 
-See if outliers anything is visible better in UMAP 
+See if outliers anything is visible better in UMAP
 ```{r fig.width = 12, fig.height = 5}
 # Choose neighbors parameters to generate umaps with different detail level
-lo2$run_umap(neighbors_X = 50, neighbors_Omega = 25)
-lo2$plot_projected("zero_distance", "zero_distance")
-lo2$plot_projected("plane_distance", "plane_distance")
+dso$run_umap(neighbors_X = 50, neighbors_Omega = 25)
+dso$plot_projected("zero_distance", "zero_distance")
+dso$plot_projected("plane_distance", "plane_distance")
 ```
 
 ### Distance-based filtering
 ```{r, fig.height=4, fig.width=10}
-plot_numeric_features(lo2$get_data(), features = c("plane_distance", "zero_distance"), ncol = 2)
-plot_numeric_features(lo2$get_data(), genes = F, features = c("plane_distance", "zero_distance"), ncol = 2, bins = 30)
+plot_numeric_features(dso$get_data(), features = c("plane_distance", "zero_distance"), ncol = 2)
+plot_numeric_features(dso$get_data(), genes = F, features = c("plane_distance", "zero_distance"), ncol = 2, bins = 30)
 ```
 
 ```{r}
-new_data <- lo2$st$data[fData(lo2$get_data())$plane_distance < 0.1, ]
+new_data <- dso$st$data[fData(dso$get_data())$plane_distance < 0.1, ]
 new_data
 ```
 
 ```{r}
-lo2$set_data(new_data)
+dso$set_data(new_data)
 ```
 
 Circle back to projection and iterate, until satisfied
@@ -109,40 +109,40 @@ Circle back to projection and iterate, until satisfied
 ## Choose visualization parameters for further analysis with filtered data
 ```{r fig.width = 12, fig.height = 5}
 # Choose neighbors parameters to generate the umap with different detail level
-lo2$run_umap(neighbors_X = 50, neighbors_Omega = 25)
-lo2$plot_projected(use_dims = NULL)
+dso$run_umap(neighbors_X = 50, neighbors_Omega = 25)
+dso$plot_projected(use_dims = NULL)
 ```
 
 ```{r}
 # NULL is for UMAP, and 3:4 looked good before
-lo2$set_display_dims(list(NULL, 3:4))
+dso$set_display_dims(list(NULL, 3:4))
 ```
 
 This is the output of plot_projected now
 ```{r fig.width = 12, fig.height = 5}
-lo2$plot_projected()
+dso$plot_projected()
 ```
 
 Checkpoint, just in case
 ```{r}
-lo2$save_state("./linseed2_save")
+dso$save_state("./dualsimplex_save")
 ```
 
 
 ## Perform deconvolution
 ```{r}
-lo2 <- Linseed2Solver$from_state("./linseed2_save")
+dso <- DualSimplexSolver$from_state("./dualsimplex_save")
 
 # Note: this wasn't saved, it's not included in state,
 # so we have to set it again
-lo2$set_display_dims(list(NULL, 3:4))
+dso$set_display_dims(list(NULL, 3:4))
 ```
 
 
 ### Find initial solution
 ```{r fig.height = 5, fig.width = 11}
-lo2$init_solution("random")
-lo2$plot_projected()
+dso$init_solution("random")
+dso$plot_projected()
 ```
 
 
@@ -152,29 +152,29 @@ lo2$plot_projected()
 # Run this cell several times, until it converges
 # If something went wrong, you can init again and start from scratch
 # TODO: reset to iteration option
-lo2$optim_solution(1000, optim_config(coef_hinge_H = 0.1))
-lo2$plot_error_history()
+dso$optim_solution(1000, optim_config(coef_hinge_H = 0.1))
+dso$plot_error_history()
 ```
 
 ```{r fig.height = 5, fig.width = 11}
-lo2$plot_projected()
+dso$plot_projected()
 ```
 
 ```{r fig.height = 5, fig.width = 11}
-# In case some lines are intersecting, set 
+# In case some lines are intersecting, set
 # points color to NULL to make things clear
-# Unfortunately, ggplot doesn't allow to color both 
+# Unfortunately, ggplot doesn't allow to color both
 # lines and points
 #
 # Also play with opacity and size if you need
-lo2$plot_projected(NULL, NULL, pt_opacity = 1, pt_size = 2)
+dso$plot_projected(NULL, NULL, pt_opacity = 1, pt_size = 2)
 ```
 
 ```{r}
 # More flexible visualizations are possible manually
-plot_projection_points(lo2$st$proj, pt_opacity = 0.8, pt_size = 0.1) %>% 
-  add_solution(lo2$st$solution_proj, lo2$st$proj) %>% 
-  add_solution_history(lo2$st$solution_proj, lo2$st$proj, pt_size = 1.5, pt_opacity = 1, step = 20, colored = T)
+plot_projection_points(dso$st$proj, pt_opacity = 0.8, pt_size = 0.1) %>%
+  add_solution(dso$st$solution_proj, dso$st$proj) %>%
+  add_solution_history(dso$st$solution_proj, dso$st$proj, pt_size = 1.5, pt_opacity = 1, step = 20, colored = T)
 ```
 
 ```{r}
@@ -185,47 +185,47 @@ plot_projection_points(lo2$st$proj, pt_opacity = 0.8, pt_size = 0.1) %>%
 ### Get final solution in original space
 ```{r}
 # Reverse projection, return to original space
-solution <- lo2$finalize_solution()
+solution <- dso$finalize_solution()
 names(solution)
 ```
 
 ```{r}
 # Checkpoint optimization and solution reversal
-lo2$save_state("./linseed2_save")
+dso$save_state("./dualsimplex_save")
 ```
 
 
 ## Generating report
-Now a report can be generated, using all the information from the  
+Now a report can be generated, using all the information from the
 ```{r}
-# Note: unlike Linseed2Solver$from_state, the load_state method doesn't create 
+# Note: unlike DualSimplexSolver$from_state, the load_state method doesn't create
 #  a new object, but updates the existing one. Particularly self$st on it.
 #  So, visualization parameters and save_dir are remembered.
-lo2$load_state()
+dso$load_state()
 ```
 
 ```{r}
 # However, let's use only UMAP for our report
-lo2$set_display_dims(list(NULL, 3:4))
+dso$set_display_dims(list(NULL, 3:4))
 
 # By the way, you can generate summary on earlier stages,
 #  reports will just be shorter
-lo2$generate_summary()
+dso$generate_summary()
 
 # Where is it?
-lo2$get_save_dir()
+dso$get_save_dir()
 ```
 
 ```{r}
 # It won't allow you to make a mistake, so don't be afraid
-lo2$generate_summary("abc")
+dso$generate_summary("abc")
 ```
 
 ## Comparing with true data
-When true solution is available, we can compare linseed with it
+When true solution is available, we can compare DualSimplex with it
 ```{r}
-lo2 <- Linseed2Solver$from_state("./linseed2_save")
-solution <- lo2$get_solution()
+dso <- DualSimplexSolver$from_state("./dualsimplex_save")
+solution <- dso$get_solution()
 ```
 
 ```{r}
@@ -245,18 +245,18 @@ plot_ptp_lines(ptp = ptp)
 
 ## Optimization animation
 ```{r}
-# Note: it's a separate function, not inside lo2
+# Note: it's a separate function, not inside dso
 # It's separated mainly because it's slow and requires gifsky
 plot_solution_history_anim(
-  lo2$st$proj,
-  lo2$st$solution_proj,
+  dso$st$proj,
+  dso$st$solution_proj,
   use_dims = 3:4,
   gif_filename = "optim_sim4_34.gif",
   nframes = 305
 )
 plot_solution_history_anim(
-  lo2$st$proj,
-  lo2$st$solution_proj,
+  dso$st$proj,
+  dso$st$solution_proj,
   use_umap = T,
   gif_filename = "optim_sim4_umap.gif",
   nframes = 305

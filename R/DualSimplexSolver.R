@@ -1,5 +1,5 @@
-Linseed2Solver <- R6Class(
-  classname = "Linseed2Solver",
+DualSimplexSolver <- R6Class(
+  classname = "DualSimplexSolver",
   private = list(
     display_dims = NULL,
     save_dir = NULL,
@@ -423,13 +423,13 @@ Linseed2Solver <- R6Class(
 
     save_state = function(save_dir = NULL) {
       out_dir <- self$getset_save_dir(save_dir)
-      saveRDS(self$st, file.path(out_dir, "linseed2_state.rds"))
+      saveRDS(self$st, file.path(out_dir, "dualsimplex_state.rds"))
       if (("umap" %in% names(self$st$proj)) && (!is.null(self$st$proj$umap$model))) {
-        fpath <- file.path(out_dir, "linseed2_umap_X.uwot")
+        fpath <- file.path(out_dir, "dualsimplex_umap_X.uwot")
         if (file.exists(fpath)) file.remove(fpath)
         uwot::save_uwot(self$st$proj$umap$model$X, fpath)
 
-        fpath <- file.path(out_dir, "linseed2_umap_Omega.uwot")
+        fpath <- file.path(out_dir, "dualsimplex_umap_Omega.uwot")
         if (file.exists(fpath)) file.remove(fpath)
         uwot::save_uwot(self$st$proj$umap$model$Omega, fpath)
       }
@@ -456,10 +456,10 @@ Linseed2Solver <- R6Class(
           stop("Current save_dir is null, specify input_dir or set_save_dir")
         }
       }
-      self$st <- readRDS(file.path(input_dir, "linseed2_state.rds"))
+      self$st <- readRDS(file.path(input_dir, "dualsimplex_state.rds"))
       if (("umap" %in% names(self$st$proj)) && (!is.null(self$st$proj$umap$model))) {
-        self$st$proj$umap$model$X <- uwot::load_uwot(file.path(input_dir, "linseed2_umap_X.uwot"))
-        self$st$proj$umap$model$Omega <- uwot::load_uwot(file.path(input_dir, "linseed2_umap_Omega.uwot"))
+        self$st$proj$umap$model$X <- uwot::load_uwot(file.path(input_dir, "dualsimplex_umap_X.uwot"))
+        self$st$proj$umap$model$Omega <- uwot::load_uwot(file.path(input_dir, "dualsimplex_umap_Omega.uwot"))
       }
     },
 
@@ -470,8 +470,8 @@ Linseed2Solver <- R6Class(
     ) {
       out_dir <- self$getset_save_dir(save_dir)
 
-      rmd_path <- system.file("extdata", "solver_summary.Rmd", package = "linseed2")
-      output_file <- file.path(out_dir, "linseed2_solver_summary.html")
+      rmd_path <- system.file("extdata", "solver_summary.Rmd", package = "DualSimplex")
+      output_file <- file.path(out_dir, "dualsimplex_solver_summary.html")
 
       old_wd <- getwd()
       on.exit(setwd(old_wd), add = TRUE)
@@ -481,7 +481,7 @@ Linseed2Solver <- R6Class(
         input = rmd_path,
         output_file = output_file,
         params = list(
-          lo2 = self,
+          dso = self,
           with_animated_optim = with_animated_optim,
           seurat_obj = seurat_obj
         )
@@ -505,7 +505,7 @@ Linseed2Solver <- R6Class(
     },
     get_n_iters = function() {
       private$optimize_first()
-      return(nrow(lo2$st$solution_proj$optim_history$errors_statistics))
+      return(nrow(dso$st$solution_proj$optim_history$errors_statistics))
     },
     get_negative_ratios = function() {
       private$finalize_first()
@@ -530,11 +530,11 @@ Linseed2Solver <- R6Class(
   )
 )
 
-Linseed2Solver$from_state <- function(input_dir, save_there = F) {
-  lo2 <- Linseed2Solver$new()
-  lo2$load_state(input_dir)
+DualSimplexSolver$from_state <- function(input_dir, save_there = F) {
+  dso <- DualSimplexSolver$new()
+  dso$load_state(input_dir)
   if (save_there) {
-    lo2$set_save_dir(input_dir)
+    dso$set_save_dir(input_dir)
   }
-  return(lo2)
+  return(dso)
 }

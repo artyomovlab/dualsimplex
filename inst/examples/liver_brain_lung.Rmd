@@ -1,11 +1,11 @@
 ---
-title: "Linseed 2 deconvolution pipeline, run on liver brain and lung data"
+title: "DualSimplex deconvolution pipeline, run on liver brain and lung data"
 output: html_document
 ---
 
-# WARNING: it's an old version without lo2, and some things might not work
+# WARNING: it's an old version without dso, and some things might not work
 
-# Install Linseed 2 package
+# Install DualSimplex package
 ```{r}
 devtools::load_all("../../")
 ```
