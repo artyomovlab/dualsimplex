@@ -10,6 +10,8 @@ License: MIT
 Imports:
     Rcpp,
     RcppArmadillo,
+    irlba,
+    nnls,
     Matrix,
     ggplot2,
     ggrastr,

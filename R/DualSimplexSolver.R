@@ -105,21 +105,19 @@ DualSimplexSolver <- R6Class(
       solution_orig = NULL,   # Auto calculated
       marker_genes = NULL     # Auto calculated
     ),
-    set_data = function(data, gene_anno_lists = NULL, sample_anno_lists = NULL) {
+    set_data = function(data, gene_anno_lists = NULL, sample_anno_lists = NULL, sinkhorn_iterations=20) {
       if (any(sapply(dimnames(data), is.null)))
         stop("Genes and samples should be named")
       if (any(sapply(dimnames(data), anyDuplicated)))
         stop("Gene and sample names should not contain duplicates")
 
       first_set = is.null(self$st$data)
-
       private$reset_since("data")
       if (!inherits(data, "ExpressionSet"))
         data <- create_eset(data)
       self$st$data <- add_default_anno(data, gene_anno_lists, sample_anno_lists)
-      self$st$scaling <- sinkhorn_scale(exprs(self$st$data))
+      self$st$scaling <- sinkhorn_scale(exprs(self$st$data), iterations = sinkhorn_iterations)
       self$st$proj_full <- svd_project(self$st$scaling, dims = NULL)
-
       if (first_set) private$add_filtering_log_step("initial")
     },
     plot_mad = function(data, ...) {
