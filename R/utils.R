@@ -55,6 +55,6 @@ read_gene_list <- function(path) {
 }
 
 rasterize_if_needed <- function(plot) {
-  plot <- if(getOption("linseed-rasterize", default=FALSE)) ggrastr::rasterise(plot, dpi=600) else plot
+  plot <- if(getOption("dualsimplex-rasterize", default=FALSE)) ggrastr::rasterise(plot, dpi=600) else plot
   return(plot)
 }

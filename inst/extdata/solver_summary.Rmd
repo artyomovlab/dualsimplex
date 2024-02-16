@@ -1,11 +1,11 @@
 ---
-title: "Linseed 2 Solver Summary"
+title: "DualSimplex Solver Summary"
 output:
   html_document:
     df_print: paged
     self_contained: yes
 params:
-  lo2: !r NULL
+  dso: !r NULL
   with_animated_optim: !r FALSE
   seurat_obj: !r NULL
 ---
@@ -22,86 +22,86 @@ h4 {
 </style>
 
 ```{r}
-if (is.null(lo2$st$data))
+if (is.null(dso$st$data))
   stop("Nothing was calculated yet")
 ```
 
 ### Filtering history
 ```{r}
-lo2$get_filtering_stats()
+dso$get_filtering_stats()
 ```
 
 ```{r}
-lo2$plot_svd_history()
+dso$plot_svd_history()
 ```
 
 ### Dataset
 Note: For further calculations, the resulting filtered dataset is used
 ```{r results='asis'}
-cat(nrow(lo2$get_data()), "genes x", ncol(lo2$get_data()), "samples")
+cat(nrow(dso$get_data()), "genes x", ncol(dso$get_data()), "samples")
 ```
 
 ```{r fig.width=7}
-lo2$plot_svd(NULL) + ggtitle("SVD explained variance")
+dso$plot_svd(NULL) + ggtitle("SVD explained variance")
 ```
 
 ```{r, fig.height=4, fig.width=6}
-lo2$plot_mad()
+dso$plot_mad()
 ```
 
 
 ```{r}
-if (is.null(lo2$st$n_cell_types)) {
+if (is.null(dso$st$n_cell_types)) {
   knitr::knit_exit()
 }
 ```
 
 ### Projection
 ```{r results='asis'}
-cat(lo2$st$n_cell_types, "cell types selected")
+cat(dso$st$n_cell_types, "cell types selected")
 ```
 
 ```{r fig.width = 12}
-lo2$plot_projected("zero_distance", "zero_distance", with_legend = T, with_solution = F, with_history = F)
+dso$plot_projected("zero_distance", "zero_distance", with_legend = T, with_solution = F, with_history = F)
 ```
 
 ```{r fig.width = 12}
-lo2$plot_projected("plane_distance", "plane_distance", with_legend = T, with_solution = F, with_history = F)
+dso$plot_projected("plane_distance", "plane_distance", with_legend = T, with_solution = F, with_history = F)
 ```
 
 ```{r fig.width=12, fig.height=3}
-lo2$plot_distances_distribution()
+dso$plot_distances_distribution()
 ```
 
 
 ```{r}
-if (is.null(lo2$st$solution_proj)) {
+if (is.null(dso$st$solution_proj)) {
   knitr::knit_exit()
 }
-has_optim = "optim_history" %in% names(lo2$st$solution_proj)
+has_optim = "optim_history" %in% names(dso$st$solution_proj)
 ```
 
 `r if (has_optim) {"### Optimization history"}`
 
 ```{r, eval=has_optim}
-lo2$plot_error_history() + ggtitle("Error history")
+dso$plot_error_history() + ggtitle("Error history")
 ```
 
 ```{r, eval=has_optim}
-lo2$plot_projected(with_legend = F, with_solution = T, with_history = T)
+dso$plot_projected(with_legend = F, with_solution = T, with_history = T)
 ```
 
 ```{r, eval=has_optim}
-lo2$plot_projected(NULL, NULL, with_legend = F, with_solution = T, with_history = T)
+dso$plot_projected(NULL, NULL, with_legend = F, with_solution = T, with_history = T)
 ```
 
 ```{r, eval=has_optim && with_animated_optim}
 plot_solution_history_anim(
-  lo2$st$proj,
-  lo2$st$solution_proj,
+  dso$st$proj,
+  dso$st$solution_proj,
   use_dims = NULL,
   gif_filename = "optim_umap.gif",
-  gif_dir = lo2$get_save_dir(),
+  gif_dir = dso$get_save_dir(),
   nframes = 305 # TODO: calculate automatically
 )
 
@@ -111,7 +111,7 @@ plot_solution_history_anim(
 
 
 ```{r}
-if (is.null(lo2$st$solution)) {
+if (is.null(dso$st$solution)) {
   knitr::knit_exit()
 }
 ```
@@ -119,24 +119,24 @@ if (is.null(lo2$st$solution)) {
 
 ### Solution
 ```{r}
-lo2$plot_projected(with_legend = F, with_solution = T, with_history = F)
+dso$plot_projected(with_legend = F, with_solution = T, with_history = F)
 ```
 
 ```{r fig.height=3, fig.width=12}
-lo2$plot_solution_distribution()
+dso$plot_solution_distribution()
 ```
 
 ```{r}
 # TODO: ggplot and function
-boxplot(t(lo2$get_solution()$H))
+boxplot(t(dso$get_solution()$H))
 ```
 
 
 ### Cell types
 Solution enrichment in genes and samples
 ```{r fig.height = 5, fig.width = 11}
-for (ct in lo2$get_ct_names()) {
-  show(lo2$plot_projected(
+for (ct in dso$get_ct_names()) {
+  show(dso$plot_projected(
     ct,
     ct,
     use_dims = NULL,
@@ -150,11 +150,11 @@ for (ct in lo2$get_ct_names()) {
 
 ### Marker genes
 ```{r fig.height = 5, fig.width = 11}
-lo2$plot_projected(color_genes = "markers", color_samples = NULL, with_solution = T, with_history = F)
+dso$plot_projected(color_genes = "markers", color_samples = NULL, with_solution = T, with_history = F)
 ```
 
 ```{r, results="asis"}
-cat_markers(lo2$get_marker_genes())
+cat_markers(dso$get_marker_genes())
 ```
 
 ```{r}
@@ -169,12 +169,12 @@ Seurat::DimPlot(seurat_obj) + ggtitle("Clusters")
 ```
 
 ```{r}
-plot_height <- (ceiling(lo2$get_n_cell_types() / 4) * 5)
+plot_height <- (ceiling(dso$get_n_cell_types() / 4) * 5)
 ```
 
 ```{r fig.width=20, fig.height=plot_height, message=FALSE, warning=FALSE, results='hide'}
-seurat_obj <- add_list_markers(seurat_obj, lo2$get_marker_genes())
-plot_marker_enrichment(seurat_obj, names(lo2$get_marker_genes()), limits = c(0, 1.5))
+seurat_obj <- add_list_markers(seurat_obj, dso$get_marker_genes())
+plot_marker_enrichment(seurat_obj, names(dso$get_marker_genes()), limits = c(0, 1.5))
 ```
 
 
