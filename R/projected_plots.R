@@ -49,22 +49,26 @@ concat_data <- function(data_list, group_colname) {
   return(merged)
 }
 
-get_solution_history <- function(solution_proj, step) {
+get_solution_history <- function(solution_proj, step, from_iter = 1, to_iter = NULL) {
   stats <- list()
   stats$X <- solution_proj$optim_history$points_statistics_X
   stats$Omega <- solution_proj$optim_history$points_statistics_Omega
   nct <- sqrt(ncol(stats$Omega))
   nit <- nrow(stats$Omega)
+  if (is.null(to_iter)) {
+    to_iter <- nit
+  }
   # TODO: correct order initially
   correct_order <- order((1:ncol(stats$Omega) - 1) %% nct)
   stats$Omega <- stats$Omega[, correct_order]
-  
+
   solution_history <- lapply(stats, function(mat) {
     tran <- matrix(c(t(mat)), ncol = nct, byrow = T)
     tran <- cbind(tran, rep(1:nct, times = nit))
     tran <- cbind(tran, rep(1:nit, each = nct))
     colnames(tran) <- c(paste0("dim_", 1:nct), "point", "iter")
-    tran <- tran[((tran[, "iter"] %% step) == 0) | (tran[, "iter"] == nit) | (tran[, "iter"] == 1), ]
+    tran <- tran[(tran[, "iter"] >= from_iter) & (tran[, "iter"] <= to_iter), ]
+    tran <- tran[((tran[, "iter"] %% step) == 0) | (tran[, "iter"] == to_iter) | (tran[, "iter"] == from_iter), ]
     tran <- as.data.frame(tran)
     tran[, "point"] <- as.factor(tran[, "point"])
     return(tran)
@@ -81,12 +85,12 @@ get_color_params <- function(to_plot, color, color_name) {
       color_scheme = "black"
     ))
   }
-  
+
   if (is.null(color_name)) color_name <- "annotation"
   if (length(color[[1]]) > 1) color <- unlist(color)
-  
+
   if (length(color) == nrow(to_plot)) {
-    if (is.factor(color)) {
+    if (is.factor(color) || is.logical(color)) {
       return(list(
         color_vec = color,
         color_name = color_name,
@@ -172,11 +176,13 @@ add_solution_history <- function(
   pt_size = 0.5,
   pt_opacity = 0.95,
   step = 100,
+  from_iter = 1,
+  to_iter = NULL,
   spaces = c("X", "Omega"),
   colored = TRUE,
   path = TRUE
 ) {
-  solution_history <- get_solution_history(solution_proj, step)
+  solution_history <- get_solution_history(solution_proj, step, from_iter = from_iter, to_iter = to_iter)
   points_2d <- get_2d_subset(proj, use_dims, solution_history)[spaces]
   if (length(spaces) > 1) {
     solution_history <- concat_data(solution_history[spaces], "space")
@@ -188,9 +194,9 @@ add_solution_history <- function(
   points_2d <- cbind(points_2d, solution_history[c("point", "iter")])
   x_col <- colnames(points_2d)[[1]]
   y_col <- colnames(points_2d)[[2]]
-  
+
   geom <- if (path) geom_path else geom_point
-  
+
   if (colored) {
     plt <- plt + geom(
       data = points_2d,
@@ -207,10 +213,10 @@ add_solution_history <- function(
       alpha = pt_opacity
     )
   }
-  
+
   plt <- plt +
     labs(title = paste0(max(solution_history$iter), " iterations"))
-  
+
   return(plt)
 }
 
@@ -225,16 +231,16 @@ plot_points_2d <- function(
   to_plot <- as.data.frame(points_2d)
   x_col <- colnames(to_plot)[1]
   y_col <- colnames(to_plot)[2]
-  
+
   cp <- get_color_params(points_2d, color, color_name)
-  
+
   if (cp$color_scheme != "black") {
     to_plot[, cp$color_name] <- cp$color_vec
-    
-    if (order_by_color) 
+
+    if (order_by_color)
       to_plot <- to_plot[order(to_plot[, cp$color_name]), ]
   }
-  
+
   return(plot_points_2d_clean(
     to_plot,
     x_col,
@@ -273,19 +279,18 @@ plot_points_2d_clean <- function(
       scale_color_distiller(palette = "Spectral", name = color_col)
   } else if (color_scheme == "factor") {
     plt <- plt +
-    rasterize_if_needed(geom_point(size = pt_size, alpha = pt_opacity)) +
+    rasterize_if_needed(geom_point(size = pt_size, color = "grey70", alpha = pt_opacity)) +
     rasterize_if_needed(geom_point(
         data = to_plot[!is.na(to_plot[[color_col]]), ],
         alpha = 1,
         size = pt_size * 2
       ))
-
   } else {
     stop("Invalid color_scheme")
   }
-  
+
   plt <- plt + theme_minimal()
-  
+
   return(plt)
 }
 
@@ -300,14 +305,14 @@ plot_solution_history_anim <- function(
   nframes = 300,
   use_dims = NULL
 ) {
-  plt <- plot_projection_points(proj, use_dims = use_dims) %>% 
+  plt <- plot_projection_points(proj, use_dims = use_dims) %>%
     add_solution_history(
       solution_proj, proj, step = 100, pt_size = 4, use_dims = use_dims, path = FALSE
     ) +
     labs(title = 'Iteration: {as.integer(closest_state)}') +
     gganimate::transition_states(iter, transition_length = 2, wrap = F) +
     gganimate::ease_aes("linear")
-  
+
   if (is.null(gif_filename) || is.null(gif_dir)) {
     gganimate::animate(plt, height = height, width = width, nframes = nframes, renderer = gganimate::gifski_renderer())
   } else {

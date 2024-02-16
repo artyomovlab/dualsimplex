@@ -71,10 +71,13 @@ which_marker <- function(gene_names, marker_list) {
   return(which_marker_anno)
 }
 
-get_fold_change <- function(signature, stat = "mean_fc") {
+get_fold_change <- function(signature, stat = "mean_fc", colnorm = T) {
   cell_types_stats <- matrix(0, ncol = ncol(signature), nrow = nrow(signature))
   rownames(cell_types_stats) <- rownames(signature)
   colnames(cell_types_stats) <- colnames(signature)
+  if (colnorm) {
+    signature <- apply(signature, 2, function(x) x / sum(x))
+  }
   for (ct_col_i in 1:ncol(cell_types_stats)) {
     stat_fun <- if (stat == "mean_fc") 
       function(gene_row) {
@@ -118,9 +121,9 @@ cat_markers <- function(marker_list) {
 ############ SINGLE CELL ############
 add_list_markers <- function(so, markers, assay = "RNA") {
   for (ct in names(markers)) {
-    if (any(markers[[ct]] %in% rownames(GetAssayData(so, assay = assay)))) {
+    if (any(markers[[ct]] %in% rownames(Seurat::GetAssayData(so, assay = assay)))) {
       message(paste("Adding", ct))
-      so <- AddModuleScore(so, features = list(markers[[ct]]), name = ct, assay = assay)
+      so <- Seurat::AddModuleScore(so, features = list(markers[[ct]]), name = ct, assay = assay)
     } else {
       message(paste("Skipping", ct))
     }
@@ -128,8 +131,17 @@ add_list_markers <- function(so, markers, assay = "RNA") {
   so
 }
 
+convert_sc_markers <- function(markers_seurat, allowed_genes, n_markers = 100) {
+  gb <- markers_seurat[markers_seurat$p_val_adj < 0.001,] %>%
+    group_by(cluster) %>%
+    filter(gene %in% allowed_genes) %>% slice_max(order_by=avg_log2FC, n=n_markers)
+  sc_marker_list <- sapply(gb %>% group_split(), function(x) list(x$gene))
+  names(sc_marker_list) <- tolower(gsub(" |-", "_", (gb %>% group_keys())$cluster))
+  return(sc_marker_list)
+}
+
 plot_marker_enrichment <- function(
-  so, marker_names, ncol = 4, limits = NULL, ggadd = function(plt) plt, wrap = T
+  so, marker_names, ncol = 4, limits = NULL, ggadd = function(plt, i) plt, wrap = T, reduction = NULL
 ) {
   p <- Seurat::FeaturePlot(
     so,
@@ -138,15 +150,20 @@ plot_marker_enrichment <- function(
     #  label.size = 3,
     order = T,
     combine = FALSE,
-    reduction = "umap"
+    reduction = reduction
   )
   
   for(i in 1:length(p)) {
     ct <- marker_names[[i]]
     p[[i]] <- ggadd(
       p[[i]] +
-        scale_colour_gradientn(colours = rev(RColorBrewer::brewer.pal(n = 11, name = "Spectral")), limits = limits, oob = scales::squish) +
-        ggtitle(ct)
+        scale_colour_gradientn(
+          colours = rev(RColorBrewer::brewer.pal(n = 11, name = "Spectral")),
+          limits = if (is.list(limits)) limits[[i]] else limits,
+          oob = scales::squish
+        ) +
+        ggtitle(ct),
+      i
     )
     #NoLegend()
   }

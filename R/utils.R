@@ -14,6 +14,12 @@ linearize_dataset = function(ge) {
   return(ge)
 }
 
+replace_duplicate_genes = function(ge) {
+  ge <- ge[order(rownames(ge), -abs(rowSums(ge))), ]
+  ge <- ge[!duplicated(rownames(ge)), ]
+  return(ge)
+}
+
 log_dataset = function(ge) {
   if (is_logscale(ge))
     return(ge)
@@ -52,5 +58,3 @@ rasterize_if_needed <- function(plot) {
   plot <- if(getOption("linseed-rasterize", default=FALSE)) ggrastr::rasterise(plot, dpi=600) else plot
   return(plot)
 }
-  
-  

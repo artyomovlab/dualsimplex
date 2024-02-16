@@ -20,7 +20,7 @@ add_default_anno <- function(
 }
 
 add_default_gene_anno <- function(eset, name_lists = NULL) {
-  eset <- add_data_stats_anno(eset)
+  eset <- add_data_stats_anno(eset, genes = T)
   eset <- add_gene_names_regex_anno(eset)
   if (!is.null(name_lists)) {
     eset <- add_name_lists_anno(eset, name_lists, genes = T)
@@ -29,6 +29,7 @@ add_default_gene_anno <- function(eset, name_lists = NULL) {
 }
 
 add_default_sample_anno <- function(eset, name_lists = NULL) {
+  eset <- add_data_stats_anno(eset, genes = F)
   if (!is.null(name_lists)) {
     eset <- add_name_lists_anno(eset, name_lists, genes = F)
   }
@@ -63,6 +64,7 @@ add_gene_names_regex_anno <- function(eset) {
   fData(eset)$LOC <- grepl("^LOC\\d+", rownames(exprs(eset)), ignore.case = T)
   fData(eset)$ORF <- grepl("^C\\w+orf\\d+", rownames(exprs(eset)), ignore.case = T)
   fData(eset)$SNOR <- grepl("^SNOR.+", rownames(exprs(eset)), ignore.case = T)
+  fData(eset)$MT <- grepl("^MT-.+", rownames(exprs(eset)), ignore.case = T)
   fData(eset)$RRNA <- grepl(".+rRNA$", rownames(exprs(eset)), ignore.case = T)
   return(eset)
 }
@@ -76,11 +78,14 @@ add_name_lists_anno <- function(eset, name_lists, genes = T) {
   return(eset)
 }
 
-add_data_stats_anno <- function(eset) {
-  fData(eset)$log_mean <- log(apply(exprs(eset), 1, mean) + 1)
-  fData(eset)$log_median <- log(apply(exprs(eset), 1, median) + 1)
-  fData(eset)$log_sd <- log(apply(exprs(eset), 1, sd) + 1)
-  fData(eset)$log_mad <- log(apply(exprs(eset), 1, mad) + 1)
+add_data_stats_anno <- function(eset, genes = T) {
+  anno <- get_anno(eset, genes)
+  margin <- if (genes) 1 else 2
+  anno$log_mean <- log(apply(exprs(eset), margin, mean) + 1)
+  anno$log_median <- log(apply(exprs(eset), margin, median) + 1)
+  anno$log_sd <- log(apply(exprs(eset), margin, sd) + 1)
+  anno$log_mad <- log(apply(exprs(eset), margin, mad) + 1)
+  eset <- set_anno(anno, eset, genes)
   return(eset)
 }
 

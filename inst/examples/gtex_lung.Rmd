@@ -1,6 +1,6 @@
 ---
 title: "Linseed 2 deconvolution pipeline, run on simulated data"
-output: 
+output:
   html_document
 ---
 
@@ -24,7 +24,7 @@ data_raw <- linearize_dataset(data_raw)
 
 ## Create Linseed 2 object
 ```{r}
-save_dir <- "./linseed2_save_gtex_lung_6kg_7ct"
+save_dir <- "./linseed2_save_gtex_lung_11kg_8ct"
 ```
 
 ```{r}
@@ -37,7 +37,6 @@ lo2$set_save_dir(save_dir)
 # Load from checkpoint option (to continue a previous run)
 lo2 <- Linseed2Solver$from_state(save_dir, save_there = T)
 ```
-
 
 ## Set data
 ```{r}
@@ -62,7 +61,7 @@ colnames(fData(lo2$get_data()))
 
 ```{r}
 lo2$basic_filter(
-  log_mad_gt = 1, remove_true_cols_additional = c("RRNA", "HK", "CC"), keep_true_cols = c("CODING")
+  log_mad_gt = 1, remove_true_cols_additional = c("RRNA"), keep_true_cols = c("CODING")
 )
 lo2$plot_mad()
 lo2$plot_svd()
@@ -74,25 +73,21 @@ lo2$get_filtering_stats()
 
 ## Calculate the projection onto solution plane, filter outliers and noise
 ```{r}
-# Estimate the number of cell types by SVD plot and project
 lo2$plot_svd(NULL)
-```
-
-
-### Project and perform distance-based filtering
-```{r}
-lo2$project(7)
+lo2$project(8)
+# all_dims <- list(2:3, 4:5, 6:7)
+all_dims <- list(2:3, 3:4, c(2, 4), c(2, 5), c(2, 6), c(2, 7), c(2, 8))
 ```
 
 ```{r fig.width = 12, fig.height = 5}
-lo2$plot_svd(NULL)
-lo2$plot_projected("zero_distance", "zero_distance", use_dims = list(2:3, 4:5, 6:7))
-lo2$plot_projected("plane_distance", "plane_distance", use_dims = list(2:3, 4:5, 6:7))
+lo2$plot_projected("zero_distance", "zero_distance", use_dims = all_dims)
+lo2$plot_projected("plane_distance", "plane_distance", use_dims = all_dims)
 lo2$plot_distances_distribution()
 ```
 
 ```{r}
-lo2$distance_filter(plane_d_lt = 0.03, zero_d_lt = NULL, genes = T)
+# Uncomment
+# lo2$distance_filter(plane_d_lt = 0.05, zero_d_lt = NULL, genes = T)
 ```
 
 ```{r}
@@ -101,17 +96,24 @@ lo2$get_filtering_stats()
 
 Circle back to projection and iterate, until satisfied
 
+```{r}
+# Checkpoint
+lo2$save_state()
+```
+
+
 ## Choose visualization parameters for further analysis with filtered data
 ```{r fig.width = 12, fig.height = 5}
 # Choose neighbors parameters to generate the umap with different detail level
 # TODO: maybe add angles to umap
-lo2$run_umap(neighbors_X = 8, neighbors_Omega = 8)
+lo2$run_umap(neighbors_X = 40, neighbors_Omega = 40)
 lo2$plot_projected(use_dims = NULL)
 ```
 
 ```{r}
-# Using just umap for further analysis
-lo2$set_display_dims(NULL)
+# Choose appropriate visualization for further analysis
+display_dims <- list(NULL, 2:3, c(2, 4), c(2, 5))
+lo2$set_display_dims(display_dims)
 ```
 
 This is the output of plot_projected now
@@ -119,8 +121,10 @@ This is the output of plot_projected now
 lo2$plot_projected()
 ```
 
-Checkpoint, just in case
+
 ```{r}
+lo2$get_save_dir()
+# Checkpoint
 lo2$save_state()
 ```
 
@@ -130,6 +134,7 @@ lo2$save_state()
 
 ### Find initial solution
 ```{r fig.height = 5, fig.width = 11}
+set.seed(15)
 lo2$init_solution("select_x")
 lo2$plot_projected()
 ```
@@ -143,23 +148,22 @@ lo2$plot_projected()
 # If something went wrong, you can init again and start from scratch
 # TODO: reset_to_iter function
 # TODO: plot W, H and lr alongside errors
-lo2$optim_solution(10000, optim_config(coef_hinge_H = 0.01, coef_hinge_W = 0.001, coef_der_X = 0.01, coef_der_Omega = 0.01))
+lo2$optim_solution(2000, optim_config(coef_hinge_H = 0.01, coef_hinge_W = 0.1))
 lo2$plot_error_history()
 ```
 
 ```{r fig.height = 5, fig.width = 11}
-# TODO: with_solution and with_history to accept subset
-lo2$plot_projected(use_dims = NULL)
+lo2$plot_projected()
 ```
 
 ```{r fig.height = 5, fig.width = 11}
-lo2$plot_projected(NULL, NULL, pt_opacity = 1, pt_size = 0.5, use_dims = list(NULL, 2:3, 4:5, 6:7))
+lo2$plot_projected(use_dims = all_dims)
 ```
 
 ```{r}
 # More flexible visualizations are possible manually
-plot_projection_points(lo2$st$proj, pt_opacity = 0.8, pt_size = 0.1) %>% 
-  add_solution(lo2$st$solution_proj, lo2$st$proj) %>% 
+plot_projection_points(lo2$st$proj, pt_opacity = 0.8, pt_size = 0.1) %>%
+  add_solution(lo2$st$solution_proj, lo2$st$proj) %>%
   add_solution_history(lo2$st$solution_proj, lo2$st$proj, pt_size = 0.5, pt_opacity = 1, step = 20, colored = T)
 ```
 
@@ -179,11 +183,10 @@ lo2$save_state()
 
 ### Optionally load single cell dataset
 ```{r}
-seurat_obj <- NULL
 library(Seurat)
+seurat_obj <- NULL
 res <- load_ts_lung()
 ts_lung <- res[[1]]
-ts_lung_endo <- res[[2]]
 rm(res)
 clusters <- unique(ts_lung$anno)
 ts_lung$anno_2 <- plyr::mapvalues(
@@ -193,11 +196,37 @@ ts_lung$anno_2 <- plyr::mapvalues(
 )
 Idents(ts_lung) <- "anno"
 
-rm(ts_lung_endo)
 seurat_obj <- ts_lung
 rm(ts_lung)
 ```
 
+```{r}
+scanpy <- reticulate::import("scanpy")
+madisson <- scanpy$read_h5ad("../../../single_cell/lung_5loc_sc_sn_cellxgene_allgenes_05122022.h5ad")
+counts <- t(madisson$X)
+colnames(counts) <-  madisson$obs_names$to_list()
+rownames(counts) <-  madisson$var_names$to_list()
+counts <- Matrix::Matrix(as.matrix(counts), sparse = T)
+
+seurat_obj <- Seurat::CreateSeuratObject(counts)
+seurat_obj <- Seurat::AddMetaData(seurat_obj, madisson$obs)
+
+embedding <- madisson$obsm["X_umap"]
+rownames(embedding) <- madisson$obs_names$to_list()
+colnames(embedding) <- c("umap_1", "umap_2")
+seurat_obj[["umap"]] <- Seurat::CreateDimReducObject(embedding, key = "umap_")
+
+seurat_obj <- Seurat::NormalizeData(seurat_obj)
+
+rm(counts)
+rm(embedding)
+rm(madisson)
+
+SeuratDisk::Convert("../../../single_cell/lung_5loc_sc_sn_cellxgene_allgenes_05122022.h5ad", "h5seurat")
+seurat_obj <- SeuratDisk::LoadH5Seurat("../../../single_cell/lung_5loc_sc_sn_cellxgene_allgenes_05122022.h5seurat")
+seurat_obj <- Seurat::ReadH5AD()
+sessionInfo()
+```
 
 ### Generate summary
 ```{r}
@@ -206,31 +235,57 @@ lo2$get_save_dir()
 ```
 
 ```{r}
-lo2$set_display_dims(NULL)
+lo2$set_display_dims(list(2:3))
 lo2$generate_summary(seurat_obj = seurat_obj, with_animated_optim = FALSE)
 ```
 
 
 # Manual additional research and figure fine-tuning
-```{r fig.width=20, fig.height=10}
-plot_marker_enrichment(seurat_obj, names(lo2$get_marker_genes()), limits = c(0, 1))
+```{r fig.height = 5, fig.width = 11}
+lo2$plot_projected(with_legend = T)
 ```
-```{r fig.width=15}
-Seurat::DimPlot(
-  seurat_obj,
-  reduction = "umap",
-  group.by = "free_annotation"
-)
-```
-
-```{r fig.width=8, fig.height=7}
-Seurat::DimPlot(
-  seurat_obj,
-  reduction = "umap",
-  cells.highlight = list(
-    `dendritic cell` = WhichCells(seurat_obj, expression = free_annotation == "dendritic cell")
-  )
-)
+```{r}
+seurat_obj <- add_list_markers(seurat_obj, lo2$get_marker_genes())
+lo2$get_marker_genes()$cell_type_1 %in% rownames(seurat_obj)
+nrow(seurat_obj)
 ```
 
 
+
+
+```{r fig.width=18, fig.height=11}
+markers <- lo2$get_marker_genes()
+annot <- sapply(gsub("_", " ", names(markers)), function(s) paste0(toupper(substring(s, 1,1)), substring(s, 2)))
+annot <- paste(annot, c("Adventitial cells", "Endothelial subset 1", "Neutrophils and monocytes", "Pneumocytes male subset",
+           "Ciliated lung cells", "Endothelial subset 2", "Pneumocytes female subset", "Macrophages"), sep = "\n")
+seurat_obj <- add_list_markers(seurat_obj, markers)
+plot_marker_enrichment(seurat_obj, names(markers), limits = c(0, 1.5), ggadd = function(plt, i) plt + NoAxes() + NoLegend() + ggtitle(annot[[i]]))
+```
+
+```{r fig.height=5, fig.width=9}
+df <- t(lo2$get_solution()$H)
+colnames(df) <- paste0("CT", 1:8)
+df <- melt(df)
+ggplot(df, aes(x = Var2, y = value)) + geom_boxplot()+ theme_minimal()+ xlab(NULL) + ylab(NULL) + ylim(c(0, 1)) +
+  theme(axis.text.x=element_text(size = 20), axis.text.y = element_text(size = 20))
+```
+
+```{r fig.width=7, fig.height=5}
+Seurat::DimPlot(seurat_obj, reduction = "umap") + ggtitle("Clusters") + scale_colour_manual(values = c(colors_m, "grey70", "grey50", "grey10")) + NoAxes() + ggtitle(NULL)
+```
+
+```{r}
+lo2$plot_svd_history()
+```
+
+```{r fig.height = 5, fig.width = 11}
+lo2$st$marker_genes <- get_signature_markers(lo2$st$solution$W, 20)
+lo2$plot_projected("markers", use_dims = all_dims)
+lo2$plot_projected("markers", use_dims = NULL)
+```
+
+
+```{r fig.height = 5, fig.width = 11}
+markers <- c("LINC01343", "LCE1E", "AC017002.2", "UGT1A3", "LINC01385", "H2BFWT", "OR13D1", "KIRREL3-AS3", "KRT75", "OTX2", "HRH3", "KRTAP19-1", "KRTAP19-3", "KRTAP7-1", "KRTAP10-2", "MMP10", "KRT14", "KRT31", "LCE1C", "KRT5", "KRT15", "S100A7", "KRT6C", "S100A2", "KRT6A", "MMP1", "KRT37", "MMP13", "KRT33A", "COL17A1", "KRT17", "DLK2", "C10orf99", "DSG3", "ANXA8", "FGF19", "AC133785.1")
+lo2$plot_projected(markers)
+```

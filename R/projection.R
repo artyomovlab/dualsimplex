@@ -103,7 +103,7 @@ transform_proj_umap <- function(points, proj) {
     ))
   }
   transformed <- points
-  transformed$X <- uwot::umap_transform(points$X[, 2:proj$meta$K], model = proj$umap$model$X)
+  transformed$X <- uwot::umap_transform(points$X[, 2:proj$meta$K], model = proj$umap$model$X, n_epochs = 100, learning_rate = 0.001)
   transformed$Omega <- uwot::umap_transform(points$Omega[, 2:proj$meta$K], model = proj$umap$model$Omega, n_epochs = 100, learning_rate = 0.001)
   colnames(transformed$X) <- c("umap_1", "umap_2")
   colnames(transformed$Omega) <- c("umap_1", "umap_2")
@@ -135,11 +135,14 @@ plot_proj_svd <- function(proj, dims = NULL) {
   return(plot_svd_d(svd_d, dims))
 }
 
-plot_svd_d <- function(svd_d, dims = NULL) {
-  vars <- svd_d^2
+plot_svd_d <- function(svd_d, dims = NULL, cumulative = T, variance = T) {
+  vars <- svd_d
+  if (variance) {
+    vars <- vars ^ 2
+  }
   df <- data.frame(
     dimension = 1:length(vars),
-    variance = cumsum(vars / sum(vars))
+    variance = if (cumulative) cumsum(vars / sum(vars)) else vars
   )
   if (is.null(dims)) {
     dims = 1:length(svd_d)
@@ -172,9 +175,14 @@ plot_svd_d <- function(svd_d, dims = NULL) {
     scale_x_continuous(minor_breaks = dims, limits = c(min(dims), max(dims))))
 }
 
-plot_svd_ds_matrix <- function(svd_ds) {
-  vars <- svd_ds ^ 2
-  vars <- t(apply(vars, 1, function(step_vars) {cumsum(step_vars / sum(step_vars))}))
+plot_svd_ds_matrix <- function(svd_ds, cumulative = T, variance = T) {
+  vars <- svd_ds
+  if (variance) {
+    vars <- vars ^ 2
+  }
+  if (cumulative) {
+    vars <- t(apply(vars, 1, function(step_vars) {cumsum(step_vars / sum(step_vars))}))
+  }
   vars <- as.data.frame(vars)
   colnames(vars) <- 1:ncol(vars)
   values <- colnames(vars)
