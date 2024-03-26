@@ -39,10 +39,16 @@ Rcpp::List reverse_sinkhorn_c(const arma::mat& result_H_row,
             W_row = W_col * diagmat(D_w_inv_pred_vec);
             H_row = diagmat(1 / D_w_inv_pred_vec) * H_col * arma::diagmat(1 / D_vs_col.col(i - 1));
         }
+        else {
+            // fair estimate of factorization of V using W_row and H_row. For NMF we don't want H to be colnorm
+            W_row = arma::diagmat(1 / D_vs_row.col(0)) * W_row; // this is not row norm anymore.
+        }
     }
 
     return Rcpp::List::create(Rcpp::Named("W") = W_col,
                               Rcpp::Named("H") = H_col,
+                              Rcpp::Named("Dv_inv_W_row") = W_row,
+                              Rcpp::Named("H_row") = H_row,
                               Rcpp::Named("D_ws_col") = D_ws_col,
                               Rcpp::Named("D_hs_row") = D_hs_row);
 }

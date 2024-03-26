@@ -24,6 +24,8 @@ reverse_sinkhorn <- function(H_row, W_col, scaling) {
   
   dimnames(unscaled$H) <- dimnames(H_row)
   dimnames(unscaled$W) <- dimnames(W_col)
+  dimnames(unscaled$H_row) <- dimnames(H_row)
+  dimnames(unscaled$Dv_inv_W_row) <- dimnames(W_col)
   
   return(unscaled)
 }
