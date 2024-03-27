@@ -374,7 +374,18 @@ DualSimplexSolver <- R6Class(
       return(self$st$solution)
     },
 
+    plot_negative_basis_change = function() {
+      private$optimize_first()
+      return(plot_negative_basis_change(self$st$proj, self$st$solution_proj))
+    },
+
+    plot_negative_proportions_change = function() {
+      private$optimize_first()
+      return(plot_negative_proportions_change(self$st$proj, self$st$solution_proj))
+    },
+
     plot_solution_distribution = function() {
+      private$finalize_first()
       cowplot::plot_grid(plotlist = list(
         plot_proportions_distribution(self$get_solution()$H) + ggtitle(
           "Proportions, H",
