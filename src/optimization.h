@@ -12,7 +12,6 @@ arma::mat hinge_der_proportions_C__(const arma::mat& H,
                                     const arma::mat& R,
                                     double precision_ = 1e-10);
 
-// [[Rcpp::export]]
 arma::mat hinge_der_basis_C__(const arma::mat& W, const arma::mat& S, double precision_ = 1e-10);
 
 // [[Rcpp::export]]

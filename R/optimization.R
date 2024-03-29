@@ -9,7 +9,8 @@ optim_config <- function(
   coef_pos_D_w = 0,
   limit_X = 0,
   limit_Omega = 0,
-  cosine_thresh = 0
+  cosine_thresh = 0,
+  alternative_method = FALSE
 ) {
   return(list(
     coef_der_X = coef_der_X,
@@ -20,9 +21,10 @@ optim_config <- function(
     coef_pos_D_w = coef_pos_D_w,
     limit_X = limit_X,
     limit_Omega = limit_Omega,
-    cosine_thresh = cosine_thresh
+    cosine_thresh = cosine_thresh,
+    alternative_method = alternative_method
   ))
-}
+
 
 OPTIM_CONFIG_DEFAULT <- optim_config()
 
@@ -109,7 +111,7 @@ optimize_solution <- function(
 
   r_limits <- calc_r_limits(proj, config$limit_X, config$limit_Omega)
 
-  optimization_result <- derivative_stage2(
+  optimization_params <- list(
     solution_proj$X,
     t(solution_proj$Omega),
     solution_proj$D_w,
@@ -132,6 +134,11 @@ optimize_solution <- function(
     r_limits$R_limit_Omega,
     config$cosine_thresh
   )
+  optimization_result <- if (config$alternative_method) {
+    do.call(alternative_derivative_stage2, optimization_params)
+  } else {
+    do.call(derivative_stage2, optimization_params)
+  }
 
   solution_proj$X <- optimization_result$new_X
   solution_proj$Omega <- t(optimization_result$new_Omega)
