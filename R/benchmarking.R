@@ -35,7 +35,7 @@ rmse <- Metrics::rmse
 ############ PLOTTING ############
 
 plot_ptp_lines <- function(ptp) {
-  linseed::plotProportions( as.data.frame(ptp[[1]]), as.data.frame(ptp[[2]]), pnames = c("predicted", "true"))
+  linseed::plotProportions(as.data.frame(ptp[[1]]), as.data.frame(ptp[[2]]), pnames = c("predicted", "true"))
 }
 
 plot_ptp_scatter <- function(ptp) {
