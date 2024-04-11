@@ -6,7 +6,6 @@ R/RcppExports.R
 *.tar.gz
 *.Rproj
 *.html
-*.gif
 *.so
 *.o
 *.uwot
