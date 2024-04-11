@@ -30,8 +30,7 @@ initializers <- list(
 
     x <- t(points)
     u <- rowMeans(x)
-    y <-
-      x / matrix(kronecker(colSums(x * u), rep(1, n_cell_types)), nrow = n_cell_types)
+    y <- x / matrix(kronecker(colSums(x * u), rep(1, n_cell_types)), nrow = n_cell_types)
 
     indice <- rep(0, n_cell_types)
     A <- matrix(0, nrow = n_cell_types, ncol = n_cell_types)
@@ -39,8 +38,7 @@ initializers <- list(
     for (i in 1:n_cell_types) {
       w <- matrix(runif(n_cell_types), ncol = 1)
       f <- w - A %*% MASS::ginv(A) %*% w
-
-      f <- f / sqrt(sum(f ^ 2))
+      f <- f / sqrt(sum(f^2))
 
       v <- t(f) %*% y
       indice[i] <- which.max(abs(v))
@@ -50,6 +48,50 @@ initializers <- list(
     Ae <- restored[indice,]
     X <- Ae %*% t(proj$meta$R)
     return(set_solution_from_x(X, proj))
+  },
+
+  select_omega = function(proj, kwargs = list()) {
+    if ("samples_subset" %in% kwargs) {
+      points <- proj$Omega[kwargs$samples_subset, ]
+    } else {
+      points <- proj$Omega
+    }
+
+    restored <- t(proj$meta$S) %*% t(points)
+    n_cell_types <- proj$meta$K
+
+    x <- t(points)
+    u <- rowMeans(x)
+    y <- x / matrix(kronecker(colSums(x * u), rep(1, n_cell_types)), nrow=n_cell_types)
+
+    indice <- rep(0, n_cell_types)
+    A <- matrix(0, nrow=n_cell_types, ncol=n_cell_types)
+    A[n_cell_types, 1] <- 1
+    for (i in 1:n_cell_types) {
+      w <- matrix(runif(n_cell_types), ncol=1)
+      f <- w - A %*% MASS::ginv(A) %*% w
+      f <- f / sqrt(sum(f^2))
+
+      v <- t(f) %*% y
+      indice[i] <- which.max(abs(v))
+      A[, i] <- y[, indice[i]]
+    }
+    Ae <- restored[, indice]
+    Omega <- proj$meta$S %*% Ae
+
+    M <- proj$meta$M
+    N <- proj$meta$N
+    B <- matrix(apply(proj$meta$S, 1, sum), ncol=1, nrow=n_cell_types)
+    D_w <- MASS::ginv(Omega) %*% B
+    D_h <- D_w * (N/M)
+    V__ <- proj$meta$S %*% proj$X
+    X <- MASS::ginv(Omega %*% diag(D_w[, 1])) %*% V__
+    return(list(
+      X = X,
+      Omega = t(Omega),
+      D_w = D_w,
+      D_h = D_h
+    ))
   },
 
   random = function(proj, kwargs = NULL) {

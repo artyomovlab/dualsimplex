@@ -79,7 +79,7 @@ get_fold_change <- function(signature, stat = "mean_fc", colnorm = T) {
     signature <- apply(signature, 2, function(x) x / sum(x))
   }
   for (ct_col_i in 1:ncol(cell_types_stats)) {
-    stat_fun <- if (stat == "mean_fc") 
+    stat_fun <- if (stat == "mean_fc")
       function(gene_row) {
         gene_row[ct_col_i] / mean(gene_row[-ct_col_i])
       }
@@ -141,7 +141,7 @@ convert_sc_markers <- function(markers_seurat, allowed_genes, n_markers = 100) {
 }
 
 plot_marker_enrichment <- function(
-  so, marker_names, ncol = 4, limits = NULL, ggadd = function(plt, i) plt, wrap = T, reduction = NULL
+  so, marker_names, ncol = 4, limits = NULL, ggadd = function(plt, i) plt, wrap = T, ...
 ) {
   p <- Seurat::FeaturePlot(
     so,
@@ -150,9 +150,9 @@ plot_marker_enrichment <- function(
     #  label.size = 3,
     order = T,
     combine = FALSE,
-    reduction = reduction
+    ...
   )
-  
+
   for(i in 1:length(p)) {
     ct <- marker_names[[i]]
     p[[i]] <- ggadd(
@@ -167,7 +167,7 @@ plot_marker_enrichment <- function(
     )
     #NoLegend()
   }
-  
+
   if (wrap) {
     cowplot::plot_grid(plotlist = p, ncol = ncol)
   } else {

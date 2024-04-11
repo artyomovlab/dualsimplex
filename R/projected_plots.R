@@ -258,7 +258,8 @@ plot_points_2d_clean <- function(
   color_col,
   color_scheme,
   pt_opacity = 0.2,
-  pt_size = 1
+  pt_size = 1,
+  ...
 ) {
   plt <- ggplot(to_plot, aes_string(x = x_col, y = y_col, color = color_col))
 
@@ -270,20 +271,22 @@ plot_points_2d_clean <- function(
         data = to_plot[to_plot[[color_col]], ],
         size = pt_size * 2,
         alpha = 1,
-        color = "green"
+        color = "green",
+        ...
       ))
     }
   } else if (color_scheme == "direct") {
     plt <- plt +
-      rasterize_if_needed(geom_point(size = pt_size, alpha = min(1, pt_opacity * 4))) +
+      rasterize_if_needed(geom_point(size = pt_size, alpha = min(1, pt_opacity * 4), ...)) +
       scale_color_distiller(palette = "Spectral", name = color_col)
   } else if (color_scheme == "factor") {
     plt <- plt +
-    rasterize_if_needed(geom_point(size = pt_size, color = "grey70", alpha = pt_opacity)) +
+    rasterize_if_needed(geom_point(size = pt_size, color = "grey70", alpha = pt_opacity, ...)) +
     rasterize_if_needed(geom_point(
         data = to_plot[!is.na(to_plot[[color_col]]), ],
         alpha = 1,
-        size = pt_size * 2
+        size = pt_size * 2,
+        ...
       ))
   } else {
     stop("Invalid color_scheme")
