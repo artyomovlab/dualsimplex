@@ -4,7 +4,9 @@
 This is the implementation of the Dual Simplex method presented in [this paper](https://www.biorxiv.org/content/10.1101/2024.04.09.588652v1)
 
 ```angular2html
-Paper reference here
+Non-negative matrix factorization and deconvolution as dual simplex problem
+Denis Kleverov, Ekaterina Aladyeva, Alexey Serdyukov, Maxim Artyomov
+bioRxiv 2024.04.09.588652; doi: https://doi.org/10.1101/2024.04.09.588652
 ```
 This in essence is an NMF algorithm which can factorize nonegative matrix V into two nonnegative matrices W and H.
 
