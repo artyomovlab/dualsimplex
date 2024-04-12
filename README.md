@@ -1,7 +1,7 @@
 # DualSimplex algorithm's R package
 
 ## About the project
-This is the implementation of the Dual Simplex method presented in [this](https://google.com) paper
+This is the implementation of the Dual Simplex method presented in [this paper](https://www.biorxiv.org/content/10.1101/2024.04.09.588652v1)
 
 ```angular2html
 Paper reference here
@@ -22,7 +22,7 @@ This method can be applied to:
 
 ## Getting Started
 ### Prerequisites
-This is an R language package so you need [R](https://www.r-project.org/about.html)
+This is an R language package so you need to have [R](https://www.r-project.org/about.html)
 
 ### Installation
 Just for now it is:
