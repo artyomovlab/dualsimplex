@@ -3,6 +3,30 @@
 
 arma::mat alternative_hinge_der_basis_C__(const arma::mat& W, const arma::mat& S, double precision_ = 1e-10);
 
+//' Main function to calculate error terms
+//'
+//' @param X current X
+//' @param Omega current Omega
+//' @param D_w current D_w
+//' @param SVRt current SVRt (sigma)
+//' @param R current R
+//' @param S current S
+//' @param coef_der_X learning rate X
+//' @param coef_der_Omega learning rate Omega
+//' @param coef_hinge_H lambda
+//' @param coef_hinge_W beta
+//' @param coef_pos_D_h experimental coefficient for D. legacy not tested.
+//' @param coef_pos_D_w experimental coefficient for D. legacy not tested.
+//' @param cell_types number of components (K)
+//' @param N current N
+//' @param M current M
+//' @param iterations number of iterations
+//' @param mean_radius_X data dependent restriction for updates
+//' @param mean_radius_Omega dependent restriction for updates
+//' @param r_const_X experimental. not tested
+//' @param r_const_Omega experimental. not tested
+//' @param thresh experimental. not tested
+//' @return new parameters
 // [[Rcpp::export]]
 Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                              const arma::mat& Omega,

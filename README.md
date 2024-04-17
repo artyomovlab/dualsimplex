@@ -25,19 +25,28 @@ This method can be applied to:
 ## Getting Started
 ### Prerequisites
 This is an R language package so you need to have [R](https://www.r-project.org/about.html)
+We tested our code using [Rstudio](https://posit.co/download/rstudio-desktop/) or [Rstudio server](https://posit.co/products/open-source/rstudio-server/) as IDE environments. 
+We are actively using Bioconductor and devtools packages so you need it to install.
 
-### Installation
-Just for now it is:
+
 ```r
-devtools::load_all()
+# in your R environment
+install.packages("BiocManager")
+install.packages("devtools")
 ```
-
-After final tweaks, it will be: 
+### Installation
+Install from github
 ```r
 devtools::install_github("artyomovlab/DualSimplex")
 ```
 
-After the publication, it will be:
+Or alternatively install from your local directory with this repository
+
+```r
+devtools::load_all("path_to_code_directory")
+```
+
+(This is not working yet) After the publication, it will be:
 ```r
 install.packages("DualSimplex")
 ```
@@ -46,6 +55,9 @@ install.packages("DualSimplex")
 ## Usage
 ### Read/Generate the data
 ```r
+library("DualSimplex")
+library(dplyr)
+
 N <- 100 # number of samples (e.g. mixtures)
 M <- 10000 # number of features (e.g. genes)
 K <- 3 # Number of pure components

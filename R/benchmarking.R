@@ -1,5 +1,13 @@
 ############ MAIN LOGIC ############
 
+#' Generate (prediction,true) pairs for each basis vector
+#'
+#' Will try to gess the right order of columns (since algorithm can shuffle it) for matrix W
+#'
+#' @param pred_basis  MxK predicted matrix W
+#' @param true_basis MxK true matrix W
+#' @return list of 2 matrices with ordered columns (1-1, 2-2, ..)
+#' @export
 coerce_pred_true_basis <- function(pred_basis, true_basis) {
   pred_basis <- pred_basis[, guess_order(t(pred_basis), t(true_basis))]
   colnames(pred_basis) <- colnames(true_basis)
@@ -7,6 +15,14 @@ coerce_pred_true_basis <- function(pred_basis, true_basis) {
   list(pred_basis, true_basis)
 }
 
+#' Generate (prediction,true) pairs for each coefficients vector
+#'
+#' Will try to gess the right order of rows (since algorithm can shuffle it) for matrix H
+#'
+#' @param pred_props  KxN predicted matrix H
+#' @param true_props KxN true matrix H
+#' @return list of 2 matrices with ordered rows (1-1, 2-2, ..)
+#' @export
 coerce_pred_true_props <- function(pred_props, true_props) {
   pred_props <- pred_props[guess_order(pred_props, true_props), ]
   colnames(pred_props) <- colnames(true_props)
@@ -14,6 +30,16 @@ coerce_pred_true_props <- function(pred_props, true_props) {
   list(pred_props, true_props)
 }
 
+
+#' Function to gess order of rows
+#'
+#' Just calculates pairwise distance and takes argmin for each column.
+#'
+#' @param predicted predicted matrix
+#' @param actual true matrix
+#' @return reordered row names
+#' @import combinat
+#' @export
 guess_order <- function(predicted, actual) {
   ctn <- nrow(predicted)
   allPerms <- combinat::permn(ctn)
@@ -25,19 +51,31 @@ guess_order <- function(predicted, actual) {
   perm
 }
 
-r2 <- function(a, b) {
-  cor(as.vector(a), as.vector(b))^2
-}
-
-rmse <- Metrics::rmse
-
 
 ############ PLOTTING ############
 
+#' Plot predicted/true lines plot for proportions/coefficients (matrix H)
+#'
+#' Used linseed package method to plot
+#'
+#' @param ptp result of coerce_pred_true_props or list of two matrices with the same order of rows
+#' @return linseed package plot
+#' @import linseed
+#' @export
 plot_ptp_lines <- function(ptp) {
   linseed::plotProportions(as.data.frame(ptp[[1]]), as.data.frame(ptp[[2]]), pnames = c("predicted", "true"))
 }
 
+#' Plot predicted/true scatter plot for proportions/coefficients (matrix H)
+#'
+#' Uses ggplot with rasterization to plot and  gridExtra::grid to arrange plots
+#'
+#' @param ptp result of coerce_pred_true_props or list of two matrices with the same order of rows
+#' @return  gridExtra::grid.arrange() plot
+#' @importFrom Metrics rmse
+#' @importFrom gridExtra grid.arrange arrangeGrob
+#' @importFrom grid textGrob
+#' @export
 plot_ptp_scatter <- function(ptp) {
   plot_list <- list()
   cts <- rownames(ptp[[1]])
@@ -47,7 +85,7 @@ plot_ptp_scatter <- function(ptp) {
       other = ptp[[2]][ct, ]
     ))
 
-    rmse_value <- round(rmse(ptp[[1]][ct, ], ptp[[2]][ct, ]), 2)
+    rmse_value <- round(Metrics::rmse(ptp[[1]][ct, ], ptp[[2]][ct, ]), 2)
 
     mx <- 1
 
@@ -79,6 +117,19 @@ plot_ptp_scatter <- function(ptp) {
   gridExtra::grid.arrange(gridExtra::arrangeGrob(common_plot, left = y.grob, bottom = x.grob))
 }
 
+#' Plot predicted/true scatter plot for basis (matrix W)
+#'
+#' Uses ggplot with rasterization to plot and  gridExtra::grid to arrange plots
+#'
+#' @param ptb result of coerce_pred_true_props or list of two matrices with the same order of rows
+#' @param max_expr all bigger values will be replaced to this value
+#' @param pt_alpha alphavalue for points
+#' @return list of plots grid extra
+#' @importFrom Metrics rmse
+#' @importFrom gridExtra grid.arrange arrangeGrob
+#' @importFrom grid textGrob
+#' @importFrom grDevices adjustcolor
+#' @export
 plot_ptb_scatter <- function(ptb, max_expr = 25, pt_alpha = 0.2) {
   plot_list <- list()
   cts <- colnames(ptb[[1]])
@@ -89,7 +140,7 @@ plot_ptb_scatter <- function(ptb, max_expr = 25, pt_alpha = 0.2) {
     ))
 
     # Calculate RMSE value
-    rmse_value <- round(rmse(to_plot$linseed, to_plot$other), 2)
+    rmse_value <- round(Metrics::rmse(to_plot$linseed, to_plot$other), 2)
 
     mx <- max(max_expr, max(max(to_plot$other, to_plot$linseed))) + 1
     plot_list[[ct]] <- ggplot(to_plot, aes(x = other, y = linseed)) +

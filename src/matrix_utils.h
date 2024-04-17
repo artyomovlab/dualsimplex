@@ -1,6 +1,10 @@
 // [[Rcpp::depends(RcppArmadillo)]]
 #include <RcppArmadillo.h>
 
+//' Get cosine distance between columns
+//'
+//' @param X input matrix
+//' @return derivative for X
 // [[Rcpp::export]]
 arma::rowvec find_cosine(const arma::mat& X);
 

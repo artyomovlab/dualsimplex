@@ -3,22 +3,61 @@ Type: Package
 Title: Projective dual simplex based gene expression deconvolution
 Version: 1.0
 Date: 2023-08-24
-Author: John Doe
-Maintainer: Abacaba <leshaserdyukov@gmail.com>
-Description: Gene expression deconvolution, based on finding SVD projections and dual simplex corners
-License: MIT
+Authors@R:
+  c(person(given = "Denis",
+           family = "Kleverov",
+           role = c("aut"),
+           email = "denisk@wustl.edu",
+           comment = c(ORCID = "0009-0002-1362-486X")),
+    person(given = "Ekaterina",
+           family = "Aladyeva",
+           role = c("aut"),
+           comment = c(ORCID = "0000-0002-3483-6944")),
+    person(given = "Alexey",
+           family = "Serdyukov",
+           role = c("aut", "cre"),
+           email = "leshaserdyukov@gmail.com",
+           comment = c(ORCID = "0009-0004-4155-5237")),
+    person(given = "Maxim",
+           family = "Artyomov",
+           email = "martyomov@wustl.edu",
+           role = c("aut", "ths"),
+          comment = c(ORCID = "0000-0002-1133-4212"))
+           )
+Maintainer: Alexey Serdyukov <leshaserdyukov@gmail.com>
+Description: Gene expression deconvolution, based on finding SVD projections and dual simplex corners.
+License: MIT + file LICENSE
+biocViews:
 Imports:
     Rcpp,
     RcppArmadillo,
+    rlang,
     irlba,
     nnls,
+    limma,
     Matrix,
     ggplot2,
     ggrastr,
+    cowplot,
+    gridExtra,
+    RColorBrewer,
+    reshape2,
+    stringr,
+    Hmisc,
+    MASS,
     dplyr,
+    tidyr,
     R6,
     Metrics,
     Biobase,
     uwot (>= 0.1.11),
-    knitr
+    knitr,
+    combinat,
+    scales,
+    linseed
+Remotes: ctlab/linseed
+Suggests:
+    Seurat,
+    gganimate
 LinkingTo: Rcpp, RcppArmadillo
+RoxygenNote: 7.3.1

@@ -1,7 +1,5 @@
 .Rproj.user/
 .idea/
-src/RcppExports.cpp
-R/RcppExports.R
 .Rhistory
 *.tar.gz
 *.Rproj
@@ -14,5 +12,4 @@ R/RcppExports.R
 # For now
 # TODO: unignore data/*.rds
 data/
-man/
 drafts/

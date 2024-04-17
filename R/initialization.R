@@ -1,3 +1,11 @@
+#' Initialize solution with selected initialization method
+#'
+#' In general it can use provided markers, solution for one of the simplex or random values
+#'
+#' @param proj dso$st$proj object containing containing all results of projection operation. (e.g. projected points and vectors)
+#' @param strategy strategy to use for initialization. valid values are "select_x", "select_omega", "random" and "marker_means"
+#' @param kwargs put here marker gene names for each of the cell type if use  marker_means
+#' @export
 initialize_solution <- function(proj, strategy = "select_x", kwargs = NULL) {
   solution <- initializers[[strategy]](proj, kwargs)
   solution$init_strategy <- strategy
@@ -141,6 +149,12 @@ initializers <- list(
   }
 )
 
+#' Infer solution matrices Omega and D from predefined matrix X
+#'
+#' Uses properties of sinkhorn transformed matrices (their proportional relation)
+#'
+#' @param X KxK matrix X
+#' @param proj dso$st$proj object, containing all necessary info about projection (e.g. vectors and projected points)
 set_solution_from_x <- function(X, proj) {
   D_h <- MASS::ginv(t(X)) %*% proj$meta$A
   M <- proj$meta$M
@@ -156,6 +170,13 @@ set_solution_from_x <- function(X, proj) {
   ))
 }
 
+#' Infer solution matrices D from predefined matrices X and Omega
+#'
+#' Uses properties of sinkhorn transformed matrices. Performs NNLS
+#'
+#' @param X KxK solution matrix X
+#' @param Omega KxK solution matrix Omega
+#' @param proj dso$st$proj object, containing all necessary info about projection (e.g. vectors and projected points)
 get_Dwh_from_XOmega <- function(X, Omega, proj) {
   V__ <- proj$meta$S %*% proj$X
 

@@ -10,6 +10,17 @@
 # Should be a function to perform one of two projections, and both of them
 
 ############ EXTRACTING 2D DATASET ############
+
+#' Get required two-dimensional subset of the data
+#'
+#' Conditionally this method returns 2D subset of points in original SVD space or umap transformed.
+#' If extra_points_proj specified it will use these points for visualization and proj is just information about projection
+#'
+#' @param proj dso$st$proj object containing all projected points and projection info
+#' @param use_dims dimensions to extract (e.g. 2:3). NULL to get umap points
+#' @param extra_points_proj additional points (should contain two matrices $X and $Omega)
+#' @return subset of projected points (columns)
+#' @export
 get_2d_subset <- function(proj, use_dims, extra_points_proj = NULL) {
   if (is.null(use_dims)) {
     if ("umap" %in% names(proj)) {
@@ -35,6 +46,12 @@ get_2d_subset <- function(proj, use_dims, extra_points_proj = NULL) {
   ))
 }
 
+#' Util function to merge list of dataframes to a single one with column to separate original dataframes
+#'
+#' @param data_list the list of dataframes
+#' @param group_colname new column to create in both. column values will be taken from names(data_list)
+#' @return merged data
+#' @export
 concat_data <- function(data_list, group_colname) {
   merged <- lapply(1:length(data_list), function(i) {
     this_data <- as.data.frame(data_list[[i]])
@@ -49,6 +66,16 @@ concat_data <- function(data_list, group_colname) {
   return(merged)
 }
 
+#' Get history of values for X and Omega from optimization logs
+#'
+#' Points will be taken uniformly in the
+#'
+#' @param solution_proj dso$st$solution_proj object containing all optimization logs and result
+#' @param step step to skip some values
+#' @param from_iter starting point
+#' @param to_iter end point
+#' @return X and Omega values for desired timestamps
+#' @export
 get_solution_history <- function(solution_proj, step, from_iter = 1, to_iter = NULL) {
   stats <- list()
   stats$X <- solution_proj$optim_history$points_statistics_X
@@ -77,6 +104,13 @@ get_solution_history <- function(solution_proj, step, from_iter = 1, to_iter = N
 }
 
 ############ EXTRACTING COLOR VECTOR & SCHEME ############
+
+#' Prepare a list of color values for points we want to plot
+#'
+#' @param to_plot dataframe to plot
+#' @param color color column or values
+#' @param color_name color column or values
+#' @return list of values to be used for coloring
 get_color_params <- function(to_plot, color, color_name) {
   if (is.null(color)) {
     return(list(
@@ -115,9 +149,20 @@ get_color_params <- function(to_plot, color, color_name) {
 
 
 ############ PLOTTING ############
-# This function handles turning projection into 2-dim data
-#  and grouping the plots by X and Omega
-#  uses ggplot facet_wrap, can add solution easily
+
+#' The starting point of plotting projected points.
+#'
+#' This funtion can be used to visualize projected points. It handles turning projection into 2-dim data
+#' and grouping the plots by X and Omega uses ggplot facet_wrap, can add solution easily
+#' Any ggplot arguments can be added after main arguments
+#'
+#'
+#' @param proj dso$st$proj object containing all projected points
+#' @param use_dims dimensions to use (e.g. 2:3), NULL means UMAP if umap is calculated
+#' @param spaces which space to visualize "X" or "Omega" or c("X", "Omega")
+#' @param ... any additional geom_point_params
+#' @return requested plot
+#' @export
 plot_projection_points <- function(
   proj,
   use_dims = NULL,
@@ -137,6 +182,16 @@ plot_projection_points <- function(
   return(plt)
 }
 
+#' Add solution points (X, Omega) to the plot
+#'
+#' @param plt plot to add
+#' @param solution_proj dso$st$solution_proj containing optimization history and solution
+#' @param proj dso$st$proj containing info about projection (e.g. vectors, projected points)
+#' @param use_dims dimensions of the proj to use (e.g. 2:3 or NULL for umap)
+#' @param pt_size size of solution points
+#' @param spaces for which space to add c("X", "Omega")
+#' @return modified plot(s)
+#' @export
 add_solution <- function(
   plt,
   solution_proj,
@@ -168,6 +223,22 @@ add_solution <- function(
   return(plt)
 }
 
+#' Add solution history lines/points to the plot
+#'
+#' @param plt plot to add
+#' @param solution_proj dso$st$solution_proj containing optimization history and solution
+#' @param proj dso$st$proj containing info about projection (e.g. vectors, projected points)
+#' @param use_dims dimensions of the proj to use (e.g. 2:3 or NULL for umap)
+#' @param pt_size size of history points
+#' @param pt_opacity alpha for lines
+#' @param step how many values to skip
+#' @param from_iter starting point
+#' @param to_iter end point
+#' @param spaces for which space to add c("X", "Omega")
+#' @param colored color according to solution points
+#' @param path if TRUE do lines, else points
+#' @return modified plot(s)
+#' @export
 add_solution_history <- function(
   plt,
   solution_proj,
@@ -220,7 +291,15 @@ add_solution_history <- function(
   return(plt)
 }
 
-# This function deals with color and arguments cleaning
+#' Intermediate step of plotting
+#' This function deals with color and arguments cleaning
+#'
+#' @param points_2d 2d subset of the data
+#' @param color color argument (row names, or column from annotation or maybe vector of values)
+#' @param color_name color column name in the preprocessed data (can be column from annotation or "highlight" or "annotation"
+#' @param order_by_color should we order by color_name column?
+#' @param ... any additional geom_point params
+#' @return ggplot object
 plot_points_2d <- function(
   points_2d,
   color = NULL,
@@ -251,6 +330,19 @@ plot_points_2d <- function(
   ))
 }
 
+#' Final step of plotting
+#' This function just does ggplot object
+#' You can add any geom_point params after main arguments
+#'
+#' @param to_plot clean 2D dataframe to plot
+#' @param x_col x axe column
+#' @param y_col y axe column
+#' @param color_col which column is color
+#' @param color_scheme color scheme identified by color params parsing
+#' @param pt_opacity opasity for points
+#' @param pt_size point size
+#' @param ... any additional geom_point params
+#' @return ggplot object
 plot_points_2d_clean <- function(
   to_plot,
   x_col,
@@ -297,6 +389,19 @@ plot_points_2d_clean <- function(
   return(plt)
 }
 
+#' Produce animation gif of optimization with gganimate (you need to install it)
+#'
+#' @param proj dso$st$proj containing projected points and info about projection
+#' @param solution_proj dso$st$solution_proj containing optimiation history
+#' @param step how many steps we skip
+#' @param height height of result animation
+#' @param width width of result animation
+#' @param gif_filename filname
+#' @param gif_dir directory
+#' @param nframes how many frames in total
+#' @param use_dims which dimensions to show (e.g. 2:3 or 3:4)
+#' @return ganimate::animate or nothing if file is specified
+#' @export
 plot_solution_history_anim <- function(
   proj,
   solution_proj,
