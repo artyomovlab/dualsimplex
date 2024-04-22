@@ -153,6 +153,7 @@ derivative_stage2 <- function(X, Omega, D_w, SVRt, R, S, coef_der_X, coef_der_Om
 #' @param D_vs_col column normalizing matrices used for V in forward procedure.
 #' @param iterations how many iterations back
 #' @return named list of W, H, Dv_inv_W_row, H_row, D_ws_col, D_hs_row.
+#' @export
 reverse_sinkhorn_c <- function(result_H_row, result_W_col, D_vs_row, D_vs_col, iterations) {
     .Call('_DualSimplex_reverse_sinkhorn_c', PACKAGE = 'DualSimplex', result_H_row, result_W_col, D_vs_row, D_vs_col, iterations)
 }
@@ -162,6 +163,7 @@ reverse_sinkhorn_c <- function(result_H_row, result_W_col, D_vs_row, D_vs_col, i
 #' @param V matrix to scale
 #' @param iterations W_gs number of iterations.
 #' @return named list of V_row, V_col, Dvs_row, Dvs_col
+#' @export
 sinkhorn_scale_c <- function(V, iterations) {
     .Call('_DualSimplex_sinkhorn_scale_c', PACKAGE = 'DualSimplex', V, iterations)
 }
