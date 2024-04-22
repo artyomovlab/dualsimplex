@@ -25,27 +25,41 @@ This method can be applied to:
 ## Getting Started
 ### Prerequisites
 This is an R language package so you need to have [R](https://www.r-project.org/about.html)
+We tested our code using [Rstudio](https://posit.co/download/rstudio-desktop/) or [Rstudio server](https://posit.co/products/open-source/rstudio-server/) as IDE environments. 
+We are actively using Bioconductor and devtools packages so you need it to install.
 
-### Installation
-Just for now it is:
+
 ```r
-devtools::load_all()
+# in your R environment
+install.packages("BiocManager")
+install.packages("devtools")
 ```
-
-After final tweaks, it will be: 
+### Installation
+Install from github
 ```r
 devtools::install_github("artyomovlab/DualSimplex")
 ```
 
-After the publication, it will be:
+Or alternatively install from your local directory with this repository
+
+```r
+devtools::load_all("path_to_code_directory")
+```
+
+(This is not working yet) After the publication, it will be:
 ```r
 install.packages("DualSimplex")
 ```
 
 
 ## Usage
+Check our additional [paper repository](https://github.com/artyomovlab/dualsimplex_paper) for more examples of NMF, bulk-RNAseq deconvolution and single cell clustering
+
 ### Read/Generate the data
 ```r
+library("DualSimplex")
+library(dplyr)
+
 N <- 100 # number of samples (e.g. mixtures)
 M <- 10000 # number of features (e.g. genes)
 K <- 3 # Number of pure components
@@ -120,9 +134,6 @@ dso$save_state("directory_to_save")
 dso <- DualSimplexSolver$from_state("directory_to_save")
 ```
 
-Check our additional [paper repository](https://github.com/artyomovlab/dualsimplex_paper) for more examples of NMF, bulk-RNAseq deconvolution and single cell clustering
-
-
 ## Contacts
 
 -  Denis Kleverov ([@denis_kleverov](https://twitter.com/denis_kleverov)) ([linkedIn](https://linkedin.com/in/denklewer) )
@@ -130,9 +141,8 @@ Check our additional [paper repository](https://github.com/artyomovlab/dualsimpl
 -  Alexey Serdyukov ([email](mailto:leshaserdyukov@gmail.com))
 -  prof. Maxim Artyomov ([@maxim_artyomov](https://twitter.com/maxim_artyomov)) ([email](mailto:martyomov@wustl.edu))
 
-
-
-## Code structure & Guidelines
+## For developers
+### Code structure & Guidelines
 
 The following files in the `R/` directory represent different stages
 of DualSimplex pipeline:
@@ -157,3 +167,19 @@ functions from those packages to implement the whole control flow.
 
 This rule of thumb leads to linear code logic and low code coupling,
 which makes it simple to debug and introduce changes.
+
+### Checking your new functions
+
+Please document your code with roxygene2 comments (as it is done for rest of the package)
+- Regenerate NAMESPACE and additional files
+```r
+devtools::document()
+```
+- ensure standard devtools check is returning 0 errors
+```r
+devtools::check()
+```
+- ensure package is installable from your repository 
+```r
+devtools::install_github("your_github_nickname"/DualSimplex@your_branch_name")
+```

@@ -1,4 +1,12 @@
 ############ SOLUTION STATS ############
+
+#' Plot distribution of values for given matix H
+#'
+#' Plot distribution of values for given matix H. Color by rows of the matrix
+#'
+#' @param H coefficients matrix to be plotted
+#' @return ggplot object
+#' @export
 plot_proportions_distribution <- function(H) {
   to_plot <- as.data.frame(t(H))
   to_plot <- tidyr::pivot_longer(
@@ -18,6 +26,15 @@ plot_proportions_distribution <- function(H) {
   return(plt)
 }
 
+#' Plot distribution of values for given matix W
+#'
+#' Plot distribution of values for given matix W. Color by columns of the matrix
+#'
+#' @param W coefficients matrix to be plotted
+#' @param max_expr maximum value of exprassion to be set (higher values will set to this)
+#' @param logp1 TRUE if want to log scale basis matrix
+#' @return ggplot object
+#' @export
 plot_basis_distribution <- function(W, max_expr = 25, logp1 = T) {
   if (logp1) {
     to_plot <- log(W + 1)
@@ -44,6 +61,16 @@ plot_basis_distribution <- function(W, max_expr = 25, logp1 = T) {
 
 
 ############ MARKERS ############
+
+#' Get signature markers based on basis matrix.
+#'
+#' Will calculate fold change for rows and return top n rownames
+#'
+#' @param signature basis matrix (W) obtained by method or any other
+#' @param n_marker_genes number of genes to return for each column
+#' @param stat which statistic to calculate for fold change
+#' @return list of lists of genes (for each column of the matrix `signature`)
+#' @export
 get_signature_markers <- function(signature, n_marker_genes = 100, stat = "mean_fc") {
   stat <- get_fold_change(signature, stat)
   markers <- lapply(colnames(stat), function(ct) {
@@ -53,6 +80,13 @@ get_signature_markers <- function(signature, n_marker_genes = 100, stat = "mean_
   return(markers)
 }
 
+#' Convert cell_type:gene list to gene:cell_type list
+#'
+#' Utility method
+#'
+#' @param marker_list list of lists of genes.
+#' @return same list but now gene is key, cell type is value
+#' @export
 revert_marker_list <- function(marker_list) {
   rev_mlist <- list()
   for (ct in names(marker_list)) {
@@ -62,6 +96,14 @@ revert_marker_list <- function(marker_list) {
   return(rev_mlist)
 }
 
+#' Assign cell types to marker genes
+#'
+#' Utility method
+#'
+#' @param gene_names gene list to assing cell types
+#' @param marker_list list of lists of marker genes for each cell type
+#' @return return marker label for gene if it is marker
+#' @export
 which_marker <- function(gene_names, marker_list) {
   rev_mlist <- revert_marker_list(marker_list)
   which_marker_anno <- rep(NA, length(gene_names))
@@ -71,6 +113,15 @@ which_marker <- function(gene_names, marker_list) {
   return(which_marker_anno)
 }
 
+#' Get fold change values for genes
+#'
+#' Utility method
+#'
+#' @param signature basis matrix (W)
+#' @param stat statistic to calculate
+#' @param colnorm normalize result value or not
+#' @return cell_types_stats (fold change values for rows)
+#' @export
 get_fold_change <- function(signature, stat = "mean_fc", colnorm = T) {
   cell_types_stats <- matrix(0, ncol = ncol(signature), nrow = nrow(signature))
   rownames(cell_types_stats) <- rownames(signature)
@@ -94,21 +145,13 @@ get_fold_change <- function(signature, stat = "mean_fc", colnorm = T) {
   cell_types_stats
 }
 
-get_limma_fold_change <- function(signature){
-  limma_fc <- matrix(0,nrow=nrow(signature),ncol=self$cell_types)
-  colnames(limma_fc) <- paste0("LimmaFC_", 1:self$cell_types)
-  for (ct in 1:self$cell_types) {
-    expr <- signature[,grepl("^Cell.*",colnames(signature))]
-    condition <- as.integer(paste0("Cell_type_",ct) != colnames(expr))
-    design <- model.matrix(~ condition)
-    fit <- lmFit(expr, design)
-    fit <- eBayes(fit)
-    stats <- topTable(fit, number = nrow(signature))
-    limma_fc[,ct] <- -stats[rownames(signature),"logFC"]
-  }
-  return(cbind(limma_fc, signature))
-}
-
+#' Convert marker list to string
+#'
+#' Nice string of markers for matrix W
+#'
+#' @param marker_list markers to convert (list of lists)
+#' @return string with all markers listed
+#' @export
 cat_markers <- function(marker_list) {
   for (ct in names(marker_list)) {
     cat(ct)
@@ -119,6 +162,16 @@ cat_markers <- function(marker_list) {
 }
 
 ############ SINGLE CELL ############
+
+#' Add markers to Seurat object
+#'
+#' Test if marker is in object using (GetAssayData), add markers using (AddModuleScore)
+#'
+#' @param so Seurat object
+#' @param markers markers list of list
+#' @param assay assay name
+#' @return Seurat object
+#' @export
 add_list_markers <- function(so, markers, assay = "RNA") {
   for (ct in names(markers)) {
     if (any(markers[[ct]] %in% rownames(Seurat::GetAssayData(so, assay = assay)))) {
@@ -131,6 +184,15 @@ add_list_markers <- function(so, markers, assay = "RNA") {
   so
 }
 
+#' Transform seurat marker genes to our genes
+#'
+#' Basically just split df by cell type
+#'
+#' @param markers_seurat marker genes extracted from seurat
+#' @param allowed_genes which genes to preserve
+#' @param n_markers how many markers we need
+#' @return list of lists
+#' @export
 convert_sc_markers <- function(markers_seurat, allowed_genes, n_markers = 100) {
   gb <- markers_seurat[markers_seurat$p_val_adj < 0.001,] %>%
     group_by(cluster) %>%
@@ -140,6 +202,22 @@ convert_sc_markers <- function(markers_seurat, allowed_genes, n_markers = 100) {
   return(sc_marker_list)
 }
 
+#' Plot enrichement for markers
+#'
+#' Using Seurat::FeaturePlot to plot
+#'
+#' @param so Seurat object
+#' @param marker_names marker genes for each cell type (list of lists)
+#' @param ncol number of columns in result plot (cowplot::plot_grid)
+#' @param limits color limits (to adjust color)
+#' @param ggadd add text to each plot (function taking plot and index of plot)
+#' @param wrap whould we do grid or not
+#' @param ... any valid Seurat::FeaturePlot params
+#' @return single plot or multiple plots
+#' @import RColorBrewer
+#' @import cowplot
+#' @import scales
+#' @export
 plot_marker_enrichment <- function(
   so, marker_names, ncol = 4, limits = NULL, ggadd = function(plt, i) plt, wrap = T, ...
 ) {

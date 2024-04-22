@@ -1,5 +1,13 @@
 ############ MAIN LOGIC ############
 
+#' Calculate SVD for the matrix
+#'
+#' produces parts of dso$st$proj object, containing vectors R,S matrix Sigma, vectors A(R) and B(S)
+#' performs SVD on the matrix
+#'
+#' @param V_row input data matrix to perform SVD (in this method it should be Sinkhorn transformed matrix)
+#' @param dims how many dimensions of SVD we leave
+#' @return list with all calculated matrices
 calc_svd_ops <- function(V_row, dims = NULL) {
   if (is.null(dims)) {
     dims <- 1:min(dim(V_row))
@@ -41,6 +49,13 @@ calc_svd_ops <- function(V_row, dims = NULL) {
   ))
 }
 
+#' Project sinkhorn scaled matrix to SVD space
+#'
+#' produces parts dso$st$proj object,  ($meta and  projected points $X and $Omega)
+#'
+#' @param scaling dso$st$scaling object containing sinkhorn scaling result
+#' @param ops svd result for the matirx
+#' @return proj object
 svd_project_with_ops <- function(scaling, ops) {
   proj <- list(
     X = scaling$V_row %*% t(ops$R),
@@ -55,12 +70,29 @@ svd_project_with_ops <- function(scaling, ops) {
   return(proj)
 }
 
+#' Prepare projection object
+#'
+#' Entry point to produce dso$st$proj object, containing all information about projection as well as projected points
+#'
+#' @param scaling dso$st$scaling object containing sinkhorn scaling result
+#' @param dims how many dimensions we want to get
+#' @return proj object
+#' @export
 svd_project <- function(scaling, dims) {
   ops <- calc_svd_ops(scaling$V_row, dims)
   proj <- svd_project_with_ops(scaling, ops)
   return(proj)
 }
 
+#' Adds UMAP representation to dso$st$proj object
+#'
+#' calls uwot::umap to make umap
+#'
+#' @param proj dso$st$proj object containing projected points and info about projection
+#' @param with_model if TRUE uses "annoy" model else "fnn"
+#' @param neighbors_X param for UMAP, play to get better picture
+#' @param neighbors_Omega param for UMAP, play to get better picture
+#' @return modified proj object
 add_proj_umap <- function(proj, with_model = FALSE, neighbors_X = 15, neighbors_Omega = 15) {
   nn_method <- if (with_model) "annoy" else "fnn"
   
@@ -90,6 +122,12 @@ add_proj_umap <- function(proj, with_model = FALSE, neighbors_X = 15, neighbors_
   return(proj)
 }
 
+#' Transform additional poitns to the same UMAP
+#'
+#' @param points new points we want to map to same umap
+#' @param proj dso$st$proj object containing projected points and umap info
+#' @return transformed points
+#' @export
 transform_proj_umap <- function(points, proj) {
   if (is.null(proj$umap)) {
     stop(paste(
@@ -110,6 +148,14 @@ transform_proj_umap <- function(points, proj) {
   return(transformed)
 }
 
+#' Unproject points. Go from projected X coordinates to original row normalized matrix H_ss and
+#' from projected Omega points to original column normalized matrix W_gs
+#'
+#' @param X_space_pts points in samples space (X space, samples space, left simplex)
+#' @param Omega_space_pts   points in features space (Omega space, genes space, right simplex)
+#' @param proj dso$st$proj object containing projected points and umap info
+#' @return list of two matrices (H_ss, W_gs)
+#' @export
 reverse_svd_projection <- function(X_space_pts, Omega_space_pts, proj) {
   return(list(
     rownorm = X_space_pts %*% proj$meta$R,
@@ -118,6 +164,12 @@ reverse_svd_projection <- function(X_space_pts, Omega_space_pts, proj) {
 }
 
 # TODO: peeks into solution layer
+#' Transform solution back from projected space to original space
+#'
+#' @param solution_proj dso$st$solution_proj object containing solution and optimization history
+#' @param proj dso$st$proj object containing projected points and info about projection
+#' @return solution_scaled object containing two matrices (H_ss, W_gs)
+#' @export
 reverse_solution_projection <- function(solution_proj, proj) {
   solution_scaled <- reverse_svd_projection(solution_proj$X, t(solution_proj$Omega), proj)
   names(solution_scaled) <- c("H_row", "W_col")
@@ -130,11 +182,13 @@ reverse_solution_projection <- function(solution_proj, proj) {
 
 
 ############ PLOTTING ############
+
+# Util function to start plotting svd
 plot_proj_svd <- function(proj, dims = NULL) {
   svd_d <- diag(proj$meta$Sigma)
   return(plot_svd_d(svd_d, dims))
 }
-
+# Util function to plot svd
 plot_svd_d <- function(svd_d, dims = NULL, cumulative = T, variance = T) {
   vars <- svd_d
   if (variance) {
@@ -175,6 +229,14 @@ plot_svd_d <- function(svd_d, dims = NULL, cumulative = T, variance = T) {
     scale_x_continuous(minor_breaks = dims, limits = c(min(dims), max(dims))))
 }
 
+#' Util function to plot svd
+#'
+#' @param svd_ds svd Sigma (D) matrix to be plotted
+#' @param cumulative TRUE if cumulative plot
+#' @param variance TRUE if explained variance should be plotted
+#' @return ggplot object
+#' @importFrom tidyr pivot_longer
+#' @export
 plot_svd_ds_matrix <- function(svd_ds, cumulative = T, variance = T) {
   vars <- svd_ds
   if (variance) {

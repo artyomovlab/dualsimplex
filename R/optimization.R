@@ -1,5 +1,21 @@
 ############ MAIN LOGIC ############
 
+#' Make optimization config object for the training method
+#'
+#' Just to have centralized object to change
+#'
+#' @param coef_der_X learning rate for X space
+#' @param coef_der_Omega learning rate for Omega space
+#' @param coef_hinge_H positiviy penalty for X space (lambda)
+#' @param coef_hinge_W positiviy penalty for Omega space (beta)
+#' @param coef_pos_D_h EXPERIMENTAL: penalty for D_h value (how far X^TxDh if from A(R))). should be 0 since not tested.
+#' @param coef_pos_D_w EXPERIMENTAL: penalty for D_w value (how far OmegaxDw if from B(S))). should be 0 since not tested.
+#' @param limit_X EXPERIMENTAL: if you want to restrict X from changing to much. should be 0 since not tested.
+#' @param limit_Omega EXPERIMENTAL: if you want to restrict Omega from changing to much. should be 0 since not tested.
+#' @param cosine_thresh  EXPERIMENTAL: if you want to restrict derivative from changing to much. should be 0 since not tested.
+#' @param alternative_method should we use alternative approach to optimization or not.  (without matrix D and with strict invertibility constraint)
+#' @return ready to use list with algorithm configuration
+#' @export
 optim_config <- function(
   coef_der_X = 0.001,
   coef_der_Omega = 0.001,
@@ -28,6 +44,20 @@ optim_config <- function(
 
 OPTIM_CONFIG_DEFAULT <- optim_config()
 
+
+#' Main optimization entry point
+#'
+#' Will perform optimization with selected parameters
+#'
+#' @param proj dso$st$proj object with information about projections (projected points, vectors)
+#' @param solution_proj dso$st$solution_proj object with current solution matrices
+#' @param iterations number of iterations to run
+#' @param config configuratio for algorithm (default is optim_config())
+#' @param block_name name for this particular run in logs
+#' @import Rcpp
+#' @import RcppArmadillo
+#' @importFrom Rcpp evalCpp
+#' @export
 optimize_solution <- function(
   # TODO: remove scaled data, this should work on proj level
   proj,
@@ -208,6 +238,15 @@ calc_r_limits <- function(
 
 ############ PLOTTING ############
 
+#' Plot errors after optimization
+#'
+#' Will plot selected terms of the cost function
+#'
+#' @param solution_proj dso$st$solution_proj object with current solution matrices
+#' @param variables which variables to plot (columns of solution_proj$optim_history$errors_statistics)
+#' @return ggplot object
+#' @import reshape2
+#' @export
 plot_errors <- function(
   solution_proj,
   variables = c(
@@ -233,6 +272,14 @@ plot_errors <- function(
 }
 
 
+#' Plot changes in negativity of matrix H
+#'
+#' Will plot percentage of negative elements for current solution.
+#'
+#' @param proj dso$st$proj object with info about projection. (used to get N, M, K values) TODO: remove this.
+#' @param solution_proj dso$st$solution_proj object with current solution matrices in projected space
+#' @return ggplot object
+#' @export
 plot_negative_proportions_change <- function(proj, solution_proj) {
   N <- proj$meta$N
   M <- proj$meta$M
@@ -249,6 +296,14 @@ plot_negative_proportions_change <- function(proj, solution_proj) {
   return(plt)
 }
 
+#' Plot changes in negativity of matrix W
+#'
+#' Will plot percentage of negative elements for current solution.
+#'
+#' @param proj dso$st$proj object with info about projection. (used to get N, M, K values) TODO: remove this.
+#' @param solution_proj dso$st$solution_proj object with current solution matrices in projected space
+#' @return ggplot object
+#' @export
 plot_negative_basis_change <- function(proj, solution_proj) {
   N <- proj$meta$N
   M <- proj$meta$M

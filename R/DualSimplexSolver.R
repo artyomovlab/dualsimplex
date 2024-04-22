@@ -1,3 +1,41 @@
+#' @title DualSimplex Object.
+#'
+#' @description
+#' The DualSimplex Object Class.
+#' Provides an interface to perform:
+#' sinkhorn transformation,
+#' svd projection,
+#' optimization of simplex corners (NMF solution).
+#'
+#' @docType class
+#' @importFrom R6 R6Class
+#' @useDynLib DualSimplex
+#' @export
+#' @return Object of \code{\link{R6Class}} -- an interface to work with data.
+#' @format \code{\link{R6Class}} object.
+#' @examples
+#' M <-  8000 # number of genes (rows)
+#' N <-  200 # number of samples (columns)
+#' K <-  3 # number of main components
+#' sim <- create_simulation(n_genes = M, n_samples = N, n_cell_types = K, with_marker_genes = FALSE)
+#' dso <- DualSimplexSolver$new()
+#' dso$set_data(sim$data) # run Sinkhorn procedure
+#' dso$project(K) # project to SVD space
+#' dso$plot_projected("zero_distance",
+#'                    "zero_distance",
+#'                    with_solution = TRUE,
+#'                    use_dims = list(2:3)) # visualize the projection
+#'
+#' @name DualSimplexObject
+#' @import Rcpp
+#' @import RcppArmadillo
+#' @import dplyr
+#' @import ggplot2
+#' @import Matrix
+#' @import Biobase
+#' @import irlba
+#' @import knitr
+#'
 DualSimplexSolver <- R6Class(
   classname = "DualSimplexSolver",
   private = list(
@@ -91,7 +129,7 @@ DualSimplexSolver <- R6Class(
     }
   ),
   public = list(
-    # Steps (order matters for private$reset_since)
+    #' @field st contain the "state" of the current object. (data, solution, projections etc..).
     st = list(
       filtering_log = NULL,   # Auto calculated
       data = NULL,            # Set by user
@@ -105,6 +143,15 @@ DualSimplexSolver <- R6Class(
       solution_orig = NULL,   # Auto calculated
       marker_genes = NULL     # Auto calculated
     ),
+
+    #' @description
+    #' Set data to the object.
+    #' In general it could be any matrix with names on columns and rows. Expression set will be created.
+    #'
+    #' @param data input data matrix
+    #' @param gene_anno_lists named list of lists. Each sublist contains names of rows which should have TRUE value in annotaiton column.
+    #' @param sample_anno_lists named list of lists. Each sublist contains names of columns which should have TRUE value in annotation column.
+    #' @param sinkhorn_iterations number of sinkhorn iterations to perform
     set_data = function(data, gene_anno_lists = NULL, sample_anno_lists = NULL, sinkhorn_iterations=20) {
       if (any(sapply(dimnames(data), is.null)))
         stop("Genes and samples should be named")
@@ -120,9 +167,24 @@ DualSimplexSolver <- R6Class(
       self$st$proj_full <- svd_project(self$st$scaling, dims = NULL)
       if (first_set) private$add_filtering_log_step("initial")
     },
-    plot_mad = function(data, ...) {
+
+    #' @description
+    #' plot MAD distribution for the data
+    #' In general it could be any matrix with names on columns and rows. Expression set will be created.
+    #'
+    #' @param ... parameters to pass to plot_feature method.
+    plot_mad = function(...) {
       plot_feature(self$get_data(), "log_mad", ...)
     },
+    #' @description
+    #' Basic data filtering for gene expression datasets.
+    #' Removes selected genes, filters by mad
+    #'
+    #' @param log_mad_gt log madthreshold to remove genes (we remove low mad genes).
+    #' @param remove_true_cols_default FALSE if tou don't want to use default gene names filter.
+    #' @param remove_true_cols_additional additional columns from annotation to use for "remove true" filter.
+    #' @param keep_true_cols columns from annotation where we should keep instances with true value.
+    #' @param genes true if want remove rows otherwise columns
     basic_filter = function(
       log_mad_gt = 0,
       remove_true_cols_default = NULL,
@@ -151,10 +213,25 @@ DualSimplexSolver <- R6Class(
         )
       )
     },
+    #' @description
+    #' Interface to plot svd
+    #' Will return the elbow plot of singular values.
+    #'
+    #' @param dims how many dimensions to plot
+    #' @return plot to work with
     plot_svd = function(dims = self$st$dims) {
       private$set_data_first()
       plot_proj_svd(self$st$proj_full, dims)
     },
+
+    #' @description
+    #' Interface to plot svd history of filtering steps through the svd plot.
+    #'
+    #' @param steps_sel selected filtering steps, list.
+    #' @param n_dims how many dimensions to plot
+    #' @param cumulative wether plot should be cumulative
+    #' @param variance plot variance explained
+    #' @return plot to work with
     plot_svd_history = function(
       steps_sel = NULL,
       n_dims = NULL,
@@ -178,6 +255,11 @@ DualSimplexSolver <- R6Class(
       }
       return(plot_svd_ds_matrix(svd_ds, cumulative = cumulative, variance =  variance))
     },
+
+    #' @description
+    #' Calculate svd projection for current data. Will perform SVD.
+    #'
+    #' @param n_cell_types selected number of dimensions (K) to work with.
     project = function(n_cell_types) {
       private$set_data_first()
       private$reset_since("n_cell_types")
@@ -190,13 +272,19 @@ DualSimplexSolver <- R6Class(
         self$st$n_cell_types
       )
     },
+
+    #' @description
+    #' A set of plots to extimate the projection.
     plot_projection_diagnostics = function() {
       plt1 <- self$plot_projected("zero_distance", "zero_distance")
       plt2 <- self$plot_projected("plane_distance", "plane_distance")
       plt3 <- self$plot_distances_distribution()
       plt4 <- self$plot_svd()
-      return(list(plt1, plt2, plt3))
+      return(list(plt1, plt2, plt3, plt4))
     },
+
+    #' @description
+    #' Plot scatterplot of plane distance to zero distance for each point
     plot_distances_distribution = function() {
       private$project_first()
       # TODO: maybe self$st$proj should be ExpressionSet with distances
@@ -209,6 +297,13 @@ DualSimplexSolver <- R6Class(
       )
       show(cowplot::plot_grid(plotlist = plotlist, ncol = 2))
     },
+
+    #' @description
+    #' Filter points based on distance thresholds. (keep lower).
+    #'
+    #' @param plane_d_lt threshold for plane distance.
+    #' @param zero_d_lt threshold for zero distance.
+    #' @param genes TRUE if filter rows, otherwise columns.
     distance_filter = function(
       plane_d_lt = NULL,
       zero_d_lt = NULL,
@@ -244,16 +339,38 @@ DualSimplexSolver <- R6Class(
         )
       )
     },
+
+    #' @description
+    #' Do UMAP transformation for current projected data in both spaces.
+    #'
+    #' @param with_model specific umap model selection for Mac users. For Mac there is a known issue with this library.
+    #' @param neighbors_X parameter for UMAP.
+    #' @param neighbors_Omega parameter for UMAP.
     run_umap = function(with_model = Sys.info()[["sysname"]] != "Darwin", neighbors_X = 50, neighbors_Omega = 10) {
       private$project_first()
       self$st$proj <- add_proj_umap(self$st$proj, with_model, neighbors_X, neighbors_Omega)
     },
 
-    # color_genes / color_samples can be:
-    # - a set of names to be highlighted
-    # - a vector of values, the same length as the number of genes
-    # - a name of a column from annotation, default is zero_distance
-    # Important note: ggplot only allows to either draw history or color all the points
+    #' @description
+    #' Interface to plot points of the current object
+    #'
+    #'  color_genes / color_samples can be:
+    #' - a set of names to be highlighted
+    #' - a vector of values, the same length as the number of genes
+    #' - a name of a column from annotation, default is zero_distance
+    #' Important note: ggplot only allows to either draw history or color all the points
+    #'
+    #' @param color_genes how to color genes (see description of method).
+    #' @param color_samples how to color samples (see description of method).
+    #' @param use_dims which dimensions to use (e.g. 2:3).
+    #' @param with_legend TRUE if want to add legends to plots.
+    #' @param with_solution TRUE if want to  add current solution points.
+    #' @param with_history TRUE if want to  add  solution history points/lines.
+    #' @param wrap FALSE if want to have two separated plots, not single one.
+    #' @param show_plots FALSE if don't want plots to be displayed.
+    #' @param from_iter starting point for history of solutions.
+    #' @param to_iter end point for history of solutions.
+    #' @param ... any other params to be passed to plot_projected method.
     plot_projected = function(
       color_genes = "zero_distance", color_samples = "zero_distance",
       use_dims = private$display_dims, with_legend = NULL,
@@ -334,6 +451,11 @@ DualSimplexSolver <- R6Class(
       return(if (wrap) cowplot::plot_grid(plotlist = plotlist) else plotlist)
     },
 
+    #' @description
+    #' Initialize current solution
+    #'
+    #' @param strategy strategy to use for initialization. valid values are "select_x", "select_omega", "random" and "marker_means"
+    #' @param ... any other params to be passed to initialization methods (e.g. marker genes)
     init_solution = function(strategy = "select_x", ...) {
       private$project_first()
       private$reset_since("solution_proj")
@@ -341,6 +463,11 @@ DualSimplexSolver <- R6Class(
       self$st$solution_proj <- initialize_solution(self$st$proj, strategy, kwargs)
     },
 
+    #' @description
+    #' Perform optimization for current solution
+    #'
+    #' @param iterations number of steps to perform
+    #' @param config optimization config (result of optim_config method)
     optim_solution = function(
       iterations = 10000,
       config = OPTIM_CONFIG_DEFAULT
@@ -354,11 +481,17 @@ DualSimplexSolver <- R6Class(
       )
     },
 
+    #' @description
+    #' Plot errors log
     plot_error_history = function() {
       private$optimize_first()
       plot_errors(self$st$solution_proj)
     },
 
+    #' @description
+    #' Finalize solution.
+    #' Return from projection to sinkhorn transformed matrices
+    #' Perform reverse sinkhorn to get original matrices W and H
     finalize_solution = function() {
       private$initialize_first()
       solution_scaled <- reverse_solution_projection(self$st$solution_proj, self$st$proj)
@@ -373,17 +506,22 @@ DualSimplexSolver <- R6Class(
       self$st$marker_genes <- get_signature_markers(self$st$solution$W)
       return(self$st$solution)
     },
-
+    #' @description
+    #' Interface to plot negativity changes in basis (Matrix W)
     plot_negative_basis_change = function() {
       private$optimize_first()
       return(plot_negative_basis_change(self$st$proj, self$st$solution_proj))
     },
 
+    #' @description
+    #' Interface to plot negativity changes in coefficients (Matrix H)
     plot_negative_proportions_change = function() {
       private$optimize_first()
       return(plot_negative_proportions_change(self$st$proj, self$st$solution_proj))
     },
 
+    #' @description
+    #' Interface to plot solution distribution as histogramm by main component
     plot_solution_distribution = function() {
       private$finalize_first()
       cowplot::plot_grid(plotlist = list(
@@ -404,11 +542,19 @@ DualSimplexSolver <- R6Class(
       ))
     },
 
+    #' @description
+    #' set and remember which dimensions to use for plotting functions
+    #'
+    #' @param display_dims  (e.g. 2:3, 3:4, NULL)
     set_display_dims = function(display_dims) {
       private$display_dims <- display_dims
     },
 
     ##### Saving to/Loading from files #####
+    #' @description
+    #' set and remember direvtory to save model state
+    #'
+    #' @param new_dir_path  path to save model
     set_save_dir = function(new_dir_path) {
       if (!dir.exists(new_dir_path)) {
         dir.create(new_dir_path, recursive = TRUE)
@@ -416,10 +562,16 @@ DualSimplexSolver <- R6Class(
       private$save_dir <- normalizePath(new_dir_path)
     },
 
+    #' @description
+    #' get current save directory for the model
     get_save_dir = function() {
       return(private$save_dir)
     },
 
+    #' @description
+    #' set and remember direvtory to save model state. returns directory name.
+    #'
+    #' @param new_dir_path  path to save model
     getset_save_dir = function(new_dir_path = NULL) {
       if (is.null(private$save_dir)) {
         if (is.null(new_dir_path)) stop("Specify save_dir or call set_save_dir")
@@ -430,6 +582,10 @@ DualSimplexSolver <- R6Class(
       return(private$save_dir)
     },
 
+    #' @description
+    #' save model state to directory
+    #'
+    #' @param save_dir  path to save model
     save_state = function(save_dir = NULL) {
       out_dir <- self$getset_save_dir(save_dir)
       saveRDS(self$st, file.path(out_dir, "dualsimplex_state.rds"))
@@ -448,6 +604,10 @@ DualSimplexSolver <- R6Class(
       return(invisible())
     },
 
+    #' @description
+    #' save current model solution (H and W) to separate tsv files
+    #'
+    #' @param save_dir  path to save matrices
     save_solution = function(save_dir = NULL) {
       private$finalize_first()
       out_dir <- self$getset_save_dir(save_dir)
@@ -457,6 +617,10 @@ DualSimplexSolver <- R6Class(
       write.table(H, file.path(out_dir, "proportions.tsv"), sep = "\t", quote = F, row.names = F)
     },
 
+    #' @description
+    #' load model from the specified directory.
+    #'
+    #' @param input_dir  path to load model from
     load_state = function(input_dir = NULL) {
       if (is.null(input_dir)) {
         if (!is.null(private$save_dir)) {
@@ -472,6 +636,12 @@ DualSimplexSolver <- R6Class(
       }
     },
 
+    #' @description
+    #' Generate automatically generated report for the method
+    #'
+    #' @param save_dir  path to save report
+    #' @param seurat_obj  seurat object to use for markers visualization
+    #' @param with_animated_optim TRUE to save gif with optimization process
     generate_summary = function(
       save_dir = NULL,
       seurat_obj = NULL,
@@ -501,21 +671,31 @@ DualSimplexSolver <- R6Class(
     },
 
     ##### Getters #####
+    #' @description
+    #' get current data.
     get_data = function() {
       private$set_data_first()
       return(self$st$data)
     },
+    #' @description
+    #' get current filtering log.
     get_filtering_stats = function() {
       return(self$st$filtering_log$stats_df)
     },
+    #' @description
+    #' get number of main components used (K)
     get_n_cell_types = function() {
       private$project_first()
       return(self$st$n_cell_types)
     },
+    #' @description
+    #' get number optimization iterations performed
     get_n_iters = function() {
       private$optimize_first()
       return(nrow(dso$st$solution_proj$optim_history$errors_statistics))
     },
+    #' @description
+    #' get proportionality of negative elements for H and W
     get_negative_ratios = function() {
       private$finalize_first()
       return(list(
@@ -523,15 +703,22 @@ DualSimplexSolver <- R6Class(
         H = sum(self$st$solution_no_corr$H < 0) / length(self$st$solution_no_corr$H)
       ))
     },
+
+    #' @description
+    #' get current solution
     get_solution = function() {
       private$finalize_first()
       return(self$st$solution)
     },
+    #' @description
+    #' get names for main components specified
     get_ct_names = function() {
       private$finalize_first()
       return(rownames(self$st$solution$H))
     },
 
+    #' @description
+    #' get marker genes for current solution
     get_marker_genes = function() {
       private$finalize_first()
       return(self$st$marker_genes)
@@ -539,6 +726,13 @@ DualSimplexSolver <- R6Class(
   )
 )
 
+#' DualSimplexSolver$from_state
+#'
+#' Static method to load model
+#' @name DualSimplexSolver$from_state
+#' @param input_dir directory to read from.
+#' @param save_there TRUE to remember directory choise for object.
+#' @return dso object
 DualSimplexSolver$from_state <- function(input_dir, save_there = F) {
   dso <- DualSimplexSolver$new()
   dso$load_state(input_dir)

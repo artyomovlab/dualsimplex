@@ -1,12 +1,25 @@
+#' Create initial data simulation
+#'
 #' Simulation builder initialization: simulation of basis, proportions and gene expression data without noise.
 #' The motivation behind this builder approach is that every add... method creates a copy of the input simulation,
 #' so that it is possible to create a single base simulation with many different child simulations.
 #' For example, with different noise applied to the same data.
 #' The add... functions inherently support magrittr's pipe operator (%>%).
+#' 
+#' @import dplyr
+#' @param n_genes number of rows in generated matrix (M)
+#' @param n_samples number of columns in generated matrix (N)
+#' @param n_cell_types number of hidden main components  in generated matrix (K)
+#' @param with_marker_genes if TRUE will also generate marker genes
+#' @param mean_proportions  generation param
+#' @param lbl_dataset TRUE for specific generation scenario of lbl dataset
+#' @return sim object
 #' @examples
+#' require(dplyr)
 #' sim_initial <- create_simulation(12000, 100, 3)
 #' sim_noise_3 <- add_noise(sim_initial, 3)
 #' sim_noise_5 <- sim_initial %>% add_noise(5) %>% add_basis_samples()
+#' @export
 create_simulation <- function(
   n_genes,
   n_samples,
@@ -48,6 +61,12 @@ create_simulation <- function(
 }
 
 #' Add N pure samples (basis + noise) per cell type to the simulation
+#'
+#' @param simulation original simulation object
+#' @param samples_per_cell_type number of pure samples to add for each hidden main component
+#' @param noise_deviation noise deviation value for pure samples
+#' @return modified sim object
+#' @export
 add_pure_samples <- function(simulation, samples_per_cell_type, noise_deviation = 0.05) {
   pure_samples <- generate_pure_samples(
     simulation$basis,
@@ -62,6 +81,10 @@ add_pure_samples <- function(simulation, samples_per_cell_type, noise_deviation 
 }
 
 #' Add samples, which are pure basis (without noise) to the simulation
+#'
+#' @param simulation original simulation object
+#' @return modified sim object
+#' @export
 add_basis_samples <- function(simulation) {
   basis_samples <- generate_basis_samples(simulation$basis)
   simulation$basis_sample_names <- colnames(basis_samples$data)
@@ -71,6 +94,13 @@ add_basis_samples <- function(simulation) {
 }
 
 #' Add noise to the simulation's data
+#'
+#' @param simulation original simulation object
+#' @param noise_deviation noise deviation
+#' @param protect_genes do not modigy these rows
+#' @param protect_samples do not modigy these samples
+#' @return modified sim object
+#' @export
 add_noise <- function(simulation, noise_deviation, protect_genes = c(), protect_samples = c()) {
   simulation$data <- apply_noise_to_data(simulation$data, noise_deviation, protect_genes, protect_samples)
   simulation$protected_genes <- protect_genes
@@ -133,6 +163,9 @@ append_marker_genes_to_basis <- function(basis, n_each_type = 1) {
 }
 
 #' Generate n points, uniformly distributed on a k-dimensional standard simplex
+#' @param n number of points
+#' @param k dimensionality of generatred data
+#' @param M number of generations
 sample_from_simplex_uniformly <- function(n, k, M = 100000) {
   X <- matrix(0, nrow = k + 1, ncol = n)
   X[k + 1,] <- M
@@ -147,6 +180,10 @@ sample_from_simplex_uniformly <- function(n, k, M = 100000) {
 #' with means from 0 to 1, proportional to the numbers from the `alpha` argument.
 #' Number of cell types is derived from `alpha`'s length. The `spread` argument
 #' defines the deviation of generated values from one and zero.
+#' @param n number of points
+#' @param k dimensionality of generatred data
+#' @param alpha proportional coefficient
+#' @param spread deviation of generated values from one and zero.
 sample_from_dirichlet <- function(n, k, alpha = NULL, spread = 7) {
   if (is.null(alpha)) {
     alpha <- rep(1, k)
@@ -160,6 +197,10 @@ sample_from_dirichlet <- function(n, k, alpha = NULL, spread = 7) {
   t(x / as.vector(sm))
 }
 
+#' Generate proportions matrix H
+#' @param n_samples number of samples (N)
+#' @param n_cell_types number of cell types (K)
+#' @param mean_proportions mean values for proportions
 generate_proportions <- function(n_samples, n_cell_types, mean_proportions = NULL) {
   if (is.null(mean_proportions) || all(mean_proportions == mean_proportions[1])) {
     proportions <- sample_from_simplex_uniformly(n_samples, n_cell_types)
