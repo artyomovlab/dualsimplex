@@ -53,6 +53,8 @@ install.packages("DualSimplex")
 
 
 ## Usage
+Check our additional [paper repository](https://github.com/artyomovlab/dualsimplex_paper) for more examples of NMF, bulk-RNAseq deconvolution and single cell clustering
+
 ### Read/Generate the data
 ```r
 library("DualSimplex")
@@ -132,9 +134,6 @@ dso$save_state("directory_to_save")
 dso <- DualSimplexSolver$from_state("directory_to_save")
 ```
 
-Check our additional [paper repository](https://github.com/artyomovlab/dualsimplex_paper) for more examples of NMF, bulk-RNAseq deconvolution and single cell clustering
-
-
 ## Contacts
 
 -  Denis Kleverov ([@denis_kleverov](https://twitter.com/denis_kleverov)) ([linkedIn](https://linkedin.com/in/denklewer) )
@@ -142,9 +141,8 @@ Check our additional [paper repository](https://github.com/artyomovlab/dualsimpl
 -  Alexey Serdyukov ([email](mailto:leshaserdyukov@gmail.com))
 -  prof. Maxim Artyomov ([@maxim_artyomov](https://twitter.com/maxim_artyomov)) ([email](mailto:martyomov@wustl.edu))
 
-
-
-## Code structure & Guidelines
+## For developers
+### Code structure & Guidelines
 
 The following files in the `R/` directory represent different stages
 of DualSimplex pipeline:
@@ -169,3 +167,19 @@ functions from those packages to implement the whole control flow.
 
 This rule of thumb leads to linear code logic and low code coupling,
 which makes it simple to debug and introduce changes.
+
+### Checking your new functions
+
+Please document your code with roxygene2 comments (as it is done for rest of the package)
+- Regenerate NAMESPACE and additional files
+```r
+devtools::document()
+```
+- ensure standard devtools check is returning 0 errors
+```r
+devtools::check()
+```
+- ensure package is installable from your repository 
+```r
+devtools::install_github("your_github_nickname"/DualSimplex@your_branch_name")
+```
