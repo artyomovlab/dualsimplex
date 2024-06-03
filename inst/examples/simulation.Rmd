@@ -76,8 +76,8 @@ dso$project(n_ct)
 
 ### View data, projected onto different dimensions
 ```{r fig.width = 12, fig.height = 5}
-dso$plot_projected("zero_distance", "zero_distance", use_dims = list(2:3, 3:4, 2:4))
-dso$plot_projected("plane_distance", "plane_distance", use_dims = list(2:3, 3:4, 2:4))
+dso$plot_projected("zero_distance", "zero_distance", use_dims = list(2:3, 3:4, c(2,4)))
+dso$plot_projected("plane_distance", "plane_distance", use_dims = list(2:3, 3:4, c(2,4)))
 ```
 
 See if outliers anything is visible better in UMAP
@@ -101,6 +101,7 @@ new_data
 
 ```{r}
 dso$set_data(new_data)
+dso$project(n_ct)
 ```
 
 Circle back to projection and iterate, until satisfied
