@@ -214,6 +214,21 @@ DualSimplexSolver <- R6Class(
       )
     },
     #' @description
+    #' Add additional distance annotation based on KNN distances to selected annotations.
+    #'
+    #' @param annotation_names_list names of annotation columns with TRUE/FALSE.
+    #' @param genes calculate for gene annotations or sample annotations.
+    add_knn_distances_anno= function(annotation_names_list = NULL, genes = T) {
+      self$st$data <- add_knn_distances_anno(
+        self$st$data,
+        self$st$proj_full,
+        annotation_columns = annotation_names_list,
+        genes = genes
+      )
+    },
+
+
+    #' @description
     #' Interface to plot svd
     #' Will return the elbow plot of singular values.
     #'
@@ -263,7 +278,7 @@ DualSimplexSolver <- R6Class(
     project = function(n_cell_types) {
       private$set_data_first()
       private$reset_since("n_cell_types")
-      self$st$n_cell_types = n_cell_types
+      self$st$n_cell_types <- n_cell_types
       self$st$dims <- if (!is.null(n_cell_types)) 1:n_cell_types else NULL
       self$st$proj <- svd_project(self$st$scaling, dims = self$st$dims)
       self$st$data <- add_distances_anno(
@@ -272,6 +287,7 @@ DualSimplexSolver <- R6Class(
         self$st$n_cell_types
       )
     },
+
 
     #' @description
     #' A set of plots to extimate the projection.
