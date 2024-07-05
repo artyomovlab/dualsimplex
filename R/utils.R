@@ -69,6 +69,16 @@ remove_zero_rows <- function(ge) {
   return(ge[!zero_rows, ])
 }
 
+#' Remove zero cols
+#'
+#' @param ge expression set matrix
+#' @return clean data
+#' @export
+remove_zero_cols <- function(ge) {
+  zero_cols <- apply(ge, 2, function(x) all(x == 0))
+  return(ge[,!zero_cols ])
+}
+
 
 #' Remove zero rows
 #'
