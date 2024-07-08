@@ -134,7 +134,7 @@ add_knn_distances_anno <- function(eset, proj_full, genes=T, annotation_columns 
   anno <- get_anno(eset, genes)
   for (anno_name in annotation_columns) {
     knns <-  FNN::get.knnx(proj_full$X[anno[[anno_name]], ], proj_full$X, k = 20)
-    distances <- apply(knns$nn.dist, 1, median, na.rm=T)
+    distances <- apply(knns$nn.dist, 1, min, na.rm=T)
     anno[, paste0(anno_name, "_subset_distance")] <- distances
   }
   eset <- set_anno(anno, eset, genes)
