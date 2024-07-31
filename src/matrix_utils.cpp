@@ -48,7 +48,7 @@ Rcpp::List getNonnegativeLowRankApproximationWithSVD(const arma::mat& X,
   Sr = Sr.head(rank);
   Yi = Ur * arma::diagmat(Sr) * Vr.t();
   for (int i = 0; i < iterations; i++) {
-    Yi.elem(arma::find(X < left)).fill(left);
+    Yi.elem(arma::find(Yi < left)).fill(left);
     svd(Ur,Sr,Vr,Yi);
     Ur = Ur.head_cols(rank);
     Vr = Vr.head_cols(rank);
@@ -56,7 +56,7 @@ Rcpp::List getNonnegativeLowRankApproximationWithSVD(const arma::mat& X,
     Yi = Ur * arma::diagmat(Sr) * Vr.t();
     // get statistics values
     // frobenius norm of negative elements
-    double fro_norm = arma::norm( Yi.elem(arma::find(X < 0)), "fro" );
+    double fro_norm = arma::norm( Yi.elem(arma::find(Yi < 0)), "fro" );
     // number of negatives
     arma::uword neg_count = static_cast<double>(getNegative(Yi));
     errors_statistics.row(i) = arma::rowvec{fro_norm, neg_count};
