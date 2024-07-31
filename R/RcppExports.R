@@ -43,6 +43,7 @@ find_cosine <- function(X) {
 #' @param rank desired approximation rank
 #' @param iterations number of iterations to perform
 #' @return left elements cropped (should be zero)
+#' @export
 getNonnegativeLowRankApproximationWithSVD <- function(X, rank, iterations, left = 0) {
     .Call('_DualSimplex_getNonnegativeLowRankApproximationWithSVD', PACKAGE = 'DualSimplex', X, rank, iterations, left)
 }

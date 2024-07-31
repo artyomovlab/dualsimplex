@@ -23,6 +23,7 @@ double getSum(arma::mat X, arma::mat M);
 //' @param rank desired approximation rank
 //' @param iterations number of iterations to perform
 //' @return left elements cropped (should be zero)
+//' @export
 // [[Rcpp::export]]
 Rcpp::List getNonnegativeLowRankApproximationWithSVD(const arma::mat& X,  
                                                      const int rank,
