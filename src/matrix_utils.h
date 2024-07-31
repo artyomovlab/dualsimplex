@@ -37,13 +37,23 @@ Rcpp::List getNonnegativeLowRankApproximationWithSVD(const arma::mat& X,
 //                                                     const double left=0);
 //
 //
-//Rcpp::List getNonnegativeLowRankApproximationWithHMT(const arma::mat& X,
-//                                                         const int rank,
-//                                                         const int p,
-//                                                         const int k,
-//                                                         const double rho,
-//                                                         const int iterations,
-//                                                         const double left=0);
+
+//' Get low rank approximation with SVD method
+//'
+//' @param X inpit matrix
+//' @param rank desired approximation rank
+//' @param p number of randomizations
+//' @param k number of randomized columns
+//' @param iterations number of iterations to perform
+//' @return left elements cropped (should be zero)
+//' @export
+// [[Rcpp::export]]
+Rcpp::List getNonnegativeLowRankApproximationWithHMT(const arma::mat& X,
+                                                         const int rank,
+                                                         const int p,
+                                                         const int k,
+                                                         const int iterations,
+                                                         const double left=0);
 //
 //Rcpp::List getNonnegativeLowRankApproximationWithTropp(const arma::mat& X,
 //                                                     const int rank,

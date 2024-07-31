@@ -74,15 +74,61 @@ Rcpp::List getNonnegativeLowRankApproximationWithSVD(const arma::mat& X,
 //}
 //
 //
-//Rcpp::List getNonnegativeLowRankApproximationWithHMT(const arma::mat& X,
-//                                                     const int rank,
-//                                                     const int p,
-//                                                     const int k,
-//                                                     const double rho,
-//                                                     const int iterations,
-//                                                     const double left){
-//
-//}
+Rcpp::List getNonnegativeLowRankApproximationWithHMT(const arma::mat& X,
+                                                     const int rank,
+                                                     const int p,
+                                                     const int k,
+                                                     const int iterations,
+                                                     const double left) {
+
+    arma::mat errors_statistics(iterations, 2, arma::fill::zeros);
+    arma::mat Psi;
+    arma::mat Z1, Z2;
+    arma::mat Q, R;
+    // initial truncated decomposition
+    arma::mat Ur;
+    arma::vec Sr;
+    arma::mat Vr;
+    arma::mat Yi;
+    arma::svd(Ur,Sr,Vr,X);
+    Ur = Ur.head_cols(rank);
+    Vr = Vr.head_cols(rank);
+    Sr = Sr.head(rank);
+    Yi = Ur * arma::diagmat(Sr) * Vr.t();
+    int m = X.n_rows;
+    int n = X.n_cols;
+    for (int i = 0; i < iterations; i++) {
+    Yi.elem(arma::find(Yi < left)).fill(left);
+    //generate psi matrix (n, k, norm_dist, rho)
+    Psi =  arma::randn(n, k);
+    Z1 = Yi * Psi;
+    // do QR decomposition
+    arma::qr(Q, R, Z1);
+    for (int j = 0; j < p; j++) {
+        Z2 = Q.t() * Yi;
+        arma::qr(Q, R, Z2.t());
+        Z1 = Yi * Q;
+        arma::qr(Q, R, Z1);
+    }
+    Z2 = Q.t() * Yi;
+    arma::svd(Ur,Sr,Vr,Z2);
+    Ur = Ur.head_cols(rank);
+    Vr = Vr.head_cols(rank);
+    Sr = Sr.head(rank);
+    Ur = Q * Ur;
+    Yi = Ur * arma::diagmat(Sr) * Vr.t();
+    // get statistics values
+    // frobenius norm of negative elements
+    double fro_norm = arma::norm( Yi.elem(arma::find(Yi < 0)), "fro" );
+    // number of negatives
+    arma::uword neg_count = static_cast<double>(getNegative(Yi));
+    errors_statistics.row(i) = arma::rowvec{fro_norm, neg_count};
+    }
+    return Rcpp::List::create(Rcpp::Named("newX") = Yi,
+                            Rcpp::Named("errors") = errors_statistics);
+
+
+}
 //
 //Rcpp::List getNonnegativeLowRankApproximationWithTropp(const arma::mat& X,
 //                                                       const int rank,

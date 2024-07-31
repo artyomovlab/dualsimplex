@@ -48,6 +48,19 @@ getNonnegativeLowRankApproximationWithSVD <- function(X, rank, iterations, left 
     .Call('_DualSimplex_getNonnegativeLowRankApproximationWithSVD', PACKAGE = 'DualSimplex', X, rank, iterations, left)
 }
 
+#' Get low rank approximation with SVD method
+#'
+#' @param X inpit matrix
+#' @param rank desired approximation rank
+#' @param p number of randomizations
+#' @param k number of randomized columns
+#' @param iterations number of iterations to perform
+#' @return left elements cropped (should be zero)
+#' @export
+getNonnegativeLowRankApproximationWithHMT <- function(X, rank, p, k, iterations, left = 0) {
+    .Call('_DualSimplex_getNonnegativeLowRankApproximationWithHMT', PACKAGE = 'DualSimplex', X, rank, p, k, iterations, left)
+}
+
 #' Get nnls solution
 #'
 #' @param A matrix A
