@@ -37,6 +37,16 @@ find_cosine <- function(X) {
     .Call('_DualSimplex_find_cosine', PACKAGE = 'DualSimplex', X)
 }
 
+#' Get low rank approximation with SVD method
+#'
+#' @param X inpit matrix
+#' @param rank desired approximation rank
+#' @param iterations number of iterations to perform
+#' @return left elements cropped (should be zero)
+getNonnegativeLowRankApproximationWithSVD <- function(X, rank, iterations, left = 0) {
+    .Call('_DualSimplex_getNonnegativeLowRankApproximationWithSVD', PACKAGE = 'DualSimplex', X, rank, iterations, left)
+}
+
 #' Get nnls solution
 #'
 #' @param A matrix A

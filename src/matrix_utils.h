@@ -15,3 +15,46 @@ arma::mat getDoubleProjection(const arma::mat& V, const arma::mat& R, const arma
 arma::uword getNegative(arma::mat X);
 
 double getSum(arma::mat X, arma::mat M);
+
+
+//' Get low rank approximation with SVD method
+//'
+//' @param X inpit matrix
+//' @param rank desired approximation rank
+//' @param iterations number of iterations to perform
+//' @return left elements cropped (should be zero)
+// [[Rcpp::export]]
+Rcpp::List getNonnegativeLowRankApproximationWithSVD(const arma::mat& X,  
+                                                     const int rank,
+                                                     const int iterations,
+                                                     const double left=0);
+
+//
+//Rcpp::List getNonnegativeLowRankApproximationWithTangent(const arma::mat& X,
+//                                                     const int rank,
+//                                                     const int iterations,
+//                                                     const double left=0);
+//
+//
+//Rcpp::List getNonnegativeLowRankApproximationWithHMT(const arma::mat& X,
+//                                                         const int rank,
+//                                                         const int p,
+//                                                         const int k,
+//                                                         const double rho,
+//                                                         const int iterations,
+//                                                         const double left=0);
+//
+//Rcpp::List getNonnegativeLowRankApproximationWithTropp(const arma::mat& X,
+//                                                     const int rank,
+//                                                     const int k,
+//                                                     const int l,
+//                                                     const double rho,
+//                                                     const int iterations,
+//                                                     const double left=0);
+//
+//Rcpp::List getNonnegativeLowRankApproximationWithGN(const arma::mat& X,
+//                                                       const int rank,
+//                                                       const int l,
+//                                                       const double rho,
+//                                                       const int iterations,
+//                                                       const double left=0);

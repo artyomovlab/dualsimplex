@@ -30,3 +30,75 @@ arma::uword getNegative(arma::mat X) {
 }
 
 double getSum(arma::mat X, arma::mat M) { return arma::accu(X) / M.n_rows; }
+
+
+Rcpp::List getNonnegativeLowRankApproximationWithSVD(const arma::mat& X,  
+                                                     const int rank,
+                                                     const int iterations,
+                                                     const double left) {
+  // truncated svd
+  arma::mat Ur;
+  arma::vec Sr;
+  arma::mat Vr;
+  arma::mat Yi;
+  arma::mat errors_statistics(iterations, 2, arma::fill::zeros);
+  svd(Ur,Sr,Vr,X);
+  Ur = Ur.head_cols(rank);
+  Vr = Vr.head_cols(rank);
+  Sr = Sr.head(rank);
+  Yi = Ur * arma::diagmat(Sr) * Vr.t();
+  for (int i = 0; i < iterations; i++) {
+    Yi.elem(arma::find(X < left)).fill(left);
+    svd(Ur,Sr,Vr,Yi);
+    Ur = Ur.head_cols(rank);
+    Vr = Vr.head_cols(rank);
+    Sr = Sr.head(rank);
+    Yi = Ur * arma::diagmat(Sr) * Vr.t();
+    // get statistics values
+    // frobenius norm of negative elements
+    double fro_norm = arma::norm( Yi.elem(arma::find(X < 0)), "fro" );
+    // number of negatives
+    arma::uword neg_count = static_cast<double>(getNegative(Yi));
+    errors_statistics.row(i) = arma::rowvec{fro_norm, neg_count};
+  }
+   return Rcpp::List::create(Rcpp::Named("newX") = Yi,
+                             Rcpp::Named("errors") = errors_statistics);
+}
+
+//
+//Rcpp::List getNonnegativeLowRankApproximationWithTangent(const arma::mat& X,
+//                                                         const int rank,
+//                                                         const int iterations,
+//                                                         const double left){
+//
+//}
+//
+//
+//Rcpp::List getNonnegativeLowRankApproximationWithHMT(const arma::mat& X,
+//                                                     const int rank,
+//                                                     const int p,
+//                                                     const int k,
+//                                                     const double rho,
+//                                                     const int iterations,
+//                                                     const double left){
+//
+//}
+//
+//Rcpp::List getNonnegativeLowRankApproximationWithTropp(const arma::mat& X,
+//                                                       const int rank,
+//                                                       const int k,
+//                                                       const int l,
+//                                                       const double rho,
+//                                                       const int iterations,
+//                                                       const double left){
+//
+//}
+//
+//Rcpp::List getNonnegativeLowRankApproximationWithGN(const arma::mat& X,
+//                                                    const int rank,
+//                                                    const int l,
+//                                                    const double rho,
+//                                                    const int iterations,
+//                                                    const double left) {
+//
+//}

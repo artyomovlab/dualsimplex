@@ -53,6 +53,20 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// getNonnegativeLowRankApproximationWithSVD
+Rcpp::List getNonnegativeLowRankApproximationWithSVD(const arma::mat& X, const int rank, const int iterations, const double left);
+RcppExport SEXP _DualSimplex_getNonnegativeLowRankApproximationWithSVD(SEXP XSEXP, SEXP rankSEXP, SEXP iterationsSEXP, SEXP leftSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< const int >::type rank(rankSEXP);
+    Rcpp::traits::input_parameter< const int >::type iterations(iterationsSEXP);
+    Rcpp::traits::input_parameter< const double >::type left(leftSEXP);
+    rcpp_result_gen = Rcpp::wrap(getNonnegativeLowRankApproximationWithSVD(X, rank, iterations, left));
+    return rcpp_result_gen;
+END_RCPP
+}
 // nnls_C__
 arma::mat nnls_C__(arma::mat A, arma::mat b, int max_iter, double tol);
 RcppExport SEXP _DualSimplex_nnls_C__(SEXP ASEXP, SEXP bSEXP, SEXP max_iterSEXP, SEXP tolSEXP) {
@@ -215,6 +229,7 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_DualSimplex_alternative_derivative_stage2", (DL_FUNC) &_DualSimplex_alternative_derivative_stage2, 21},
     {"_DualSimplex_find_cosine", (DL_FUNC) &_DualSimplex_find_cosine, 1},
+    {"_DualSimplex_getNonnegativeLowRankApproximationWithSVD", (DL_FUNC) &_DualSimplex_getNonnegativeLowRankApproximationWithSVD, 4},
     {"_DualSimplex_nnls_C__", (DL_FUNC) &_DualSimplex_nnls_C__, 4},
     {"_DualSimplex_jump_norm", (DL_FUNC) &_DualSimplex_jump_norm, 2},
     {"_DualSimplex_update_idx", (DL_FUNC) &_DualSimplex_update_idx, 3},
