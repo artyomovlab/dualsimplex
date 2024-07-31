@@ -90,7 +90,7 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         new_X = new_X - coef_der_X * der_X;
         // threshold for length of the new X
 
-        new_Omega = arma::inv(new_X);
+        new_Omega = arma::pinv(new_X);
 
         new_D_w_x_sqrt =  new_X.col(0) * sqrt_Sigma.at(0) * sqrt(N);
         new_D_w_x = arma::pow(new_D_w_x_sqrt, 2);
@@ -117,7 +117,7 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
 
 
         new_Omega = new_Omega - coef_der_Omega * der_Omega;
-        new_X = arma::inv(new_Omega);
+        new_X = arma::pinv(new_Omega);
 
 
        // Rcpp::Rcout << "going to get D_w from first column" << std::endl;
