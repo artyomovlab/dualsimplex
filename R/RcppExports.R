@@ -61,6 +61,18 @@ getNonnegativeLowRankApproximationWithHMT <- function(X, rank, p, k, iterations,
     .Call('_DualSimplex_getNonnegativeLowRankApproximationWithHMT', PACKAGE = 'DualSimplex', X, rank, p, k, iterations, left)
 }
 
+#' Get low rank approximation with GN method
+#'
+#' @param X inpit matrix
+#' @param rank desired approximation rank
+#' @param l parameter for Psi
+#' @param iterations number of iterations to perform
+#' @return left elements cropped (should be zero)
+#' @export
+getNonnegativeLowRankApproximationWithGN <- function(X, rank, l, iterations, left = 0) {
+    .Call('_DualSimplex_getNonnegativeLowRankApproximationWithGN', PACKAGE = 'DualSimplex', X, rank, l, iterations, left)
+}
+
 #' Get nnls solution
 #'
 #' @param A matrix A

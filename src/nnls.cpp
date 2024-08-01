@@ -15,7 +15,7 @@ arma::vec nnls_col(const arma::mat &A,
     double tmp;
     while (i < max_iter && max(abs(x - x0)) > tol) {
         x0 = x;
-        for (int k = 0; k < A.n_cols; k++) {
+        for (unsigned int k = 0; k < A.n_cols; k++) {
             tmp = x[k] - mu[k] / H.at(k, k);
             if (tmp < 0) tmp = 0;
             if (tmp != x[k]) mu += (tmp - x[k]) * H.col(k);
@@ -26,13 +26,13 @@ arma::vec nnls_col(const arma::mat &A,
 
     return x;
 }
-
+    
 arma::mat nnls_C__(arma::mat A, arma::mat b, int max_iter, double tol) {
     // solving Ax = b, where x and b are both matrices
     if (A.n_rows != b.n_rows)
         throw std::invalid_argument("A and b must have the same number of rows.");
     arma::mat x(A.n_cols, b.n_cols);
-    for (int i = 0; i < b.n_cols; i++) x.col(i) = nnls_col(A, b.col(i), max_iter, tol);
+    for (unsigned int i = 0; i < b.n_cols; i++) x.col(i) = nnls_col(A, b.col(i), max_iter, tol);
 
     return x;
 }

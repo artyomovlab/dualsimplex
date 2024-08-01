@@ -9,9 +9,9 @@ arma::mat jump_norm(arma::mat& X, const double r_const_X) {
     arma::mat X_trunc(X.n_rows, X.n_cols - 1);
     arma::uvec ids = arma::regspace<arma::uvec>(1, X.n_cols - 1);
     X_trunc = X.cols(ids);
-    for (int k = 0; k < X.n_rows; k++) {
+    for (unsigned int k = 0; k < X.n_rows; k++) {
         double row_norm = norm(X_trunc.row(k), 2);
-        for (int j = 1; j < X.n_cols; j++) {
+        for (unsigned int j = 1; j < X.n_cols; j++) {
             if (r_const_X > row_norm) {
                 norm_.at(k, j) = r_const_X / row_norm;
             } else {
@@ -27,7 +27,7 @@ arma::uvec update_idx(const arma::mat& prev_X, const arma::mat& new_X, const dou
     arma::rowvec new_values = find_cosine(new_X);
     arma::uvec idx2 = find(new_values >= thresh);
     arma::uvec new_idx = {};
-    for (int i = 0; i < idx2.n_elem; i++) {
+    for (unsigned int i = 0; i < idx2.n_elem; i++) {
         if (new_values.at(idx2[i]) >= prev_values.at(idx2[i])) {
             int sz = new_idx.size();
             new_idx.resize(sz + 1);
@@ -74,8 +74,8 @@ double hinge_C__(const arma::mat& X) {
     arma::mat X_(X.n_rows, X.n_cols, arma::fill::zeros);
     double elem_ = 0;
 
-    for (int i = 0; i < X.n_rows; i++) {
-        for (int j = 0; j < X.n_cols; j++) {
+    for (unsigned int i = 0; i < X.n_rows; i++) {
+        for (unsigned int j = 0; j < X.n_cols; j++) {
             elem_ = X(i, j);
             if (elem_ < 0) {
                 X_(i, j) = -elem_;
@@ -160,9 +160,6 @@ Rcpp::List derivative_stage2(const arma::mat& X,
     arma::mat der_X, der_Omega;
 
     for (int itr_ = 0; itr_ < iterations; itr_++) {
-        bool has_jump_X = false;
-        bool has_jump_Omega = false;
-
         // derivative X
         der_X =
             -2 * (diagmat(new_D_w) * new_Omega.t() * (SVRt - new_Omega * diagmat(new_D_w) * new_X));

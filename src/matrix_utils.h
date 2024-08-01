@@ -63,9 +63,18 @@ Rcpp::List getNonnegativeLowRankApproximationWithHMT(const arma::mat& X,
 //                                                     const int iterations,
 //                                                     const double left=0);
 //
-//Rcpp::List getNonnegativeLowRankApproximationWithGN(const arma::mat& X,
-//                                                       const int rank,
-//                                                       const int l,
-//                                                       const double rho,
-//                                                       const int iterations,
-//                                                       const double left=0);
+
+//' Get low rank approximation with GN method
+//'
+//' @param X inpit matrix
+//' @param rank desired approximation rank
+//' @param l parameter for Psi
+//' @param iterations number of iterations to perform
+//' @return left elements cropped (should be zero)
+//' @export
+// [[Rcpp::export]]
+Rcpp::List getNonnegativeLowRankApproximationWithGN(const arma::mat& X,
+                                                      const int rank,
+                                                      const int l,
+                                                      const int iterations,
+                                                      const double left=0);
