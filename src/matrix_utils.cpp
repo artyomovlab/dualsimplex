@@ -174,6 +174,7 @@ Rcpp::List getNonnegativeLowRankApproximationWithGN(const arma::mat& X,
     W = Phi * Z;
     // do QR decomposition
     arma::qr(Q, R, W);
+    R = R.head_rows(R.n_cols);
     V = (Phi * Yi).t() * Q;
     U = Z * arma::inv(R);
     Yi = U * V.t();
