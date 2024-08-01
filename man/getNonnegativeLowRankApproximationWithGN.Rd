@@ -2,7 +2,7 @@
 % Please edit documentation in R/RcppExports.R
 \name{getNonnegativeLowRankApproximationWithGN}
 \alias{getNonnegativeLowRankApproximationWithGN}
-\title{Get low rank approximation with GN method}
+\title{Get low rank approximation with GN method.}
 \usage{
 getNonnegativeLowRankApproximationWithGN(X, rank, l, iterations, left = 0)
 }
@@ -14,10 +14,12 @@ getNonnegativeLowRankApproximationWithGN(X, rank, l, iterations, left = 0)
 \item{l}{parameter for Psi}
 
 \item{iterations}{number of iterations to perform}
+
+\item{left}{elements cropped (should be zero)}
 }
 \value{
-left elements cropped (should be zero)
+named list containing new matrix, frobenious history for negative elements and number of negative elements.
 }
 \description{
-Get low rank approximation with GN method
+Get low rank approximation with GN method.
 }

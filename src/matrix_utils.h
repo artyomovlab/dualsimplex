@@ -17,12 +17,13 @@ arma::uword getNegative(arma::mat X);
 double getSum(arma::mat X, arma::mat M);
 
 
-//' Get low rank approximation with SVD method
+//' Get low rank approximation with SVD method.
 //'
-//' @param X inpit matrix
-//' @param rank desired approximation rank
-//' @param iterations number of iterations to perform
-//' @return left elements cropped (should be zero)
+//' @param X inpit matrix.
+//' @param rank desired approximation rank.
+//' @param iterations number of iterations to perform.
+//' @param left elements cropped (should be zero).
+//' @return named list containing new matrix, frobenious history for negative elements and number of negative elements.
 //' @export
 // [[Rcpp::export]]
 Rcpp::List getNonnegativeLowRankApproximationWithSVD(const arma::mat& X,  
@@ -38,14 +39,15 @@ Rcpp::List getNonnegativeLowRankApproximationWithSVD(const arma::mat& X,
 //
 //
 
-//' Get low rank approximation with SVD method
+//' Get low rank approximation with SVD method.
 //'
-//' @param X inpit matrix
-//' @param rank desired approximation rank
-//' @param p number of randomizations
-//' @param k number of randomized columns
-//' @param iterations number of iterations to perform
-//' @return left elements cropped (should be zero)
+//' @param X inpit matrix.
+//' @param rank desired approximation rank.
+//' @param p number of randomizations.
+//' @param k number of randomized columns.
+//' @param iterations number of iterations to perform.
+//' @param left elements cropped (should be zero).
+//' @return named list containing new matrix, frobenious history for negative elements and number of negative elements.
 //' @export
 // [[Rcpp::export]]
 Rcpp::List getNonnegativeLowRankApproximationWithHMT(const arma::mat& X,
@@ -64,13 +66,14 @@ Rcpp::List getNonnegativeLowRankApproximationWithHMT(const arma::mat& X,
 //                                                     const double left=0);
 //
 
-//' Get low rank approximation with GN method
+//' Get low rank approximation with GN method.
 //'
 //' @param X inpit matrix
 //' @param rank desired approximation rank
 //' @param l parameter for Psi
 //' @param iterations number of iterations to perform
-//' @return left elements cropped (should be zero)
+//' @param left elements cropped (should be zero)
+//' @return named list containing new matrix, frobenious history for negative elements and number of negative elements.
 //' @export
 // [[Rcpp::export]]
 Rcpp::List getNonnegativeLowRankApproximationWithGN(const arma::mat& X,

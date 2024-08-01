@@ -2,7 +2,7 @@
 
 arma::mat correctByNorm(arma::mat& X) {
     arma::vec norm_(X.n_rows);
-    for (int k = 0; k < X.n_rows; k++) {
+    for (unsigned int k = 0; k < X.n_rows; k++) {
         norm_[k] = arma::norm(X.row(k), 2);
     }
     arma::mat B = diagmat(1 / norm_) * X;
@@ -99,7 +99,6 @@ Rcpp::List getNonnegativeLowRankApproximationWithHMT(const arma::mat& X,
     Vr = Vr.head_cols(rank);
     Sr = Sr.head(rank);
     Yi = Ur * arma::diagmat(Sr) * Vr.t();
-    int m = X.n_rows;
     int n = X.n_cols;
     for (int i = 0; i < iterations; i++) {
     Yi.elem(arma::find(Yi < left)).fill(left);
@@ -170,7 +169,7 @@ Rcpp::List getNonnegativeLowRankApproximationWithGN(const arma::mat& X,
     //generate psi matrix (n, rank)
     Psi =  arma::randn(n, rank);
     //generate phi matrix (l, m)
-    Phi = arma::randn(n, rank);
+    Phi = arma::randn(l, m);
     Z = Yi * Psi;
     W = Phi * Z;
     // do QR decomposition

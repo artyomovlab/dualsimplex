@@ -2,24 +2,26 @@
 % Please edit documentation in R/RcppExports.R
 \name{getNonnegativeLowRankApproximationWithHMT}
 \alias{getNonnegativeLowRankApproximationWithHMT}
-\title{Get low rank approximation with SVD method}
+\title{Get low rank approximation with SVD method.}
 \usage{
 getNonnegativeLowRankApproximationWithHMT(X, rank, p, k, iterations, left = 0)
 }
 \arguments{
-\item{X}{inpit matrix}
+\item{X}{inpit matrix.}
 
-\item{rank}{desired approximation rank}
+\item{rank}{desired approximation rank.}
 
-\item{p}{number of randomizations}
+\item{p}{number of randomizations.}
 
-\item{k}{number of randomized columns}
+\item{k}{number of randomized columns.}
 
-\item{iterations}{number of iterations to perform}
+\item{iterations}{number of iterations to perform.}
+
+\item{left}{elements cropped (should be zero).}
 }
 \value{
-left elements cropped (should be zero)
+named list containing new matrix, frobenious history for negative elements and number of negative elements.
 }
 \description{
-Get low rank approximation with SVD method
+Get low rank approximation with SVD method.
 }

@@ -75,8 +75,6 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
     arma::mat der_X, der_Omega;
 
     for (int itr_ = 0; itr_ < iterations; itr_++) {
-        bool has_jump_X = false;
-        bool has_jump_Omega = false;
         // derivative X
         //der_X = -2 * (new_Omega.t() * (SVRt - new_Omega * new_X));
         //der_X +=  coef_hinge_H * hinge_der_proportions_C__(new_X  * R, R);
