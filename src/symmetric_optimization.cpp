@@ -107,7 +107,7 @@ Rcpp::List symmetric_derivative_stage2(const arma::mat& X,
 
         // derivative Omega
         der_Omega = -2 * (SVRt - new_Omega * new_X) * new_X.t();
-        der_Omega += coef_hinge_W  * symmetric_hinge_der_basis_C__(S.t() * arma::diagmat(sqrt_Sigma) * new_Omega, S);
+        der_Omega += coef_hinge_W  * symmetric_hinge_der_basis_C__(S.t() * new_Omega, S);
         der_Omega = correctByNorm(der_Omega) * mean_radius_Omega;
 
 
