@@ -173,7 +173,7 @@ initializers <- list(
     # X
     ids_X <- minrow(idx_table_X)[1:n_cell_types]
     X <- proj$X[ids_X, ]
-    Omega <- X
+    Omega <- proj$X[ids_X, ]
 
     Ds <- get_Dwh_from_XOmega(X, Omega, proj)
     return(list(
