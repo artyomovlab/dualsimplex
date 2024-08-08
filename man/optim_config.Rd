@@ -14,7 +14,8 @@ optim_config(
   limit_X = 0,
   limit_Omega = 0,
   cosine_thresh = 0,
-  alternative_method = FALSE
+  alternative_method = FALSE,
+  method = "basic"
 )
 }
 \arguments{

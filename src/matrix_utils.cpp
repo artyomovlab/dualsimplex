@@ -106,12 +106,12 @@ Rcpp::List getNonnegativeLowRankApproximationWithHMT(const arma::mat& X,
     Psi =  arma::randn(n, k);
     Z1 = Yi * Psi;
     // do QR decomposition
-    arma::qr(Q, R, Z1);
+    arma::qr_econ(Q, R, Z1);
     for (int j = 0; j < p; j++) {
         Z2 = Q.t() * Yi;
-        arma::qr(Q, R, Z2.t());
+        arma::qr_econ(Q, R, Z2.t());
         Z1 = Yi * Q;
-        arma::qr(Q, R, Z1);
+        arma::qr_econ(Q, R, Z1);
     }
     Z2 = Q.t() * Yi;
     arma::svd(Ur,Sr,Vr,Z2);

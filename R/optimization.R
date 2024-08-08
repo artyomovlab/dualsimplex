@@ -26,7 +26,8 @@ optim_config <- function(
   limit_X = 0,
   limit_Omega = 0,
   cosine_thresh = 0,
-  alternative_method = FALSE
+  alternative_method = FALSE,
+  method = "basic" # basic/positivity/symmetric
 ) {
   return(list(
     coef_der_X = coef_der_X,
@@ -38,6 +39,7 @@ optim_config <- function(
     limit_X = limit_X,
     limit_Omega = limit_Omega,
     cosine_thresh = cosine_thresh,
+    method = method,
     alternative_method = alternative_method
   ))
 }
@@ -164,11 +166,14 @@ optimize_solution <- function(
     r_limits$R_limit_Omega,
     config$cosine_thresh
   )
-  optimization_result <- if (config$alternative_method) {
+  optimization_result <- if (config$method == "positivity") {
     do.call(alternative_derivative_stage2, optimization_params)
+  } else if (config$method == "symmetric") {
+        do.call(symmetric_derivative_stage2, optimization_params)
   } else {
     do.call(derivative_stage2, optimization_params)
   }
+
 
   solution_proj$X <- optimization_result$new_X
   solution_proj$Omega <- t(optimization_result$new_Omega)
