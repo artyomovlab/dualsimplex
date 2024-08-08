@@ -146,6 +146,42 @@ initializers <- list(
       D_w = Ds$D_w,
       D_h = Ds$D_h
     ))
+  },
+    random_symmetric = function(proj, kwargs = NULL) {
+    if (!is.null(kwargs) && "n" %in% kwargs) {
+      n <- kwargs[["n"]]
+    } else {
+      n <- 100
+    }
+    n_cell_types <- proj$meta$K
+    M <- proj$meta$M
+    N <- proj$meta$N
+
+    idx_table_X <- matrix(0, ncol = n_cell_types + 1, nrow = n)
+
+    for (i in 1:n) {
+      #X
+      ids_X <- sample(1:M, n_cell_types)
+      X <- proj$X[ids_X, ]
+      metric_X <- sqrt(sum(apply(X[, -1], 2, mean) ^ 2))
+      idx_table_X[i, ] <- c(ids_X, metric_X)
+    }
+
+    minrow <- function(mat) mat[which.min(mat[, ncol(mat)]), ]
+
+
+    # X
+    ids_X <- minrow(idx_table_X)[1:n_cell_types]
+    X <- proj$X[ids_X, ]
+    Omega <- X
+
+    Ds <- get_Dwh_from_XOmega(X, Omega, proj)
+    return(list(
+      X = X,
+      Omega = t(Omega),
+      D_w = Ds$D_w,
+      D_h = Ds$D_h
+    ))
   }
 )
 
