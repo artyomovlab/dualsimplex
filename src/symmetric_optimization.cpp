@@ -138,9 +138,9 @@ Rcpp::List symmetric_derivative_stage2(const arma::mat& X,
         double sum_ = accu(new_D_w) / M;
 
         // result X and omega
-        final_X = arma::diagmat(1/new_D_w_x_sqrt) * new_X * arma::diagmat(sqrt_Sigma);
+        final_X = arma::diagmat(1/new_D_w_x_sqrt) * new_X;
 
-        final_Omega = arma::diagmat(sqrt_Sigma)* new_Omega * arma::diagmat(1/new_D_w_omega_sqrt);
+        final_Omega =  new_Omega * arma::diagmat(1/new_D_w_omega_sqrt);
         Rcpp::List current_errors = calcErrors(final_X,
                                                final_Omega,
                                                new_D_w,
