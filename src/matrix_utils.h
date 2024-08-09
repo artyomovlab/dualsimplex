@@ -23,13 +23,15 @@ double getSum(arma::mat X, arma::mat M);
 //' @param rank desired approximation rank.
 //' @param iterations number of iterations to perform.
 //' @param left elements cropped (should be zero).
+//' @param right elements cropped (infinity by default)
 //' @return named list containing new matrix, frobenious history for negative elements and number of negative elements.
 //' @export
 // [[Rcpp::export]]
 Rcpp::List getNonnegativeLowRankApproximationWithSVD(const arma::mat& X,  
                                                      const int rank,
                                                      const int iterations,
-                                                     const double left=0);
+                                                     const double left=0,
+                                                     const double right=std::numeric_limits<double>::infinity());
 
 //
 //Rcpp::List getNonnegativeLowRankApproximationWithTangent(const arma::mat& X,
@@ -47,15 +49,17 @@ Rcpp::List getNonnegativeLowRankApproximationWithSVD(const arma::mat& X,
 //' @param k number of randomized columns.
 //' @param iterations number of iterations to perform.
 //' @param left elements cropped (should be zero).
+//' @param right elements cropped (infinity by default)
 //' @return named list containing new matrix, frobenious history for negative elements and number of negative elements.
 //' @export
 // [[Rcpp::export]]
-Rcpp::List getNonnegativeLowRankApproximationWithHMT(const arma::mat& X,
+Rcpp:: getNonnegativeLowRankApproximationWithHMT(const arma::mat& X,
                                                          const int rank,
                                                          const int p,
                                                          const int k,
                                                          const int iterations,
-                                                         const double left=0);
+                                                         const double left=0,
+                                                         const double right=std::numeric_limits<double>::infinity());
 //
 //Rcpp::List getNonnegativeLowRankApproximationWithTropp(const arma::mat& X,
 //                                                     const int rank,
@@ -73,6 +77,7 @@ Rcpp::List getNonnegativeLowRankApproximationWithHMT(const arma::mat& X,
 //' @param l parameter for Psi
 //' @param iterations number of iterations to perform
 //' @param left elements cropped (should be zero)
+//' @param right elements cropped (infinity by default)
 //' @return named list containing new matrix, frobenious history for negative elements and number of negative elements.
 //' @export
 // [[Rcpp::export]]
@@ -80,4 +85,22 @@ Rcpp::List getNonnegativeLowRankApproximationWithGN(const arma::mat& X,
                                                       const int rank,
                                                       const int l,
                                                       const int iterations,
-                                                      const double left=0);
+                                                      const double left=0,
+                                                      const double right=std::numeric_limits<double>::infinity());
+
+
+//' Get low rank approximation with Tangent method.
+//'
+//' @param X inpit matrix.
+//' @param rank desired approximation rank.
+//' @param iterations number of iterations to perform.
+//' @param left elements cropped (should be zero).
+//' @param right elements cropped (infinity by default)
+//' @return named list containing new matrix, frobenious history for negative elements and number of negative elements.
+//' @export
+// [[Rcpp::export]]
+Rcpp::List getNonnegativeLowRankApproximationWithTangentMethod(const arma::mat& X,  
+                                                     const int rank,
+                                                     const int iterations,
+                                                     const double left=0, 
+                                                     const double right=std::numeric_limits<double>::infinity());

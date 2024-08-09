@@ -4,7 +4,7 @@
 \alias{getNonnegativeLowRankApproximationWithSVD}
 \title{Get low rank approximation with SVD method.}
 \usage{
-getNonnegativeLowRankApproximationWithSVD(X, rank, iterations, left = 0)
+getNonnegativeLowRankApproximationWithSVD(X, rank, iterations, left = 0, right)
 }
 \arguments{
 \item{X}{inpit matrix.}
@@ -14,6 +14,8 @@ getNonnegativeLowRankApproximationWithSVD(X, rank, iterations, left = 0)
 \item{iterations}{number of iterations to perform.}
 
 \item{left}{elements cropped (should be zero).}
+
+\item{right}{elements cropped (infinity by default)}
 }
 \value{
 named list containing new matrix, frobenious history for negative elements and number of negative elements.

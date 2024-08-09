@@ -4,7 +4,14 @@
 \alias{getNonnegativeLowRankApproximationWithGN}
 \title{Get low rank approximation with GN method.}
 \usage{
-getNonnegativeLowRankApproximationWithGN(X, rank, l, iterations, left = 0)
+getNonnegativeLowRankApproximationWithGN(
+  X,
+  rank,
+  l,
+  iterations,
+  left = 0,
+  right
+)
 }
 \arguments{
 \item{X}{inpit matrix}
@@ -16,6 +23,8 @@ getNonnegativeLowRankApproximationWithGN(X, rank, l, iterations, left = 0)
 \item{iterations}{number of iterations to perform}
 
 \item{left}{elements cropped (should be zero)}
+
+\item{right}{elements cropped (infinity by default)}
 }
 \value{
 named list containing new matrix, frobenious history for negative elements and number of negative elements.

@@ -35,7 +35,8 @@ double getSum(arma::mat X, arma::mat M) { return arma::accu(X) / M.n_rows; }
 Rcpp::List getNonnegativeLowRankApproximationWithSVD(const arma::mat& X,  
                                                      const int rank,
                                                      const int iterations,
-                                                     const double left) {
+                                                     const double left,
+                                                     const double right) {
   // truncated svd
   arma::mat Ur;
   arma::vec Sr;
@@ -50,6 +51,7 @@ Rcpp::List getNonnegativeLowRankApproximationWithSVD(const arma::mat& X,
   Yi = Ur * arma::diagmat(Sr) * Vr.t();
   for (int i = 0; i < iterations; i++) {
     Yi.elem(arma::find(Yi < left)).fill(left);
+    Yi.elem(arma::find(Yi > right)).fill(right);
     svd(Ur,Sr,Vr,Yi);
     Ur = Ur.head_cols(rank);
     Vr = Vr.head_cols(rank);
@@ -68,6 +70,7 @@ Rcpp::List getNonnegativeLowRankApproximationWithSVD(const arma::mat& X,
                               Rcpp::Named("neg_count") = neg_elements_statistics);
 }
 
+
 //
 //Rcpp::List getNonnegativeLowRankApproximationWithTangent(const arma::mat& X,
 //                                                         const int rank,
@@ -82,7 +85,8 @@ Rcpp::List getNonnegativeLowRankApproximationWithHMT(const arma::mat& X,
                                                      const int p,
                                                      const int k,
                                                      const int iterations,
-                                                     const double left) {
+                                                     const double left,
+                                                     const double right) {
 
     arma::rowvec frobenius_statistics(iterations, arma::fill::zeros);
     arma::urowvec neg_elements_statistics(iterations, arma::fill::zeros);                                                  
@@ -102,6 +106,7 @@ Rcpp::List getNonnegativeLowRankApproximationWithHMT(const arma::mat& X,
     int n = X.n_cols;
     for (int i = 0; i < iterations; i++) {
     Yi.elem(arma::find(Yi < left)).fill(left);
+    Yi.elem(arma::find(Yi > right)).fill(right);
     //generate psi matrix (n, k, norm_dist, rho)
     Psi =  arma::randn(n, k);
     Z1 = Yi * Psi;
@@ -149,7 +154,8 @@ Rcpp::List getNonnegativeLowRankApproximationWithGN(const arma::mat& X,
                                                    const int rank,
                                                    const int l,
                                                    const int iterations,
-                                                   const double left) {
+                                                   const double left,
+                                                   const double right) {
     arma::rowvec frobenius_statistics(iterations, arma::fill::zeros);
     arma::urowvec neg_elements_statistics(iterations, arma::fill::zeros);    
     arma::mat Psi, Phi;
@@ -166,6 +172,7 @@ Rcpp::List getNonnegativeLowRankApproximationWithGN(const arma::mat& X,
 
     for (int i = 0; i < iterations; i++) {
     Yi.elem(arma::find(Yi < left)).fill(left);
+    Yi.elem(arma::find(Yi > right)).fill(right);
     //generate psi matrix (n, rank)
     Psi =  arma::randn(n, rank);
     //generate phi matrix (l, m)
@@ -192,7 +199,58 @@ Rcpp::List getNonnegativeLowRankApproximationWithGN(const arma::mat& X,
                               Rcpp::Named("frobenius_neg_norm") = frobenius_statistics,
                               Rcpp::Named("neg_count") = neg_elements_statistics);
 
+}
 
 
+Rcpp::List getNonnegativeLowRankApproximationWithTangentMethod(const arma::mat& X,  
+                                                     const int rank,
+                                                     const int iterations,
+                                                     const double left,
+                                                     const double right) {
+  // truncated svd
+  arma::mat Ur, U2r;
+  arma::vec Sr, S2r;
+  arma::mat Vr, V2r;
+  arma::mat Yi;
+  arma::mat Im, In;
+  arma::mat G1, G2, Q1, Q2, R1, R2, Z;
+  arma::rowvec frobenius_statistics(iterations, arma::fill::zeros);
+  arma::urowvec neg_elements_statistics(iterations, arma::fill::zeros);    
+  svd(Ur,Sr,Vr,X);
+  Ur = Ur.head_cols(rank);
+  Vr = Vr.head_cols(rank);
+  Sr = Sr.head(rank);
+  Yi = Ur * arma::diagmat(Sr) * Vr.t();
+  int m = X.n_rows;
+  int n = X.n_cols;
+  Im.eye(m, m);
+  In.eye(n, n);
+  for (int i = 0; i < iterations; i++) {
+    Yi.elem(arma::find(Yi < left)).fill(left);
+    Yi.elem(arma::find(Yi > right)).fill(right);
+    G1 = Ur * Yi;
+    G2 = (Im - (Ur * Ur.t())) * Yi * Vr;
 
+    arma::qr_econ(Q1, R1, (In-(Vr*Vr.t())* G1.t()));
+    arma::qr_econ(Q2, R2, G2);
+    Z = arma::join_rows(G1*Vr, R1.t());
+    Z = arma::join_cols(Z, arma::join_cols(R2, arma::zeros(size(R2))));
+    svd(U2r,S2r,V2r,Z);
+    U2r = U2r.head_cols(rank);
+    V2r = V2r.head_cols(rank);
+    S2r = S2r.head(rank);
+    Ur = arma::join_rows(Ur, Q2) * U2r;
+    Vr = arma::join_rows(Vr, Q1) * V2r;
+    Yi = Ur * arma::diagmat(Sr) * Vr.t();
+    // get statistics values
+    // frobenius norm of negative elements
+    double fro_norm = arma::norm( Yi.elem(arma::find(Yi < 0)), "fro" );
+    // number of negatives
+    arma::uword neg_count = getNegative(Yi);
+    frobenius_statistics(i) = fro_norm;
+    neg_elements_statistics(i) = neg_count;
+    }
+    return Rcpp::List::create(Rcpp::Named("newX") = Yi,
+                              Rcpp::Named("frobenius_neg_norm") = frobenius_statistics,
+                              Rcpp::Named("neg_count") = neg_elements_statistics);
 }
