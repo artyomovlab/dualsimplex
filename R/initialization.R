@@ -175,12 +175,15 @@ initializers <- list(
     X <- proj$X[ids_X, ]
     Omega <- t(proj$X[ids_X, ])
 
+    Dw <- MASS::ginv(t(X)) %*% proj$meta$A
+    Dh <- Dw *(N / M);
+
     Ds <- get_Dwh_from_XOmega(X, Omega, proj)
     return(list(
       X = X,
       Omega = t(Omega),
-      D_w = Ds$D_w,
-      D_h = Ds$D_h
+      D_w = Dw,
+      D_h = Dh
     ))
   }
 )
