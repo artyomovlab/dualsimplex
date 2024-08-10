@@ -1,5 +1,6 @@
 // [[Rcpp::depends(RcppArmadillo)]]
 #include <RcppArmadillo.h>
+#include <limits>
 
 //' Get cosine distance between columns
 //'
@@ -53,7 +54,7 @@ Rcpp::List getNonnegativeLowRankApproximationWithSVD(const arma::mat& X,
 //' @return named list containing new matrix, frobenious history for negative elements and number of negative elements.
 //' @export
 // [[Rcpp::export]]
-Rcpp:: getNonnegativeLowRankApproximationWithHMT(const arma::mat& X,
+Rcpp::List getNonnegativeLowRankApproximationWithHMT(const arma::mat& X,
                                                          const int rank,
                                                          const int p,
                                                          const int k,

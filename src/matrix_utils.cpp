@@ -51,7 +51,9 @@ Rcpp::List getNonnegativeLowRankApproximationWithSVD(const arma::mat& X,
   Yi = Ur * arma::diagmat(Sr) * Vr.t();
   for (int i = 0; i < iterations; i++) {
     Yi.elem(arma::find(Yi < left)).fill(left);
-    Yi.elem(arma::find(Yi > right)).fill(right);
+    if (right > 0) {
+        Yi.elem(arma::find(Yi > right)).fill(right);
+    }
     svd(Ur,Sr,Vr,Yi);
     Ur = Ur.head_cols(rank);
     Vr = Vr.head_cols(rank);
@@ -106,7 +108,9 @@ Rcpp::List getNonnegativeLowRankApproximationWithHMT(const arma::mat& X,
     int n = X.n_cols;
     for (int i = 0; i < iterations; i++) {
     Yi.elem(arma::find(Yi < left)).fill(left);
-    Yi.elem(arma::find(Yi > right)).fill(right);
+    if (right > 0) {
+        Yi.elem(arma::find(Yi > right)).fill(right);
+    }
     //generate psi matrix (n, k, norm_dist, rho)
     Psi =  arma::randn(n, k);
     Z1 = Yi * Psi;
@@ -172,7 +176,9 @@ Rcpp::List getNonnegativeLowRankApproximationWithGN(const arma::mat& X,
 
     for (int i = 0; i < iterations; i++) {
     Yi.elem(arma::find(Yi < left)).fill(left);
-    Yi.elem(arma::find(Yi > right)).fill(right);
+    if (right > 0) {
+        Yi.elem(arma::find(Yi > right)).fill(right);
+    }
     //generate psi matrix (n, rank)
     Psi =  arma::randn(n, rank);
     //generate phi matrix (l, m)
@@ -227,7 +233,9 @@ Rcpp::List getNonnegativeLowRankApproximationWithTangentMethod(const arma::mat& 
   In.eye(n, n);
   for (int i = 0; i < iterations; i++) {
     Yi.elem(arma::find(Yi < left)).fill(left);
-    Yi.elem(arma::find(Yi > right)).fill(right);
+    if (right > 0) {
+        Yi.elem(arma::find(Yi > right)).fill(right);
+    }
     G1 = Ur * Yi;
     G2 = (Im - (Ur * Ur.t())) * Yi * Vr;
 
