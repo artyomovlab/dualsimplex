@@ -11,7 +11,7 @@ getNonnegativeLowRankApproximationWithHMT(
   k,
   iterations,
   left = 0,
-  right
+  right = -1
 )
 }
 \arguments{

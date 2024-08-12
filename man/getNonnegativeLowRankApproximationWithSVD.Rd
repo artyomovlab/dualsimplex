@@ -4,7 +4,13 @@
 \alias{getNonnegativeLowRankApproximationWithSVD}
 \title{Get low rank approximation with SVD method.}
 \usage{
-getNonnegativeLowRankApproximationWithSVD(X, rank, iterations, left = 0, right)
+getNonnegativeLowRankApproximationWithSVD(
+  X,
+  rank,
+  iterations,
+  left = 0,
+  right = -1
+)
 }
 \arguments{
 \item{X}{inpit matrix.}

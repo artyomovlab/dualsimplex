@@ -10,7 +10,7 @@ getNonnegativeLowRankApproximationWithGN(
   l,
   iterations,
   left = 0,
-  right
+  right = -1
 )
 }
 \arguments{
