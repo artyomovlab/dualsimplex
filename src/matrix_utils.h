@@ -1,6 +1,5 @@
 // [[Rcpp::depends(RcppArmadillo)]]
 #include <RcppArmadillo.h>
-#include <limits>
 
 //' Get cosine distance between columns
 //'
@@ -32,7 +31,7 @@ Rcpp::List getNonnegativeLowRankApproximationWithSVD(const arma::mat& X,
                                                      const int rank,
                                                      const int iterations,
                                                      const double left=0,
-                                                     const double right=std::numeric_limits<double>::infinity());
+                                                     const double right=-1);
 
 //
 //Rcpp::List getNonnegativeLowRankApproximationWithTangent(const arma::mat& X,
@@ -60,7 +59,7 @@ Rcpp::List getNonnegativeLowRankApproximationWithHMT(const arma::mat& X,
                                                          const int k,
                                                          const int iterations,
                                                          const double left=0,
-                                                         const double right=std::numeric_limits<double>::infinity());
+                                                         const double right=-1);
 //
 //Rcpp::List getNonnegativeLowRankApproximationWithTropp(const arma::mat& X,
 //                                                     const int rank,
@@ -87,7 +86,7 @@ Rcpp::List getNonnegativeLowRankApproximationWithGN(const arma::mat& X,
                                                       const int l,
                                                       const int iterations,
                                                       const double left=0,
-                                                      const double right=std::numeric_limits<double>::infinity());
+                                                      const double right=-1);
 
 
 //' Get low rank approximation with Tangent method.
@@ -104,4 +103,4 @@ Rcpp::List getNonnegativeLowRankApproximationWithTangentMethod(const arma::mat& 
                                                      const int rank,
                                                      const int iterations,
                                                      const double left=0, 
-                                                     const double right=std::numeric_limits<double>::infinity());
+                                                     const double right=-1);
