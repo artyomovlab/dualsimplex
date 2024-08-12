@@ -239,16 +239,16 @@ Rcpp::List getNonnegativeLowRankApproximationWithTangentMethod(const arma::mat& 
     G1 = Ur.t() * Yi;
     G2 = (Im - (Ur * Ur.t())) * Yi * Vr;
 
-    arma::qr_econ(Q1, R1, (In-(Vr*Vr.t())* G1.t()));
+    arma::qr_econ(Q1, R1, ((In-(Vr*Vr.t()))* G1.t()));
     arma::qr_econ(Q2, R2, G2);
-    Z = arma::join_rows(G1*Vr, R1.t());
-    Z = arma::join_cols(Z, arma::join_cols(R2, arma::zeros(size(R2))));
+    Z = arma::join_cols(G1*Vr, R1.t());
+    Z = arma::join_rows(Z, arma::join_cols(R2, arma::zeros(size(R2))));
     svd(U2r,S2r,V2r,Z);
     U2r = U2r.head_cols(rank);
     V2r = V2r.head_cols(rank);
     S2r = S2r.head(rank);
-    Ur = arma::join_rows(Ur, Q2) * U2r;
-    Vr = arma::join_rows(Vr, Q1) * V2r;
+    Ur = arma::join_cols(Ur, Q2) * U2r;
+    Vr = arma::join_cols(Vr, Q1) * V2r;
     Yi = Ur * arma::diagmat(Sr) * Vr.t();
     // get statistics values
     // frobenius norm of negative elements
