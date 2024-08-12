@@ -236,7 +236,7 @@ Rcpp::List getNonnegativeLowRankApproximationWithTangentMethod(const arma::mat& 
     if (right > 0) {
         Yi.elem(arma::find(Yi > right)).fill(right);
     }
-    G1 = Ur * Yi;
+    G1 = Ur.t() * Yi;
     G2 = (Im - (Ur * Ur.t())) * Yi * Vr;
 
     arma::qr_econ(Q1, R1, (In-(Vr*Vr.t())* G1.t()));
