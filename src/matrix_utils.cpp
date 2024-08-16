@@ -239,9 +239,10 @@ Rcpp::List getNonnegativeLowRankApproximationWithTangentMethod(const arma::mat& 
     G1 = Ur.t() * Yi;
     G2 = (Im - (Ur * Ur.t())) * Yi * Vr;
 
-    arma::qr_econ(Q1, R1, ((In-(Vr*Vr.t()))* G1.t()));
+    arma::qr_econ(Q1, R1, ((In-(Vr * Vr.t()))* G1.t()));
+
     arma::qr_econ(Q2, R2, G2);
-    Z = arma::join_cols(G1*Vr, R1.t());
+    Z = arma::join_cols(G1 * Vr, R1.t());
     Z = arma::join_rows(Z, arma::join_cols(R2, arma::zeros(size(R2))));
     svd(U2r,S2r,V2r,Z);
     U2r = U2r.head_cols(rank);

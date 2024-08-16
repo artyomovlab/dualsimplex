@@ -194,6 +194,7 @@ initializers <- list(
 #'
 #' @param X KxK matrix X
 #' @param proj dso$st$proj object, containing all necessary info about projection (e.g. vectors and projected points)
+#' @export
 set_solution_from_x <- function(X, proj) {
   D_h <- MASS::ginv(t(X)) %*% proj$meta$A
   M <- proj$meta$M
@@ -216,6 +217,7 @@ set_solution_from_x <- function(X, proj) {
 #' @param X KxK solution matrix X
 #' @param Omega KxK solution matrix Omega
 #' @param proj dso$st$proj object, containing all necessary info about projection (e.g. vectors and projected points)
+#' @export
 get_Dwh_from_XOmega <- function(X, Omega, proj) {
   V__ <- proj$meta$S %*% proj$X
 
