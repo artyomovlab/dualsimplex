@@ -223,34 +223,33 @@ Rcpp::List getNonnegativeLowRankApproximationWithTangentMethod(const arma::mat& 
   arma::rowvec frobenius_statistics(iterations, arma::fill::zeros);
   arma::urowvec neg_elements_statistics(iterations, arma::fill::zeros);    
   svd(Ur,Sr,Vr,X);
-  Ur = Ur.head_cols(rank);
-  Vr = Vr.head_cols(rank);
-  Sr = Sr.head(rank);
-  Yi = Ur * arma::diagmat(Sr) * Vr.t();
-  int m = X.n_rows;
+  Ur = Ur.head_cols(rank); // m*r
+  Vr = Vr.head_cols(rank); // n*r
+  Sr = Sr.head(rank); // r
+  Yi = Ur * arma::diagmat(Sr) * Vr.t(); // m*n
+  int m = X.n_rows; 
   int n = X.n_cols;
-  Im.eye(m, m);
-  In.eye(n, n);
+  Im.eye(m, m); // m*m
+  In.eye(n, n); // n*n
   for (int i = 0; i < iterations; i++) {
     Yi.elem(arma::find(Yi < left)).fill(left);
     if (right > 0) {
         Yi.elem(arma::find(Yi > right)).fill(right);
     }
-    G1 = Ur.t() * Yi;
-    G2 = (Im - (Ur * Ur.t())) * Yi * Vr;
+    G1 = Ur.t() * Yi; // r*m x m*n -> r*n
+    G2 = (Im - (Ur * Ur.t())) * Yi * Vr; // (m*m - (m*r x r*m)) * m*n * n*r -> m*r
 
-    arma::qr_econ(Q1, R1, ((In-(Vr * Vr.t()))* G1.t()));
-
-    arma::qr_econ(Q2, R2, G2);
-    Z = arma::join_cols(G1 * Vr, R1.t());
-    Z = arma::join_rows(Z, arma::join_cols(R2, arma::zeros(size(R2))));
-    svd(U2r,S2r,V2r,Z);
-    U2r = U2r.head_cols(rank);
-    V2r = V2r.head_cols(rank);
-    S2r = S2r.head(rank);
-    Ur = arma::join_cols(Ur, Q2) * U2r;
-    Vr = arma::join_cols(Vr, Q1) * V2r;
-    Yi = Ur * arma::diagmat(Sr) * Vr.t();
+    arma::qr_econ(Q1, R1, ((In-(Vr * Vr.t()))* G1.t())); //  QR((n*n - (n*n))* n*r ) -> QR(n*r) ->  (n*r) (r*r)
+    arma::qr_econ(Q2, R2, G2); // (m*r) (r*r)
+    Z = arma::join_rows(G1 * Vr, R1.t()); // join_rows((r*n x n*r), r*r) ->  r*2r
+    Z = arma::join_cols(Z, arma::join_rows(R2, arma::zeros(size(R2))));  // 2r*2r
+    svd(U2r,S2r,V2r,Z); //   
+    U2r = U2r.head_cols(rank); // 2r*r
+    V2r = V2r.head_cols(rank); // 2r*r
+    S2r = S2r.head(rank); //r
+    Ur = arma::join_rows(Ur, Q2) * U2r; // jc(m*r, m*r)x 2r*r -> m*r
+    Vr = arma::join_rows(Vr, Q1) * V2r; // jc(n*r, n*r) x 2r*r -> n*r
+    Yi = Ur * arma::diagmat(S2r) * Vr.t();
     // get statistics values
     // frobenius norm of negative elements
     double fro_norm = arma::norm( Yi.elem(arma::find(Yi < 0)), "fro" );
