@@ -221,17 +221,19 @@ Rcpp::List getNonnegativeLowRankApproximationWithTangentMethod(const arma::mat& 
   arma::mat Im, In;
   arma::mat G1, G2, Q1, Q2, R1, R2, Z;
   arma::rowvec frobenius_statistics(iterations, arma::fill::zeros);
-  arma::urowvec neg_elements_statistics(iterations, arma::fill::zeros);    
+  arma::urowvec neg_elements_statistics(iterations, arma::fill::zeros);
   svd(Ur,Sr,Vr,X);
   Ur = Ur.head_cols(rank); // m*r
   Vr = Vr.head_cols(rank); // n*r
   Sr = Sr.head(rank); // r
   Yi = Ur * arma::diagmat(Sr) * Vr.t(); // m*n
+  arma::mat attention_matrix = arma::zeros(size(Yi));    
   int m = X.n_rows; 
   int n = X.n_cols;
   Im.eye(m, m); // m*m
   In.eye(n, n); // n*n
   for (int i = 0; i < iterations; i++) {
+    attention_matrix.elem(arma::find(Yi < left)) += 1;
     Yi.elem(arma::find(Yi < left)).fill(left);
     if (right > 0) {
         Yi.elem(arma::find(Yi > right)).fill(right);
@@ -259,6 +261,7 @@ Rcpp::List getNonnegativeLowRankApproximationWithTangentMethod(const arma::mat& 
     neg_elements_statistics(i) = neg_count;
     }
     return Rcpp::List::create(Rcpp::Named("newX") = Yi,
+                              Rcpp::Named("attention") = attention_matrix,
                               Rcpp::Named("frobenius_neg_norm") = frobenius_statistics,
                               Rcpp::Named("neg_count") = neg_elements_statistics);
 }
