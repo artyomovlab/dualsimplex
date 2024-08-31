@@ -345,6 +345,9 @@ DualSimplexSolver <- R6Class(
           zero_d_lt,
           genes
         )
+      new_data <- remove_zero_cols(new_data)
+      new_data <- remove_zero_rows(new_data)
+
       self$set_data(new_data)
       private$add_filtering_log_step(
         "distance_filter",
@@ -456,7 +459,7 @@ DualSimplexSolver <- R6Class(
       }
 
       if (!is.null(with_legend) && with_legend) {
-        plt_X <- plt_X + theme(legend.position = "right")
+          plt_X <- plt_X + theme(legend.position = "right")
         plt_Omega <- plt_Omega + theme(legend.position = "right")
       }
 
