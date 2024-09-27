@@ -145,7 +145,7 @@ optimize_solution <- function(
     solution_proj$X,
     t(solution_proj$Omega),
     solution_proj$D_w,
-      proj$meta$S %*% proj$X
+      proj$meta$S %*% proj$X,
    # proj$meta$Sigma, # Should be equal to SVRt
     proj$meta$R,
     proj$meta$S,
