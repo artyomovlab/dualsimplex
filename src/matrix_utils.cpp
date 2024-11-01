@@ -43,7 +43,9 @@ Rcpp::List getNonnegativeLowRankApproximationWithSVD(const arma::mat& X,
   arma::mat Vr;
   arma::mat Yi;
   arma::rowvec frobenius_statistics(iterations, arma::fill::zeros);
-  arma::urowvec neg_elements_statistics(iterations, arma::fill::zeros);    
+  arma::urowvec neg_elements_statistics(iterations, arma::fill::zeros);
+  arma::urowvec approximation_fro_norm(iterations, arma::fill::zeros);
+
   svd(Ur,Sr,Vr,X);
   Ur = Ur.head_cols(rank);
   Vr = Vr.head_cols(rank);
@@ -62,14 +64,17 @@ Rcpp::List getNonnegativeLowRankApproximationWithSVD(const arma::mat& X,
     // get statistics values
     // frobenius norm of negative elements
     double fro_norm = arma::norm( Yi.elem(arma::find(Yi < 0)), "fro" );
+    double fro_distance = arma::norm(X-Yi, "fro");
     // number of negatives
     arma::uword neg_count = getNegative(Yi);
     frobenius_statistics(i) = fro_norm;
     neg_elements_statistics(i) = neg_count;
+    approximation_fro_norm(i) = fro_distance;
     }
     return Rcpp::List::create(Rcpp::Named("newX") = Yi,
                               Rcpp::Named("frobenius_neg_norm") = frobenius_statistics,
-                              Rcpp::Named("neg_count") = neg_elements_statistics);
+                              Rcpp::Named("neg_count") = neg_elements_statistics,
+                              Rcpp::Named("approx_error") = approximation_fro_norm);
 }
 
 
@@ -91,7 +96,9 @@ Rcpp::List getNonnegativeLowRankApproximationWithHMT(const arma::mat& X,
                                                      const double right) {
 
     arma::rowvec frobenius_statistics(iterations, arma::fill::zeros);
-    arma::urowvec neg_elements_statistics(iterations, arma::fill::zeros);                                                  
+    arma::urowvec neg_elements_statistics(iterations, arma::fill::zeros);
+    arma::urowvec approximation_fro_norm(iterations, arma::fill::zeros);
+
     arma::mat Psi;
     arma::mat Z1, Z2;
     arma::mat Q, R;
@@ -132,14 +139,18 @@ Rcpp::List getNonnegativeLowRankApproximationWithHMT(const arma::mat& X,
     // get statistics values
     // frobenius norm of negative elements
     double fro_norm = arma::norm( Yi.elem(arma::find(Yi < 0)), "fro" );
+    double fro_distance = arma::norm(X-Yi, "fro");
+
     // number of negatives
     arma::uword neg_count = getNegative(Yi);
     frobenius_statistics(i) = fro_norm;
     neg_elements_statistics(i) = neg_count;
+    approximation_fro_norm(i) = fro_distance;
     }
     return Rcpp::List::create(Rcpp::Named("newX") = Yi,
                               Rcpp::Named("frobenius_neg_norm") = frobenius_statistics,
-                              Rcpp::Named("neg_count") = neg_elements_statistics);
+                              Rcpp::Named("neg_count") = neg_elements_statistics,
+                              Rcpp::Named("approx_error") = approximation_fro_norm);
 
 
 }
@@ -161,7 +172,9 @@ Rcpp::List getNonnegativeLowRankApproximationWithGN(const arma::mat& X,
                                                    const double left,
                                                    const double right) {
     arma::rowvec frobenius_statistics(iterations, arma::fill::zeros);
-    arma::urowvec neg_elements_statistics(iterations, arma::fill::zeros);    
+    arma::urowvec neg_elements_statistics(iterations, arma::fill::zeros);
+    arma::urowvec approximation_fro_norm(iterations, arma::fill::zeros);
+
     arma::mat Psi, Phi;
     arma::mat Z, W, V, U;
     arma::mat Q, R;
@@ -196,14 +209,17 @@ Rcpp::List getNonnegativeLowRankApproximationWithGN(const arma::mat& X,
     // get statistics values
     // frobenius norm of negative elements
     double fro_norm = arma::norm( Yi.elem(arma::find(Yi < 0)), "fro" );
+    double fro_distance = arma::norm(X-Yi, "fro");
     // number of negatives
     arma::uword neg_count = getNegative(Yi);
     frobenius_statistics(i) = fro_norm;
     neg_elements_statistics(i) = neg_count;
+    approximation_fro_norm(i) = fro_distance;
     }
     return Rcpp::List::create(Rcpp::Named("newX") = Yi,
                               Rcpp::Named("frobenius_neg_norm") = frobenius_statistics,
-                              Rcpp::Named("neg_count") = neg_elements_statistics);
+                              Rcpp::Named("neg_count") = neg_elements_statistics,
+                              Rcpp::Named("approx_error") = approximation_fro_norm);
 
 }
 
@@ -222,6 +238,8 @@ Rcpp::List getNonnegativeLowRankApproximationWithTangentMethod(const arma::mat& 
   arma::mat G1, G2, Q1, Q2, R1, R2, Z;
   arma::rowvec frobenius_statistics(iterations, arma::fill::zeros);
   arma::urowvec neg_elements_statistics(iterations, arma::fill::zeros);
+  arma::urowvec approximation_fro_norm(iterations, arma::fill::zeros);
+
   svd(Ur,Sr,Vr,X);
   Ur = Ur.head_cols(rank); // m*r
   Vr = Vr.head_cols(rank); // n*r
@@ -255,13 +273,17 @@ Rcpp::List getNonnegativeLowRankApproximationWithTangentMethod(const arma::mat& 
     // get statistics values
     // frobenius norm of negative elements
     double fro_norm = arma::norm( Yi.elem(arma::find(Yi < 0)), "fro" );
+    double fro_distance = arma::norm(X-Yi, "fro");
+
     // number of negatives
     arma::uword neg_count = getNegative(Yi);
     frobenius_statistics(i) = fro_norm;
     neg_elements_statistics(i) = neg_count;
+    approximation_fro_norm(i) = fro_distance;
     }
     return Rcpp::List::create(Rcpp::Named("newX") = Yi,
                               Rcpp::Named("attention") = attention_matrix,
                               Rcpp::Named("frobenius_neg_norm") = frobenius_statistics,
-                              Rcpp::Named("neg_count") = neg_elements_statistics);
+                              Rcpp::Named("neg_count") = neg_elements_statistics,
+                              Rcpp::Named("approx_error") = approximation_fro_norm);
 }
