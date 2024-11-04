@@ -242,8 +242,8 @@ Rcpp::List getNonnegativeLowRankApproximationWithTangentMethod(const arma::mat& 
   arma::mat G1, G2, Q1, Q2, R1, R2, Z;
   arma::rowvec frobenius_statistics(iterations, arma::fill::zeros);
   arma::urowvec neg_elements_statistics(iterations, arma::fill::zeros);
-  arma::urowvec approximation_fro_norm(iterations, arma::fill::zeros);
-  arma::urowvec normalized_feature_movements(iterations, arma::fill::zeros);
+  arma::rowvec approximation_fro_norm(iterations, arma::fill::zeros);
+  arma::rowvec normalized_feature_movements(iterations, arma::fill::zeros);
 
   svd(Ur,Sr,Vr,X);
   Ur = Ur.head_cols(rank); // m*r
