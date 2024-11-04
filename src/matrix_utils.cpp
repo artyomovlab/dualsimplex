@@ -245,7 +245,6 @@ Rcpp::List getNonnegativeLowRankApproximationWithTangentMethod(const arma::mat& 
   arma::urowvec approximation_fro_norm(iterations, arma::fill::zeros);
   arma::urowvec normalized_feature_movements(iterations, arma::fill::zeros);
 
-
   svd(Ur,Sr,Vr,X);
   Ur = Ur.head_cols(rank); // m*r
   Vr = Vr.head_cols(rank); // n*r
@@ -280,13 +279,13 @@ Rcpp::List getNonnegativeLowRankApproximationWithTangentMethod(const arma::mat& 
     // frobenius norm of negative elements
     double fro_norm = arma::norm( Yi.elem(arma::find(Yi < 0)), "fro" );
     double fro_distance = arma::norm(X-Yi, "fro");
-    double normalized_changes =  arma::mean(arma::vecnorm((arma::normalise(X, 1, 1) - arma::normalise(Yi, 1, 1)), 2, 1));
+    double mean_gene_movement = arma::mean(arma::vecnorm((arma::normalise(X, 1, 1) - arma::normalise(Yi, 1, 1)), 1, 1));
     // number of negatives
     arma::uword neg_count = getNegative(Yi);
     frobenius_statistics(i) = fro_norm;
     neg_elements_statistics(i) = neg_count;
     approximation_fro_norm(i) = fro_distance;
-    normalized_feature_movements(i) = normalized_changes;
+    normalized_feature_movements(i) = mean_gene_movement;
     }
     return Rcpp::List::create(Rcpp::Named("newX") = Yi,
                               Rcpp::Named("attention") = attention_matrix,
