@@ -257,7 +257,28 @@ Rcpp::List getNonnegativeLowRankApproximationWithTangentMethod(const arma::mat& 
   In.eye(n, n); // n*n
   for (int i = 0; i < iterations; i++) {
     attention_matrix.elem(arma::find(Yi < left)) += 1;
-    Yi.elem(arma::find(Yi < left)).fill(left);
+    if (left >= 0) {
+        Yi.elem(arma::find(Yi < left)).fill(left);
+    }
+    else if (left == -1) {
+        // mean for the whole matrix
+        double mean_value = arma::mean(Yi.elem(arma::find(Yi >= 0)));
+        Yi.elem(arma::find(Yi < 0)).fill(mean_value);
+    } else if (left == -2) {
+        // median for the whole matrix
+        double mean_value = arma::median(Yi.elem(arma::find(Yi >= 0)));
+        Yi.elem(arma::find(Yi < 0)).fill(mean_value);
+    } else if (left == -3) {
+        //mean for specific gene
+        arma::uvec indices = arma::find(Yi < 0);
+        arma::umat mutrix_indices = arma::ind2sub( size(Yi), indices );
+        arma::urowvec row_indicies = mutrix_indices.row(0);
+        arma::mat res_mat = Yi.rows(row_indicies);
+        res_mat.elem(arma::find(res_mat < 0)).fill(0);
+        arma::vec row_means = arma::mean(res_mat, 1);
+        Yi.elem(arma::find(Yi < 0)) = row_means;
+    }
+
     if (right > 0) {
         Yi.elem(arma::find(Yi > right)).fill(right);
     }
