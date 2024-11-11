@@ -45,6 +45,7 @@ dso$plot_projected("zero_distance",
 \item \href{#method-DualSimplexSolver-set_data}{\code{DualSimplexSolver$set_data()}}
 \item \href{#method-DualSimplexSolver-plot_mad}{\code{DualSimplexSolver$plot_mad()}}
 \item \href{#method-DualSimplexSolver-basic_filter}{\code{DualSimplexSolver$basic_filter()}}
+\item \href{#method-DualSimplexSolver-add_knn_distances_anno}{\code{DualSimplexSolver$add_knn_distances_anno()}}
 \item \href{#method-DualSimplexSolver-plot_svd}{\code{DualSimplexSolver$plot_svd()}}
 \item \href{#method-DualSimplexSolver-plot_svd_history}{\code{DualSimplexSolver$plot_svd_history()}}
 \item \href{#method-DualSimplexSolver-project}{\code{DualSimplexSolver$project()}}
@@ -154,6 +155,28 @@ Removes selected genes, filters by mad
 \item{\code{keep_true_cols}}{columns from annotation where we should keep instances with true value.}
 
 \item{\code{genes}}{true if want remove rows otherwise columns}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-DualSimplexSolver-add_knn_distances_anno"></a>}}
+\if{latex}{\out{\hypertarget{method-DualSimplexSolver-add_knn_distances_anno}{}}}
+\subsection{Method \code{add_knn_distances_anno()}}{
+Add additional distance annotation based on KNN distances to selected annotations.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$add_knn_distances_anno(
+  annotation_names_list = NULL,
+  genes = T
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{annotation_names_list}}{names of annotation columns with TRUE/FALSE.}
+
+\item{\code{genes}}{calculate for gene annotations or sample annotations.}
 }
 \if{html}{\out{</div>}}
 }

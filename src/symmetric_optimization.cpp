@@ -1,10 +1,10 @@
-#include "alternative_optimization.h"
+#include "symmetric_optimization.h"
 
 #include "matrix_utils.h"
 #include "nnls.h"
 #include "optimization.h"
 
-arma::mat alternative_hinge_der_basis_C__(const arma::mat& W, const arma::mat& S, double precision_) {
+arma::mat symmetric_hinge_der_basis_C__(const arma::mat& W, const arma::mat& S, double precision_) {
     int n = W.n_cols;
 
     arma::mat res(n, n, arma::fill::zeros);
@@ -17,7 +17,7 @@ arma::mat alternative_hinge_der_basis_C__(const arma::mat& W, const arma::mat& S
     return res;
 }
 
-Rcpp::List alternative_derivative_stage2(const arma::mat& X,
+Rcpp::List symmetric_derivative_stage2(const arma::mat& X,
                              const arma::mat& Omega,
                              const arma::mat& D_w,
                              const arma::mat& SVRt,
@@ -59,8 +59,8 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
     arma::vec sqrt_D_w = arma::sqrt(D_w);
 
 
-    new_X =  arma::diagmat(new_D_w_x_sqrt) * new_X * arma::diagmat(1 / sqrt_Sigma);
-    new_Omega =  arma::diagmat(1 / sqrt_Sigma) *  new_Omega * arma::diagmat(new_D_w_omega_sqrt);
+    new_X =  arma::diagmat(new_D_w_x_sqrt) * new_X;
+    new_Omega =  new_Omega * arma::diagmat(new_D_w_omega_sqrt);
 
 
 
@@ -78,22 +78,21 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         // derivative X
         //der_X = -2 * (new_Omega.t() * (SVRt - new_Omega * new_X));
         //der_X +=  coef_hinge_H * hinge_der_proportions_C__(new_X  * R, R);
-
-        der_X =  coef_hinge_H * hinge_der_proportions_C__(new_X  * arma::diagmat(sqrt_Sigma)  * R, R) * arma::diagmat(1 / sqrt_Sigma);
+        der_X = -2 * (new_Omega.t() * (SVRt - new_Omega * new_X));
+        der_X +=  coef_hinge_H * hinge_der_proportions_C__(new_X * R, R);
 
         der_X = correctByNorm(der_X) * mean_radius_X;
-
 
         // Update X
         new_X = new_X - coef_der_X * der_X;
         // threshold for length of the new X
 
-        new_Omega = arma::pinv(new_X);
+        new_Omega = new_X.t();
 
-        new_D_w_x_sqrt =  new_X.col(0) * sqrt_Sigma.at(0) * sqrt(N);
+        new_D_w_x_sqrt =  new_X.col(0)  * sqrt(N);
         new_D_w_x = arma::pow(new_D_w_x_sqrt, 2);
 
-        new_D_w_omega_sqrt =  new_Omega.row(0).as_col() * sqrt_Sigma.at(0) * sqrt(M);
+        new_D_w_omega_sqrt =  new_Omega.row(0).as_col() * sqrt(M);
         new_D_w_omega = arma::pow(new_D_w_omega_sqrt, 2);
 
         new_D_w = new_D_w_x_sqrt % new_D_w_omega_sqrt;
@@ -107,23 +106,21 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
 
 
         // derivative Omega
-
-        der_Omega = coef_hinge_W * arma::diagmat(1 / sqrt_Sigma) * alternative_hinge_der_basis_C__(S.t() * arma::diagmat(sqrt_Sigma) * new_Omega, S);
-
-
+        der_Omega = -2 * (SVRt - new_Omega * new_X) * new_X.t();
+        der_Omega += coef_hinge_W  * symmetric_hinge_der_basis_C__(S.t() * new_Omega, S);
         der_Omega = correctByNorm(der_Omega) * mean_radius_Omega;
 
 
         new_Omega = new_Omega - coef_der_Omega * der_Omega;
-        new_X = arma::pinv(new_Omega);
+        new_X = new_Omega.t();
 
 
        // Rcpp::Rcout << "going to get D_w from first column" << std::endl;
-        new_D_w_omega_sqrt = new_Omega.row(0).as_col() * sqrt_Sigma.at(0) * sqrt(M);
+        new_D_w_omega_sqrt = new_Omega.row(0).as_col()  * sqrt(M);
         new_D_w_omega = arma::pow(new_D_w_omega_sqrt, 2);
 
 
-        new_D_w_x_sqrt =  new_X.col(0) * sqrt_Sigma.at(0) * sqrt(N);
+        new_D_w_x_sqrt =  new_X.col(0)  * sqrt(N);
         new_D_w_x = arma::pow(new_D_w_x_sqrt, 2);
 
 
@@ -141,11 +138,9 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         double sum_ = accu(new_D_w) / M;
 
         // result X and omega
-        final_X = arma::diagmat(1/new_D_w_x_sqrt) * new_X * arma::diagmat(sqrt_Sigma);
+        final_X = arma::diagmat(1/new_D_w_x_sqrt) * new_X;
 
-        final_Omega = arma::diagmat(sqrt_Sigma)* new_Omega * arma::diagmat(1/new_D_w_omega_sqrt);
-
-
+        final_Omega =  new_Omega * arma::diagmat(1/new_D_w_omega_sqrt);
         Rcpp::List current_errors = calcErrors(final_X,
                                                final_Omega,
                                                new_D_w,

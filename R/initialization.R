@@ -146,6 +146,45 @@ initializers <- list(
       D_w = Ds$D_w,
       D_h = Ds$D_h
     ))
+  },
+    random_symmetric = function(proj, kwargs = NULL) {
+    if (!is.null(kwargs) && "n" %in% kwargs) {
+      n <- kwargs[["n"]]
+    } else {
+      n <- 100
+    }
+    n_cell_types <- proj$meta$K
+    M <- proj$meta$M
+    N <- proj$meta$N
+
+    idx_table_X <- matrix(0, ncol = n_cell_types + 1, nrow = n)
+
+    for (i in 1:n) {
+      #X
+      ids_X <- sample(1:M, n_cell_types)
+      X <- proj$X[ids_X, ]
+      metric_X <- sqrt(sum(apply(X[, -1], 2, mean) ^ 2))
+      idx_table_X[i, ] <- c(ids_X, metric_X)
+    }
+
+    minrow <- function(mat) mat[which.min(mat[, ncol(mat)]), ]
+
+
+    # X
+    ids_X <- minrow(idx_table_X)[1:n_cell_types]
+    X <- proj$X[ids_X, ]
+    Omega <- t(proj$X[ids_X, ])
+
+    Dw <- MASS::ginv(t(X)) %*% proj$meta$A
+    Dh <- Dw *(N / M);
+
+    Ds <- get_Dwh_from_XOmega(X, Omega, proj)
+    return(list(
+      X = X,
+      Omega = t(Omega),
+      D_w = Dw,
+      D_h = Dh
+    ))
   }
 )
 
@@ -155,6 +194,7 @@ initializers <- list(
 #'
 #' @param X KxK matrix X
 #' @param proj dso$st$proj object, containing all necessary info about projection (e.g. vectors and projected points)
+#' @export
 set_solution_from_x <- function(X, proj) {
   D_h <- MASS::ginv(t(X)) %*% proj$meta$A
   M <- proj$meta$M
@@ -177,6 +217,7 @@ set_solution_from_x <- function(X, proj) {
 #' @param X KxK solution matrix X
 #' @param Omega KxK solution matrix Omega
 #' @param proj dso$st$proj object, containing all necessary info about projection (e.g. vectors and projected points)
+#' @export
 get_Dwh_from_XOmega <- function(X, Omega, proj) {
   V__ <- proj$meta$S %*% proj$X
 
