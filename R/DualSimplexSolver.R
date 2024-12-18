@@ -729,7 +729,7 @@ DualSimplexSolver <- R6Class(
     #' @param row_norm wether to return row or column normalized matrix
     get_sinkhorned_data = function(row_norm=TRUE) {
       private$set_data_first()
-      return(get_sinkhorned_matrix(V = self$st$data, scaling = self$st$scaling, row_norm = row_norm))
+      return(get_sinkhorned_matrix(V = exprs(self$st$data), scaling = self$st$scaling, row_norm = row_norm))
     }
   )
 
