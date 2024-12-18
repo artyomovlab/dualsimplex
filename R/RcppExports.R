@@ -181,3 +181,16 @@ efficient_sinkhorn <- function(V, max_iter = 20L, iter_start_check = 5L, check_e
     .Call('_DualSimplex_efficient_sinkhorn', PACKAGE = 'DualSimplex', V, max_iter, iter_start_check, check_every_iter, epsilon)
 }
 
+#' Generate Sinkhorn scaled matrix using provided Sinkhorn scaling result.
+#'
+#' We extracted this to separate methd for the sake of memory usage.
+#' @param V matrix to scale.
+#' @param D_vs_row row normalizing matrices used for V in forward procedure.
+#' @param D_vs_col column normalizing matrices used for V in forward procedure.
+#' @param row_normalized wether to generate row normalized or column normalized matrix
+#' @return Converged matrix.
+#' @export
+get_sinkhorned_matrix_c <- function(V, D_vs_row, D_vs_col, row_normalized = TRUE) {
+    .Call('_DualSimplex_get_sinkhorned_matrix_c', PACKAGE = 'DualSimplex', V, D_vs_row, D_vs_col, row_normalized)
+}
+

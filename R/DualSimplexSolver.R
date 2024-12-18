@@ -722,8 +722,17 @@ DualSimplexSolver <- R6Class(
     get_marker_genes = function() {
       private$finalize_first()
       return(self$st$marker_genes)
+    },
+    #' @description
+    #' get sinkhorn scaled data.
+    #'
+    #' @param row_norm wether to return row or column normalized matrix
+    get_sinkhorned_data = function(row_norm=TRUE) {
+      private$set_data_first()
+      return(get_sinkhorned_matrix(V = self$st$data, scaling = self$st$scaling, row_norm = row_norm))
     }
   )
+
 )
 
 #' DualSimplexSolver$from_state

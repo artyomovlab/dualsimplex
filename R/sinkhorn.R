@@ -64,3 +64,18 @@ reverse_solution_sinkhorn <- function(solution_scaled, scaling) {
     scaling
   ))
 }
+
+
+#' Wrapper to call reverse sinkhorn on dso object
+#'
+#' @param V contain solution matrices $H_row and $W_col.
+#' @param scaling dso$scaling object containing normalization matrices.
+#' @param row_norm wether to return row normalized or column normalized matrix.
+#' @return scaled object
+#' @import Rcpp
+#' @import RcppArmadillo
+#' @export
+get_sinkhorned_matrix <- function(V, scaling, row_norm=TRUE) {
+  return(get_sinkhorned_matrix_c(V, scaling$D_vs_row, scaling$D_vs_col, row_norm))
+}
+

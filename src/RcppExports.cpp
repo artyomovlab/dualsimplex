@@ -226,6 +226,20 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// get_sinkhorned_matrix_c
+arma::mat get_sinkhorned_matrix_c(const arma::mat& V, const arma::mat& D_vs_row, const arma::mat& D_vs_col, bool row_normalized);
+RcppExport SEXP _DualSimplex_get_sinkhorned_matrix_c(SEXP VSEXP, SEXP D_vs_rowSEXP, SEXP D_vs_colSEXP, SEXP row_normalizedSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type V(VSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type D_vs_row(D_vs_rowSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type D_vs_col(D_vs_colSEXP);
+    Rcpp::traits::input_parameter< bool >::type row_normalized(row_normalizedSEXP);
+    rcpp_result_gen = Rcpp::wrap(get_sinkhorned_matrix_c(V, D_vs_row, D_vs_col, row_normalized));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_DualSimplex_alternative_derivative_stage2", (DL_FUNC) &_DualSimplex_alternative_derivative_stage2, 21},
@@ -241,6 +255,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_DualSimplex_reverse_sinkhorn_c", (DL_FUNC) &_DualSimplex_reverse_sinkhorn_c, 5},
     {"_DualSimplex_sinkhorn_scale_c", (DL_FUNC) &_DualSimplex_sinkhorn_scale_c, 2},
     {"_DualSimplex_efficient_sinkhorn", (DL_FUNC) &_DualSimplex_efficient_sinkhorn, 5},
+    {"_DualSimplex_get_sinkhorned_matrix_c", (DL_FUNC) &_DualSimplex_get_sinkhorned_matrix_c, 4},
     {NULL, NULL, 0}
 };
 

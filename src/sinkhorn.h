@@ -46,3 +46,17 @@ Rcpp::List efficient_sinkhorn(
     const int check_every_iter = 3,
     const double epsilon = 1.490116e-08 // similar to R's all.equal
 );
+
+
+//' Generate Sinkhorn scaled matrix using provided Sinkhorn scaling result.
+//'
+//' We extracted this to separate methd for the sake of memory usage.
+//' @param V matrix to scale.
+//' @param D_vs_row row normalizing matrices used for V in forward procedure.
+//' @param D_vs_col column normalizing matrices used for V in forward procedure.
+//' @param row_normalized wether to generate row normalized or column normalized matrix
+//' @return Converged matrix.
+//' @export
+// [[Rcpp::export]]
+arma::mat get_sinkhorned_matrix_c(const arma::mat& V, const arma::mat& D_vs_row, const arma::mat& D_vs_col, bool row_normalized=true);
+

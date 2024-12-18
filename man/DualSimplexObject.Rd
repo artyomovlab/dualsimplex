@@ -76,6 +76,7 @@ dso$plot_projected("zero_distance",
 \item \href{#method-DualSimplexSolver-get_solution}{\code{DualSimplexSolver$get_solution()}}
 \item \href{#method-DualSimplexSolver-get_ct_names}{\code{DualSimplexSolver$get_ct_names()}}
 \item \href{#method-DualSimplexSolver-get_marker_genes}{\code{DualSimplexSolver$get_marker_genes()}}
+\item \href{#method-DualSimplexSolver-get_sinkhorned_data}{\code{DualSimplexSolver$get_sinkhorned_data()}}
 \item \href{#method-DualSimplexSolver-clone}{\code{DualSimplexSolver$clone()}}
 }
 }
@@ -661,6 +662,23 @@ get marker genes for current solution
 \if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$get_marker_genes()}\if{html}{\out{</div>}}
 }
 
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-DualSimplexSolver-get_sinkhorned_data"></a>}}
+\if{latex}{\out{\hypertarget{method-DualSimplexSolver-get_sinkhorned_data}{}}}
+\subsection{Method \code{get_sinkhorned_data()}}{
+get sinkhorn scaled data.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$get_sinkhorned_data(row_norm = TRUE)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{row_norm}}{wether to return row or column normalized matrix}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-DualSimplexSolver-clone"></a>}}

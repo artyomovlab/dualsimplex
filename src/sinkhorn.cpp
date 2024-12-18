@@ -130,3 +130,19 @@ Rcpp::List efficient_sinkhorn(const arma::mat& V,
                                 Rcpp::Named("D_vs_col") = D_col.rows(0, i-1).t(),
                                 Rcpp::Named("iterations") = i);
 }
+
+arma::mat get_sinkhorned_matrix_c(const arma::mat& V, const arma::mat& D_vs_row, const arma::mat& D_vs_col, bool row_normalized) {
+    int total_iterations = D_vs_row.n_cols;
+    arma::mat V_ = V;
+    for (int i = 0; i < total_iterations - 1; i++) {
+        V_.each_col() %= D_vs_row.col(i); // row normalized
+        V_.each_row() %= D_vs_col.col(i); // column normalized
+    }
+    V_.each_col() %= D_vs_row.col(total_iterations - 1); // row normalized
+    if (row_normalized) {
+        V_.each_row() %= D_vs_col.col(total_iterations - 1); // column normalized
+    }
+    return V_;
+}
+
+
