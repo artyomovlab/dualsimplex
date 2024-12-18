@@ -136,11 +136,11 @@ arma::mat get_sinkhorned_matrix_c(const arma::mat& V, const arma::mat& D_vs_row,
     arma::mat V_ = V;
     for (int i = 0; i < total_iterations - 1; i++) {
         V_.each_col() %= D_vs_row.col(i); // row normalized
-        V_.each_row() %= D_vs_col.col(i); // column normalized
+        V_.each_row() %= D_vs_col.col(i).as_row(); // column normalized
     }
     V_.each_col() %= D_vs_row.col(total_iterations - 1); // row normalized
     if (row_normalized) {
-        V_.each_row() %= D_vs_col.col(total_iterations - 1); // column normalized
+        V_.each_row() %= D_vs_col.col(total_iterations - 1).as_row(); // column normalized
     }
     return V_;
 }
