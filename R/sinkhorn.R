@@ -76,6 +76,8 @@ reverse_solution_sinkhorn <- function(solution_scaled, scaling) {
 #' @import RcppArmadillo
 #' @export
 get_sinkhorned_matrix <- function(V, scaling, row_norm=TRUE) {
-  return(get_sinkhorned_matrix_c(V, scaling$D_vs_row, scaling$D_vs_col, row_norm))
+  scaled_matrix <- get_sinkhorned_matrix_c(V, scaling$D_vs_row, scaling$D_vs_col, row_norm)
+  dimnames(scaled_matrix) <- dimnames(V)
+  return(scaled_matrix)
 }
 

@@ -139,7 +139,7 @@ arma::mat get_sinkhorned_matrix_c(const arma::mat& V, const arma::mat& D_vs_row,
         V_.each_row() %= D_vs_col.col(i).as_row(); // column normalized
     }
     V_.each_col() %= D_vs_row.col(total_iterations - 1); // row normalized
-    if (row_normalized) {
+    if (!row_normalized) {
         V_.each_row() %= D_vs_col.col(total_iterations - 1).as_row(); // column normalized
     }
     return V_;
