@@ -1,16 +1,22 @@
 #' Sinkhorn transform matrix
 #'
 #' @param V input matrix
-#' @param iterations number of iterations
+#' @param max_iter Maximum iterations of the Sinkhorn scaling. Default is 20 iterations.
+#' @param iter_start_check From which iteration should the function checks the convergence. By default, check started from iteration 5.
+#' @param check_every_iter How offeten should we check the convergence. The default is check every 3 iterations
+#' @param epsilon The tolerance for convergece. Default value is same as R's built in `all.equal` function.
 #' @return scaling object (find it in dso$st$scaling)
 #' @export
-sinkhorn_scale <- function(V, iterations = 20) {
-  scaling <- sinkhorn_scale_c(V, iterations)
-  
+sinkhorn_scale <- function(
+  V,
+  max_iter = 20L,
+  iter_start_check = 5L,
+  check_every_iter = 3L,
+  epsilon = sqrt(.Machine$double.eps)
+) {
+  scaling <- efficient_sinkhorn(V, max_iter, iter_start_check, check_every_iter, epsilon)
   dimnames(scaling$V_row) <- dimnames(V)
   dimnames(scaling$V_column) <- dimnames(V)
-  
-  scaling$iterations <- iterations
   
   return(scaling)
 }

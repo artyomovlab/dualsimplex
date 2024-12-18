@@ -211,6 +211,21 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// efficient_sinkhorn
+Rcpp::List efficient_sinkhorn(const arma::mat& V, const int max_iter, const int iter_start_check, const int check_every_iter, const double epsilon);
+RcppExport SEXP _DualSimplex_efficient_sinkhorn(SEXP VSEXP, SEXP max_iterSEXP, SEXP iter_start_checkSEXP, SEXP check_every_iterSEXP, SEXP epsilonSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type V(VSEXP);
+    Rcpp::traits::input_parameter< const int >::type max_iter(max_iterSEXP);
+    Rcpp::traits::input_parameter< const int >::type iter_start_check(iter_start_checkSEXP);
+    Rcpp::traits::input_parameter< const int >::type check_every_iter(check_every_iterSEXP);
+    Rcpp::traits::input_parameter< const double >::type epsilon(epsilonSEXP);
+    rcpp_result_gen = Rcpp::wrap(efficient_sinkhorn(V, max_iter, iter_start_check, check_every_iter, epsilon));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_DualSimplex_alternative_derivative_stage2", (DL_FUNC) &_DualSimplex_alternative_derivative_stage2, 21},
@@ -225,6 +240,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_DualSimplex_derivative_stage2", (DL_FUNC) &_DualSimplex_derivative_stage2, 21},
     {"_DualSimplex_reverse_sinkhorn_c", (DL_FUNC) &_DualSimplex_reverse_sinkhorn_c, 5},
     {"_DualSimplex_sinkhorn_scale_c", (DL_FUNC) &_DualSimplex_sinkhorn_scale_c, 2},
+    {"_DualSimplex_efficient_sinkhorn", (DL_FUNC) &_DualSimplex_efficient_sinkhorn, 5},
     {NULL, NULL, 0}
 };
 

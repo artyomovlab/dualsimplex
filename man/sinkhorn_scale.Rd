@@ -4,12 +4,24 @@
 \alias{sinkhorn_scale}
 \title{Sinkhorn transform matrix}
 \usage{
-sinkhorn_scale(V, iterations = 20)
+sinkhorn_scale(
+  V,
+  max_iter = 20L,
+  iter_start_check = 5L,
+  check_every_iter = 3L,
+  epsilon = sqrt(.Machine$double.eps)
+)
 }
 \arguments{
 \item{V}{input matrix}
 
-\item{iterations}{number of iterations}
+\item{max_iter}{Maximum iterations of the Sinkhorn scaling. Default is 20 iterations.}
+
+\item{iter_start_check}{From which iteration should the function checks the convergence. By default, check started from iteration 5.}
+
+\item{check_every_iter}{How offeten should we check the convergence. The default is check every 3 iterations}
+
+\item{epsilon}{The tolerance for convergece. Default value is same as R's built in `all.equal` function.}
 }
 \value{
 scaling object (find it in dso$st$scaling)
