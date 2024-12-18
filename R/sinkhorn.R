@@ -15,8 +15,6 @@ sinkhorn_scale <- function(
   epsilon = sqrt(.Machine$double.eps)
 ) {
   scaling <- efficient_sinkhorn(V, max_iter, iter_start_check, check_every_iter, epsilon)
-  scaling$V_column <- scaling$V_row / scaling$delta 
-  
   dimnames(scaling$V_row) <- dimnames(V)
   dimnames(scaling$V_column) <- dimnames(V)
   

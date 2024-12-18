@@ -163,7 +163,7 @@ DualSimplexSolver <- R6Class(
       if (!inherits(data, "ExpressionSet"))
         data <- create_eset(data)
       self$st$data <- add_default_anno(data, gene_anno_lists, sample_anno_lists)
-      self$st$scaling <- sinkhorn_scale(exprs(self$st$data), iterations = sinkhorn_iterations)
+      self$st$scaling <- sinkhorn_scale(exprs(self$st$data), max_iter = sinkhorn_iterations)
       self$st$proj_full <- svd_project(self$st$scaling, dims = NULL)
       if (first_set) private$add_filtering_log_step("initial")
     },
