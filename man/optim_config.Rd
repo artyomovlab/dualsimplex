@@ -36,7 +36,7 @@ optim_config(
 
 \item{cosine_thresh}{EXPERIMENTAL: if you want to restrict derivative from changing to much. should be 0 since not tested.}
 
-\item{method}{method of optimization to use can be  basic/positivity/symmetric.}
+\item{method}{method of optimization to use can be  basic/positivity.}
 }
 \value{
 ready to use list with algorithm configuration

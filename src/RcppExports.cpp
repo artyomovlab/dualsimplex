@@ -274,34 +274,18 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// symmetric_derivative_stage2
-Rcpp::List symmetric_derivative_stage2(const arma::mat& X, const arma::mat& Omega, const arma::mat& D_w, const arma::mat& SVRt, const arma::mat& R, const arma::mat& S, const double coef_der_X, const double coef_der_Omega, const double coef_hinge_H, const double coef_hinge_W, const double coef_pos_D_h, const double coef_pos_D_w, const int cell_types, const double N, const double M, const int iterations, const double mean_radius_X, const double mean_radius_Omega, const double r_const_X, const double r_const_Omega, const double thresh);
-RcppExport SEXP _DualSimplex_symmetric_derivative_stage2(SEXP XSEXP, SEXP OmegaSEXP, SEXP D_wSEXP, SEXP SVRtSEXP, SEXP RSEXP, SEXP SSEXP, SEXP coef_der_XSEXP, SEXP coef_der_OmegaSEXP, SEXP coef_hinge_HSEXP, SEXP coef_hinge_WSEXP, SEXP coef_pos_D_hSEXP, SEXP coef_pos_D_wSEXP, SEXP cell_typesSEXP, SEXP NSEXP, SEXP MSEXP, SEXP iterationsSEXP, SEXP mean_radius_XSEXP, SEXP mean_radius_OmegaSEXP, SEXP r_const_XSEXP, SEXP r_const_OmegaSEXP, SEXP threshSEXP) {
+// efficient_sinkhorn
+Rcpp::List efficient_sinkhorn(const arma::mat& V, const int max_iter, const int iter_start_check, const int check_every_iter, const double epsilon);
+RcppExport SEXP _DualSimplex_efficient_sinkhorn(SEXP VSEXP, SEXP max_iterSEXP, SEXP iter_start_checkSEXP, SEXP check_every_iterSEXP, SEXP epsilonSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type Omega(OmegaSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type D_w(D_wSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type SVRt(SVRtSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type R(RSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type S(SSEXP);
-    Rcpp::traits::input_parameter< const double >::type coef_der_X(coef_der_XSEXP);
-    Rcpp::traits::input_parameter< const double >::type coef_der_Omega(coef_der_OmegaSEXP);
-    Rcpp::traits::input_parameter< const double >::type coef_hinge_H(coef_hinge_HSEXP);
-    Rcpp::traits::input_parameter< const double >::type coef_hinge_W(coef_hinge_WSEXP);
-    Rcpp::traits::input_parameter< const double >::type coef_pos_D_h(coef_pos_D_hSEXP);
-    Rcpp::traits::input_parameter< const double >::type coef_pos_D_w(coef_pos_D_wSEXP);
-    Rcpp::traits::input_parameter< const int >::type cell_types(cell_typesSEXP);
-    Rcpp::traits::input_parameter< const double >::type N(NSEXP);
-    Rcpp::traits::input_parameter< const double >::type M(MSEXP);
-    Rcpp::traits::input_parameter< const int >::type iterations(iterationsSEXP);
-    Rcpp::traits::input_parameter< const double >::type mean_radius_X(mean_radius_XSEXP);
-    Rcpp::traits::input_parameter< const double >::type mean_radius_Omega(mean_radius_OmegaSEXP);
-    Rcpp::traits::input_parameter< const double >::type r_const_X(r_const_XSEXP);
-    Rcpp::traits::input_parameter< const double >::type r_const_Omega(r_const_OmegaSEXP);
-    Rcpp::traits::input_parameter< const double >::type thresh(threshSEXP);
-    rcpp_result_gen = Rcpp::wrap(symmetric_derivative_stage2(X, Omega, D_w, SVRt, R, S, coef_der_X, coef_der_Omega, coef_hinge_H, coef_hinge_W, coef_pos_D_h, coef_pos_D_w, cell_types, N, M, iterations, mean_radius_X, mean_radius_Omega, r_const_X, r_const_Omega, thresh));
+    Rcpp::traits::input_parameter< const arma::mat& >::type V(VSEXP);
+    Rcpp::traits::input_parameter< const int >::type max_iter(max_iterSEXP);
+    Rcpp::traits::input_parameter< const int >::type iter_start_check(iter_start_checkSEXP);
+    Rcpp::traits::input_parameter< const int >::type check_every_iter(check_every_iterSEXP);
+    Rcpp::traits::input_parameter< const double >::type epsilon(epsilonSEXP);
+    rcpp_result_gen = Rcpp::wrap(efficient_sinkhorn(V, max_iter, iter_start_check, check_every_iter, epsilon));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -323,7 +307,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_DualSimplex_derivative_stage2", (DL_FUNC) &_DualSimplex_derivative_stage2, 21},
     {"_DualSimplex_reverse_sinkhorn_c", (DL_FUNC) &_DualSimplex_reverse_sinkhorn_c, 5},
     {"_DualSimplex_sinkhorn_scale_c", (DL_FUNC) &_DualSimplex_sinkhorn_scale_c, 2},
-    {"_DualSimplex_symmetric_derivative_stage2", (DL_FUNC) &_DualSimplex_symmetric_derivative_stage2, 21},
+    {"_DualSimplex_efficient_sinkhorn", (DL_FUNC) &_DualSimplex_efficient_sinkhorn, 5},
     {NULL, NULL, 0}
 };
 

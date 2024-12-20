@@ -223,31 +223,16 @@ sinkhorn_scale_c <- function(V, iterations) {
     .Call('_DualSimplex_sinkhorn_scale_c', PACKAGE = 'DualSimplex', V, iterations)
 }
 
-#' Main function to calculate error terms
+#' More efficient forward Sinkhorn scaling algorithm which check the convergence
 #'
-#' @param X current X
-#' @param Omega current Omega
-#' @param D_w current D_w
-#' @param SVRt current SVRt (sigma)
-#' @param R current R
-#' @param S current S
-#' @param coef_der_X learning rate X
-#' @param coef_der_Omega learning rate Omega
-#' @param coef_hinge_H lambda
-#' @param coef_hinge_W beta
-#' @param coef_pos_D_h experimental coefficient for D. legacy not tested.
-#' @param coef_pos_D_w experimental coefficient for D. legacy not tested.
-#' @param cell_types number of components (K)
-#' @param N current N
-#' @param M current M
-#' @param iterations number of iterations
-#' @param mean_radius_X data dependent restriction for updates
-#' @param mean_radius_Omega dependent restriction for updates
-#' @param r_const_X experimental. not tested
-#' @param r_const_Omega experimental. not tested
-#' @param thresh experimental. not tested
-#' @return new parameters
-symmetric_derivative_stage2 <- function(X, Omega, D_w, SVRt, R, S, coef_der_X, coef_der_Omega, coef_hinge_H, coef_hinge_W, coef_pos_D_h, coef_pos_D_w, cell_types, N, M, iterations, mean_radius_X, mean_radius_Omega, r_const_X = 0, r_const_Omega = 0, thresh = 0.8) {
-    .Call('_DualSimplex_symmetric_derivative_stage2', PACKAGE = 'DualSimplex', X, Omega, D_w, SVRt, R, S, coef_der_X, coef_der_Omega, coef_hinge_H, coef_hinge_W, coef_pos_D_h, coef_pos_D_w, cell_types, N, M, iterations, mean_radius_X, mean_radius_Omega, r_const_X, r_const_Omega, thresh)
+#' @param V matrix to scale.
+#' @param max_iter Maximum iterations of the Sinkhorn scaling. Default is 20 iterations.
+#' @param iter_start_check From which iteration should the function checks the convergence. By default, check started from iteration 5.
+#' @param check_every_iter How offeten should we check the convergence. The default is check every 3 iterations.
+#' @param epsilon The tolerance for convergece. Default value is 1.490116e-08, which is similar to R's built in `all.equal` function.
+#' @return named list of V_row, V_col, D_row, D_col, iterations.
+#' @export
+efficient_sinkhorn <- function(V, max_iter = 20L, iter_start_check = 5L, check_every_iter = 3L, epsilon = 1.490116e-08) {
+    .Call('_DualSimplex_efficient_sinkhorn', PACKAGE = 'DualSimplex', V, max_iter, iter_start_check, check_every_iter, epsilon)
 }
 
