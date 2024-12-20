@@ -157,8 +157,11 @@ DualSimplexSolver <- R6Class(
         stop("Genes and samples should be named")
       if (any(sapply(dimnames(data), anyDuplicated)))
         stop("Gene and sample names should not contain duplicates")
-
-      first_set = is.null(self$st$data)
+      if (any(rowSums(data) == 0))
+        stop("The data matrix should not contain all zero rows. Use remove_zero_rows() method")
+      if (any(colSums(data) == 0))
+        stop("The data matrix should not contain all zero columns. Use remove_zero_cols() method")
+      first_set <-  is.null(self$st$data)
       private$reset_since("data")
       if (!inherits(data, "ExpressionSet"))
         data <- create_eset(data)
