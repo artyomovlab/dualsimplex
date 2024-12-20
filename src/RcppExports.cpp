@@ -53,6 +53,69 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// getNonnegativeLowRankApproximationWithSVD
+Rcpp::List getNonnegativeLowRankApproximationWithSVD(const arma::mat& X, const int rank, const int iterations, const double left, const double right);
+RcppExport SEXP _DualSimplex_getNonnegativeLowRankApproximationWithSVD(SEXP XSEXP, SEXP rankSEXP, SEXP iterationsSEXP, SEXP leftSEXP, SEXP rightSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< const int >::type rank(rankSEXP);
+    Rcpp::traits::input_parameter< const int >::type iterations(iterationsSEXP);
+    Rcpp::traits::input_parameter< const double >::type left(leftSEXP);
+    Rcpp::traits::input_parameter< const double >::type right(rightSEXP);
+    rcpp_result_gen = Rcpp::wrap(getNonnegativeLowRankApproximationWithSVD(X, rank, iterations, left, right));
+    return rcpp_result_gen;
+END_RCPP
+}
+// getNonnegativeLowRankApproximationWithHMT
+Rcpp::List getNonnegativeLowRankApproximationWithHMT(const arma::mat& X, const int rank, const int p, const int k, const int iterations, const double left, const double right);
+RcppExport SEXP _DualSimplex_getNonnegativeLowRankApproximationWithHMT(SEXP XSEXP, SEXP rankSEXP, SEXP pSEXP, SEXP kSEXP, SEXP iterationsSEXP, SEXP leftSEXP, SEXP rightSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< const int >::type rank(rankSEXP);
+    Rcpp::traits::input_parameter< const int >::type p(pSEXP);
+    Rcpp::traits::input_parameter< const int >::type k(kSEXP);
+    Rcpp::traits::input_parameter< const int >::type iterations(iterationsSEXP);
+    Rcpp::traits::input_parameter< const double >::type left(leftSEXP);
+    Rcpp::traits::input_parameter< const double >::type right(rightSEXP);
+    rcpp_result_gen = Rcpp::wrap(getNonnegativeLowRankApproximationWithHMT(X, rank, p, k, iterations, left, right));
+    return rcpp_result_gen;
+END_RCPP
+}
+// getNonnegativeLowRankApproximationWithGN
+Rcpp::List getNonnegativeLowRankApproximationWithGN(const arma::mat& X, const int rank, const int l, const int iterations, const double left, const double right);
+RcppExport SEXP _DualSimplex_getNonnegativeLowRankApproximationWithGN(SEXP XSEXP, SEXP rankSEXP, SEXP lSEXP, SEXP iterationsSEXP, SEXP leftSEXP, SEXP rightSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< const int >::type rank(rankSEXP);
+    Rcpp::traits::input_parameter< const int >::type l(lSEXP);
+    Rcpp::traits::input_parameter< const int >::type iterations(iterationsSEXP);
+    Rcpp::traits::input_parameter< const double >::type left(leftSEXP);
+    Rcpp::traits::input_parameter< const double >::type right(rightSEXP);
+    rcpp_result_gen = Rcpp::wrap(getNonnegativeLowRankApproximationWithGN(X, rank, l, iterations, left, right));
+    return rcpp_result_gen;
+END_RCPP
+}
+// getNonnegativeLowRankApproximationWithTangentMethod
+Rcpp::List getNonnegativeLowRankApproximationWithTangentMethod(const arma::mat& X, const int rank, const int iterations, const double left, const double right);
+RcppExport SEXP _DualSimplex_getNonnegativeLowRankApproximationWithTangentMethod(SEXP XSEXP, SEXP rankSEXP, SEXP iterationsSEXP, SEXP leftSEXP, SEXP rightSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< const int >::type rank(rankSEXP);
+    Rcpp::traits::input_parameter< const int >::type iterations(iterationsSEXP);
+    Rcpp::traits::input_parameter< const double >::type left(leftSEXP);
+    Rcpp::traits::input_parameter< const double >::type right(rightSEXP);
+    rcpp_result_gen = Rcpp::wrap(getNonnegativeLowRankApproximationWithTangentMethod(X, rank, iterations, left, right));
+    return rcpp_result_gen;
+END_RCPP
+}
 // nnls_C__
 arma::mat nnls_C__(arma::mat A, arma::mat b, int max_iter, double tol);
 RcppExport SEXP _DualSimplex_nnls_C__(SEXP ASEXP, SEXP bSEXP, SEXP max_iterSEXP, SEXP tolSEXP) {
@@ -230,6 +293,10 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_DualSimplex_alternative_derivative_stage2", (DL_FUNC) &_DualSimplex_alternative_derivative_stage2, 21},
     {"_DualSimplex_find_cosine", (DL_FUNC) &_DualSimplex_find_cosine, 1},
+    {"_DualSimplex_getNonnegativeLowRankApproximationWithSVD", (DL_FUNC) &_DualSimplex_getNonnegativeLowRankApproximationWithSVD, 5},
+    {"_DualSimplex_getNonnegativeLowRankApproximationWithHMT", (DL_FUNC) &_DualSimplex_getNonnegativeLowRankApproximationWithHMT, 7},
+    {"_DualSimplex_getNonnegativeLowRankApproximationWithGN", (DL_FUNC) &_DualSimplex_getNonnegativeLowRankApproximationWithGN, 6},
+    {"_DualSimplex_getNonnegativeLowRankApproximationWithTangentMethod", (DL_FUNC) &_DualSimplex_getNonnegativeLowRankApproximationWithTangentMethod, 5},
     {"_DualSimplex_nnls_C__", (DL_FUNC) &_DualSimplex_nnls_C__, 4},
     {"_DualSimplex_jump_norm", (DL_FUNC) &_DualSimplex_jump_norm, 2},
     {"_DualSimplex_update_idx", (DL_FUNC) &_DualSimplex_update_idx, 3},

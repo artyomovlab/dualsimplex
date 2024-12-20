@@ -14,7 +14,7 @@ optim_config(
   limit_X = 0,
   limit_Omega = 0,
   cosine_thresh = 0,
-  alternative_method = FALSE
+  method = "basic"
 )
 }
 \arguments{
@@ -36,7 +36,7 @@ optim_config(
 
 \item{cosine_thresh}{EXPERIMENTAL: if you want to restrict derivative from changing to much. should be 0 since not tested.}
 
-\item{alternative_method}{should we use alternative approach to optimization or not.  (without matrix D and with strict invertibility constraint)}
+\item{method}{method of optimization to use can be  basic/positivity.}
 }
 \value{
 ready to use list with algorithm configuration

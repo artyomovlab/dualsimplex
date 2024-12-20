@@ -37,6 +37,61 @@ find_cosine <- function(X) {
     .Call('_DualSimplex_find_cosine', PACKAGE = 'DualSimplex', X)
 }
 
+#' Get low rank approximation with SVD method.
+#'
+#' @param X inpit matrix.
+#' @param rank desired approximation rank.
+#' @param iterations number of iterations to perform.
+#' @param left elements cropped (should be zero).
+#' @param right elements cropped (infinity by default)
+#' @return named list containing new matrix, frobenious history for negative elements and number of negative elements.
+#' @export
+getNonnegativeLowRankApproximationWithSVD <- function(X, rank, iterations, left = 0, right = -1) {
+    .Call('_DualSimplex_getNonnegativeLowRankApproximationWithSVD', PACKAGE = 'DualSimplex', X, rank, iterations, left, right)
+}
+
+#' Get low rank approximation with SVD method.
+#'
+#' @param X inpit matrix.
+#' @param rank desired approximation rank.
+#' @param p number of randomizations.
+#' @param k number of randomized columns.
+#' @param iterations number of iterations to perform.
+#' @param left elements cropped (should be zero).
+#' @param right elements cropped (infinity by default)
+#' @return named list containing new matrix, frobenious history for negative elements and number of negative elements.
+#' @export
+getNonnegativeLowRankApproximationWithHMT <- function(X, rank, p, k, iterations, left = 0, right = -1) {
+    .Call('_DualSimplex_getNonnegativeLowRankApproximationWithHMT', PACKAGE = 'DualSimplex', X, rank, p, k, iterations, left, right)
+}
+
+#' Get low rank approximation with GN method.
+#'
+#' @param X inpit matrix
+#' @param rank desired approximation rank
+#' @param l parameter for Psi
+#' @param iterations number of iterations to perform
+#' @param left elements cropped (should be zero)
+#' @param right elements cropped (infinity by default)
+#' @return named list containing new matrix, frobenious history for negative elements and number of negative elements.
+#' @export
+getNonnegativeLowRankApproximationWithGN <- function(X, rank, l, iterations, left = 0, right = -1) {
+    .Call('_DualSimplex_getNonnegativeLowRankApproximationWithGN', PACKAGE = 'DualSimplex', X, rank, l, iterations, left, right)
+}
+
+#' Get low rank approximation with Tangent method.
+#'
+#' @param X inpit matrix.
+#' @param rank desired approximation rank.
+#' @param iterations number of iterations to perform.
+#' @param left elements cropped (should be zero).
+#' @param right elements cropped (infinity by default)
+#' @return named list containing new matrix, frobenious history for negative elements and number of negative elements.
+#' @export
+getNonnegativeLowRankApproximationWithTangentMethod <- function(X, rank, iterations, left = 0, right = -1) {
+    .Call('_DualSimplex_getNonnegativeLowRankApproximationWithTangentMethod', PACKAGE = 'DualSimplex', X, rank, iterations, left, right)
+}
+
 #' Get nnls solution
 #'
 #' @param A matrix A

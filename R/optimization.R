@@ -13,7 +13,7 @@
 #' @param limit_X EXPERIMENTAL: if you want to restrict X from changing to much. should be 0 since not tested.
 #' @param limit_Omega EXPERIMENTAL: if you want to restrict Omega from changing to much. should be 0 since not tested.
 #' @param cosine_thresh  EXPERIMENTAL: if you want to restrict derivative from changing to much. should be 0 since not tested.
-#' @param alternative_method should we use alternative approach to optimization or not.  (without matrix D and with strict invertibility constraint)
+#' @param method method of optimization to use can be  basic/positivity.
 #' @return ready to use list with algorithm configuration
 #' @export
 optim_config <- function(
@@ -26,7 +26,7 @@ optim_config <- function(
   limit_X = 0,
   limit_Omega = 0,
   cosine_thresh = 0,
-  alternative_method = FALSE
+  method = "basic" # basic/positivity
 ) {
   return(list(
     coef_der_X = coef_der_X,
@@ -38,7 +38,7 @@ optim_config <- function(
     limit_X = limit_X,
     limit_Omega = limit_Omega,
     cosine_thresh = cosine_thresh,
-    alternative_method = alternative_method
+    method = method
   ))
 }
 
@@ -164,9 +164,12 @@ optimize_solution <- function(
     r_limits$R_limit_Omega,
     config$cosine_thresh
   )
-  optimization_result <- if (config$alternative_method) {
+  optimization_result <- if (config$method == "positivity") {
     do.call(alternative_derivative_stage2, optimization_params)
+  } else if (config$method == "basic") {
+    do.call(derivative_stage2, optimization_params)
   } else {
+    print("Unknown optimization method. Will do the basic one")
     do.call(derivative_stage2, optimization_params)
   }
 
