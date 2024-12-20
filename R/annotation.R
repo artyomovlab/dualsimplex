@@ -130,10 +130,10 @@ add_distances_anno <- function(eset, proj_full, n_cell_types) {
   return(eset)
 }
 
-add_knn_distances_anno <- function(eset, proj_full, genes=T, annotation_columns ) {
+add_knn_distances_anno <- function(eset, proj_full, annotation_columns,  k_neighbors, genes=T) {
   anno <- get_anno(eset, genes)
   for (anno_name in annotation_columns) {
-    knns <-  FNN::get.knnx(proj_full$X[anno[[anno_name]], ], proj_full$X, k = 20)
+    knns <-  FNN::get.knnx(proj_full$X[anno[[anno_name]], ], proj_full$X, k = k_neighbors)
     distances <- apply(knns$nn.dist, 1, min, na.rm=T)
     anno[, paste0(anno_name, "_subset_distance")] <- distances
   }

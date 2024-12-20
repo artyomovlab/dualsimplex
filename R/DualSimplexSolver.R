@@ -218,12 +218,14 @@ DualSimplexSolver <- R6Class(
     #'
     #' @param annotation_names_list names of annotation columns with TRUE/FALSE.
     #' @param genes calculate for gene annotations or sample annotations.
-    add_knn_distances_anno= function(annotation_names_list = NULL, genes = T) {
+    #' @param k_neighbors a number of neighbors to calculate the distance on for the annotation
+    add_knn_distances_anno= function(annotation_names_list = NULL, genes = T, k_neighbors = 20) {
       self$st$data <- add_knn_distances_anno(
         self$st$data,
         self$st$proj_full,
         annotation_columns = annotation_names_list,
-        genes = genes
+        genes = genes,
+        k_neighbors = k_neighbors
       )
     },
 

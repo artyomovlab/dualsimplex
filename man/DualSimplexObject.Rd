@@ -167,7 +167,8 @@ Add additional distance annotation based on KNN distances to selected annotation
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$add_knn_distances_anno(
   annotation_names_list = NULL,
-  genes = T
+  genes = T,
+  k_neighbors = 20
 )}\if{html}{\out{</div>}}
 }
 
@@ -177,6 +178,8 @@ Add additional distance annotation based on KNN distances to selected annotation
 \item{\code{annotation_names_list}}{names of annotation columns with TRUE/FALSE.}
 
 \item{\code{genes}}{calculate for gene annotations or sample annotations.}
+
+\item{\code{k_neighbors}}{a number of neighbors to calculate the distance on for the annotation}
 }
 \if{html}{\out{</div>}}
 }
