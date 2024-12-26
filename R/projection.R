@@ -49,16 +49,16 @@ calc_svd_ops <- function(V_row, max_dim = 50L, tol = 1e-05) {
 #' @param ops svd result for the matirx
 #' @param dim how many dimension we what
 #' @return proj object
-svd_project_with_ops <- function(scaling, ops, dim = NULL) {
+svd_project_with_ops <- function(scaling, ops, dims = NULL) {
   # Setup
   if (!is.null(dim)) {
-    if (dim > ops[["max_dim"]]) {
+    if (max(dim) > ops[["max_dim"]]) {
       stop("Not enough dimension in ops. Run `calc_svd_ops` with larger max_dim parameter")
     }
 
-    ops[["S"]] <- ops[["S"]][1:dim, ]  # right configuration?
-    ops[["R"]] <- ops[["R"]][1:dim, ]  # right configuration?
-    ops[["Sigma"]] <- ops[["Sigma"]][1:dim]
+    ops[["S"]] <- ops[["S"]][dims, ]
+    ops[["R"]] <- ops[["R"]][dims, ]
+    ops[["Sigma"]] <- ops[["Sigma"]][dims]
   }
 
   ops[["max_dim"]] <- NULL
@@ -80,7 +80,7 @@ svd_project_with_ops <- function(scaling, ops, dim = NULL) {
   rownames(ops[["B"]]) <- rownames(ops[["S"]])
 
   # Actual projection
-  # TODO: profile how many times R call the scaling object
+  # TODO: profile how many times R call the scaling object. We might be avle to cache it
   proj <- list(
     X = scaling$V_row %*% t(ops$R),
     Omega = t(ops$S %*% scaling$V_column),
@@ -100,11 +100,12 @@ svd_project_with_ops <- function(scaling, ops, dim = NULL) {
 #'
 #' @param scaling dso$st$scaling object containing sinkhorn scaling result
 #' @param dims how many dimensions we want to get
+#' @param ops = SVD projection operations. Default is NULL and calculated on the fly for backward compatability.
 #' @return proj object
 #' @export
-svd_project <- function(scaling, ops, dims) {
-  # ops <- calc_svd_ops(scaling$V_row, dims)
-  proj <- svd_project_with_ops(scaling, ops, dim = dims)
+svd_project <- function(scaling, dims, ops = NULL) {
+  if (is.null(ops)) ops <- calc_svd_ops(scaling$V_row, max_dim = max(dims))
+  proj <- svd_project_with_ops(scaling, ops, dims = dims)
   return(proj)
 }
 
