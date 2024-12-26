@@ -6,46 +6,38 @@
 #' performs SVD on the matrix
 #'
 #' @param V_row input data matrix to perform SVD (in this method it should be Sinkhorn transformed matrix)
-#' @param dims how many dimensions of SVD we leave
+#' @param max_dim how many dimensions of SVD to calculate. Default is 50.
+#' @param tol tolerance for SVD calculation. See ?irlba::irlba for more information. Default is 1e-05.
 #' @return list with all calculated matrices
-calc_svd_ops <- function(V_row, dims = NULL) {
-  if (is.null(dims)) {
-    dims <- 1:min(dim(V_row))
-  }
-  svd_ <- svd(V_row)
-  S <- t(svd_$u[, dims])
-  R <- t(svd_$v[, dims])
-  Sigma <- diag(svd_$d[dims])
+calc_svd_ops <- function(V_row, max_dim = 50L, tol = 1e-05) {
+  dims <- 1:min(dim(V_row), max_dim)
+
+  svd_ <- irlba::irlba(
+    A = V_row,
+    nv = max_dim,
+    work = max_dim * 3,  # same setting as in Seurat
+    tol = tol
+  )
+  S <- t(svd_$u)
+  R <- t(svd_$v)
+  Sigma <- diag(svd_$d)
   
   # TODO: does this ever really happen?
   if (all(R[1, ] < 0)) {
     S[1, ] <- -S[1, ]
     R[1, ] <- -R[1, ]
   }
-  
-  # TODO: extract this common code
+
   rownames(R) <- paste0("dim_", 1:nrow(R))
   colnames(R) <- colnames(V_row)
   rownames(S) <- rownames(R)
   colnames(S) <- rownames(V_row)
   
-  A <- matrix(apply(R, 1, sum),
-              ncol = 1,
-              nrow = length(dims))
-  B <- matrix(apply(S, 1, sum),
-              ncol = 1,
-              nrow = length(dims))
-  
-  rownames(A) <- rownames(R)
-  rownames(B) <- rownames(S)
-  
-  
   return(list(
     S = S,
     R = R,
     Sigma = Sigma,
-    A = A,
-    B = B
+    max_dim = max_dim
   ))
 }
 
@@ -55,8 +47,40 @@ calc_svd_ops <- function(V_row, dims = NULL) {
 #'
 #' @param scaling dso$st$scaling object containing sinkhorn scaling result
 #' @param ops svd result for the matirx
+#' @param dim how many dimension we what
 #' @return proj object
-svd_project_with_ops <- function(scaling, ops) {
+svd_project_with_ops <- function(scaling, ops, dim = NULL) {
+  # Setup
+  if (!is.null(dim)) {
+    if (dim > ops[["max_dim"]]) {
+      stop("Not enough dimension in ops. Run `calc_svd_ops` with larger max_dim parameter")
+    }
+
+    ops[["S"]] <- ops[["S"]][1:dim, ]  # right configuration?
+    ops[["R"]] <- ops[["R"]][1:dim, ]  # right configuration?
+    ops[["Sigma"]] <- ops[["Sigma"]][1:dim]
+  }
+
+  ops[["max_dim"]] <- NULL
+
+  # Add A and B matrix
+  ops[["A"]] <- matrix(
+    apply(ops[["R"]], 1, sum),
+    nrow = nrow(ops[["R"]]),
+    ncol = 1
+  )
+
+  ops[["B"]] <- matrix(
+    apply(ops[["S"]], 1, sum),
+    nrow = nrow(ops[["S"]]),
+    ncol = 1
+  )
+  
+  rownames(ops[["A"]]) <- rownames(ops[["R"]])
+  rownames(ops[["B"]]) <- rownames(ops[["S"]])
+
+  # Actual projection
+  # TODO: profile how many times R call the scaling object
   proj <- list(
     X = scaling$V_row %*% t(ops$R),
     Omega = t(ops$S %*% scaling$V_column),
@@ -78,9 +102,9 @@ svd_project_with_ops <- function(scaling, ops) {
 #' @param dims how many dimensions we want to get
 #' @return proj object
 #' @export
-svd_project <- function(scaling, dims) {
-  ops <- calc_svd_ops(scaling$V_row, dims)
-  proj <- svd_project_with_ops(scaling, ops)
+svd_project <- function(scaling, ops, dims) {
+  # ops <- calc_svd_ops(scaling$V_row, dims)
+  proj <- svd_project_with_ops(scaling, ops, dim = dims)
   return(proj)
 }
 
