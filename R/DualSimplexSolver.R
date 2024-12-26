@@ -99,7 +99,7 @@ DualSimplexSolver <- R6Class(
         filtering_params
       )
       self$st$filtering_log$object_log[[step_num]] <- list(
-        Sigma = self$st$proj_full$meta$Sigma
+        Sigma = self$st$proj$meta$Sigma
       )
     },
     resolve_color_col = function(color, genes) {
@@ -126,6 +126,11 @@ DualSimplexSolver <- R6Class(
         name <- NULL
       }
       return(list(color = color, name = name))
+    },
+
+    check_max_dim = function(dims, max_dim = self$st$proj_ops$max_dim) {
+      set_data_first()
+      if (max(dims) > max_dim) stop("Not enough dimension in ops. Run `calc_svd_ops` with larger max_dim parameter")
     }
   ),
   public = list(
@@ -134,7 +139,7 @@ DualSimplexSolver <- R6Class(
       filtering_log = NULL,   # Auto calculated
       data = NULL,            # Set by user
       scaling = NULL,         # Auto calculated
-      proj_full = NULL,       # Auto calculated
+      proj_ops = NULL,        # Auto calculated
       n_cell_types = NULL,    # Set by user
       dims = NULL,            # Auto calculated
       proj = NULL,            # Auto calculated, proj$umap is triggered by user
@@ -152,7 +157,7 @@ DualSimplexSolver <- R6Class(
     #' @param gene_anno_lists named list of lists. Each sublist contains names of rows which should have TRUE value in annotaiton column.
     #' @param sample_anno_lists named list of lists. Each sublist contains names of columns which should have TRUE value in annotation column.
     #' @param sinkhorn_iterations number of sinkhorn iterations to perform
-    set_data = function(data, gene_anno_lists = NULL, sample_anno_lists = NULL, sinkhorn_iterations=20) {
+    set_data = function(data, gene_anno_lists = NULL, sample_anno_lists = NULL, sinkhorn_iterations=20, max_dim = 50L, tol = 1e-05) {
       if (any(sapply(dimnames(data), is.null)))
         stop("Genes and samples should be named")
       if (any(sapply(dimnames(data), anyDuplicated)))
@@ -163,11 +168,11 @@ DualSimplexSolver <- R6Class(
         stop("The data matrix should not contain all zero columns. Use remove_zero_cols() method")
       first_set <-  is.null(self$st$data)
       private$reset_since("data")
-      if (!inherits(data, "ExpressionSet"))
-        data <- create_eset(data)
+      if (!inherits(data, "ExpressionSet")) data <- create_eset(data)
       self$st$data <- add_default_anno(data, gene_anno_lists, sample_anno_lists)
-      self$st$scaling <- sinkhorn_scale(exprs(self$st$data), max_iter = sinkhorn_iterations)
-      self$st$proj_full <- svd_project(self$st$scaling, dims = NULL)
+      self$st$scaling <- sinkhorn_scale(exprs(self$st$data), iterations = sinkhorn_iterations)
+      self$st$proj_ops <- calc_svd_ops(self$scaling$V_row, max_dim = max_dim, tol = tol)
+      self$st$proj <- svd_project(self$st$scaling, dims = NULL, ops = self$st$proj_ops)
       if (first_set) private$add_filtering_log_step("initial")
     },
 
@@ -241,7 +246,8 @@ DualSimplexSolver <- R6Class(
     #' @return plot to work with
     plot_svd = function(dims = self$st$dims) {
       private$set_data_first()
-      plot_proj_svd(self$st$proj_full, dims)
+      private$check_max_dim(dims)
+      plot_proj_svd(self$st$proj, dims)
     },
 
     #' @description
@@ -288,7 +294,8 @@ DualSimplexSolver <- R6Class(
       self$st$proj <- svd_project(self$st$scaling, dims = self$st$dims)
       self$st$data <- add_distances_anno(
         self$st$data,
-        self$st$proj_full,
+        self$st$scaling,
+        self$st$proj,
         self$st$n_cell_types
       )
     },
