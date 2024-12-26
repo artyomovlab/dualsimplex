@@ -105,27 +105,19 @@ add_data_stats_anno <- function(eset, genes = T) {
 # Distances annotation
 
 # TODO: this function shamelessly peeks into further stages than
+# TODO (cjlee): Modify this function for only using truncated SVD. The best way might be NOT using `calc_partial_dist`
 # annotation, but its required for filtering
-add_distances_anno <- function(eset, proj_full, n_cell_types) {
-  fData(eset)$plane_distance <- calc_partial_dist(
-    proj_full$X,
-    with_dims = -c(1, 2:n_cell_types)
-  )
+add_distances_anno <- function(eset, scaling, proj, n_cell_types) {
+  # For features
+  feature_dists <- calc_dist_from_truncated_svd(scaling$V_row, proj$X[ ,2:n_cell_types])
+  fData(eset)$plane_distance <- feature_dists$plane_distance
+  fData(eset)$zero_distance <- feature_dists$zero_distance
 
-  pData(eset)$plane_distance <- calc_partial_dist(
-    proj_full$Omega,
-    with_dims = -c(1, 2:n_cell_types)
-  )
 
-  fData(eset)$zero_distance <- calc_partial_dist(
-    proj_full$X,
-    with_dims = 2:n_cell_types
-  )
-
-  pData(eset)$zero_distance <- calc_partial_dist(
-    proj_full$Omega,
-    with_dims = 2:n_cell_types
-  )
+  # For samples
+  sample_dists <- calc_dist_from_truncated_svd(scaling$V_column, proj$Omega)
+  pData(eset)$plane_distance <- sample_dists$plane_distance
+  pData(eset)$zero_distance <- sample_dists$zero_distance
 
   return(eset)
 }
