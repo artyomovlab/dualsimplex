@@ -51,8 +51,8 @@ calc_svd_ops <- function(V_row, max_dim = 50L, tol = 1e-05) {
 #' @return proj object
 svd_project_with_ops <- function(scaling, ops, dims = NULL) {
   # Setup
-  if (!is.null(dim)) {
-    if (max(dim) > ops[["max_dim"]]) {
+  if (!is.null(dims)) {
+    if (max(dims) > ops[["max_dim"]]) {
       stop("Not enough dimension in ops. Run `calc_svd_ops` with larger max_dim parameter")
     }
 
