@@ -108,3 +108,28 @@ rasterize_if_needed <- function(plot) {
   plot <- if(getOption("dualsimplex-rasterize", default=FALSE)) ggrastr::rasterise(plot, dpi=600) else plot
   return(plot)
 }
+
+# TODO (cjlee): Modify this function for only using truncated SVD
+calc_dist_from_truncated_svd <- function(scaled, projected) {
+  # Decide which direction should we calculate the "total variacne" from scaled data
+  if (rowname(scaled) != rowname(projected)) {
+    # This is the case of samples
+    varfun <- matrixStats::colVars
+    nfun <- ncol
+  } else {
+    # For features
+    varfun <- matrixStats::rawVars
+    nfun <- nrow
+  }
+
+  # Calculate distences
+  zero_distance <- sqrt(rowSums(projected^2))
+
+  list(
+    zero_distance = zero_distance
+    plane_distance =  sqrt(
+      varfun(scaled) * (nfun(scaled) - 1)
+      - zero_distance^2
+    )
+  )
+}
