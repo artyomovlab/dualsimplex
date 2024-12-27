@@ -129,7 +129,7 @@ DualSimplexSolver <- R6Class(
     },
 
     check_max_dim = function(dims, max_dim = self$st$proj_ops$max_dim) {
-      set_data_first()
+      private$set_data_first()
       if (max(dims) > max_dim) stop("Not enough dimension in ops. Run `calc_svd_ops` with larger max_dim parameter")
     }
   ),
