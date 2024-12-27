@@ -118,7 +118,7 @@ calc_dist_from_truncated_svd <- function(scaled, projected) {
     nfun <- ncol
   } else {
     # For features
-    varfun <- matrixStats::rawVars
+    varfun <- matrixStats::rowVars
     nfun <- nrow
   }
 
