@@ -291,7 +291,7 @@ DualSimplexSolver <- R6Class(
       private$reset_since("n_cell_types")
       self$st$n_cell_types <- n_cell_types
       self$st$dims <- if (!is.null(n_cell_types)) 1:n_cell_types else NULL
-      self$st$proj <- svd_project(self$st$scaling, dims = self$st$dims)
+      self$st$proj <- svd_project(self$st$scaling, dims = self$st$dims, ops = self$st$proj_ops)
       self$st$data <- add_distances_anno(
         self$st$data,
         self$st$scaling,
