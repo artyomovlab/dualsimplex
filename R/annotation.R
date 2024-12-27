@@ -115,7 +115,7 @@ add_distances_anno <- function(eset, scaling, proj, n_cell_types) {
 
 
   # For samples
-  sample_dists <- calc_dist_from_truncated_svd(scaling$V_column, proj$Omega)
+  sample_dists <- calc_dist_from_truncated_svd(scaling$V_column, proj$Omega[ ,2:n_cell_types])
   pData(eset)$plane_distance <- sample_dists$plane_distance
   pData(eset)$zero_distance <- sample_dists$zero_distance
 
