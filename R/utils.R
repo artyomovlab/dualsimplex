@@ -126,7 +126,7 @@ calc_dist_from_truncated_svd <- function(scaled, projected) {
   zero_distance <- sqrt(rowSums(projected^2))
 
   list(
-    zero_distance = zero_distance
+    zero_distance = zero_distance,
     plane_distance =  sqrt(
       varfun(scaled) * (nfun(scaled) - 1)
       - zero_distance^2
