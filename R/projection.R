@@ -109,6 +109,29 @@ svd_project <- function(scaling, dims, ops = NULL) {
   return(proj)
 }
 
+#' Prepare projection object
+#'
+#' Entry point to produce dso$st$proj object, containing all information about projection as well as projected points
+#'
+#' @param dso DualSimplexSolver object.
+#' @param dims a integer vector indicateing the dimensions we want to get.
+#' @param ops SVD projection operations. Default is NULL and calculated on the fly for backward compatability.
+#' @return proj object
+#' @export
+efficient_svd_project <- function(dso, dims, ops = NULL) {
+  V_row <- dso$get_V_row()
+
+  if (is.null(ops)) ops <- calc_svd_ops(V_row, max_dim = max(dims))
+  svd_project_with_ops(
+    list(
+      "V_row" = V_row,
+      "V_column" = dso$get_V_column()
+    ),
+    ops,
+    dims = dims
+  )
+}
+
 #' Adds UMAP representation to dso$st$proj object
 #'
 #' calls uwot::umap to make umap
