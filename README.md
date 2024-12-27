@@ -2,6 +2,7 @@
 
 ## About the project
 This is the implementation of the Dual Simplex method presented in [this paper](https://www.biorxiv.org/content/10.1101/2024.04.09.588652v1)
+![image](https://github.com/user-attachments/assets/f2c89c95-e106-4cf2-8c38-527ef34f7ed0)
 
 ```angular2html
 Non-negative matrix factorization and deconvolution as dual simplex problem
