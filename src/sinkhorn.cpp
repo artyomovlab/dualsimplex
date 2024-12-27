@@ -121,12 +121,8 @@ Rcpp::List efficient_sinkhorn(const arma::mat& V,
     } else {
         Rcpp::warning("Sinkhorn transformation does not converge at iteration %i", i);
     }
-    arma::mat V_column = V_;
-    V_.each_row() /= D_col_sum_current;
 
-    return Rcpp::List::create(Rcpp::Named("V_row") = V_,
-                                Rcpp::Named("V_column") = V_column,
-                                Rcpp::Named("D_vs_row") = D_row.cols(0, i-1),
-                                Rcpp::Named("D_vs_col") = D_col.rows(0, i-1).t(),
-                                Rcpp::Named("iterations") = i);
+    return Rcpp::List::create(Rcpp::Named("D_vs_row") = D_row.cols(0, i-1),
+                              Rcpp::Named("D_vs_col") = D_col.rows(0, i-1).t(),
+                              Rcpp::Named("iterations") = i);
 }
