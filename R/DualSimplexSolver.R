@@ -753,6 +753,23 @@ DualSimplexSolver <- R6Class(
     get_marker_genes = function() {
       private$finalize_first()
       return(self$st$marker_genes)
+    },
+
+    #' @description
+    #' Calculate V_row on the fly.
+    #' TODO: It might be good to have a more efficient implementation, if this function will be frequently called.
+    get_V_row = function(scaling) {
+      private$set_data_first()
+
+      dr <- matrixStats::rowProds(self$st$scaling$D_vs_row)
+      dc <- matrixStats::rowProds(self$st$scaling$D_vs_col[, 1:(self$st$scaling$iterations-1)])
+      
+      sweep(
+        dr * exprs(self$get_data()),  # R is column-oriented, direct multiplication is row-wise,
+        MARGIN = 2,
+        STATS = dc,
+        FUN = `*`
+      )
     }
   )
 )
