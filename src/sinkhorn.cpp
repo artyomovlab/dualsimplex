@@ -91,42 +91,42 @@ Rcpp::List efficient_sinkhorn(const arma::mat& V,
     arma::mat D_col(max_iter, N);
 
     arma::mat V_ = V;
-
+    D_col_sum_current = 1 / arma::sum(V_, 0);
     // for convergence check
     arma::rowvec converged_col_sum(N, arma::fill::value(1/delta));
     bool converged = false;
 
     // Main algorithm
     int i;
-    for (i = 1; i < max_iter; i++) {
+    for (i = 0; i < max_iter; i++) {
         // Row normalize
         D_row_sum_current = 1 / arma::sum(V_, 1);
-        D_row.col(i-1) = D_row_sum_current;
+        D_row.col(i) = D_row_sum_current;
         V_.each_col() %= D_row_sum_current;
 
         // Column normalize
         D_col_sum_current = 1 / arma::sum(V_, 0);
-        D_col.row(i-1) = D_col_sum_current;
+        D_col.row(i) = D_col_sum_current;
         V_.each_row() %= D_col_sum_current;
 
         // Check convergence
-        if (i >= iter_start_check && ((i-iter_start_check) % check_every_iter) == 0) {
+        if ((i+1) >= iter_start_check && ((i + 1 -iter_start_check) % check_every_iter) == 0) {
             converged = arma::approx_equal(D_col_sum_current, converged_col_sum, "absdiff", epsilon);
         }
         if (converged) break;
     }
 
     if (converged) {
-        Rcpp::Rcout << "Sinkhorn transformation converge at iteration: " << i << ".\n";
+        Rcpp::Rcout << "Sinkhorn transformation converge at iteration: " << (i + 1) << ".\n";
     } else {
-        Rcpp::warning("Sinkhorn transformation does not converge at iteration %i", i);
+        Rcpp::warning("Sinkhorn transformation does not converge at iteration %i", (i+1));
     }
     arma::mat V_column = V_;
     V_.each_row() /= D_col_sum_current;
 
     return Rcpp::List::create(Rcpp::Named("V_row") = V_,
                                 Rcpp::Named("V_column") = V_column,
-                                Rcpp::Named("D_vs_row") = D_row.cols(0, i-1),
-                                Rcpp::Named("D_vs_col") = D_col.rows(0, i-1).t(),
-                                Rcpp::Named("iterations") = i);
+                                Rcpp::Named("D_vs_row") = D_row.cols(0, i),
+                                Rcpp::Named("D_vs_col") = D_col.rows(0, i).t(),
+                                Rcpp::Named("iterations") = (i+1) );
 }
