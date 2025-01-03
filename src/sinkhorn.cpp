@@ -85,10 +85,10 @@ Rcpp::List efficient_sinkhorn(const arma::mat& V,
     double delta = M / N;
 
     arma::vec D_row_sum_current(M);
-    arma::mat D_row(M, max_iter);
+    arma::mat D_row(M, max_iter + 1);
 
     arma::rowvec D_col_sum_current(N);
-    arma::mat D_col(max_iter, N);
+    arma::mat D_col(max_iter + 1, N);
 
     arma::mat V_ = V;
     D_col_sum_current = 1 / arma::sum(V_, 0);
@@ -124,9 +124,10 @@ Rcpp::List efficient_sinkhorn(const arma::mat& V,
     arma::mat V_column = V_;
     V_.each_row() /= D_col_sum_current;
 
+    // will return all zero
     return Rcpp::List::create(Rcpp::Named("V_row") = V_,
                                 Rcpp::Named("V_column") = V_column,
-                                Rcpp::Named("D_vs_row") = D_row.cols(0, i),
-                                Rcpp::Named("D_vs_col") = D_col.rows(0, i).t(),
+                                Rcpp::Named("D_vs_row") = (i>0) ? D_row.cols(0, i-1) : arma::mat (M, 1, arma::fill::zeros),
+                                Rcpp::Named("D_vs_col") = (i>0) ? D_col.rows(0, i-1).t() : arma::mat (N, 1, arma::fill::zeros),
                                 Rcpp::Named("iterations") = (i+1) );
 }
