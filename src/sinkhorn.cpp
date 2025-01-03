@@ -117,12 +117,16 @@ Rcpp::List efficient_sinkhorn(const arma::mat& V,
     }
 
     if (converged) {
-        Rcpp::Rcout << "Sinkhorn transformation converge at iteration: " << (i + 1) << ".\n";
+        Rcpp::Rcout << "Sinkhorn transformation converge at iteration: " << i << ".\n";
     } else {
-        Rcpp::warning("Sinkhorn transformation does not converge at iteration %i", (i+1));
+        Rcpp::warning("Sinkhorn transformation does not converge at iteration %i", i);
     }
     arma::mat V_column = V_;
-    V_.each_row() %= D_col_sum_current;
+    if (i > 0) {
+        // if some normalizations were done. return back halfway to get row normalized matrix
+        V_.each_row() /= D_col_sum_current;
+    }
+
 
     // will return all zero
     return Rcpp::List::create(Rcpp::Named("V_row") = V_,
