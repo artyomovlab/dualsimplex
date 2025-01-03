@@ -122,7 +122,7 @@ Rcpp::List efficient_sinkhorn(const arma::mat& V,
         Rcpp::warning("Sinkhorn transformation does not converge at iteration %i", (i+1));
     }
     arma::mat V_column = V_;
-    V_.each_row() /= D_col_sum_current;
+    V_.each_row() %= D_col_sum_current;
 
     // will return all zero
     return Rcpp::List::create(Rcpp::Named("V_row") = V_,
