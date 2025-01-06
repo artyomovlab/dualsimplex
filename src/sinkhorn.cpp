@@ -91,7 +91,6 @@ Rcpp::List efficient_sinkhorn(const arma::mat& V,
     arma::mat D_col(max_iter + 1, N, arma::fill::zeros);
 
     arma::mat V_ = V;
-    D_col_sum_current = 1 / arma::sum(V_, 0);
     // for convergence check
     arma::rowvec converged_col_sum(N, arma::fill::value(1/delta));
     bool converged = false;
@@ -128,10 +127,10 @@ Rcpp::List efficient_sinkhorn(const arma::mat& V,
     }
 
 
-    // will return all zero
+    // will return all zero columns for D_vs_row and D_vs_col if no normalizations performed
     return Rcpp::List::create(Rcpp::Named("V_row") = V_,
                                 Rcpp::Named("V_column") = V_column,
-                                Rcpp::Named("D_vs_row") = (i>0) ? D_row.cols(0, i-1) :  D_row.cols(0,0),
-                                Rcpp::Named("D_vs_col") = (i>0) ? D_col.rows(0, i-1).t() : D_col.rows(0,0).t(),
-                                Rcpp::Named("iterations") = (i+1) );
+                                Rcpp::Named("D_vs_row") = (i > 0) ? D_row.cols(0, i - 1) :  D_row.cols(0,0),
+                                Rcpp::Named("D_vs_col") = (i > 0) ? D_col.rows(0, i - 1).t() : D_col.rows(0,0).t(),
+                                Rcpp::Named("iterations") = i);
 }
