@@ -118,14 +118,13 @@ svd_project <- function(scaling, dims, ops = NULL) {
 #' @param ops SVD projection operations. Default is NULL and calculated on the fly for backward compatability.
 #' @return proj object
 #' @export
-efficient_svd_project <- function(dso, dims, ops = NULL) {
-  V_row <- dso$get_V_row()
-
+efficient_svd_project <- function(V_row, V_column, dims, ops = NULL) {
   if (is.null(ops)) ops <- calc_svd_ops(V_row, max_dim = max(dims))
+  
   svd_project_with_ops(
     list(
       "V_row" = V_row,
-      "V_column" = dso$get_V_column()
+      "V_column" = V_column
     ),
     ops,
     dims = dims
