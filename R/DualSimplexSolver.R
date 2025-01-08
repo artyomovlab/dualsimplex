@@ -156,7 +156,9 @@ DualSimplexSolver <- R6Class(
     #' @param data input data matrix
     #' @param gene_anno_lists named list of lists. Each sublist contains names of rows which should have TRUE value in annotaiton column.
     #' @param sample_anno_lists named list of lists. Each sublist contains names of columns which should have TRUE value in annotation column.
-    #' @param sinkhorn_iterations number of sinkhorn iterations to perform
+    #' @param sinkhorn_iterations number of sinkhorn iterations to perform.
+    #' @param max_dim maximum dimention we want the projection operation. It is passed to `calc_svd_ops` function.
+    #' @param tol tolerance for SVD calculation. It is passed to `calc_svd_ops` function.
     set_data = function(data, gene_anno_lists = NULL, sample_anno_lists = NULL, sinkhorn_iterations=20, max_dim = 50L, tol = 1e-05) {
       if (any(sapply(dimnames(data), is.null)))
         stop("Genes and samples should be named")
