@@ -4,12 +4,14 @@
 \alias{calc_svd_ops}
 \title{Calculate SVD for the matrix}
 \usage{
-calc_svd_ops(V_row, dims = NULL)
+calc_svd_ops(V_row, max_dim = 50L, tol = 1e-05)
 }
 \arguments{
 \item{V_row}{input data matrix to perform SVD (in this method it should be Sinkhorn transformed matrix)}
 
-\item{dims}{how many dimensions of SVD we leave}
+\item{max_dim}{how many dimensions of SVD to calculate. Default is 50.}
+
+\item{tol}{tolerance for SVD calculation. See ?irlba::irlba for more information. Default is 1e-05.}
 }
 \value{
 list with all calculated matrices

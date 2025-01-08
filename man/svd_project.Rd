@@ -4,12 +4,14 @@
 \alias{svd_project}
 \title{Prepare projection object}
 \usage{
-svd_project(scaling, dims)
+svd_project(scaling, dims, ops = NULL)
 }
 \arguments{
 \item{scaling}{dso$st$scaling object containing sinkhorn scaling result}
 
 \item{dims}{how many dimensions we want to get}
+
+\item{ops}{= SVD projection operations. Default is NULL and calculated on the fly for backward compatability.}
 }
 \value{
 proj object
