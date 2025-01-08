@@ -270,7 +270,7 @@ DualSimplexSolver <- R6Class(
     plot_svd = function(dims = self$st$dims) {
       private$set_data_first()
       private$check_max_dim(dims)
-      plot_svd_d(self$st$proj_ops$Sigma, dims)
+      plot_svd_d(diag(self$st$proj_ops$Sigma), dims)
     },
 
     #' @description
