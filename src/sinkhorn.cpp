@@ -143,7 +143,7 @@ arma::mat sinkhorn_sweep_c(const arma::mat& V,
     iter -= 1;  // adjust 1-base to 0-base
 
     // scaling till iter-1 round of normalization
-    for (int i = 0; i < iter; i++) {
+    for (unsigned int i = 0; i < iter; i++) {
         V_.each_col() %= D_vs_row.col(i);
         V_.each_row() %= D_vs_col.col(i).t();
     }
