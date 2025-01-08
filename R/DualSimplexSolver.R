@@ -99,7 +99,7 @@ DualSimplexSolver <- R6Class(
         filtering_params
       )
       self$st$filtering_log$object_log[[step_num]] <- list(
-        Sigma = self$st$proj$meta$Sigma
+        Sigma = self$st$proj_ops$Sigma
       )
     },
     resolve_color_col = function(color, genes) {
