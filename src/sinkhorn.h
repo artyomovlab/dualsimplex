@@ -51,7 +51,8 @@ Rcpp::List efficient_sinkhorn(
 //'
 //' @param V matrix to scale.
 //' @param D_vs_row matrix stroing row scaling at each iteration  
-//' @param D_vs_col matrix stroing column scaling at each iteration  
+//' @param D_vs_col matrix stroing column scaling at each iteration
+//' @param iter iteration at which Sinkhorn is converged
 //' @return scaled matrix
 //' @export
 // [[Rcpp::export]]

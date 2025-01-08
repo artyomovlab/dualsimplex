@@ -47,7 +47,7 @@ calc_svd_ops <- function(V_row, max_dim = 50L, tol = 1e-05) {
 #'
 #' @param scaling dso$st$scaling object containing sinkhorn scaling result
 #' @param ops svd result for the matirx
-#' @param dim how many dimension we want
+#' @param dims a vector of dimensions we want
 #' @return proj object
 svd_project_with_ops <- function(scaling, ops, dims = NULL) {
   # Setup
@@ -113,7 +113,8 @@ svd_project <- function(scaling, dims, ops = NULL) {
 #'
 #' Entry point to produce dso$st$proj object, containing all information about projection as well as projected points
 #'
-#' @param dso DualSimplexSolver object.
+#' @param V_row row normalized matrix by Sinkhorn tranformation.
+#' @param V_column column normalized matrix by Sinkhorn tranformation.
 #' @param dims a integer vector indicateing the dimensions we want to get.
 #' @param ops SVD projection operations. Default is NULL and calculated on the fly for backward compatability.
 #' @return proj object
