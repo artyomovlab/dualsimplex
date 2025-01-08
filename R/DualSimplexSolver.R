@@ -137,6 +137,9 @@ DualSimplexSolver <- R6Class(
     #' @field st contain the "state" of the current object. (data, solution, projections etc..).
     st = list(
       filtering_log = NULL,       # Auto calculated
+      sinkhorn_iterations = NULL, # Can be set by user. Default is 20
+      max_dim = NULL,             # Can be set by user. Default is 50
+      tol = NULL,                  # Can be set by user. Default is 1e-05
       data = NULL,                # Set by user
       scaling = NULL,             # Auto calculated
       proj_ops = NULL,            # Auto calculated
@@ -146,10 +149,8 @@ DualSimplexSolver <- R6Class(
       solution_proj = NULL,       # Triggered by user
       solution = NULL,            # Triggered by user
       solution_orig = NULL,       # Auto calculated
-      marker_genes = NULL,        # Auto calculated
-      sinkhorn_iterations = NULL, # Can be set by user. Default is 20
-      max_dim = NULL,             # Can be set by user. Default is 50
-      tol = NULL                  # Can be set by user. Default is 1e-05
+      marker_genes = NULL        # Auto calculated
+
     ),
 
     #' @description
