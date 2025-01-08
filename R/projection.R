@@ -47,7 +47,7 @@ calc_svd_ops <- function(V_row, max_dim = 50L, tol = 1e-05) {
 #'
 #' @param scaling dso$st$scaling object containing sinkhorn scaling result
 #' @param ops svd result for the matirx
-#' @param dim how many dimension we what
+#' @param dim how many dimension we want
 #' @return proj object
 svd_project_with_ops <- function(scaling, ops, dims = NULL) {
   # Setup

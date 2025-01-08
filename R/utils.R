@@ -111,7 +111,7 @@ rasterize_if_needed <- function(plot) {
 
 # TODO (cjlee): Modify this function for only using truncated SVD
 calc_dist_from_truncated_svd <- function(scaled, projected) {
-  # Decide which direction should we calculate the "total variacne" from scaled data
+  # Decide which direction should we calculate the "total variance" from scaled data
   if (any(rownames(scaled)[1:3] != rownames(projected)[1:3])) {
     # This is the case of samples
     varfun <- matrixStats::colVars
