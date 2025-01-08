@@ -134,7 +134,7 @@ Rcpp::List efficient_sinkhorn(const arma::mat& V,
 arma::mat sinkhorn_sweep_c(const arma::mat& V,
                            const arma::mat& D_vs_row,
                            const arma::mat& D_vs_col,
-                           int iter) {
+                           unsigned int iter) {
     // This function simply does D_v_2n-2 * D_v_2n-4 * ... * D_v_0 * V * D_v_1 * ... * D_v_2n-1
     // iteratively. Iterative scaling is to prevent potential floating-point underflow (remember
     // that during scaling, the value getting smaller and smaller).

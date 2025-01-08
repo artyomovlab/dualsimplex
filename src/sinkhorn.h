@@ -59,5 +59,5 @@ arma::mat sinkhorn_sweep_c(
     const arma::mat& V,
     const arma::mat& D_vs_row,
     const arma::mat& D_vs_col,
-    int iter
+    unsigned int iter
 );
