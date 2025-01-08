@@ -58,7 +58,7 @@ svd_project_with_ops <- function(scaling, ops, dims = NULL) {
 
     ops[["S"]] <- ops[["S"]][dims, ]
     ops[["R"]] <- ops[["R"]][dims, ]
-    ops[["Sigma"]] <- ops[["Sigma"]][dims]
+    ops[["Sigma"]] <- ops[["Sigma"]][dims, dims]
   }
 
   ops[["max_dim"]] <- NULL
