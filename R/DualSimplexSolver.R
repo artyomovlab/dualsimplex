@@ -139,7 +139,8 @@ DualSimplexSolver <- R6Class(
       filtering_log = NULL,       # Auto calculated
       sinkhorn_iterations = NULL, # Can be set by user. Default is 20
       max_dim = NULL,             # Can be set by user. Default is 50
-      tol = NULL,                  # Can be set by user. Default is 1e-05
+      svd_tol = NULL,             # Can be set by user. Default is 1e-05
+      sinkhorn_tol = NULL,        # Can be set by user. Default is 1e-15
       data = NULL,                # Set by user
       scaling = NULL,             # Auto calculated
       proj_ops = NULL,            # Auto calculated
@@ -162,14 +163,16 @@ DualSimplexSolver <- R6Class(
     #' @param sample_anno_lists named list of lists. Each sublist contains names of columns which should have TRUE value in annotation column.
     #' @param sinkhorn_iterations number of sinkhorn iterations to perform.
     #' @param max_dim maximum dimention we want the projection operation. It is passed to `calc_svd_ops` function.
-    #' @param tol tolerance for SVD calculation. It is passed to `calc_svd_ops` function.
+    #' @param svd_tol tolerance for SVD calculation. It is passed to `calc_svd_ops` function.
+    #' @param sinkhorn_tol tolerance for SVD calculation. It is passed to `sinkhron_scale` function.
     set_data = function(
       data,
       gene_anno_lists = NULL,
       sample_anno_lists = NULL,
       sinkhorn_iterations=20,
       max_dim = 50L,
-      tol = 1e-05
+      svd_tol = 1e-05,
+      sinkhorn_tol = 1e-12
     ) {
       # Sanity checks
       if (any(sapply(dimnames(data), is.null)))
@@ -187,15 +190,16 @@ DualSimplexSolver <- R6Class(
         self$st$max_dim <- min(dim(data))
         warning("Provided `max_dim` is bigger than smallest dimention of `data`. Setting `max_dim` to ", self$st$max_dim, ".")
       }
-      if (is.null(self$st$tol)) self$st$tol <- tol
+      if (is.null(self$st$svd_tol)) self$st$svd_tol <- svd_tol
+      if (is.null(self$st$sinkhorn_tol)) self$st$sinkhorn_tol <- sinkhorn_tol
 
       #  
       first_set <-  is.null(self$st$data)
       private$reset_since("data")
       if (!inherits(data, "ExpressionSet")) data <- create_eset(data)
       self$st$data <- add_default_anno(data, gene_anno_lists, sample_anno_lists)
-      self$st$scaling <- sinkhorn_scale(exprs(self$st$data), max_iter = self$st$sinkhorn_iterations)
-      self$st$proj_ops <- calc_svd_ops(self$get_V_row(), max_dim = self$st$max_dim, tol = self$st$tol)
+      self$st$scaling <- sinkhorn_scale(exprs(self$st$data), max_iter = self$st$sinkhorn_iterations, epsilon=self$st$sinkhorn_tol)
+      self$st$proj_ops <- calc_svd_ops(self$get_V_row(), max_dim = self$st$max_dim, tol = self$st$svd_tol)
       if (first_set) private$add_filtering_log_step("initial")
     },
 

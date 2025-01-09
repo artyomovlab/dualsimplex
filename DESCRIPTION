@@ -56,7 +56,6 @@ Imports:
     scales,
     linseed,
     FNN,
-    matrixStats
 Remotes: ctlab/linseed
 Suggests:
     Seurat,
