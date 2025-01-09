@@ -317,12 +317,8 @@ DualSimplexSolver <- R6Class(
       self$st$proj <- efficient_svd_project(self$get_V_row(), self$get_V_column(), dims = self$st$dims, ops = self$st$proj_ops)
       self$st$data <- add_distances_anno(
         self$st$data,
-        list(
-          "V_row" = self$get_V_row(),
-          "V_column" = self$get_V_column()
-        ),
-        self$st$proj,
-        self$st$n_cell_types
+        V_row = self$get_V_row,
+        self$st$proj
       )
     },
 

@@ -109,27 +109,28 @@ rasterize_if_needed <- function(plot) {
   return(plot)
 }
 
-# TODO (cjlee): Modify this function for only using truncated SVD
-calc_dist_from_truncated_svd <- function(scaled, projected) {
-  # Decide which direction should we calculate the "total variance" from scaled data
-  if (any(rownames(scaled)[1:3] != rownames(projected)[1:3])) {
-    # This is the case of samples
-    varfun <- matrixStats::colVars
-    nfun <- nrow
-  } else {
-    # For features
-    varfun <- matrixStats::rowVars
-    nfun <- ncol
-  }
-
-  # Calculate distences
-  zero_distance <- sqrt(rowSums(projected^2))
+#' Reade genes form a list
+#'
+#' @param approximated a low-rank approximation by SVD
+#' @param original the original data matrix
+#' @param residual the residual matrix
+#' @param margin direction for distance calculation. 1 is for rows, 2 is for columns.
+#' 
+#' @return R list containing zero_distance and plane_distance
+calc_dist_from_truncated_svd <- function(approximated, original = NULL, residual = NULL, margin) {
+  if (is.null(original) & is.null(residual)) stop("One of the 'original' or 'residual' matrix should be provided")
+  if (is.null(residual)) residual <- original - approximated
 
   list(
-    zero_distance = zero_distance,
-    plane_distance =  sqrt(
-      varfun(scaled) * (nfun(scaled) - 1)
-      - zero_distance^2
+    zero_distance = apply(
+      approximated,
+      MARGIN = margin,
+      FUN = \(v) sqrt(sum((v - mean(v))^2))
+    ),
+    plane_distance =  apply(
+      residual,
+      MARGIN = margin,
+      FUN = \(v) sqrt(sum((v - mean(v))^2))
     )
   )
 }
