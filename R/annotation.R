@@ -114,7 +114,7 @@ add_data_stats_anno <- function(eset, genes = T) {
 #' 
 #' TODO (cjlee): make it more efficient. by Rcpp maybe?
 add_distances_anno <- function(eset, V_row, proj) {
-  approx <- with(proj@meta, t(S) %*% Sigma %*% R)
+  approx <- with(proj$meta, t(S) %*% Sigma %*% R)
   residual <- V_row - approx
 
   # For features (using V_row)
