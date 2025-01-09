@@ -109,7 +109,7 @@ rasterize_if_needed <- function(plot) {
   return(plot)
 }
 
-#' Reade genes form a list
+#' Calculate zero_distance and plane_distance with truncated SVD
 #'
 #' @param approximated a low-rank approximation by SVD
 #' @param original the original data matrix
