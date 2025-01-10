@@ -7,7 +7,7 @@
 #'
 #' @param V_row input data matrix to perform SVD (in this method it should be Sinkhorn transformed matrix)
 #' @param max_dim how many dimensions of SVD to calculate. Default is 50.
-#' @param tol tolerance for SVD calculation. See ?irlba::irlba for more information. Default is 1e-05.
+#' @param method svd method to use
 #' @param ... additional arguments passed to function `run_svd`
 #' 
 #' @return list with all calculated matrices
@@ -82,7 +82,7 @@ svd_project_with_ops <- function(scaling, ops, dims = NULL) {
   rownames(ops[["B"]]) <- rownames(ops[["S"]])
 
   # Actual projection
-  # TODO: profile how many times R call the scaling object. We might be avle to cache it
+  # TODO: profile how many times R call the scaling object. We might be able to cache it
   proj <- list(
     X = scaling$V_row %*% t(ops$R),
     Omega = t(ops$S %*% scaling$V_column),

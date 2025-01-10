@@ -11,9 +11,9 @@ calc_svd_ops(V_row, max_dim = 50L, method = "svd", ...)
 
 \item{max_dim}{how many dimensions of SVD to calculate. Default is 50.}
 
-\item{...}{additional arguments passed to function `run_svd`}
+\item{method}{svd method to use}
 
-\item{tol}{tolerance for SVD calculation. See ?irlba::irlba for more information. Default is 1e-05.}
+\item{...}{additional arguments passed to function `run_svd`}
 }
 \value{
 list with all calculated matrices
