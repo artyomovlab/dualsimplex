@@ -89,14 +89,36 @@ add_name_lists_anno <- function(eset, name_lists, genes = T) {
 #'
 #'@param eset Expression set
 #'@param genes if TRUE apply to rows, otherwise columns
+#' 
+#'@import matrixStats
+#' 
 #'@return  annotated Expression set
 add_data_stats_anno <- function(eset, genes = T) {
+  stat_fns <- list(
+    genes = list(
+      mean = matrixStats::rowMeans2,
+      median = matrixStats::rowMedians,
+      sd = matrixStats::rowSds,
+      mad = matrixStats::rowMads
+    ),
+
+    samples = list(
+      mean = matrixStats::colMeans2,
+      median = matrixStats::colMedians,
+      sd = matrixStats::colSds,
+      mad = matrixStats::colMads
+    )
+  )
+
   anno <- get_anno(eset, genes)
-  margin <- if (genes) 1 else 2
-  anno$log_mean <- log(apply(exprs(eset), margin, mean) + 1)
-  anno$log_median <- log(apply(exprs(eset), margin, median) + 1)
-  anno$log_sd <- log(apply(exprs(eset), margin, sd) + 1)
-  anno$log_mad <- log(apply(exprs(eset), margin, mad) + 1)
+  margin <- if (genes) "genes" else "samples"
+
+
+  anno$log_mean <- log(stat_fns[[margin]][["mean"]](exprs(eset))  + 1)
+  anno$log_median <- log(stat_fns[[margin]][["median"]](exprs(eset)) + 1)
+  anno$log_sd <- log(stat_fns[[margin]][["sd"]](exprs(eset)) + 1)
+  anno$log_mad <- log(stat_fns[[margin]][["mad"]](exprs(eset)) + 1)
+
   eset <- set_anno(anno, eset, genes)
   return(eset)
 }
