@@ -114,7 +114,7 @@ In general it could be any matrix with names on columns and rows. Expression set
 
 \item{\code{max_dim}}{maximum dimention we want the projection operation. It is passed to `calc_svd_ops` function.}
 
-\item{\code{sinkhorn_tol}}{tolerance for SVD calculation. It is passed to `sinkhron_scale` function.}
+\item{\code{sinkhorn_tol}}{tolerance for Sinkhorn calculation. It is passed to `sinkhron_scale` function.}
 
 \item{\code{svd_method}}{which SVD algorithm to use.}
 

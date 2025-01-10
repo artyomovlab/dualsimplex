@@ -32,7 +32,7 @@
 #' @import dplyr
 #' @import ggplot2
 #' @import Matrix
-#' @import Biobase
+#' @importFrom Biobase exprs AnnotatedDataFrame ExpressionSet
 #' @import irlba
 #' @import knitr
 #'
@@ -163,7 +163,7 @@ DualSimplexSolver <- R6Class(
     #' @param sample_anno_lists named list of lists. Each sublist contains names of columns which should have TRUE value in annotation column.
     #' @param sinkhorn_iterations number of sinkhorn iterations to perform.
     #' @param max_dim maximum dimention we want the projection operation. It is passed to `calc_svd_ops` function.
-    #' @param sinkhorn_tol tolerance for SVD calculation. It is passed to `sinkhron_scale` function.
+    #' @param sinkhorn_tol tolerance for Sinkhorn calculation. It is passed to `sinkhron_scale` function.
     #' @param svd_method which SVD algorithm to use.
     #' @param ... additional arguments passed to function `run_svd`
     set_data = function(
@@ -200,7 +200,7 @@ DualSimplexSolver <- R6Class(
       private$reset_since("data")
       if (!inherits(data, "ExpressionSet")) data <- create_eset(data)
       self$st$data <- add_default_anno(data, gene_anno_lists, sample_anno_lists)
-      self$st$scaling <- sinkhorn_scale(exprs(self$st$data), max_iter = self$st$sinkhorn_iterations, epsilon=self$st$sinkhorn_tol)
+      self$st$scaling <- sinkhorn_scale(Biobase::exprs(self$st$data), max_iter = self$st$sinkhorn_iterations, epsilon=self$st$sinkhorn_tol)
       self$st$proj_ops <- calc_svd_ops(self$get_V_row(), max_dim = self$st$max_dim, self$st$svd_method, ...)
       if (first_set) private$add_filtering_log_step("initial")
     },
@@ -789,7 +789,7 @@ DualSimplexSolver <- R6Class(
       private$set_data_first()
 
       res <- sinkhorn_sweep_c(
-        V = exprs(self$get_data()),
+        V = Biobase::exprs(self$get_data()),
         D_vs_row = self$st$scaling$D_vs_row,
         D_vs_col = self$st$scaling$D_vs_col[, 1:(self$st$scaling$iterations-1)],
         iter = self$st$scaling$iterations
@@ -807,7 +807,7 @@ DualSimplexSolver <- R6Class(
       private$set_data_first()
 
       res <- sinkhorn_sweep_c(
-        V = exprs(self$get_data()),
+        V = Biobase::exprs(self$get_data()),
         D_vs_row = self$st$scaling$D_vs_row,
         D_vs_col = self$st$scaling$D_vs_col,
         iter = self$st$scaling$iterations

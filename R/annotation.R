@@ -39,7 +39,7 @@ add_default_sample_anno <- function(eset, name_lists = NULL) {
 
 # eset object initialization:
 create_eset <- function(data) {
-  ExpressionSet(
+  Biobase::ExpressionSet(
     assayData = data,
     featureData = create_gene_anno(data),
     phenoData = create_sample_anno(data)
@@ -49,13 +49,13 @@ create_eset <- function(data) {
 create_sample_anno <- function(data) {
   sample_anno <- data.frame(matrix(nrow=ncol(data), ncol=0))
   rownames(sample_anno) <- colnames(data)
-  return(AnnotatedDataFrame(sample_anno))
+  return(Biobase::AnnotatedDataFrame(sample_anno))
 }
 
 create_gene_anno <- function(data) {
   gene_anno <- data.frame(matrix(nrow=nrow(data), ncol=0))
   rownames(gene_anno) <- rownames(data)
-  return(AnnotatedDataFrame(gene_anno))
+  return(Biobase::AnnotatedDataFrame(gene_anno))
 }
 
 
@@ -65,12 +65,13 @@ create_gene_anno <- function(data) {
 #'@param eset Expression set
 #'@return  annotated Expression set
 add_gene_names_regex_anno <- function(eset) {
-  fData(eset)$RPLS <- grepl("^(RPL|RPS).+", rownames(exprs(eset)), ignore.case = T)
-  fData(eset)$LOC <- grepl("^LOC\\d+", rownames(exprs(eset)), ignore.case = T)
-  fData(eset)$ORF <- grepl("^C\\w+orf\\d+", rownames(exprs(eset)), ignore.case = T)
-  fData(eset)$SNOR <- grepl("^SNOR.+", rownames(exprs(eset)), ignore.case = T)
-  fData(eset)$MT <- grepl("^MT-.+", rownames(exprs(eset)), ignore.case = T)
-  fData(eset)$RRNA <- grepl(".+rRNA$", rownames(exprs(eset)), ignore.case = T)
+  gene_names <- rownames(Biobase::exprs(eset))
+  fData(eset)$RPLS <- grepl("^(RPL|RPS).+", gene_names, ignore.case = T)
+  fData(eset)$LOC <- grepl("^LOC\\d+", gene_names, ignore.case = T)
+  fData(eset)$ORF <- grepl("^C\\w+orf\\d+", gene_names, ignore.case = T)
+  fData(eset)$SNOR <- grepl("^SNOR.+", gene_names, ignore.case = T)
+  fData(eset)$MT <- grepl("^MT-.+", gene_names, ignore.case = T)
+  fData(eset)$RRNA <- grepl(".+rRNA$", gene_names, ignore.case = T)
   return(eset)
 }
 
@@ -89,14 +90,34 @@ add_name_lists_anno <- function(eset, name_lists, genes = T) {
 #'
 #'@param eset Expression set
 #'@param genes if TRUE apply to rows, otherwise columns
+#'@importFrom matrixStats rowMeans2 rowMedians rowSds rowMads colMeans2 colSds colMads colMedians
 #'@return  annotated Expression set
 add_data_stats_anno <- function(eset, genes = T) {
+  stat_fns <- list(
+    genes = list(
+      mean = matrixStats::rowMeans2,
+      median = matrixStats::rowMedians,
+      sd = matrixStats::rowSds,
+      mad = matrixStats::rowMads
+    ),
+
+    samples = list(
+      mean = matrixStats::colMeans2,
+      median = matrixStats::colMedians,
+      sd = matrixStats::colSds,
+      mad = matrixStats::colMads
+    )
+  )
+
   anno <- get_anno(eset, genes)
-  margin <- if (genes) 1 else 2
-  anno$log_mean <- log(apply(exprs(eset), margin, mean) + 1)
-  anno$log_median <- log(apply(exprs(eset), margin, median) + 1)
-  anno$log_sd <- log(apply(exprs(eset), margin, sd) + 1)
-  anno$log_mad <- log(apply(exprs(eset), margin, mad) + 1)
+  margin <- if (genes) "genes" else "samples"
+
+
+  anno$log_mean <- log(stat_fns[[margin]][["mean"]](Biobase::exprs(eset))  + 1)
+  anno$log_median <- log(stat_fns[[margin]][["median"]](Biobase::exprs(eset)) + 1)
+  anno$log_sd <- log(stat_fns[[margin]][["sd"]](Biobase::exprs(eset)) + 1)
+  anno$log_mad <- log(stat_fns[[margin]][["mad"]](Biobase::exprs(eset)) + 1)
+
   eset <- set_anno(anno, eset, genes)
   return(eset)
 }
