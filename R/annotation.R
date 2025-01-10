@@ -102,30 +102,32 @@ add_data_stats_anno <- function(eset, genes = T) {
 }
 
 
-# Distances annotation
+#' Distances annotation
+#' 
+#' Add distance information in the expression set object
+#' 
+#' @param eset expression set to be modified
+#' @param V_row Sinkhorn scaled matrix
+#' @param proj a projectino object
+#' 
+#' @return an expression set object with distance information
+#' 
+#' TODO (cjlee): make it more efficient. by Rcpp maybe?
+add_distances_anno <- function(eset, V_row, proj) {
+  approx <- with(proj$meta, t(S) %*% Sigma %*% R)
+  residual <- V_row - approx
 
-# TODO: this function shamelessly peeks into further stages than
-# annotation, but its required for filtering
-add_distances_anno <- function(eset, proj_full, n_cell_types) {
-  fData(eset)$plane_distance <- calc_partial_dist(
-    proj_full$X,
-    with_dims = -c(1, 2:n_cell_types)
-  )
+  # For features (using V_row)
+  feature_dists <- calc_dist_from_truncated_svd(approx, residual = residual, margin = 1)
+  fData(eset)$plane_distance <- feature_dists$plane_distance
+  fData(eset)$zero_distance <- feature_dists$zero_distance
 
-  pData(eset)$plane_distance <- calc_partial_dist(
-    proj_full$Omega,
-    with_dims = -c(1, 2:n_cell_types)
-  )
 
-  fData(eset)$zero_distance <- calc_partial_dist(
-    proj_full$X,
-    with_dims = 2:n_cell_types
-  )
-
-  pData(eset)$zero_distance <- calc_partial_dist(
-    proj_full$Omega,
-    with_dims = 2:n_cell_types
-  )
+  # For samples (using V_column)
+  d <- ncol(V_row) / nrow(V_row)
+  sample_dists <- calc_dist_from_truncated_svd(approx * d, residual = residual * d, margin = 2)
+  pData(eset)$plane_distance <- sample_dists$plane_distance
+  pData(eset)$zero_distance <- sample_dists$zero_distance
 
   return(eset)
 }

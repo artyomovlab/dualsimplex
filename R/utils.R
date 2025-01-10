@@ -108,3 +108,29 @@ rasterize_if_needed <- function(plot) {
   plot <- if(getOption("dualsimplex-rasterize", default=FALSE)) ggrastr::rasterise(plot, dpi=600) else plot
   return(plot)
 }
+
+#' Calculate zero_distance and plane_distance with truncated SVD
+#'
+#' @param approximated a low-rank approximation by SVD
+#' @param original the original data matrix
+#' @param residual the residual matrix
+#' @param margin direction for distance calculation. 1 is for rows, 2 is for columns.
+#' 
+#' @return R list containing zero_distance and plane_distance
+calc_dist_from_truncated_svd <- function(approximated, original = NULL, residual = NULL, margin) {
+  if (is.null(original) & is.null(residual)) stop("One of the 'original' or 'residual' matrix should be provided")
+  if (is.null(residual)) residual <- original - approximated
+
+  list(
+    zero_distance = apply(
+      approximated,
+      MARGIN = margin,
+      FUN = \(v) sqrt(sum((v - mean(v))^2))
+    ),
+    plane_distance =  apply(
+      residual,
+      MARGIN = margin,
+      FUN = \(v) sqrt(sum((v - mean(v))^2))
+    )
+  )
+}

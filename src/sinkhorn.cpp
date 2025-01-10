@@ -84,13 +84,15 @@ Rcpp::List efficient_sinkhorn(const arma::mat& V,
     double N = V.n_cols;
     double delta = M / N;
 
+    // Initial normalization matrix with 1s.
     arma::vec D_row_sum_current(M);
-    arma::mat D_row(M, max_iter + 1, arma::fill::zeros);
+    arma::mat D_row(M, max_iter + 1, arma::fill::ones);
 
     arma::rowvec D_col_sum_current(N);
-    arma::mat D_col(max_iter + 1, N, arma::fill::zeros);
+    arma::mat D_col(max_iter + 1, N, arma::fill::ones);
 
     arma::mat V_ = V;
+
     // for convergence check
     arma::rowvec converged_col_sum(N, arma::fill::value(1/delta));
     bool converged = false;
@@ -111,8 +113,8 @@ Rcpp::List efficient_sinkhorn(const arma::mat& V,
         // Check convergence
         if ((i+1) >= iter_start_check && ((i + 1 -iter_start_check) % check_every_iter) == 0) {
             converged = arma::approx_equal(D_col_sum_current, converged_col_sum, "absdiff", epsilon);
+            if (converged) break;  // Only check convergence as the state is updated 
         }
-        if (converged) break;
     }
 
     if (converged) {
@@ -120,17 +122,38 @@ Rcpp::List efficient_sinkhorn(const arma::mat& V,
     } else {
         Rcpp::warning("Sinkhorn transformation does not converge at iteration %i", i);
     }
-    arma::mat V_column = V_;
-    if (i > 0) {
-        // if some normalizations were done. return back halfway to get row normalized matrix
-        V_.each_row() /= D_col_sum_current;
+
+    // will return all 1 columns for D_vs_row and D_vs_col if no normalizations performed
+    return Rcpp::List::create(Rcpp::Named("D_vs_row") = (i > 0) ? D_row.cols(0, i - 1) :  D_row.cols(0,0),
+                              Rcpp::Named("D_vs_col") = (i > 0) ? D_col.rows(0, i - 1).t() : D_col.rows(0,0).t(),
+                              Rcpp::Named("iterations") = i);
+
+}
+
+
+arma::mat sinkhorn_sweep_c(const arma::mat& V,
+                           const arma::mat& D_vs_row,
+                           const arma::mat& D_vs_col,
+                           unsigned int iter) {
+    // This function simply does D_v_2n-2 * D_v_2n-4 * ... * D_v_0 * V * D_v_1 * ... * D_v_2n-1
+    // iteratively. Iterative scaling is to prevent potential floating-point underflow (remember
+    // that during scaling, the value getting smaller and smaller).
+
+    arma::mat V_ = V;
+    iter -= 1;  // adjust 1-base to 0-base
+
+    // scaling till iter-1 round of normalization
+    for (unsigned int i = 0; i < iter; i++) {
+        V_.each_col() %= D_vs_row.col(i);
+        V_.each_row() %= D_vs_col.col(i).t();
     }
 
+    // Last normalization, returning V_row or V_column is controled by the size of D_vs_row and D_vs_col
+    V_.each_col() %= D_vs_row.col(iter);
 
-    // will return all zero columns for D_vs_row and D_vs_col if no normalizations performed
-    return Rcpp::List::create(Rcpp::Named("V_row") = V_,
-                                Rcpp::Named("V_column") = V_column,
-                                Rcpp::Named("D_vs_row") = (i > 0) ? D_row.cols(0, i - 1) :  D_row.cols(0,0),
-                                Rcpp::Named("D_vs_col") = (i > 0) ? D_col.rows(0, i - 1).t() : D_col.rows(0,0).t(),
-                                Rcpp::Named("iterations") = i);
+    if (D_vs_col.n_cols > iter) {
+        V_.each_row() %= D_vs_col.col(iter).t();
+    }
+
+    return(V_);
 }

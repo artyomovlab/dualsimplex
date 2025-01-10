@@ -4,12 +4,14 @@
 \alias{svd_project_with_ops}
 \title{Project sinkhorn scaled matrix to SVD space}
 \usage{
-svd_project_with_ops(scaling, ops)
+svd_project_with_ops(scaling, ops, dims = NULL)
 }
 \arguments{
 \item{scaling}{dso$st$scaling object containing sinkhorn scaling result}
 
 \item{ops}{svd result for the matirx}
+
+\item{dims}{a vector of dimensions we want}
 }
 \value{
 proj object

@@ -55,7 +55,7 @@ Imports:
     combinat,
     scales,
     linseed,
-    FNN
+    FNN,
 Remotes: ctlab/linseed
 Suggests:
     Seurat,

@@ -14,11 +14,7 @@ sinkhorn_scale <- function(
   check_every_iter = 3L,
   epsilon = sqrt(.Machine$double.eps)
 ) {
-  scaling <- efficient_sinkhorn(V, max_iter, iter_start_check, check_every_iter, epsilon)
-  dimnames(scaling$V_row) <- dimnames(V)
-  dimnames(scaling$V_column) <- dimnames(V)
-  
-  return(scaling)
+  efficient_sinkhorn(V, max_iter, iter_start_check, check_every_iter, epsilon)
 }
 
 #' reverse Sinkhorn transform scaled matrix

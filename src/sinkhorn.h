@@ -46,3 +46,19 @@ Rcpp::List efficient_sinkhorn(
     const int check_every_iter = 3,
     const double epsilon = 1.490116e-08 // similar to R's all.equal
 );
+
+//' Helper function to perfrom iteration scaling
+//'
+//' @param V matrix to scale.
+//' @param D_vs_row matrix stroing row scaling at each iteration  
+//' @param D_vs_col matrix stroing column scaling at each iteration
+//' @param iter iteration at which Sinkhorn is converged
+//' @return scaled matrix
+//' @export
+// [[Rcpp::export]]
+arma::mat sinkhorn_sweep_c(
+    const arma::mat& V,
+    const arma::mat& D_vs_row,
+    const arma::mat& D_vs_col,
+    unsigned int iter
+);

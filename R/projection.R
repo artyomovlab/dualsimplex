@@ -6,46 +6,40 @@
 #' performs SVD on the matrix
 #'
 #' @param V_row input data matrix to perform SVD (in this method it should be Sinkhorn transformed matrix)
-#' @param dims how many dimensions of SVD we leave
+#' @param max_dim how many dimensions of SVD to calculate. Default is 50.
+#' @param tol tolerance for SVD calculation. See ?irlba::irlba for more information. Default is 1e-05.
+#' @param ... additional arguments passed to function `run_svd`
+#' 
 #' @return list with all calculated matrices
-calc_svd_ops <- function(V_row, dims = NULL) {
-  if (is.null(dims)) {
-    dims <- 1:min(dim(V_row))
-  }
-  svd_ <- svd(V_row)
-  S <- t(svd_$u[, dims])
-  R <- t(svd_$v[, dims])
-  Sigma <- diag(svd_$d[dims])
+calc_svd_ops <- function(V_row, max_dim = 50L, method = "svd", ...) {
+  dims <- 1:min(dim(V_row), max_dim)
+
+  svd_ <- run_svd(
+    V = V_row,
+    k = max_dim,
+    method = method,
+    ...
+  )
+  S <- t(svd_$u)
+  R <- t(svd_$v)
+  Sigma <- diag(svd_$d)
   
   # TODO: does this ever really happen?
   if (all(R[1, ] < 0)) {
     S[1, ] <- -S[1, ]
     R[1, ] <- -R[1, ]
   }
-  
-  # TODO: extract this common code
+
   rownames(R) <- paste0("dim_", 1:nrow(R))
   colnames(R) <- colnames(V_row)
   rownames(S) <- rownames(R)
   colnames(S) <- rownames(V_row)
   
-  A <- matrix(apply(R, 1, sum),
-              ncol = 1,
-              nrow = length(dims))
-  B <- matrix(apply(S, 1, sum),
-              ncol = 1,
-              nrow = length(dims))
-  
-  rownames(A) <- rownames(R)
-  rownames(B) <- rownames(S)
-  
-  
   return(list(
     S = S,
     R = R,
     Sigma = Sigma,
-    A = A,
-    B = B
+    max_dim = max_dim
   ))
 }
 
@@ -55,8 +49,40 @@ calc_svd_ops <- function(V_row, dims = NULL) {
 #'
 #' @param scaling dso$st$scaling object containing sinkhorn scaling result
 #' @param ops svd result for the matirx
+#' @param dims a vector of dimensions we want
 #' @return proj object
-svd_project_with_ops <- function(scaling, ops) {
+svd_project_with_ops <- function(scaling, ops, dims = NULL) {
+  # Setup
+  if (!is.null(dims)) {
+    if (max(dims) > ops[["max_dim"]]) {
+      stop("Not enough dimension in ops. Run `calc_svd_ops` with larger max_dim parameter")
+    }
+
+    ops[["S"]] <- ops[["S"]][dims, ]
+    ops[["R"]] <- ops[["R"]][dims, ]
+    ops[["Sigma"]] <- ops[["Sigma"]][dims, dims]
+  }
+
+  ops[["max_dim"]] <- NULL
+
+  # Add A and B matrix
+  ops[["A"]] <- matrix(
+    apply(ops[["R"]], 1, sum),
+    nrow = nrow(ops[["R"]]),
+    ncol = 1
+  )
+
+  ops[["B"]] <- matrix(
+    apply(ops[["S"]], 1, sum),
+    nrow = nrow(ops[["S"]]),
+    ncol = 1
+  )
+  
+  rownames(ops[["A"]]) <- rownames(ops[["R"]])
+  rownames(ops[["B"]]) <- rownames(ops[["S"]])
+
+  # Actual projection
+  # TODO: profile how many times R call the scaling object. We might be avle to cache it
   proj <- list(
     X = scaling$V_row %*% t(ops$R),
     Omega = t(ops$S %*% scaling$V_column),
@@ -76,12 +102,36 @@ svd_project_with_ops <- function(scaling, ops) {
 #'
 #' @param scaling dso$st$scaling object containing sinkhorn scaling result
 #' @param dims how many dimensions we want to get
+#' @param ops = SVD projection operations. Default is NULL and calculated on the fly for backward compatability.
 #' @return proj object
 #' @export
-svd_project <- function(scaling, dims) {
-  ops <- calc_svd_ops(scaling$V_row, dims)
-  proj <- svd_project_with_ops(scaling, ops)
+svd_project <- function(scaling, dims, ops = NULL) {
+  if (is.null(ops)) ops <- calc_svd_ops(scaling$V_row, max_dim = max(dims))
+  proj <- svd_project_with_ops(scaling, ops, dims = dims)
   return(proj)
+}
+
+#' Prepare projection object
+#'
+#' Entry point to produce dso$st$proj object, containing all information about projection as well as projected points
+#'
+#' @param V_row row normalized matrix by Sinkhorn tranformation.
+#' @param V_column column normalized matrix by Sinkhorn tranformation.
+#' @param dims a integer vector indicateing the dimensions we want to get.
+#' @param ops SVD projection operations. Default is NULL and calculated on the fly for backward compatability.
+#' @return proj object
+#' @export
+efficient_svd_project <- function(V_row, V_column, dims, ops = NULL) {
+  if (is.null(ops)) ops <- calc_svd_ops(V_row, max_dim = max(dims))
+  
+  svd_project_with_ops(
+    list(
+      "V_row" = V_row,
+      "V_column" = V_column
+    ),
+    ops,
+    dims = dims
+  )
 }
 
 #' Adds UMAP representation to dso$st$proj object
@@ -260,4 +310,72 @@ plot_svd_ds_matrix <- function(svd_ds, cumulative = T, variance = T) {
   to_plot$component <- as.integer(to_plot$component)
   
   return(ggplot(to_plot, aes(x = component, y = explained_variance, col = step)) + geom_line())
+}
+
+#' SVD wrapper function
+#' 
+#' @param V input matrix
+#' @param k how many dimensions to take
+#' @param method SVD method to be used. Currently 'svd' and 'irlba' are implemented.
+#' @param ... all other parameters passed to spesified SVD algorithm
+#' 
+#' @return a SVD object contains u, v, d as in base::svd
+run_svd <- function(V, k, method = "svd", ...) {
+  # Sanity check
+  implemented <- list(
+    "svd" = list(svd,
+      defaults = list(
+        x = V,
+        nu = k,
+        nv = k
+      )
+    ),
+
+    "irlba" = list(irlba::irlba,
+        defaults = list(
+          A = V,
+          nv = k,
+          work = k * 3  # same setting as in Signac::RunSVD
+        )
+    )
+  )
+  
+  # Sanity check
+  if (!(method %in% names(implemented))) {
+    stop("`method` should be one of the ", paste(names(implemented), collapse = ", "), ".")
+  }
+  
+  
+  # Construct arguments
+  user_args <- as.list(substitute(...()))
+  
+  # Sanity check. Following approach prevent argument duplication check in `...`.
+  # Let's check it manually.
+  if (any(duplicated(names(user_args)))) {
+    arg_names <- names(user_args)
+    duplicated_args <- unique(arg_names[duplicated(arg_names)])
+    
+    stop(
+      "formal argument(s) ",
+      paste(duplicated_args, collapse = ", "), 
+      " matched by multiple actual arguments."
+    )
+  }
+  
+  # Unique argumants are selected in following order:
+  #   1. user input in `...`,
+  #   2. custom 'defaults'
+  #   3. default arguments in the original function. This is handled by `do.call`
+  #
+  # TODO: There should be more transparent way to do this...
+  args <- c(
+    user_args,
+    implemented[[method]][["defaults"]]
+  )
+  args <- args[unique(names(args))]
+
+  # Special bug fix for svd. See https://github.com/boost-R/mboost/issues/109 for more information
+  if (method == "svd") args[["LINPACK"]] <- NULL  # Why don't CRAN fix this...?
+  
+  do.call(implemented[[method]][[1]], args)
 }

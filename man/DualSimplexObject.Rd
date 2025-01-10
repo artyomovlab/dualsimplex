@@ -77,6 +77,8 @@ dso$plot_projected("zero_distance",
 \item \href{#method-DualSimplexSolver-get_solution}{\code{DualSimplexSolver$get_solution()}}
 \item \href{#method-DualSimplexSolver-get_ct_names}{\code{DualSimplexSolver$get_ct_names()}}
 \item \href{#method-DualSimplexSolver-get_marker_genes}{\code{DualSimplexSolver$get_marker_genes()}}
+\item \href{#method-DualSimplexSolver-get_V_row}{\code{DualSimplexSolver$get_V_row()}}
+\item \href{#method-DualSimplexSolver-get_V_column}{\code{DualSimplexSolver$get_V_column()}}
 \item \href{#method-DualSimplexSolver-clone}{\code{DualSimplexSolver$clone()}}
 }
 }
@@ -91,7 +93,11 @@ In general it could be any matrix with names on columns and rows. Expression set
   data,
   gene_anno_lists = NULL,
   sample_anno_lists = NULL,
-  sinkhorn_iterations = 20
+  sinkhorn_iterations = 20,
+  max_dim = 50L,
+  sinkhorn_tol = 1e-12,
+  svd_method = "svd",
+  ...
 )}\if{html}{\out{</div>}}
 }
 
@@ -104,7 +110,15 @@ In general it could be any matrix with names on columns and rows. Expression set
 
 \item{\code{sample_anno_lists}}{named list of lists. Each sublist contains names of columns which should have TRUE value in annotation column.}
 
-\item{\code{sinkhorn_iterations}}{number of sinkhorn iterations to perform}
+\item{\code{sinkhorn_iterations}}{number of sinkhorn iterations to perform.}
+
+\item{\code{max_dim}}{maximum dimention we want the projection operation. It is passed to `calc_svd_ops` function.}
+
+\item{\code{sinkhorn_tol}}{tolerance for SVD calculation. It is passed to `sinkhron_scale` function.}
+
+\item{\code{svd_method}}{which SVD algorithm to use.}
+
+\item{\code{...}}{additional arguments passed to function `run_svd`}
 }
 \if{html}{\out{</div>}}
 }
@@ -685,6 +699,26 @@ get names for main components specified
 get marker genes for current solution
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$get_marker_genes()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-DualSimplexSolver-get_V_row"></a>}}
+\if{latex}{\out{\hypertarget{method-DualSimplexSolver-get_V_row}{}}}
+\subsection{Method \code{get_V_row()}}{
+Calculate V_row on the fly.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$get_V_row()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-DualSimplexSolver-get_V_column"></a>}}
+\if{latex}{\out{\hypertarget{method-DualSimplexSolver-get_V_column}{}}}
+\subsection{Method \code{get_V_column()}}{
+Calculate V_column on the fly.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$get_V_column()}\if{html}{\out{</div>}}
 }
 
 }
