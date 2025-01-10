@@ -90,9 +90,7 @@ add_name_lists_anno <- function(eset, name_lists, genes = T) {
 #'
 #'@param eset Expression set
 #'@param genes if TRUE apply to rows, otherwise columns
-#' 
 #'@importFrom matrixStats rowMeans2 rowMedians rowSds rowMads colMeans2 colSds colMads colMedians
-#' 
 #'@return  annotated Expression set
 add_data_stats_anno <- function(eset, genes = T) {
   stat_fns <- list(
