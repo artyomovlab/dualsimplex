@@ -8,15 +8,17 @@
 #' @param V_row input data matrix to perform SVD (in this method it should be Sinkhorn transformed matrix)
 #' @param max_dim how many dimensions of SVD to calculate. Default is 50.
 #' @param tol tolerance for SVD calculation. See ?irlba::irlba for more information. Default is 1e-05.
+#' @param ... additional arguments passed to function `run_svd`
+#' 
 #' @return list with all calculated matrices
-calc_svd_ops <- function(V_row, max_dim = 50L, tol = 1e-05) {
+calc_svd_ops <- function(V_row, max_dim = 50L, method = "svd", ...) {
   dims <- 1:min(dim(V_row), max_dim)
 
-  svd_ <- irlba::irlba(
-    A = V_row,
-    nv = max_dim,
-    work = max_dim * 3,  # same setting as in Seurat
-    tol = tol
+  svd_ <- run_svd(
+    V = V_row,
+    k = max_dim,
+    method = method,
+    ...
   )
   S <- t(svd_$u)
   R <- t(svd_$v)
@@ -308,4 +310,72 @@ plot_svd_ds_matrix <- function(svd_ds, cumulative = T, variance = T) {
   to_plot$component <- as.integer(to_plot$component)
   
   return(ggplot(to_plot, aes(x = component, y = explained_variance, col = step)) + geom_line())
+}
+
+#' SVD wrapper function
+#' 
+#' @param V input matrix
+#' @param k how many dimensions to take
+#' @param method SVD method to be used. Currently 'svd' and 'irlba' are implemented.
+#' @param ... all other parameters passed to spesified SVD algorithm
+#' 
+#' @return a SVD object contains u, v, d as in base::svd
+run_svd <- function(V, k, method = "svd", ...) {
+  # Sanity check
+  implemented <- list(
+    "svd" = list(svd,
+      defaults = list(
+        x = V,
+        nu = k,
+        nv = k
+      )
+    ),
+
+    "irlba" = list(irlba::irlba,
+        defaults = list(
+          A = V,
+          nv = k,
+          work = k * 3  # same setting as in Signac::RunSVD
+        )
+    )
+  )
+  
+  # Sanity check
+  if (!(method %in% names(implemented))) {
+    stop("`method` should be one of the ", paste(names(implemented), collapse = ", "), ".")
+  }
+  
+  
+  # Construct arguments
+  user_args <- as.list(substitute(...()))
+  
+  # Sanity check. Following approach prevent argument duplication check in `...`.
+  # Let's check it manually.
+  if (any(duplicated(names(user_args)))) {
+    arg_names <- names(user_args)
+    duplicated_args <- unique(arg_names[duplicated(arg_names)])
+    
+    stop(
+      "formal argument(s) ",
+      paste(duplicated_args, collapse = ", "), 
+      " matched by multiple actual arguments."
+    )
+  }
+  
+  # Unique argumants are selected in following order:
+  #   1. user input in `...`,
+  #   2. custom 'defaults'
+  #   3. default arguments in the original function. This is handled by `do.call`
+  #
+  # TODO: There should be more transparent way to do this...
+  args <- c(
+    user_args,
+    implemented[[method]][["defaults"]]
+  )
+  args <- args[unique(names(args))]
+
+  # Special bug fix for svd. See https://github.com/boost-R/mboost/issues/109 for more information
+  if (method == "svd") args[["LINPACK"]] <- NULL  # Why don't CRAN fix this...?
+  
+  do.call(implemented[[method]][[1]], args)
 }
