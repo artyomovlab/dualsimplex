@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{calc_dist_from_truncated_svd}
 \alias{calc_dist_from_truncated_svd}
-\title{Reade genes form a list}
+\title{Calculate zero_distance and plane_distance with truncated SVD}
 \usage{
 calc_dist_from_truncated_svd(
   approximated,
@@ -24,5 +24,5 @@ calc_dist_from_truncated_svd(
 R list containing zero_distance and plane_distance
 }
 \description{
-Reade genes form a list
+Calculate zero_distance and plane_distance with truncated SVD
 }

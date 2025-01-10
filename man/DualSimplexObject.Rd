@@ -95,8 +95,9 @@ In general it could be any matrix with names on columns and rows. Expression set
   sample_anno_lists = NULL,
   sinkhorn_iterations = 20,
   max_dim = 50L,
-  svd_tol = 1e-05,
-  sinkhorn_tol = 1e-12
+  sinkhorn_tol = 1e-12,
+  svd_method = "svd",
+  ...
 )}\if{html}{\out{</div>}}
 }
 
@@ -113,9 +114,11 @@ In general it could be any matrix with names on columns and rows. Expression set
 
 \item{\code{max_dim}}{maximum dimention we want the projection operation. It is passed to `calc_svd_ops` function.}
 
-\item{\code{svd_tol}}{tolerance for SVD calculation. It is passed to `calc_svd_ops` function.}
-
 \item{\code{sinkhorn_tol}}{tolerance for SVD calculation. It is passed to `sinkhron_scale` function.}
+
+\item{\code{svd_method}}{which SVD algorithm to use.}
+
+\item{\code{...}}{additional arguments passed to function `run_svd`}
 }
 \if{html}{\out{</div>}}
 }
