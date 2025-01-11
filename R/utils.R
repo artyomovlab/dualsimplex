@@ -121,16 +121,36 @@ calc_dist_from_truncated_svd <- function(approximated, original = NULL, residual
   if (is.null(original) & is.null(residual)) stop("One of the 'original' or 'residual' matrix should be provided")
   if (is.null(residual)) residual <- original - approximated
 
-  list(
-    zero_distance = apply(
-      approximated,
-      MARGIN = margin,
-      FUN = \(v) sqrt(sum((v - mean(v))^2))
-    ),
-    plane_distance =  apply(
-      residual,
-      MARGIN = margin,
-      FUN = \(v) sqrt(sum((v - mean(v))^2))
-    )
+  dist_fns  <- list(
+    # margin = 1: by row
+    row_dist_from_mean,
+
+    # margin = 2: by column
+    col_dist_from_mean
   )
+
+  list(
+    zero_distance = dist_fns[[margin]](approximated),
+    plane_distance =   dist_fns[[margin]](residual)
+  )
+}
+
+#' Calculate Euclidean distance around the mean for each row
+#'
+#'@param mtx a dense matrix
+#'@importFrom matrixStats rowSds
+#'@return  a numeric vector
+row_dist_from_mean <- function(mtx) {
+  # Notice that standard deviation estimates is devided by sqrt(N-1)
+  matrixStats::rowSds(mtx) * sqrt(ncol(mtx) - 1)
+}
+
+#' Calculate Euclidean distance around the mean for each column
+#'
+#'@param mtx a dense matrix
+#'@importFrom matrixStats colSds
+#'@return  a numeric vector
+col_dist_from_mean <- function(mtx) {
+  # Notice that standard deviation estimates is devided by sqrt(N-1)
+  matrixStats::colSds(mtx) * sqrt(nrow(mtx) - 1)
 }
