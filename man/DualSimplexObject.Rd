@@ -93,7 +93,7 @@ In general it could be any matrix with names on columns and rows. Expression set
   data,
   gene_anno_lists = NULL,
   sample_anno_lists = NULL,
-  sinkhorn_iterations = 20,
+  max_sinkhorn_iterations = 20,
   max_dim = 50L,
   sinkhorn_tol = 1e-12,
   svd_method = "svd",
@@ -110,7 +110,7 @@ In general it could be any matrix with names on columns and rows. Expression set
 
 \item{\code{sample_anno_lists}}{named list of lists. Each sublist contains names of columns which should have TRUE value in annotation column.}
 
-\item{\code{sinkhorn_iterations}}{number of sinkhorn iterations to perform.}
+\item{\code{max_sinkhorn_iterations}}{number of sinkhorn iterations to perform.}
 
 \item{\code{max_dim}}{maximum dimention we want the projection operation. It is passed to `calc_svd_ops` function.}
 
