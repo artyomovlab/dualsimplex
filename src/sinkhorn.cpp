@@ -142,17 +142,17 @@ arma::mat sinkhorn_sweep_c(const arma::mat& V,
 
     arma::mat V_ = V;
     iter -= 1;  // adjust 1-base to 0-base
-
+    unsigned int i;
     // scaling till iter-1 round of normalization
-    for (unsigned int i = 0; i < iter; i++) {
+    for (i = 0; i < iter; i++) {
         V_.each_col() %= D_vs_row.col(i);
         V_.each_row() %= D_vs_col.col(i).t();
     }
 
     // Last normalization, returning V_row or V_column is controled by the size of D_vs_row and D_vs_col
-    V_.each_col() %= D_vs_row.col(iter);
+    V_.each_col() %= D_vs_row.col(i);
     if (return_col_norm == 1) {
-        V_.each_row() %= D_vs_col.col(iter).t();
+        V_.each_row() %= D_vs_col.col(i).t();
     }
 
     return(V_);
