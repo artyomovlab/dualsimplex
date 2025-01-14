@@ -53,6 +53,7 @@ Rcpp::List efficient_sinkhorn(
 //' @param D_vs_row matrix stroing row scaling at each iteration  
 //' @param D_vs_col matrix stroing column scaling at each iteration
 //' @param iter iteration at which Sinkhorn is converged
+//' @param return_col_norm whether to perform very last normalization
 //' @return scaled matrix
 //' @export
 // [[Rcpp::export]]
@@ -60,5 +61,6 @@ arma::mat sinkhorn_sweep_c(
     const arma::mat& V,
     const arma::mat& D_vs_row,
     const arma::mat& D_vs_col,
-    unsigned int iter
+    unsigned int iter,
+    unsigned int return_col_norm
 );

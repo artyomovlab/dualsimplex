@@ -4,7 +4,7 @@
 \alias{sinkhorn_sweep_c}
 \title{Helper function to perfrom iteration scaling}
 \usage{
-sinkhorn_sweep_c(V, D_vs_row, D_vs_col, iter)
+sinkhorn_sweep_c(V, D_vs_row, D_vs_col, iter, return_col_norm)
 }
 \arguments{
 \item{V}{matrix to scale.}
@@ -14,6 +14,8 @@ sinkhorn_sweep_c(V, D_vs_row, D_vs_col, iter)
 \item{D_vs_col}{matrix stroing column scaling at each iteration}
 
 \item{iter}{iteration at which Sinkhorn is converged}
+
+\item{return_col_norm}{whether to perform very last normalization}
 }
 \value{
 scaled matrix

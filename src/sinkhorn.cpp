@@ -134,25 +134,25 @@ Rcpp::List efficient_sinkhorn(const arma::mat& V,
 arma::mat sinkhorn_sweep_c(const arma::mat& V,
                            const arma::mat& D_vs_row,
                            const arma::mat& D_vs_col,
-                           unsigned int iter) {
+                           unsigned int iter,
+                           unsigned int return_col_norm) {
     // This function simply does D_v_2n-2 * D_v_2n-4 * ... * D_v_0 * V * D_v_1 * ... * D_v_2n-1
     // iteratively. Iterative scaling is to prevent potential floating-point underflow (remember
     // that during scaling, the value getting smaller and smaller).
 
     arma::mat V_ = V;
-    iter -= 1;  // adjust 1-base to 0-base
-
-    // scaling till iter-1 round of normalization
-    for (unsigned int i = 0; i < iter; i++) {
-        V_.each_col() %= D_vs_row.col(i);
-        V_.each_row() %= D_vs_col.col(i).t();
-    }
-
-    // Last normalization, returning V_row or V_column is controled by the size of D_vs_row and D_vs_col
-    V_.each_col() %= D_vs_row.col(iter);
-
-    if (D_vs_col.n_cols > iter) {
-        V_.each_row() %= D_vs_col.col(iter).t();
+    if (iter > 0) {
+        iter -= 1;  // adjust 1-base to 0-base
+        // scaling till iter-1 round of normalization
+        for (unsigned int i = 0; i < iter; i++) {
+            V_.each_col() %= D_vs_row.col(i);
+            V_.each_row() %= D_vs_col.col(i).t();
+        }
+        // Last normalization, returning V_row or V_column is controled by the size of D_vs_row and D_vs_col
+        V_.each_col() %= D_vs_row.col(iter);
+        if (return_col_norm == 1) {
+            V_.each_row() %= D_vs_col.col(iter).t();
+        }
     }
 
     return(V_);

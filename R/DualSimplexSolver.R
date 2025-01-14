@@ -127,21 +127,32 @@ DualSimplexSolver <- R6Class(
       }
       return(list(color = color, name = name))
     },
-
     check_max_dim = function(dims) {
       private$set_data_first()
       if (max(dims) > self$st$proj_ops$max_dim) stop("Not enough dimension in ops. Run `calc_svd_ops` with larger max_dim parameter")
+    },
+
+    update_variables = function(data,gene_anno_lists = NULL, sample_anno_lists = NULL, ...) {
+      if (any(rowSums(as.matrix(data)) == 0))
+        stop("The data matrix should not contain all zero rows. Use remove_zero_rows() method")
+      if (any(colSums(as.matrix(data)) == 0))
+        stop("The data matrix should not contain all zero columns. Use remove_zero_cols() method")
+      if (!inherits(data, "ExpressionSet")) data <- create_eset(data)
+
+      self$st$data <- add_default_anno(data, gene_anno_lists, sample_anno_lists)
+      self$st$scaling <- sinkhorn_scale(Biobase::exprs(self$st$data), max_iter = self$st$max_sinkhorn_iterations, epsilon=self$st$sinkhorn_tol)
+      self$st$proj_ops <- calc_svd_ops(self$get_V_row(), max_dim = self$st$max_dim, self$st$svd_method, ...)
     }
   ),
   public = list(
     #' @field st contain the "state" of the current object. (data, solution, projections etc..).
     st = list(
+      data = NULL,                # Set by user
       filtering_log = NULL,       # Auto calculated
-      sinkhorn_iterations = NULL, # Can be set by user. Default is 20
       max_dim = NULL,             # Can be set by user. Default is 50
+      max_sinkhorn_iterations = NULL, # Can be set by user. Default is 20
       sinkhorn_tol = NULL,        # Can be set by user. Default is 1e-15
       svd_method = NULL,          # Can be set by user. Default is 'svd'
-      data = NULL,                # Set by user
       scaling = NULL,             # Auto calculated
       proj_ops = NULL,            # Auto calculated
       n_cell_types = NULL,        # Set by user
@@ -151,7 +162,6 @@ DualSimplexSolver <- R6Class(
       solution = NULL,            # Triggered by user
       solution_orig = NULL,       # Auto calculated
       marker_genes = NULL        # Auto calculated
-
     ),
 
     #' @description
@@ -161,7 +171,7 @@ DualSimplexSolver <- R6Class(
     #' @param data input data matrix
     #' @param gene_anno_lists named list of lists. Each sublist contains names of rows which should have TRUE value in annotaiton column.
     #' @param sample_anno_lists named list of lists. Each sublist contains names of columns which should have TRUE value in annotation column.
-    #' @param sinkhorn_iterations number of sinkhorn iterations to perform.
+    #' @param max_sinkhorn_iterations number of sinkhorn iterations to perform.
     #' @param max_dim maximum dimention we want the projection operation. It is passed to `calc_svd_ops` function.
     #' @param sinkhorn_tol tolerance for Sinkhorn calculation. It is passed to `sinkhron_scale` function.
     #' @param svd_method which SVD algorithm to use.
@@ -170,7 +180,7 @@ DualSimplexSolver <- R6Class(
       data,
       gene_anno_lists = NULL,
       sample_anno_lists = NULL,
-      sinkhorn_iterations=20,
+      max_sinkhorn_iterations=20,
       max_dim = 50L,
       sinkhorn_tol = 1e-12,
       svd_method = "svd",
@@ -181,28 +191,19 @@ DualSimplexSolver <- R6Class(
         stop("Genes and samples should be named")
       if (any(sapply(dimnames(data), anyDuplicated)))
         stop("Gene and sample names should not contain duplicates")
-      if (any(rowSums(as.matrix(data)) == 0))
-        stop("The data matrix should not contain all zero rows. Use remove_zero_rows() method")
-      if (any(colSums(as.matrix(data)) == 0))
-        stop("The data matrix should not contain all zero columns. Use remove_zero_cols() method")
 
-      if (is.null(self$st$sinkhorn_iterations)) self$st$sinkhorn_iterations <- sinkhorn_iterations
-      if (is.null(self$st$max_dim)) self$st$max_dim <- max_dim
+      private$reset_since("data")
+      self$st$max_sinkhorn_iterations <- max_sinkhorn_iterations
+      self$st$max_dim <- max_dim
       if (self$st$max_dim > min(dim(data))) {
         self$st$max_dim <- min(dim(data))
         warning("Provided `max_dim` is bigger than smallest dimention of `data`. Setting `max_dim` to ", self$st$max_dim, ".")
       }
-      if (is.null(self$st$sinkhorn_tol)) self$st$sinkhorn_tol <- sinkhorn_tol
-      if (is.null(self$st$svd_method)) self$st$svd_method <- svd_method
+      self$st$sinkhorn_tol <- sinkhorn_tol
+      self$st$svd_method <- svd_method
 
-      #  
-      first_set <-  is.null(self$st$data)
-      private$reset_since("data")
-      if (!inherits(data, "ExpressionSet")) data <- create_eset(data)
-      self$st$data <- add_default_anno(data, gene_anno_lists, sample_anno_lists)
-      self$st$scaling <- sinkhorn_scale(Biobase::exprs(self$st$data), max_iter = self$st$sinkhorn_iterations, epsilon=self$st$sinkhorn_tol)
-      self$st$proj_ops <- calc_svd_ops(self$get_V_row(), max_dim = self$st$max_dim, self$st$svd_method, ...)
-      if (first_set) private$add_filtering_log_step("initial")
+      private$update_variables(data, gene_anno_lists, sample_anno_lists, ...)
+      private$add_filtering_log_step("initial")
     },
 
     #' @description
@@ -239,7 +240,9 @@ DualSimplexSolver <- R6Class(
       new_data <- threshold_filter(new_data, "log_mad", log_mad_gt, genes = genes, keep_lower = F)
       new_data <- bool_filter(new_data, remove_true_cols, genes = genes, remove_true = T)
       new_data <- bool_filter(new_data, keep_true_cols, genes = genes, remove_true = F)
-      self$set_data(new_data)
+      new_data <- remove_zero_cols(new_data)
+      new_data <- remove_zero_rows(new_data)
+      private$update_variables(new_data)
       private$add_filtering_log_step(
         "basic_filters",
         paste(
@@ -388,7 +391,7 @@ DualSimplexSolver <- R6Class(
       new_data <- remove_zero_cols(new_data)
       new_data <- remove_zero_rows(new_data)
 
-      self$set_data(new_data)
+      private$update_variables(new_data)
       private$add_filtering_log_step(
         "distance_filter",
         paste(
@@ -791,8 +794,9 @@ DualSimplexSolver <- R6Class(
       res <- sinkhorn_sweep_c(
         V = Biobase::exprs(self$get_data()),
         D_vs_row = self$st$scaling$D_vs_row,
-        D_vs_col = self$st$scaling$D_vs_col[, 1:(self$st$scaling$iterations-1)],
-        iter = self$st$scaling$iterations
+        D_vs_col = self$st$scaling$D_vs_col,
+        iter = self$st$scaling$iterations,
+        return_col_norm = 0
       )
 
       rownames(res) <- rownames(self$get_data())
@@ -810,7 +814,8 @@ DualSimplexSolver <- R6Class(
         V = Biobase::exprs(self$get_data()),
         D_vs_row = self$st$scaling$D_vs_row,
         D_vs_col = self$st$scaling$D_vs_col,
-        iter = self$st$scaling$iterations
+        iter = self$st$scaling$iterations,
+        return_col_norm = 1
       )
 
       rownames(res) <- rownames(self$get_data())

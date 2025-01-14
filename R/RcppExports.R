@@ -242,9 +242,10 @@ efficient_sinkhorn <- function(V, max_iter = 20L, iter_start_check = 5L, check_e
 #' @param D_vs_row matrix stroing row scaling at each iteration  
 #' @param D_vs_col matrix stroing column scaling at each iteration
 #' @param iter iteration at which Sinkhorn is converged
+#' @param return_col_norm whether to perform very last normalization
 #' @return scaled matrix
 #' @export
-sinkhorn_sweep_c <- function(V, D_vs_row, D_vs_col, iter) {
-    .Call('_DualSimplex_sinkhorn_sweep_c', PACKAGE = 'DualSimplex', V, D_vs_row, D_vs_col, iter)
+sinkhorn_sweep_c <- function(V, D_vs_row, D_vs_col, iter, return_col_norm) {
+    .Call('_DualSimplex_sinkhorn_sweep_c', PACKAGE = 'DualSimplex', V, D_vs_row, D_vs_col, iter, return_col_norm)
 }
 
