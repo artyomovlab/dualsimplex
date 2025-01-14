@@ -149,8 +149,8 @@ DualSimplexSolver <- R6Class(
     st = list(
       data = NULL,                # Set by user
       filtering_log = NULL,       # Auto calculated
-      sinkhorn_iterations = NULL, # Can be set by user. Default is 20
       max_dim = NULL,             # Can be set by user. Default is 50
+      max_sinkhorn_iterations = NULL, # Can be set by user. Default is 20
       sinkhorn_tol = NULL,        # Can be set by user. Default is 1e-15
       svd_method = NULL,          # Can be set by user. Default is 'svd'
       scaling = NULL,             # Auto calculated
@@ -794,8 +794,9 @@ DualSimplexSolver <- R6Class(
       res <- sinkhorn_sweep_c(
         V = Biobase::exprs(self$get_data()),
         D_vs_row = self$st$scaling$D_vs_row,
-        D_vs_col = self$st$scaling$D_vs_col[, 1:(self$st$scaling$iterations-1)],
-        iter = self$st$scaling$iterations
+        D_vs_col = self$st$scaling$D_vs_col,
+        iter = self$st$scaling$iterations,
+        return_col_norm = 0
       )
 
       rownames(res) <- rownames(self$get_data())
@@ -813,7 +814,8 @@ DualSimplexSolver <- R6Class(
         V = Biobase::exprs(self$get_data()),
         D_vs_row = self$st$scaling$D_vs_row,
         D_vs_col = self$st$scaling$D_vs_col,
-        iter = self$st$scaling$iterations
+        iter = self$st$scaling$iterations,
+        return_col_norm = 1
       )
 
       rownames(res) <- rownames(self$get_data())
