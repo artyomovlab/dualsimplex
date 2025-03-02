@@ -405,13 +405,14 @@ DualSimplexSolver <- R6Class(
     #' @description
     #' Automatically Filter points based on distance thresholds. (keep lower).
     #'
+    #' @param method which method of filtering to choose. options are 'n_sigma' and 'quantile'
     #' @param cutoff_samples if we should cut samples.
     #' @param cutoff_genes if we should cut genes.
+    #' @param
     remove_outliers = function(
-      method = "n_sigma", # or plane
+      method = "n_sigma", # or quantile
       cutoff_samples = T,
-      cutoff_genes = T,
-      filter_by_plane = T
+      cutoff_genes = T
     ) {
       private$project_first()
       if (is.null(plane_d_lt) && is.null(zero_d_lt)) {
