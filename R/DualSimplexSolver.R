@@ -403,6 +403,67 @@ DualSimplexSolver <- R6Class(
     },
 
     #' @description
+    #' Automatically Filter points based on distance thresholds. (keep lower).
+    #'
+    #' @param cutoff_samples if we should cut samples.
+    #' @param cutoff_genes if we should cut genes.
+    remove_outliers = function(
+      method = "n_sigma", # or plane
+      cutoff_samples = T,
+      cutoff_genes = T,
+      filter_by_plane = T
+    ) {
+      private$project_first()
+      if (is.null(plane_d_lt) && is.null(zero_d_lt)) {
+        stop("Choose at least one distance to filter by")
+      }
+      new_data <- self$get_data()
+      if (cutoff_genes) {
+          if (method == "n_sigma") {
+            new_data <- n_sigma_filter(new_data, "plane_distance", n_sigma = 3, genes = T)
+          } else if (method == "quantile") {
+            new_data <- quantile_filter(new_data, "plane_distance", quant=0.98, genes = T, keep_lower = T)
+
+          }
+      }
+      if (cutoff_samples) {
+        if (method == "n_sigma") {
+            new_data <- n_sigma_filter(new_data, "plane_distance", n_sigma = 3, genes = F)
+        } else if (method == "quantile") {
+            new_data <- quantile_filter(new_data, "plane_distance", quant=0.98, genes = F, keep_lower = T)
+        }
+      }
+      if (cutoff_genes) {
+          if (method == "n_sigma") {
+            new_data <- n_sigma_filter(new_data, "zero_distance", n_sigma = 3, genes = T)
+          } else if (method == "quantile") {
+            new_data <- quantile_filter(new_data, "zero_distance", quant=0.98, genes = T, keep_lower = T)
+
+          }
+      }
+      if (cutoff_samples) {
+        if (method == "n_sigma") {
+            new_data <- n_sigma_filter(new_data, "zero_distance", n_sigma = 3, genes = F)
+        } else if (method == "quantile") {
+            new_data <- quantile_filter(new_data, "zero_distance", quant=0.98, genes = F, keep_lower = T)
+        }
+      }
+      new_data <- remove_zero_cols(new_data)
+      new_data <- remove_zero_rows(new_data)
+      private$update_variables(new_data)
+      private$add_filtering_log_step(
+        paste0(method ,"_filter"),
+        paste(
+          "remove_outliers",
+          paste0("n_sigma = ", 3),
+          paste0("quant = ", 0.98),
+          sep = ", "
+        )
+      )
+    },
+
+
+    #' @description
     #' Do UMAP transformation for current projected data in both spaces.
     #'
     #' @param with_model specific umap model selection for Mac users. For Mac there is a known issue with this library.
