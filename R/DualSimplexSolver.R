@@ -408,7 +408,6 @@ DualSimplexSolver <- R6Class(
     #' @param method which method of filtering to choose. options are 'n_sigma' and 'quantile'
     #' @param cutoff_samples if we should cut samples.
     #' @param cutoff_genes if we should cut genes.
-    #' @param
     remove_outliers = function(
       method = "n_sigma", # or quantile
       cutoff_samples = T,
