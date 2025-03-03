@@ -414,15 +414,12 @@ DualSimplexSolver <- R6Class(
       cutoff_genes = T
     ) {
       private$project_first()
-      if (is.null(plane_d_lt) && is.null(zero_d_lt)) {
-        stop("Choose at least one distance to filter by")
-      }
       new_data <- self$get_data()
       if (cutoff_genes) {
           if (method == "n_sigma") {
             new_data <- n_sigma_filter(new_data, "plane_distance", n_sigma = 3, genes = T)
           } else if (method == "quantile") {
-            new_data <- quantile_filter(new_data, "plane_distance", quant=0.98, genes = T, keep_lower = T)
+            new_data <- quantile_filter(new_data, "plane_distance", quant = 0.98, genes = T, keep_lower = T)
 
           }
       }
@@ -430,14 +427,14 @@ DualSimplexSolver <- R6Class(
         if (method == "n_sigma") {
             new_data <- n_sigma_filter(new_data, "plane_distance", n_sigma = 3, genes = F)
         } else if (method == "quantile") {
-            new_data <- quantile_filter(new_data, "plane_distance", quant=0.98, genes = F, keep_lower = T)
+            new_data <- quantile_filter(new_data, "plane_distance", quant = 0.98, genes = F, keep_lower = T)
         }
       }
       if (cutoff_genes) {
           if (method == "n_sigma") {
             new_data <- n_sigma_filter(new_data, "zero_distance", n_sigma = 3, genes = T)
           } else if (method == "quantile") {
-            new_data <- quantile_filter(new_data, "zero_distance", quant=0.98, genes = T, keep_lower = T)
+            new_data <- quantile_filter(new_data, "zero_distance", quant = 0.98, genes = T, keep_lower = T)
 
           }
       }
