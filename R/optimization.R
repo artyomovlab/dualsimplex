@@ -13,6 +13,8 @@
 #' @param limit_X EXPERIMENTAL: if you want to restrict X from changing to much. should be 0 since not tested.
 #' @param limit_Omega EXPERIMENTAL: if you want to restrict Omega from changing to much. should be 0 since not tested.
 #' @param cosine_thresh  EXPERIMENTAL: if you want to restrict derivative from changing to much. should be 0 since not tested.
+#' @param x_init initial value for X during the optimization.
+#' @param omega_init initial value for Omega during the optimization.
 #' @param method method of optimization to use can be  basic/positivity.
 #' @return ready to use list with algorithm configuration
 #' @export
@@ -26,7 +28,10 @@ optim_config <- function(
   limit_X = 0,
   limit_Omega = 0,
   cosine_thresh = 0,
-  method = "basic" # basic/positivity
+  x_center = NULL,
+  omega_center = NULL,
+  theta_threshold = 0,
+  method = "basic" # basic/positivity/theta
 ) {
   return(list(
     coef_der_X = coef_der_X,
@@ -38,6 +43,8 @@ optim_config <- function(
     limit_X = limit_X,
     limit_Omega = limit_Omega,
     cosine_thresh = cosine_thresh,
+    x_center = NULL,
+    omega_center = NULL,
     method = method
   ))
 }
@@ -168,6 +175,11 @@ optimize_solution <- function(
     do.call(alternative_derivative_stage2, optimization_params)
   } else if (config$method == "basic") {
     do.call(derivative_stage2, optimization_params)
+  } else if (config$method == "theta") {
+    optimization_params$X_center <- config$x_center
+    optimization_params$Omega_center <- config$omega_center
+    optimization_params$theta_threshold <- config$theta_threshold
+    do.call(theta_derivative_stage2, optimization_params)
   } else {
     print("Unknown optimization method. Will do the basic one")
     do.call(derivative_stage2, optimization_params)
@@ -183,7 +195,7 @@ optimize_solution <- function(
 
   solution_proj$optim_history$errors_statistics <- rbind(
     solution_proj$optim_history$errors_statistics,
-      optimization_result$errors_statistics
+    optimization_result$errors_statistics
   )
 
   solution_proj$optim_history$points_statistics_X <- rbind(
@@ -322,5 +334,3 @@ plot_negative_basis_change <- function(proj, solution_proj) {
     ggtitle("Number of negative basis elements")
   return(plt)
 }
-
-

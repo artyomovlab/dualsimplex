@@ -14,6 +14,9 @@ optim_config(
   limit_X = 0,
   limit_Omega = 0,
   cosine_thresh = 0,
+  x_center = NULL,
+  omega_center = NULL,
+  theta_threshold = 0,
   method = "basic"
 )
 }
@@ -37,6 +40,10 @@ optim_config(
 \item{cosine_thresh}{EXPERIMENTAL: if you want to restrict derivative from changing to much. should be 0 since not tested.}
 
 \item{method}{method of optimization to use can be  basic/positivity.}
+
+\item{x_init}{initial value for X during the optimization.}
+
+\item{omega_init}{initial value for Omega during the optimization.}
 }
 \value{
 ready to use list with algorithm configuration

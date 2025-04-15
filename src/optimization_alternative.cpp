@@ -1,4 +1,4 @@
-#include "alternative_optimization.h"
+#include "optimization_alternative.h"
 
 #include "matrix_utils.h"
 #include "nnls.h"
