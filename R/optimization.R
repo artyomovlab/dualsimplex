@@ -150,27 +150,27 @@ optimize_solution <- function(
   r_limits <- calc_r_limits(proj, config$limit_X, config$limit_Omega)
 
   optimization_params <- list(
-    solution_proj$X,
-    t(solution_proj$Omega),
-    solution_proj$D_w,
-    proj$meta$Sigma, # Should be equal to SVRt
-    proj$meta$R,
-    proj$meta$S,
-    config$coef_der_X,
-    config$coef_der_Omega,
-    config$coef_hinge_H,
-    config$coef_hinge_W,
-    config$coef_pos_D_h,
-    config$coef_pos_D_w,
-    n_cell_types,
-    proj$meta$N,
-    proj$meta$M,
-    iterations,
-    mean_radius_X,
-    mean_radius_Omega,
-    r_limits$R_limit_X,
-    r_limits$R_limit_Omega,
-    config$cosine_thresh
+    X = solution_proj$X,
+    Omega = t(solution_proj$Omega),
+    D_w = solution_proj$D_w,
+    SVRt = proj$meta$Sigma, # Should be equal to SVRt
+    R = proj$meta$R,
+    S = proj$meta$S,
+    coef_der_X = config$coef_der_X,
+    coef_der_Omega = config$coef_der_Omega,
+    coef_hinge_H = config$coef_hinge_H,
+    coef_hinge_W = config$coef_hinge_W,
+    coef_pos_D_h = config$coef_pos_D_h,
+    coef_pos_D_w = config$coef_pos_D_w,
+    cell_types = n_cell_types,
+    N = proj$meta$N,
+    M = proj$meta$M,
+    iterations = iterations,
+    mean_radius_X = mean_radius_X,
+    mean_radius_Omega = mean_radius_Omega,
+    r_const_X = r_limits$R_limit_X,
+    r_const_Omega = r_limits$R_limit_Omega,
+    thresh = config$cosine_thresh
   )
   optimization_result <- if (config$method == "positivity") {
     do.call(alternative_derivative_stage2, optimization_params)
