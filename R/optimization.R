@@ -46,6 +46,7 @@ optim_config <- function(
     cosine_thresh = cosine_thresh,
     x_center = x_center,
     omega_center = omega_center,
+    theta_threshold = theta_threshold,
     method = method
   ))
 }
