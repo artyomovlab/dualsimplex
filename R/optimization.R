@@ -44,8 +44,8 @@ optim_config <- function(
     limit_X = limit_X,
     limit_Omega = limit_Omega,
     cosine_thresh = cosine_thresh,
-    x_center = NULL,
-    omega_center = NULL,
+    x_center = x_center,
+    omega_center = omega_center,
     method = method
   ))
 }
