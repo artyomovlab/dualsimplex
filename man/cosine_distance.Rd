@@ -7,7 +7,9 @@
 cosine_distance(a, b)
 }
 \arguments{
-\item{input}{vector b.}
+\item{a}{input vector a.}
+
+\item{b}{input vector b.}
 }
 \value{
 double value of cosine distance

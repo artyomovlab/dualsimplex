@@ -24,6 +24,9 @@
 //' @param r_const_X experimental. not tested
 //' @param r_const_Omega experimental. not tested
 //' @param thresh experimental. not tested
+//' @param X_center optimization restriction directions for X.
+//' @param Omega_center optimization restriction direcitons of Omega.
+//' @param theta_threshold angle to restrict optimization/
 //' @return new parameters
 // [[Rcpp::export]]
 Rcpp::List theta_derivative_stage2(const arma::mat& X,

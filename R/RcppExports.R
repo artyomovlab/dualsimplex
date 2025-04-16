@@ -3,8 +3,8 @@
 
 #' Get cosine distance between columns
 #'
-#' @param input vector a.
-#' @param input vector b.
+#' @param a input vector a.
+#' @param b input vector b.
 #' @return double value of cosine distance
 cosine_distance <- function(a, b) {
     .Call('_DualSimplex_cosine_distance', PACKAGE = 'DualSimplex', a, b)
@@ -232,6 +232,9 @@ alternative_derivative_stage2 <- function(X, Omega, D_w, SVRt, R, S, coef_der_X,
 #' @param r_const_X experimental. not tested
 #' @param r_const_Omega experimental. not tested
 #' @param thresh experimental. not tested
+#' @param X_center optimization restriction directions for X.
+#' @param Omega_center optimization restriction direcitons of Omega.
+#' @param theta_threshold angle to restrict optimization/
 #' @return new parameters
 theta_derivative_stage2 <- function(X, Omega, D_w, SVRt, R, S, X_center, Omega_center, coef_der_X, coef_der_Omega, coef_hinge_H, coef_hinge_W, coef_pos_D_h, coef_pos_D_w, cell_types, N, M, iterations, mean_radius_X, mean_radius_Omega, r_const_X = 0, r_const_Omega = 0, thresh = 0.8, theta_threshold = 0) {
     .Call('_DualSimplex_theta_derivative_stage2', PACKAGE = 'DualSimplex', X, Omega, D_w, SVRt, R, S, X_center, Omega_center, coef_der_X, coef_der_Omega, coef_hinge_H, coef_hinge_W, coef_pos_D_h, coef_pos_D_w, cell_types, N, M, iterations, mean_radius_X, mean_radius_Omega, r_const_X, r_const_Omega, thresh, theta_threshold)

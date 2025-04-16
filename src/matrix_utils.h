@@ -3,8 +3,8 @@
 
 //' Get cosine distance between columns
 //'
-//' @param input vector a.
-//' @param input vector b.
+//' @param a input vector a.
+//' @param b input vector b.
 //' @return double value of cosine distance
 // [[Rcpp::export]]
 double cosine_distance(const arma::rowvec& a,const arma::rowvec& b);

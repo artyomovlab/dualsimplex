@@ -185,6 +185,44 @@ initializers <- list(
       D_w = Dw,
       D_h = Dh
     ))
+  },
+
+  random_X_within_theta_angle = function(proj, kwargs) {
+    # Having center points provided we want to initialize in some 
+    # random point within theta angle
+    if (!"init_centers" %in% names(kwargs)) {
+      stop("Put init_centers in kwargs to set some starting point for this initialization.")
+    }
+    if (!"theta" %in% names(kwargs)) {
+      stop("Put theta in kwargs to set some constraint on theta.")
+    }
+    max_length <- 1.5
+    n_cell_types <- proj$meta$K
+    center_points <- kwargs$init_centers
+    generated_vectors <- lapply(c(1:n_cell_types),  function(cell_type) {
+      # original vector is a medoid for cell type (transposed)
+      orig_vector <-  as.matrix(center_points[cell_type, ])
+      # generate rotated vector
+      cur_theta <- runif(1, min = -theta_max_div, max = theta_max_div)
+      random_multiplier <-  runif(1, min = 0.4, max = max_length)
+      u <-  as.matrix(orig_vector[2:n_cell_types])
+      u <-  random_multiplier * u
+      # random direction
+      p <- as.matrix(rnorm(n_cell_types - 1, mean = 0, sd = 1))
+      nom <- t(p) %*% u
+      denom <-  t(u) %*% u
+      multiplier <- (nom / denom)[1]
+      w_prime <- p - multiplier * u
+      w <- norm(u) * w_prime / norm(w_prime)
+      v <- cos(cur_theta) * u + sin(cur_theta) * w   # new vector
+      result_vector <- c()
+      result_vector[2:n_cell_types] <- v
+      result_vector[1] <- orig_vector[1]
+      return(result_vector)
+    })
+    X <- t(do.call("cbind", generated_vectors))
+    colnames(X) <- colnames(proj$X)
+    return(set_solution_from_x(X, proj))
   }
 )
 

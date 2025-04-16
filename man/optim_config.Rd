@@ -39,11 +39,13 @@ optim_config(
 
 \item{cosine_thresh}{EXPERIMENTAL: if you want to restrict derivative from changing to much. should be 0 since not tested.}
 
+\item{x_center}{X rays around which to perform search in theta search.}
+
+\item{omega_center}{Omega rays around which to perform search in theta search.}
+
+\item{theta_threshold}{theta param.}
+
 \item{method}{method of optimization to use can be  basic/positivity.}
-
-\item{x_init}{initial value for X during the optimization.}
-
-\item{omega_init}{initial value for Omega during the optimization.}
 }
 \value{
 ready to use list with algorithm configuration

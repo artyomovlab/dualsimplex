@@ -13,8 +13,9 @@
 #' @param limit_X EXPERIMENTAL: if you want to restrict X from changing to much. should be 0 since not tested.
 #' @param limit_Omega EXPERIMENTAL: if you want to restrict Omega from changing to much. should be 0 since not tested.
 #' @param cosine_thresh  EXPERIMENTAL: if you want to restrict derivative from changing to much. should be 0 since not tested.
-#' @param x_init initial value for X during the optimization.
-#' @param omega_init initial value for Omega during the optimization.
+#' @param x_center X rays around which to perform search in theta search.
+#' @param omega_center Omega rays around which to perform search in theta search.
+#' @param theta_threshold theta param.
 #' @param method method of optimization to use can be  basic/positivity.
 #' @return ready to use list with algorithm configuration
 #' @export

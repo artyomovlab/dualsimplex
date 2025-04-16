@@ -44,6 +44,10 @@ theta_derivative_stage2(
 
 \item{S}{current S}
 
+\item{X_center}{optimization restriction directions for X.}
+
+\item{Omega_center}{optimization restriction direcitons of Omega.}
+
 \item{coef_der_X}{learning rate X}
 
 \item{coef_der_Omega}{learning rate Omega}
@@ -73,6 +77,8 @@ theta_derivative_stage2(
 \item{r_const_Omega}{experimental. not tested}
 
 \item{thresh}{experimental. not tested}
+
+\item{theta_threshold}{angle to restrict optimization/}
 }
 \value{
 new parameters
