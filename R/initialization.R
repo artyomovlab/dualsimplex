@@ -200,7 +200,7 @@ initializers <- list(
     
     n_cell_types <- proj$meta$K
     center_points <- kwargs$init_centers
-    theta_max_div <- theta
+    theta_max_div <- kwargs$theta
     generated_vectors <- lapply(c(1:n_cell_types),  function(cell_type) {
       # original vector is a medoid for cell type (transposed)
       orig_vector <-  as.matrix(center_points[cell_type, ])
