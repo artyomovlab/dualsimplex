@@ -65,14 +65,10 @@ Rcpp::List theta_derivative_stage2(const arma::mat& X,
 
         if (theta_threshold > 0) {
             tmp_X = (new_X - coef_der_X * der_X);
-            Rcpp::Rcout << "Start theta business for X" << "\n";
             for (int c=0; c < cell_types; c++) {
                 if (!(X_center.row(c).subvec(1, cell_types - 1).is_zero())) {
-                    Rcpp::Rcout << "Center point is defineed for " << c << "\n";
                     double cos_distance_result = cosine_distance(tmp_X.row(c).subvec(1, cell_types - 1), X_center.row(c).subvec(1, cell_types - 1));
-                    Rcpp::Rcout << "Cosine  is  " << cos_distance_result  << "\n";
                     if (cos_distance_result < cos_theta) {
-                        Rcpp::Rcout << "Distance is lower than threshold  of " << cos_theta  << ". Start shrink"<< "\n";
                         // start shrinking derivative to be inside
                         int shrink_iteration = 0;
                         while(cos_distance_result < cos_theta) {
@@ -82,7 +78,6 @@ Rcpp::List theta_derivative_stage2(const arma::mat& X,
                             // Rcout << "Now cos is  : " << cos_distance_result << "\n";
                             shrink_iteration++;
                           }
-                          Rcpp::Rcout << "X Shrink iterations performed : " << shrink_iteration << "\n";
                     }
                 }
             }
@@ -120,11 +115,11 @@ Rcpp::List theta_derivative_stage2(const arma::mat& X,
         der_Omega += coef_pos_D_w * 2 * (new_Omega * new_D_w - sum_rows_S) * new_D_w.t();
         der_Omega.row(0).zeros();
         der_Omega = correctByNorm(der_Omega) * mean_radius_Omega;
-        Rcpp::Rcout << "Current Omega " << "\n";
         Rcpp::Rcout << new_Omega << "\n";
         if (theta_threshold > 0) {
             Rcpp::Rcout << "Start theta business for Omega" << "\n";
             tmp_Omega = new_Omega - coef_der_Omega * der_Omega;
+            Rcpp::Rcout << "Current tmp Omega " << tmp_Omega <<"\n";
             for (int c=0; c < cell_types; c++) {
                 if (!(Omega_center.col(c).subvec(1, cell_types - 1).is_zero())) {
                     Rcpp::Rcout << "Center point is defineed for " << c << "\n";
