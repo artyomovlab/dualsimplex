@@ -197,8 +197,10 @@ initializers <- list(
       stop("Put theta in kwargs to set some constraint on theta.")
     }
     max_length <- 1.5
+    
     n_cell_types <- proj$meta$K
     center_points <- kwargs$init_centers
+    theta_max_div <- theta
     generated_vectors <- lapply(c(1:n_cell_types),  function(cell_type) {
       # original vector is a medoid for cell type (transposed)
       orig_vector <-  as.matrix(center_points[cell_type, ])
