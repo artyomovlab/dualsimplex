@@ -30,6 +30,7 @@ Rcpp::List theta_derivative_stage2(const arma::mat& X,
                              const double thresh,
                              const double theta_threshold
                             ) {
+    Rcpp::Rcout << "sucessfull init training" << "\n";
     arma::mat errors_statistics(iterations, 9, arma::fill::zeros);
     arma::mat points_statistics_X(iterations, cell_types * cell_types, arma::fill::zeros);
     arma::mat points_statistics_Omega(iterations, cell_types * cell_types, arma::fill::zeros);
