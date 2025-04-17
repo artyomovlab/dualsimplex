@@ -254,7 +254,7 @@ initializers <- list(
       Ds <- get_Dwh_from_XOmega(X, Omega, proj)
       new_solution_proj <- list(
         X = X,
-        Omega = t(Omega),
+        Omega = Omega,
         D_w = Ds$D_w,
         D_h = Ds$D_h
       )
