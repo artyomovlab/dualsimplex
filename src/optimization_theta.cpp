@@ -122,9 +122,11 @@ Rcpp::List theta_derivative_stage2(const arma::mat& X,
                     Rcpp::Rcout << "Center point is defineed for " << c << "\n";
                     Rcpp::Rcout << "Current tmp Omega \n" << tmp_Omega <<"\n";
                     Rcpp::Rcout << "Current center Omega \n" << Omega_center <<"\n";
+                    Rcpp::Rcout << "Transposed Omega col \n" << tmp_Omega.col(c).subvec(1, cell_types - 1).t() <<"\n";
+
                     double cos_distance_result = cosine_distance(
-                        tmp_Omega.col(c).subvec(1, cell_types - 1), 
-                        Omega_center.col(c).subvec(1, cell_types - 1));
+                        tmp_Omega.col(c).subvec(1, cell_types - 1).t(), 
+                        Omega_center.col(c).subvec(1, cell_types - 1).t()); //need rowvec here
                     Rcpp::Rcout << "Cosine  is  " << cos_distance_result  << "\n";
                     if (cos_distance_result < cos_theta) {
                         // start shrinking derivative to be inside
@@ -133,7 +135,7 @@ Rcpp::List theta_derivative_stage2(const arma::mat& X,
                         while(cos_distance_result < cos_theta) {
                             der_Omega.col(c) /=  2;
                             tmp_Omega = new_Omega - coef_der_Omega * der_Omega;
-                            cos_distance_result = cosine_distance(tmp_Omega.col(c).subvec(1, cell_types - 1), Omega_center.col(c).subvec(1, cell_types - 1));
+                            cos_distance_result = cosine_distance(tmp_Omega.col(c).subvec(1, cell_types - 1).t(), Omega_center.col(c).subvec(1, cell_types - 1).t());
                             // Rcout << "Now cos is  : " << cos_distance_result << "\n";
                             shrink_iteration++;
                           }
