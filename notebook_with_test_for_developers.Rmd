@@ -1,0 +1,133 @@
+---
+title: "Notebook to check your code changes before submitting PR"
+---
+
+# Perform package checks 
+
+```{r}
+library(devtools)
+```
+
+## Documentation files will be generated
+```{r}
+devtools::document()
+```
+
+## A lot of different checks of your code
+
+```{r}
+devtools::check()
+```
+
+# Install from your branch
+ensure you unloaded tha package, removed the previous version and restarted the R session.
+```{r}
+devtools::install_github("your_github/DualSimplex@your_branch")
+library(DualSimplex)
+```
+
+# Test run
+
+## Create object
+```{r fig.height = 5, fig.width = 11}
+library(dplyr)
+
+n_ct <- 3
+
+set.seed(3)
+sim <- create_simulation(n_genes = 10000,
+                         n_samples = 100,
+                         n_cell_types = n_ct,
+                         with_marker_genes = FALSE)
+sim <- sim %>% add_noise(noise_deviation = 0.2)
+
+data_raw <- sim$data
+true_basis <- sim$basis
+true_proportions <- sim$proportions
+
+dso <- DualSimplexSolver$new()
+dso$set_data(data_raw)
+
+plane_distance_threshold = 0.05 # Change here several times to see result, start with big and lower it
+dso$project(3)
+dso$distance_filter(plane_d_lt = plane_distance_threshold,
+                    zero_d_lt = NULL,
+                    genes = T)
+
+dso$project(3)
+dso$plot_svd_history()
+dso$init_solution("random")
+dso$plot_projected(
+  "zero_distance",
+  "zero_distance",
+  with_solution = TRUE,
+  use_dims = list(2:3)
+)
+```
+
+
+## Make specific init, which was in a paper
+```{r}
+set.seed(23)
+dso$init_solution("random")
+dso$plot_projected(
+  "plane_distance",
+  "plane_distance",
+  with_solution = TRUE,
+  use_dims = list(2:3)
+)
+```
+
+
+## Make 5000 steps of optimization
+```{r}
+blocks <- 5
+iterations <- 5000
+
+
+for (i in 1:blocks) {
+  dso$optim_solution(
+    round(iterations / blocks),
+    optim_config(
+      coef_hinge_H = 1,
+      coef_hinge_W = 1,
+      coef_der_X = 0.001,
+      coef_der_Omega = 0.001
+    )
+  )
+  curr_X <- dso$st$solution_proj$X  # this is how we can extract solution on a fly
+  curr_Omega <- dso$st$solution_proj$Omega # this is how we can extract solution on a fly
+}
+```
+
+```{r fig.height = 5, fig.width = 11}
+dso$plot_projected(
+  "zero_distance",
+  "zero_distance",
+  with_solution = TRUE,
+  use_dims = list(2:3)
+)
+```
+
+```{r}
+dso$plot_error_history()
+```
+
+
+## Prepare basis/proportions plots
+```{r}
+solution <- dso$finalize_solution()
+names(solution)
+solution <- dso$get_solution()
+```
+
+```{r fig.width=20, fig.height=5}
+ptb <- coerce_pred_true_basis(solution$W, true_basis[rownames(solution$W), ])
+ptp <- coerce_pred_true_props(solution$H, true_proportions)
+plot_ptp_scatter(ptp)
+plot_ptb_scatter(ptb)
+```
+
+```{r}
+plot_ptp_lines(ptp)
+```

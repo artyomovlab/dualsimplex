@@ -266,9 +266,9 @@ plot_errors <- function(
   to_plot <- reshape2::melt(to_plot, id.vars = "iteration", measure.vars = variables)
   plt <-
     ggplot(to_plot, aes(
-      x = iteration,
-      y = log10(value),
-      color = variable
+      x = .data$iteration,
+      y = log10(.data$value),
+      color = .data$variable
     )) +
     geom_line() + theme_minimal()
   plt
@@ -292,7 +292,7 @@ plot_negative_proportions_change <- function(proj, solution_proj) {
   toPlot <- as.data.frame(errors_statistics[, "neg_props_count",drop=F])
   last_prop_count <- round(toPlot[nrow(toPlot), "neg_props_count"] / total_H,6) * 100
   toPlot$iteration <- 0:(nrow(toPlot) - 1)
-  plt <- ggplot(toPlot,aes(y=neg_props_count,x=iteration)) + geom_line() + theme_minimal() +
+  plt <- ggplot(toPlot,aes(y=.data$neg_props_count,x=.data$iteration)) + geom_line() + theme_minimal() +
       xlab("Iteration") + ylab("Negative proportions")+
     annotate("text",  x=Inf, y = Inf, label = paste0(last_prop_count,"%"), vjust=1, hjust=1) +
     ggtitle("Number of negative proportions")
@@ -316,7 +316,7 @@ plot_negative_basis_change <- function(proj, solution_proj) {
   toPlot <- as.data.frame(errors_statistics[,"neg_basis_count",drop=F])
   last_basis_count <- round(toPlot[nrow(toPlot),"neg_basis_count"] / total_W,6) * 100
   toPlot$iteration <- 0:(nrow(toPlot) - 1)
-  plt <- ggplot(toPlot,aes(y=neg_basis_count,x=iteration)) + geom_line() + theme_minimal() +
+  plt <- ggplot(toPlot,aes(y=.data$neg_basis_count,x=.data$iteration)) + geom_line() + theme_minimal() +
       xlab("Iteration") + ylab("Negative basis")+
       annotate("text",  x=Inf, y = Inf, label = paste0(last_basis_count,"%"), vjust=1, hjust=1) +
     ggtitle("Number of negative basis elements")

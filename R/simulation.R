@@ -5,8 +5,8 @@
 #' so that it is possible to create a single base simulation with many different child simulations.
 #' For example, with different noise applied to the same data.
 #' The add... functions inherently support magrittr's pipe operator (%>%).
-#' 
-#' @import dplyr
+#'
+#' @importFrom Biobase exprs ExpressionSet fData pData
 #' @param n_genes number of rows in generated matrix (M)
 #' @param n_samples number of columns in generated matrix (N)
 #' @param n_cell_types number of hidden main components  in generated matrix (K)
@@ -19,6 +19,7 @@
 #' sim_initial <- create_simulation(12000, 100, 3)
 #' sim_noise_3 <- add_noise(sim_initial, 3)
 #' sim_noise_5 <- sim_initial %>% add_noise(5) %>% add_basis_samples()
+#' @import dplyr
 #' @export
 create_simulation <- function(
   n_genes,
@@ -113,16 +114,16 @@ add_noise <- function(simulation, noise_deviation, protect_genes = c(), protect_
 # All underlying logic is below
 generate_basis <- function(n_genes, n_cell_types, sd_ = 0.2) {
   data_1 <- c(
-    rnorm(n_genes * 2, mean = 4, sd = 0.75),
-    rnorm(n_genes * 3, mean = 10, sd = 1.5)
+    stats::rnorm(n_genes * 2, mean = 4, sd = 0.75),
+    stats::rnorm(n_genes * 3, mean = 10, sd = 1.5)
   )
   basis <- matrix(0, nrow = n_genes, ncol = n_cell_types)
-  sds_ <- rnorm(n_cell_types, mean = sd_, sd = 0.02)
+  sds_ <- stats::rnorm(n_cell_types, mean = sd_, sd = 0.02)
   
   for (i in 1:n_genes) {
-    basis[i, 1] <- data_1[sample(seq_len(length(data_1)), 1)] * rnorm(1, mean = 1, sd = sds_[1])
+    basis[i, 1] <- data_1[sample(seq_len(length(data_1)), 1)] * stats::rnorm(1, mean = 1, sd = sds_[1])
     for (j in 2:n_cell_types) {
-      basis[i, j] <- basis[i, 1] * rnorm(1, mean = 1, sd = sds_[j])
+      basis[i, j] <- basis[i, 1] * stats::rnorm(1, mean = 1, sd = sds_[j])
     }
   }
   
@@ -192,7 +193,7 @@ sample_from_dirichlet <- function(n, k, alpha = NULL, spread = 7) {
   }
   l <- length(alpha)
   alpha_ <- alpha / sum(alpha) * spread
-  x <- matrix(rgamma(l * n, alpha_), ncol = l, byrow = TRUE)
+  x <- matrix(stats::rgamma(l * n, alpha_), ncol = l, byrow = TRUE)
   sm <- x %*% rep(1, l)
   t(x / as.vector(sm))
 }
@@ -215,7 +216,8 @@ generate_proportions <- function(n_samples, n_cell_types, mean_proportions = NUL
 }
 
 apply_noise_to_data <- function(data, noise_deviation, protect_genes = c(), protect_samples = c()) {
-  noise_mask <- matrix(rnorm(length(data), sd = noise_deviation), nrow = nrow(data), ncol = ncol(data))
+  noise_mask <- matrix(stats::rnorm(length(data), mean = 0, sd = noise_deviation),
+                       nrow = nrow(data), ncol = ncol(data))
   rownames(noise_mask) <- rownames(data)
   colnames(noise_mask) <- colnames(data)
   noise_mask <- 2^noise_mask
@@ -228,7 +230,7 @@ apply_noise_to_data <- function(data, noise_deviation, protect_genes = c(), prot
 
 generate_pure_samples <- function(basis, samples_per_cell_type, noise_deviation = 0.05) {
   data <- basis[, rep(seq_len(ncol(basis)), each = samples_per_cell_type)] * matrix(
-    rnorm(nrow(basis) * ncol(basis) * samples_per_cell_type, mean = 1, sd = noise_deviation),
+    stats::rnorm(nrow(basis) * ncol(basis) * samples_per_cell_type, mean = 1, sd = noise_deviation),
     nrow = nrow(basis),
     ncol = ncol(basis) * samples_per_cell_type
   )

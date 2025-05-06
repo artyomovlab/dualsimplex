@@ -9,6 +9,7 @@
 #' @param gene_name_lists named list of lists. Each sublist contains names of rows which should have TRUE value in annotaiton column.
 #' @param sample_name_lists named list of lists. Each sublist contains names of columns which should have TRUE value in annotation column.
 #' @return annotated expression set. (fData, pData) now contain annotations
+#'
 #' @export
 add_default_anno <- function(
   eset,
@@ -66,12 +67,12 @@ create_gene_anno <- function(data) {
 #'@return  annotated Expression set
 add_gene_names_regex_anno <- function(eset) {
   gene_names <- rownames(Biobase::exprs(eset))
-  fData(eset)$RPLS <- grepl("^(RPL|RPS).+", gene_names, ignore.case = T)
-  fData(eset)$LOC <- grepl("^LOC\\d+", gene_names, ignore.case = T)
-  fData(eset)$ORF <- grepl("^C\\w+orf\\d+", gene_names, ignore.case = T)
-  fData(eset)$SNOR <- grepl("^SNOR.+", gene_names, ignore.case = T)
-  fData(eset)$MT <- grepl("^MT-.+", gene_names, ignore.case = T)
-  fData(eset)$RRNA <- grepl(".+rRNA$", gene_names, ignore.case = T)
+  Biobase::fData(eset)$RPLS <- grepl("^(RPL|RPS).+", gene_names, ignore.case = T)
+  Biobase::fData(eset)$LOC <- grepl("^LOC\\d+", gene_names, ignore.case = T)
+  Biobase::fData(eset)$ORF <- grepl("^C\\w+orf\\d+", gene_names, ignore.case = T)
+  Biobase::fData(eset)$SNOR <- grepl("^SNOR.+", gene_names, ignore.case = T)
+  Biobase::fData(eset)$MT <- grepl("^MT-.+", gene_names, ignore.case = T)
+  Biobase::fData(eset)$RRNA <- grepl(".+rRNA$", gene_names, ignore.case = T)
   return(eset)
 }
 
@@ -140,15 +141,15 @@ add_distances_anno <- function(eset, V_row, proj) {
 
   # For features (using V_row)
   feature_dists <- calc_dist_from_truncated_svd(approx, residual = residual, margin = 1)
-  fData(eset)$plane_distance <- feature_dists$plane_distance
-  fData(eset)$zero_distance <- feature_dists$zero_distance
+  Biobase::fData(eset)$plane_distance <- feature_dists$plane_distance
+  Biobase::fData(eset)$zero_distance <- feature_dists$zero_distance
 
 
   # For samples (using V_column)
   d <- ncol(V_row) / nrow(V_row)
   sample_dists <- calc_dist_from_truncated_svd(approx * d, residual = residual * d, margin = 2)
-  pData(eset)$plane_distance <- sample_dists$plane_distance
-  pData(eset)$zero_distance <- sample_dists$zero_distance
+  Biobase::pData(eset)$plane_distance <- sample_dists$plane_distance
+  Biobase::pData(eset)$zero_distance <- sample_dists$zero_distance
 
   return(eset)
 }
@@ -175,9 +176,9 @@ add_knn_distances_anno <- function(eset, proj_full, annotation_columns,  k_neigh
 #' @export
 get_anno <- function(eset, genes = T, feature = NULL) {
   if (genes) {
-    anno <- fData(eset)
+    anno <- Biobase::fData(eset)
   } else {
-    anno <- pData(eset)
+    anno <- Biobase::pData(eset)
   }
   if (!is.null(feature)) {
     anno <- anno[, feature]
@@ -196,10 +197,10 @@ get_anno <- function(eset, genes = T, feature = NULL) {
 set_anno <- function(anno, eset, genes = T) {
   if (genes) {
     eset <- eset[rownames(anno), ]
-    fData(eset) <- anno
+    Biobase::fData(eset) <- anno
   } else {
     eset <- eset[, rownames(anno)]
-    pData(eset) <- anno
+    Biobase::pData(eset) <- anno
   }
   return(eset)
 }

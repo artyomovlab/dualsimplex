@@ -418,7 +418,7 @@ plot_solution_history_anim <- function(
       solution_proj, proj, step = 100, pt_size = 4, use_dims = use_dims, path = FALSE
     ) +
     labs(title = 'Iteration: {as.integer(closest_state)}') +
-    gganimate::transition_states(iter, transition_length = 2, wrap = F) +
+    gganimate::transition_states(.data$iter, transition_length = 2, wrap = F) +
     gganimate::ease_aes("linear")
 
   if (is.null(gif_filename) || is.null(gif_dir)) {

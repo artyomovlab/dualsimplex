@@ -30,7 +30,6 @@ dso$plot_projected("zero_distance",
                    "zero_distance",
                    with_solution = TRUE,
                    use_dims = list(2:3)) # visualize the projection
-
 }
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}

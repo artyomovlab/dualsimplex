@@ -2,3 +2,7 @@
 ^\.Rproj\.user$
 ^.*\.html$
 ^.*\.gif$
+^\.idea
+^\.vscode
+^\.clang-format
+^notebook_with_test_for_developers.Rmd
