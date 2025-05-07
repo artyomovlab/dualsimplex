@@ -144,6 +144,6 @@ quantile_filter <- function(eset, feature, quant, genes = T, keep_lower = T) {
 #' @export
 n_sigma_filter <- function(eset, feature, n_sigma = 3, genes = T) {
   feature_col <- get_anno(eset, genes, feature)
-  threshold <- mean(feature_col) + n_sigma * sd(feature_col)
+  threshold <- mean(feature_col) + n_sigma * stats::sd(feature_col)
   return(threshold_filter(eset, feature, threshold, genes, keep_lower = T))
 }

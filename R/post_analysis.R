@@ -17,7 +17,7 @@ plot_proportions_distribution <- function(H) {
   )
   plt <- ggplot(
     to_plot,
-    aes(x = proportion, fill = cell_type)
+    aes(x = .data$proportion, fill = .data$cell_type)
   ) + geom_histogram(
     stat = "bin",
     binwidth = 0.05,
@@ -50,7 +50,7 @@ plot_basis_distribution <- function(W, max_expr = 25, logp1 = T) {
   )
   plt <- ggplot(
     to_plot,
-    aes(x = expression, fill = cell_type)
+    aes(x = expression, fill = .data$cell_type)
   ) + geom_histogram(
     stat = "bin",
     binwidth = 0.5,
@@ -194,9 +194,9 @@ add_list_markers <- function(so, markers, assay = "RNA") {
 #' @return list of lists
 #' @export
 convert_sc_markers <- function(markers_seurat, allowed_genes, n_markers = 100) {
-  gb <- markers_seurat[markers_seurat$p_val_adj < 0.001,] %>%
-    group_by(cluster) %>%
-    filter(gene %in% allowed_genes) %>% slice_max(order_by=avg_log2FC, n=n_markers)
+  gb <- markers_seurat %>% filter(.data$p_val_adj < 0.001) %>%
+    group_by(.data$cluster) %>%
+    filter(.data$gene %in% allowed_genes) %>% slice_max(order_by=.data$avg_log2FC, n=n_markers)
   sc_marker_list <- sapply(gb %>% group_split(), function(x) list(x$gene))
   names(sc_marker_list) <- tolower(gsub(" |-", "_", (gb %>% group_keys())$cluster))
   return(sc_marker_list)

@@ -51,7 +51,7 @@ rownorm <- function(ge) {
 #' @return TRUE or FALSE
 #' @export
 is_logscale <- function(x) {
-  qx <- quantile(as.numeric(x), na.rm = T)
+  qx <- stats::quantile(as.numeric(x), na.rm = T)
   if (qx[5] - qx[1] > 100 || qx[5] > 100) {
     return(FALSE)
   } else {

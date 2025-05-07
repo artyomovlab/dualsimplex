@@ -10,8 +10,8 @@ plot_ptp_lines(ptp)
 \item{ptp}{result of coerce_pred_true_props or list of two matrices with the same order of rows}
 }
 \value{
-linseed package plot
+lineplot
 }
 \description{
-Used linseed package method to plot
+Using here method exported from linseed package.
 }

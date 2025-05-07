@@ -1,5 +1,6 @@
 .Rproj.user/
 .idea/
+.vscode/
 .Rhistory
 *.tar.gz
 *.Rproj
@@ -8,6 +9,7 @@
 *.o
 *.uwot
 *.rds
+*.dll
 
 # For now
 # TODO: unignore data/*.rds

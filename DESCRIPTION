@@ -54,10 +54,8 @@ Imports:
     knitr,
     combinat,
     scales,
-    linseed,
     FNN,
     matrixStats
-Remotes: ctlab/linseed
 Suggests:
     Seurat,
     gganimate

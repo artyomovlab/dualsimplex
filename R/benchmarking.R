@@ -52,18 +52,100 @@ guess_order <- function(predicted, actual) {
 }
 
 
+toMatrix <- function(x) {
+    if (is.data.frame(x)) {
+        # Convert data frame (or tibble) to a plain matrix
+        return(as.matrix(x))
+    }
+    if (is.matrix(x)) {
+        # Return if already a matrix
+        return(x)
+    }
+    stop("Invalid type for plotting: ", paste(class(x), collapse = ", "))
+}
+
+
 ############ PLOTTING ############
+
+#' Draw a plot of estimated proportions
+#'
+#' Draws a plot of estimated proprotions
+#' If ggplot2 and reshape2 are installed will use them and return ggplot object
+#' Otherwise will use standart R functions
+#'
+#' @param ... matricies, data frames, NMF objects of estimated proportions or paths to file
+#' @param point_size point size for plot
+#' @param line_size line size for plot
+#' @param pnames experiment titles
+#'
+#' @return ggplot object
+#'
+#'
+#' @import ggplot2
+#' @import reshape2
+#' @export
+plotProportions <- function(..., pnames = NULL, point_size=2, line_size=1) {
+    proportions <- list(...)
+    proportions <- lapply(proportions, toMatrix)
+
+    newRowNames <- do.call(function(...) {
+        mapply(function(...) {
+            dots <- list(...)
+            rn <- unlist(dots)
+            paste0(rn, collapse = "\n")
+        }, ...)
+    }, lapply(proportions, rownames))
+
+    proportions <- lapply(proportions, function(p) {
+        rownames(p) <- newRowNames
+        p
+    })
+
+    names(proportions) <- pnames
+
+
+    cellTypes <- nrow(proportions[[1]])
+    results.m <- melt(proportions)
+    results.m[, 4] <- as.factor(results.m[, 4])
+
+    results.m <- results.m[sample(nrow(results.m)), ]
+
+    gplot <- ggplot(results.m,
+                             aes(x = as.numeric(.data$Var2),
+                                          y = .data$value,
+                                          fill = .data$Var1,
+                                          color = .data$L1)) +
+        geom_line(size=line_size) +
+        geom_point(size=point_size) +
+        scale_x_discrete(labels = colnames(proportions[[1]])) +
+        facet_grid(Var1 ~ .) +
+        ylab("proportions") +
+        ylim(0, 1.1) +
+        theme_bw() +
+        theme(axis.title.x = element_blank(),
+                       axis.text.x = element_text(angle = 45,
+                                                           hjust = 1)) +
+        guides(fill = "none")
+    if (length(proportions) > 1) {
+        gplot <- gplot + theme(legend.title = element_blank(),
+            legend.position = "top")
+
+    } else {
+        gplot <- gplot + theme(legend.position = "none")
+    }
+    gplot
+}
+
 
 #' Plot predicted/true lines plot for proportions/coefficients (matrix H)
 #'
-#' Used linseed package method to plot
+#' Using here method exported from linseed package.
 #'
 #' @param ptp result of coerce_pred_true_props or list of two matrices with the same order of rows
-#' @return linseed package plot
-#' @import linseed
+#' @return lineplot
 #' @export
 plot_ptp_lines <- function(ptp) {
-  linseed::plotProportions(as.data.frame(ptp[[1]]), as.data.frame(ptp[[2]]), pnames = c("predicted", "true"))
+  plotProportions(as.data.frame(ptp[[1]]), as.data.frame(ptp[[2]]), pnames = c("predicted", "true"))
 }
 
 #' Plot predicted/true scatter plot for proportions/coefficients (matrix H)
@@ -81,7 +163,7 @@ plot_ptp_scatter <- function(ptp) {
   cts <- rownames(ptp[[1]])
   for (ct in cts) {
     to_plot <- as.data.frame(list(
-      linseed = ptp[[1]][ct, ],
+      DualSimplex = ptp[[1]][ct, ],
       other = ptp[[2]][ct, ]
     ))
 
@@ -89,7 +171,7 @@ plot_ptp_scatter <- function(ptp) {
 
     mx <- 1
 
-    plot_list[[ct]] <- ggplot(to_plot, aes(x=other, y=linseed)) +
+    plot_list[[ct]] <- ggplot(to_plot, aes(x=.data$other, y=.data$DualSimplex)) +
       rasterize_if_needed(geom_point(size = 5, shape = 1, colour = "black")) +
       ggtitle(paste0(ct)) +
       geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "red", size = 1.5) +
@@ -135,15 +217,15 @@ plot_ptb_scatter <- function(ptb, max_expr = 25, pt_alpha = 0.2) {
   cts <- colnames(ptb[[1]])
   for (ct in cts) {
     to_plot <- as.data.frame(list(
-      linseed = log2(ptb[[1]][, ct] + 1),
+      DualSimplex = log2(ptb[[1]][, ct] + 1),
       other = log2(ptb[[2]][, ct] + 1)
     ))
 
     # Calculate RMSE value
-    rmse_value <- round(Metrics::rmse(to_plot$linseed, to_plot$other), 2)
+    rmse_value <- round(Metrics::rmse(to_plot$DualSimplex, to_plot$other), 2)
 
-    mx <- max(max_expr, max(max(to_plot$other, to_plot$linseed))) + 1
-    plot_list[[ct]] <- ggplot(to_plot, aes(x = other, y = linseed)) +
+    mx <- max(max_expr, max(max(to_plot$other, to_plot$DualSimplex))) + 1
+    plot_list[[ct]] <- ggplot(to_plot, aes(x = .data$other, y = .data$DualSimplex)) +
       rasterize_if_needed(geom_point(colour = adjustcolor("black", alpha.f = pt_alpha))) +
       annotate("text", x = 15, y = 2, label = paste0("RMSE = ", rmse_value),
                hjust = 1, vjust = 0, size = 6, family = "sans") +

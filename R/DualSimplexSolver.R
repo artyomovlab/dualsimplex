@@ -13,6 +13,17 @@
 #' @export
 #' @return Object of \code{\link{R6Class}} -- an interface to work with data.
 #' @format \code{\link{R6Class}} object.
+#'
+#' @name DualSimplexObject
+#' @import Rcpp
+#' @import RcppArmadillo
+#' @import dplyr
+#' @import ggplot2
+#' @import Matrix
+#' @importFrom Biobase exprs AnnotatedDataFrame ExpressionSet fData pData
+#' @import irlba
+#' @import knitr
+#'
 #' @examples
 #' M <-  8000 # number of genes (rows)
 #' N <-  200 # number of samples (columns)
@@ -25,17 +36,6 @@
 #'                    "zero_distance",
 #'                    with_solution = TRUE,
 #'                    use_dims = list(2:3)) # visualize the projection
-#'
-#' @name DualSimplexObject
-#' @import Rcpp
-#' @import RcppArmadillo
-#' @import dplyr
-#' @import ggplot2
-#' @import Matrix
-#' @importFrom Biobase exprs AnnotatedDataFrame ExpressionSet
-#' @import irlba
-#' @import knitr
-#'
 DualSimplexSolver <- R6Class(
   classname = "DualSimplexSolver",
   private = list(

@@ -251,7 +251,7 @@ plot_svd_d <- function(svd_d, dims = NULL, cumulative = T, variance = T) {
   if (is.null(dims)) {
     dims = 1:length(svd_d)
   }
-  return(ggplot(data = df[dims,], aes(x = dimension, y = variance)) +
+  return(ggplot(data = df[dims,], aes(x = .data$dimension, y = .data$variance)) +
     geom_point(
       aes(y = variance),
       size = 0.5,
@@ -309,7 +309,7 @@ plot_svd_ds_matrix <- function(svd_ds, cumulative = T, variance = T) {
   )
   to_plot$component <- as.integer(to_plot$component)
   
-  return(ggplot(to_plot, aes(x = component, y = explained_variance, col = step)) + geom_line())
+  return(ggplot(to_plot, aes(x = .data$component, y = .data$explained_variance, col = .data$step)) + geom_line())
 }
 
 #' SVD wrapper function
