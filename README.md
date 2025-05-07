@@ -69,7 +69,7 @@ sim <- create_simulation(n_genes = M,
                          n_samples = N,
                          n_cell_types = K,
                          with_marker_genes = FALSE)
-sim <- sim %>% add_noise(noise_deviation = 0.2)
+sim <- sim %>% add_noise(noise_deviation = 3.5)
 
 data_raw <- sim$data
 true_W <- sim$basis
@@ -85,6 +85,9 @@ dso$project(K) # project to SVD space
 dso$plot_projected("zero_distance", "zero_distance", with_solution = TRUE, use_dims = list(2:3)) # visualize the projection
 dso$set_display_dims(list(2:3)) # remember the use_dims choice, to call just dso$plot_projected()
 ```
+![image](https://github.com/user-attachments/assets/c60a71d3-f924-413c-8713-1f9cf42bfa5b)
+
+
 
 ### (Optional) Filter the data/remove outliers 
 This is only if you are willing to remove points from your dataset
@@ -96,6 +99,7 @@ dso$project(K)
 dso$plot_projection_diagnostics() # See the distribution of points distances
 dso$plot_svd_history() # observe changes in SVD variance explained
 ```
+![image](https://github.com/user-attachments/assets/b899808d-9c56-40fe-b44a-d6e32f50f32c)
 
 ### Identify simplex corners in the projected space
 #### Initialize solution
@@ -118,13 +122,18 @@ dso$optim_solution(
 dso$plot_projected("zero_distance", "zero_distance")
 dso$plot_error_history()
 ```
+![image](https://github.com/user-attachments/assets/97c150c9-715e-4958-81df-4995cd5c897a)
 
 #### Get solution
 ```r
 solution <- dso$finalize_solution()
 result_W <- solution$W
 result_H <- solution$H
+ptp <- coerce_pred_true_props(solution$H, true_H)
+plot_ptp_lines(ptp)
 ```
+![image](https://github.com/user-attachments/assets/207b1c42-708c-474a-a699-eef61e4dfaf5)
+
 
 ### Save/Load the results
 ```r
