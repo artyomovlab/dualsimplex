@@ -403,33 +403,45 @@ DualSimplexSolver <- R6Class(
     },
 
     #' @description
-    #' Filter points based on distribution around mean value of selected feature
+    #' Iteratively filter by N sigma using all the features provided.
     #' aplication of  n_sigma_filter <- function(eset, feature, n_sigma = 3, genes = T)
-    #' @param feature feature name (column of pData or fData).
+    #' @param features feature names (columns of pData or fData) as a vector.
     #' @param n_sigma number of sigmas to keep.
     #' @param genes TRUE if filter rows, otherwise columns.
-    n_sigma_filter = function(
-      feature = NULL,
+    #' @param max_filtering_iterations maximum fitering iterations to be performed
+    iterative_n_sigma_filter = function(
+      features = NULL,
       n_sigma = 3,
+      max_filtering_iterations = 500,
       genes = T
     ) {
       private$project_first()
-      if (is.null(feature)) {
-        stop("Choose feature name from fData and pData columns to filter by")
+      if (is.null(features)) {
+        stop("Choose feature names from fData and pData columns to filter by")
       }
       new_data <- self$get_data()
 
-      if (!is.null(feature))
-        new_data <- n_sigma_filter(eset = new_data, feature = feature,  n_sigma = n_sigma, genes = T)
-      new_data <- remove_zero_cols(new_data)
-      new_data <- remove_zero_rows(new_data)
-
-      private$update_variables(new_data)
+      if (!is.null(features))
+        filtering_iteration <-  1
+        previous_count <-  if(genes) dim(new_data)[[1]] else  dim(new_data)[[2]]
+        new_count <- -1
+        while((new_count < previous_count) && (filtering_iteration < max_filtering_iterations) ) {
+          # Filter all features by selected sigma
+          for (current_feature in features) {
+              new_data <- n_sigma_filter(eset = new_data, feature = feature,  n_sigma = n_sigma, genes = genes)
+              new_data <- remove_zero_cols(new_data)
+              new_data <- remove_zero_rows(new_data)
+              private$update_variables(new_data)
+              self$project(self$st$n_cell_types)
+          }
+          new_count <-  if(genes) dim(new_data)[[1]] else  dim(new_data)[[2]]
+        }
       private$add_filtering_log_step(
         "n_sigma_filter",
         paste(
-          paste0("feature = ", feature),
+          paste('features =', paste0(features, collapse=',')),
           paste0("n_sigma = ", n_sigma),
+          paste0("iterations = ", filtering_iteration),
           sep = ", "
         )
       )

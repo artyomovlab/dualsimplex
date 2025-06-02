@@ -51,7 +51,7 @@ dso$plot_projected("zero_distance",
 \item \href{#method-DualSimplexSolver-plot_projection_diagnostics}{\code{DualSimplexSolver$plot_projection_diagnostics()}}
 \item \href{#method-DualSimplexSolver-plot_distances_distribution}{\code{DualSimplexSolver$plot_distances_distribution()}}
 \item \href{#method-DualSimplexSolver-distance_filter}{\code{DualSimplexSolver$distance_filter()}}
-\item \href{#method-DualSimplexSolver-n_sigma_filter}{\code{DualSimplexSolver$n_sigma_filter()}}
+\item \href{#method-DualSimplexSolver-iterative_n_sigma_filter}{\code{DualSimplexSolver$iterative_n_sigma_filter()}}
 \item \href{#method-DualSimplexSolver-run_umap}{\code{DualSimplexSolver$run_umap()}}
 \item \href{#method-DualSimplexSolver-plot_projected}{\code{DualSimplexSolver$plot_projected()}}
 \item \href{#method-DualSimplexSolver-init_solution}{\code{DualSimplexSolver$init_solution()}}
@@ -313,21 +313,28 @@ Filter points based on distance thresholds. (keep lower).
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-DualSimplexSolver-n_sigma_filter"></a>}}
-\if{latex}{\out{\hypertarget{method-DualSimplexSolver-n_sigma_filter}{}}}
-\subsection{Method \code{n_sigma_filter()}}{
-Filter points based on distribution around mean value of selected feature
+\if{html}{\out{<a id="method-DualSimplexSolver-iterative_n_sigma_filter"></a>}}
+\if{latex}{\out{\hypertarget{method-DualSimplexSolver-iterative_n_sigma_filter}{}}}
+\subsection{Method \code{iterative_n_sigma_filter()}}{
+Iteratively filter by N sigma using all the features provided.
 aplication of  n_sigma_filter <- function(eset, feature, n_sigma = 3, genes = T)
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$n_sigma_filter(feature = NULL, n_sigma = 3, genes = T)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$iterative_n_sigma_filter(
+  features = NULL,
+  n_sigma = 3,
+  max_filtering_iterations = 500,
+  genes = T
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{feature}}{feature name (column of pData or fData).}
+\item{\code{features}}{feature names (columns of pData or fData) as a vector.}
 
 \item{\code{n_sigma}}{number of sigmas to keep.}
+
+\item{\code{max_filtering_iterations}}{maximum fitering iterations to be performed}
 
 \item{\code{genes}}{TRUE if filter rows, otherwise columns.}
 }
