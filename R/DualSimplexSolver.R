@@ -428,7 +428,7 @@ DualSimplexSolver <- R6Class(
         while((new_count < previous_count) && (filtering_iteration < max_filtering_iterations) ) {
           # Filter all features by selected sigma
           for (current_feature in features) {
-              new_data <- n_sigma_filter(eset = new_data, feature = feature,  n_sigma = n_sigma, genes = genes)
+              new_data <- n_sigma_filter(eset = new_data, feature = current_feature,  n_sigma = n_sigma, genes = genes)
               new_data <- remove_zero_cols(new_data)
               new_data <- remove_zero_rows(new_data)
               private$update_variables(new_data)
