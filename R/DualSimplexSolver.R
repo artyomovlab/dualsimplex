@@ -436,7 +436,7 @@ DualSimplexSolver <- R6Class(
           }
           new_count <-  if(genes) dim(new_data)[[1]] else  dim(new_data)[[2]]
           private$update_variables(new_data)
-          self$project(self$st$n_cell_types)
+          self$project(cell_types)
         }
       private$add_filtering_log_step(
         "n_sigma_filter",
