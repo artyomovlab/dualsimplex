@@ -419,7 +419,7 @@ DualSimplexSolver <- R6Class(
       }
       new_data <- self$get_data()
 
-      if (!is.null(plane_d_lt))
+      if (!is.null(feature))
         new_data <- n_sigma_filter(eset = new_data, feature = feature,  n_sigma = n_sigma, genes = T)
       new_data <- remove_zero_cols(new_data)
       new_data <- remove_zero_rows(new_data)
