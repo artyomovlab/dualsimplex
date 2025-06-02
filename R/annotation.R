@@ -144,13 +144,17 @@ add_distances_anno <- function(eset, V_row, proj) {
   Biobase::fData(eset)$plane_distance <- feature_dists$plane_distance
   Biobase::fData(eset)$zero_distance <- feature_dists$zero_distance
 
+  # Also include projection coordinates as a columns into fData
+  Biobase::fData(eset)[, colnames(proj$X)] <- proj$X
+
 
   # For samples (using V_column)
   d <- ncol(V_row) / nrow(V_row)
   sample_dists <- calc_dist_from_truncated_svd(approx * d, residual = residual * d, margin = 2)
   Biobase::pData(eset)$plane_distance <- sample_dists$plane_distance
   Biobase::pData(eset)$zero_distance <- sample_dists$zero_distance
-
+  # Also include projection coordinates as a columns into pData
+  Biobase::pData(eset)[, colnames(proj$Omega)] <- proj$Omega
   return(eset)
 }
 

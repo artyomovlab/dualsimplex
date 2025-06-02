@@ -403,6 +403,39 @@ DualSimplexSolver <- R6Class(
     },
 
     #' @description
+    #' Filter points based on distribution around mean value of selected feature
+    #' aplication of  n_sigma_filter <- function(eset, feature, n_sigma = 3, genes = T)
+    #' @param feature feature name (column of pData or fData).
+    #' @param n_sigma number of sigmas to keep.
+    #' @param genes TRUE if filter rows, otherwise columns.
+    n_sigma_filter = function(
+      feature = NULL,
+      n_sigma = 3,
+      genes = T
+    ) {
+      private$project_first()
+      if (is.null(feature)) {
+        stop("Choose feature name from fData and pData columns to filter by")
+      }
+      new_data <- self$get_data()
+
+      if (!is.null(plane_d_lt))
+        new_data <- n_sigma_filter(eset = new_data, feature = feature,  n_sigma = n_sigma, genes = T)
+      new_data <- remove_zero_cols(new_data)
+      new_data <- remove_zero_rows(new_data)
+
+      private$update_variables(new_data)
+      private$add_filtering_log_step(
+        "n_sigma_filter",
+        paste(
+          paste0("feature = ", feature),
+          paste0("n_sigma = ", n_sigma),
+          sep = ", "
+        )
+      )
+    },
+
+    #' @description
     #' Do UMAP transformation for current projected data in both spaces.
     #'
     #' @param with_model specific umap model selection for Mac users. For Mac there is a known issue with this library.
