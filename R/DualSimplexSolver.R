@@ -426,6 +426,7 @@ DualSimplexSolver <- R6Class(
         previous_count <-  if(genes) dim(new_data)[[1]] else  dim(new_data)[[2]]
         new_count <- -1
         while((new_count < previous_count) && (filtering_iteration < max_filtering_iterations) ) {
+          previous_count <-  new_count
           # Filter all features by selected sigma
           cell_types <-  self$st$n_cell_types
           for (current_feature in features) {
@@ -439,7 +440,7 @@ DualSimplexSolver <- R6Class(
           self$project(cell_types)
           filtering_iteration <-  filtering_iteration + 1
           print(paste("removed", previous_count - new_count, "points"))
-          previous_count <-  new_count
+
         }
       private$add_filtering_log_step(
         "n_sigma_filter",
