@@ -421,7 +421,7 @@ DualSimplexSolver <- R6Class(
       }
       new_data <- self$get_data()
 
-      if (!is.null(features))
+      if (!is.null(features)) {
         filtering_iteration <-  1
         previous_count <-  if(genes) dim(new_data)[[1]] else  dim(new_data)[[2]]
         new_count <- -1
@@ -438,6 +438,7 @@ DualSimplexSolver <- R6Class(
           new_count <-  if(genes) dim(new_data)[[1]] else  dim(new_data)[[2]]
           private$update_variables(new_data)
           self$project(cell_types)
+          new_data <- self$get_data()
           filtering_iteration <-  filtering_iteration + 1
           print(paste("removed", previous_count - new_count, "points"))
 
@@ -451,6 +452,7 @@ DualSimplexSolver <- R6Class(
           sep = ", "
         )
       )
+      }
     },
 
     #' @description
