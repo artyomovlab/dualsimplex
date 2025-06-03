@@ -426,7 +426,7 @@ DualSimplexSolver <- R6Class(
         previous_count <-  if(genes) dim(new_data)[[1]] else  dim(new_data)[[2]]
         new_count <- -1
         while((new_count < previous_count) && (filtering_iteration < max_filtering_iterations) ) {
-          previous_count <-  new_count
+          previous_count <-   if(new_count == -1) previous_count else  new_count
           # Filter all features by selected sigma
           cell_types <-  self$st$n_cell_types
           for (current_feature in features) {
