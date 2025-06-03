@@ -438,6 +438,8 @@ DualSimplexSolver <- R6Class(
           private$update_variables(new_data)
           self$project(cell_types)
           filtering_iteration <-  filtering_iteration + 1
+          print(paste("removed", previous_count - new_count, "points"))
+          previous_count <-  new_count
         }
       private$add_filtering_log_step(
         "n_sigma_filter",
