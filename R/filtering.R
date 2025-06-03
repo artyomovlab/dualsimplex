@@ -94,6 +94,37 @@ threshold_filter <- function(
   return(set_anno(anno_flt, eset, genes))
 }
 
+#' Simple range filter based on annotation values
+#'
+#' will remove or keep only values in specified range
+#'
+#' @param eset Expression set (annotated matrix)
+#' @param feature numerical feature to test
+#' @param threshold_lower numerical threshold value
+#' @param threshold_upper numerical threshold value
+#' @param genes if TRUE filter rows else columns
+#' @param keep_within should we keep or remove values within the range
+#' @return modified set
+#' @export
+range_filter <- function(
+  eset,
+  feature,
+  threshold_lower,
+  threshold_upper,
+  genes = T,
+  keep_within = T
+) {
+  anno <- get_anno(eset, genes)
+  if (keep_within) {
+    anno_flt <- dplyr::filter(anno, between(get(feature),threshold_lower, threshold_upper))
+  } else {
+    anno_flt <- dplyr::filter(anno, !between(get(feature),threshold_lower, threshold_upper))
+  }
+  return(set_anno(anno_flt, eset, genes))
+}
+
+
+
 
 #' Simple top_filter filter based on annotation values
 #'
@@ -144,7 +175,8 @@ quantile_filter <- function(eset, feature, quant, genes = T, keep_lower = T) {
 #' @export
 n_sigma_filter <- function(eset, feature, n_sigma = 3, genes = T) {
   feature_col <- get_anno(eset, genes, feature)
-  feature_col <-  abs(feature_col - mean(feature_col))
-  threshold <-  n_sigma * stats::sd(feature_col)
-  return(threshold_filter(eset, feature, threshold, genes, keep_lower = T))
+  sigma <-  stats::sd(feature_col)
+  lower_bound <- mean(feature_col) - n_sigma * sigma
+  upper_bound <- mean(feature_col) + n_sigma * sigma
+  return(range_filter(eset, feature, threshold_lower = lower_bound,  threshold_upper = upper_bound, genes, keep_within = T))
 }
