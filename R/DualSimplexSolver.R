@@ -262,10 +262,24 @@ DualSimplexSolver <- R6Class(
     add_knn_distances_anno= function(annotation_names_list = NULL, genes = T, k_neighbors = 20) {
       self$st$data <- add_knn_distances_anno(
         self$st$data,
-        self$st$proj_full,
+        self$st$proj,
         annotation_columns = annotation_names_list,
         genes = genes,
         k_neighbors = k_neighbors
+      )
+    },
+
+    #' @description
+    #' Add additional density annotation to points.
+    #'
+    #' @param radius radius to count neighbors within.
+    #' @param genes calculate for gene annotations or sample annotations.
+    add_density_anno= function(radius = NULL, genes = T) {
+      self$st$data <- add_density_annotation(
+        self$st$data,
+        self$st$proj,
+        radius = radius,
+        genes = genes
       )
     },
 
@@ -453,6 +467,55 @@ DualSimplexSolver <- R6Class(
         )
       )
       }
+    },
+
+
+    #' @description
+    #' Iteratively filter by N sigma using all the features provided.
+    #' aplication of  n_sigma_filter <- function(eset, feature, n_sigma = 3, genes = T)
+    #' @param n_sigma number of sigmas to keep.
+    #' @param density_radius radius for density calculation.
+    #' @param genes TRUE if filter rows, otherwise columns.
+    #' @param max_filtering_iterations maximum fitering iterations to be performed
+    iterative_density_n_sigma_filter = function(
+      n_sigma = 3,
+      max_filtering_iterations = 500,
+      density_radius = NULL,
+      genes = T
+    ) {
+      private$project_first()
+      new_data <- self$get_data()
+      feature <- 'density'
+      filtering_iteration <-  1
+      previous_count <-  if(genes) dim(new_data)[[1]] else  dim(new_data)[[2]]
+      new_count <- -1
+      while((new_count < previous_count) && (filtering_iteration < max_filtering_iterations) ) {
+          previous_count <-   if(new_count == -1) previous_count else  new_count
+          # Filter all features by selected sigma
+          cell_types <-  self$st$n_cell_types
+
+
+        new_data <- n_sigma_filter(eset = new_data, feature = current_feature,  n_sigma = n_sigma, genes = genes)
+        new_data <- remove_zero_cols(new_data)
+        new_data <- remove_zero_rows(new_data)
+        new_count <-  if(genes) dim(new_data)[[1]] else  dim(new_data)[[2]]
+        private$update_variables(new_data)
+        self$project(cell_types)
+        self$add_density_anno(radius=density_radius, genes=genes)
+        new_data <- self$get_data()
+        filtering_iteration <-  filtering_iteration + 1
+        print(paste("removed", previous_count - new_count, "points"))
+
+      }
+      private$add_filtering_log_step(
+        "iterative_density_filter",
+        paste(
+          paste('radius =', paste0(density_radius, collapse=',')),
+          paste0("n_sigma = ", n_sigma),
+          paste0("iterations = ", filtering_iteration),
+          sep = ", "
+        )
+      )
     },
 
     #' @description

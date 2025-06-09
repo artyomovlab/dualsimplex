@@ -158,13 +158,34 @@ add_distances_anno <- function(eset, V_row, proj) {
   return(eset)
 }
 
-add_knn_distances_anno <- function(eset, proj_full, annotation_columns,  k_neighbors, genes=T) {
+add_knn_distances_anno <- function(eset, proj, annotation_columns,  k_neighbors, genes=T) {
   anno <- get_anno(eset, genes)
   for (anno_name in annotation_columns) {
-    knns <-  FNN::get.knnx(proj_full$X[anno[[anno_name]], ], proj_full$X, k = k_neighbors)
+    knns <-  FNN::get.knnx(proj$X[anno[[anno_name]], ], proj$X, k = k_neighbors)
     distances <- apply(knns$nn.dist, 1, min, na.rm=T)
     anno[, paste0(anno_name, "_subset_distance")] <- distances
   }
+  eset <- set_anno(anno, eset, genes)
+  return(eset)
+}
+
+add_density_annotation <- function(eset, proj, genes=T,radius) {
+  anno <- get_anno(eset, genes)
+  if (genes) {
+    if (!is.null(radius)) {
+      print("Set the radius to standard deviation since the value was not provided")
+      radius <- stats::sd(proj$X)
+    }
+    nn_result <- dbscan::frNN(proj$X, eps = radius)
+  } else {
+    if (!is.null(radius)) {
+      print("Set the radius to standard deviation since the value was not provided")
+      radius <- stats::sd(proj$Omega)
+    }
+    nn_result <- dbscan::frNN(proj$Omega, eps = radius)
+  }
+  nn_count <-  unlist(lapply(nn_result$id, length))
+  anno$density <-  nn_count[rownames(anno)]
   eset <- set_anno(anno, eset, genes)
   return(eset)
 }
