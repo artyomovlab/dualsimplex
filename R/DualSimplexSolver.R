@@ -507,8 +507,8 @@ DualSimplexSolver <- R6Class(
       private$add_filtering_log_step(
         "iterative_density_filter",
         paste(
-          paste('radius =', paste0(density_radius, collapse=',')),
-          paste0("n_sigma = ", n_sigma),
+          paste('radius =', density_radius),
+          paste0("threshold = ", threshold),
           paste0("iterations = ", filtering_iteration),
           sep = ", "
         )
