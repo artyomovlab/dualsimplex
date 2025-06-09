@@ -370,7 +370,7 @@ Iteratively filter by N sigma using all the features provided.
 aplication of  n_sigma_filter <- function(eset, feature, n_sigma = 3, genes = T)
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$iterative_density_n_sigma_filter(
-  n_sigma = 3,
+  quantile = 0.99,
   max_filtering_iterations = 500,
   density_radius = NULL,
   genes = T
@@ -380,7 +380,7 @@ aplication of  n_sigma_filter <- function(eset, feature, n_sigma = 3, genes = T)
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{n_sigma}}{number of sigmas to keep.}
+\item{\code{quantile}}{quantile below which keep values}
 
 \item{\code{max_filtering_iterations}}{maximum fitering iterations to be performed}
 

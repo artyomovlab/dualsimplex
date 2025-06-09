@@ -473,12 +473,12 @@ DualSimplexSolver <- R6Class(
     #' @description
     #' Iteratively filter by N sigma using all the features provided.
     #' aplication of  n_sigma_filter <- function(eset, feature, n_sigma = 3, genes = T)
-    #' @param n_sigma number of sigmas to keep.
+    #' @param quantile quantile below which keep values
     #' @param density_radius radius for density calculation.
     #' @param genes TRUE if filter rows, otherwise columns.
     #' @param max_filtering_iterations maximum fitering iterations to be performed
     iterative_density_n_sigma_filter = function(
-      n_sigma = 3,
+      quantile = 0.99,
       max_filtering_iterations = 500,
       density_radius = NULL,
       genes = T
@@ -495,7 +495,7 @@ DualSimplexSolver <- R6Class(
           cell_types <-  self$st$n_cell_types
 
 
-        new_data <- n_sigma_filter(eset = new_data, feature = current_feature,  n_sigma = n_sigma, genes = genes)
+        new_data <- quantile_filter(eset = new_data, feature = current_feature,  quant = quantile, genes = genes)
         new_data <- remove_zero_cols(new_data)
         new_data <- remove_zero_rows(new_data)
         new_count <-  if(genes) dim(new_data)[[1]] else  dim(new_data)[[2]]

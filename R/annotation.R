@@ -169,16 +169,16 @@ add_knn_distances_anno <- function(eset, proj, annotation_columns,  k_neighbors,
   return(eset)
 }
 
-add_density_annotation <- function(eset, proj, genes=T,radius) {
+add_density_annotation <- function(eset, proj, genes=T, radius=NULL) {
   anno <- get_anno(eset, genes)
   if (genes) {
-    if (!is.null(radius)) {
+    if (is.null(radius)) {
       print("Set the radius to standard deviation since the value was not provided")
       radius <- stats::sd(proj$X)
     }
     nn_result <- dbscan::frNN(proj$X, eps = radius)
   } else {
-    if (!is.null(radius)) {
+    if (is.null(radius)) {
       print("Set the radius to standard deviation since the value was not provided")
       radius <- stats::sd(proj$Omega)
     }
