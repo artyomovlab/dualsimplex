@@ -185,7 +185,10 @@ add_density_annotation <- function(eset, proj, genes=T, radius=NULL) {
     nn_result <- dbscan::frNN(proj$Omega, eps = radius)
   }
   nn_count <-  unlist(lapply(nn_result$id, length))
+  nn_mean_distance <-  unlist(lapply(nn_result$dist, mean))
   anno$density <-  nn_count[rownames(anno)]
+  # zero distance for all neighbors means zero density
+  anno[names(nn_mean_distance[nn_mean_distance == 0]), 'density'] <-  0
   eset <- set_anno(anno, eset, genes)
   return(eset)
 }
