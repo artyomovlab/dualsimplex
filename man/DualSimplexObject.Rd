@@ -54,6 +54,7 @@ dso$plot_projected("zero_distance",
 \item \href{#method-DualSimplexSolver-distance_filter}{\code{DualSimplexSolver$distance_filter()}}
 \item \href{#method-DualSimplexSolver-iterative_n_sigma_filter}{\code{DualSimplexSolver$iterative_n_sigma_filter()}}
 \item \href{#method-DualSimplexSolver-iterative_density_filter}{\code{DualSimplexSolver$iterative_density_filter()}}
+\item \href{#method-DualSimplexSolver-iterative_mahalanobis_filter}{\code{DualSimplexSolver$iterative_mahalanobis_filter()}}
 \item \href{#method-DualSimplexSolver-run_umap}{\code{DualSimplexSolver$run_umap()}}
 \item \href{#method-DualSimplexSolver-plot_projected}{\code{DualSimplexSolver$plot_projected()}}
 \item \href{#method-DualSimplexSolver-init_solution}{\code{DualSimplexSolver$init_solution()}}
@@ -385,6 +386,35 @@ aplication of  n_sigma_filter <- function(eset, feature, n_sigma = 3, genes = T)
 \item{\code{max_filtering_iterations}}{maximum fitering iterations to be performed}
 
 \item{\code{density_radius}}{radius for density calculation.}
+
+\item{\code{genes}}{TRUE if filter rows, otherwise columns.}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-DualSimplexSolver-iterative_mahalanobis_filter"></a>}}
+\if{latex}{\out{\hypertarget{method-DualSimplexSolver-iterative_mahalanobis_filter}{}}}
+\subsection{Method \code{iterative_mahalanobis_filter()}}{
+Iteratively filter by N sigma using all the features provided simultaniously.
+aplication of  n_sigma_filter <- function(eset, feature, n_sigma = 3, genes = T)
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$iterative_mahalanobis_filter(
+  features = NULL,
+  n_sigma = 3,
+  max_filtering_iterations = 500,
+  genes = T
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{features}}{feature names (columns of pData or fData) as a vector.}
+
+\item{\code{n_sigma}}{number of sigmas to keep.}
+
+\item{\code{max_filtering_iterations}}{maximum fitering iterations to be performed}
 
 \item{\code{genes}}{TRUE if filter rows, otherwise columns.}
 }

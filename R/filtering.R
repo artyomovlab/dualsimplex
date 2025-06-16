@@ -178,5 +178,31 @@ n_sigma_filter <- function(eset, feature, n_sigma = 3, genes = T) {
   sigma <-  stats::sd(feature_col)
   lower_bound <- mean(feature_col) - n_sigma * sigma
   upper_bound <- mean(feature_col) + n_sigma * sigma
+  print(paste("Sigma:", sigma))
   return(range_filter(eset, feature, threshold_lower = lower_bound,  threshold_upper = upper_bound, genes, keep_within = T))
+}
+
+
+#' Simple n_sigma filter based on annotation values
+#'
+#' will keep only values lying in a n_sigma interval for the feature
+#'
+#' @param eset Expression set (annotated matrix)
+#' @param features numerical features to test
+#' @param n_sigma how many standard deviations to keep
+#' @param genes if TRUE filter rows else columns
+#' @param keep_lower wether to take values inside interval
+#' @return modified set
+#' @export
+mahalanobis_n_sigma_filter <- function(eset, features, n_sigma = 3, genes = T, keep_lower=T) {
+  feature_cols <- get_anno(eset, genes, features)
+  Sx <- stats::cov(feature_cols)
+  distance_values <- sqrt(stats::mahalanobis(features, colMeans(features), Sx))
+  anno <- get_anno(eset, genes)
+  if (keep_lower) {
+    anno_flt <- anno[distance_values < n_sigma,]
+  } else {
+    anno_flt <- anno[distance_values < n_sigma,]
+  }
+  return(set_anno(anno_flt, eset, genes))
 }
