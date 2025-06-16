@@ -197,7 +197,7 @@ n_sigma_filter <- function(eset, feature, n_sigma = 3, genes = T) {
 mahalanobis_n_sigma_filter <- function(eset, features, n_sigma = 3, genes = T, keep_lower=T) {
   feature_cols <- get_anno(eset, genes, features)
   Sx <- stats::cov(feature_cols)
-  distance_values <- sqrt(stats::mahalanobis(features, colMeans(features), Sx))
+  distance_values <- sqrt(stats::mahalanobis(feature_cols, colMeans(feature_cols), Sx))
   anno <- get_anno(eset, genes)
   if (keep_lower) {
     anno_flt <- anno[distance_values < n_sigma,]
