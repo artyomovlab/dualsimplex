@@ -3,10 +3,18 @@
 
 //' Get cosine distance between columns
 //'
+//' @param a input vector a.
+//' @param b input vector b.
+//' @return double value of cosine distance
+// [[Rcpp::export]]
+double cosine_distance(const arma::rowvec& a,const arma::rowvec& b);
+
+//' Get cosine distance between columns
+//'
 //' @param X input matrix
 //' @return derivative for X
 // [[Rcpp::export]]
-arma::rowvec find_cosine(const arma::mat& X);
+arma::rowvec cosine_between_rows(const arma::mat& X);
 
 arma::mat correctByNorm(arma::mat& X);
 

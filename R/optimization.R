@@ -13,6 +13,9 @@
 #' @param limit_X EXPERIMENTAL: if you want to restrict X from changing to much. should be 0 since not tested.
 #' @param limit_Omega EXPERIMENTAL: if you want to restrict Omega from changing to much. should be 0 since not tested.
 #' @param cosine_thresh  EXPERIMENTAL: if you want to restrict derivative from changing to much. should be 0 since not tested.
+#' @param x_center X rays around which to perform search in theta search.
+#' @param omega_center Omega rays around which to perform search in theta search.
+#' @param theta_threshold theta param.
 #' @param method method of optimization to use can be  basic/positivity.
 #' @return ready to use list with algorithm configuration
 #' @export
@@ -26,7 +29,10 @@ optim_config <- function(
   limit_X = 0,
   limit_Omega = 0,
   cosine_thresh = 0,
-  method = "basic" # basic/positivity
+  x_center = NULL,
+  omega_center = NULL,
+  theta_threshold = 0,
+  method = "basic" # basic/positivity/theta
 ) {
   return(list(
     coef_der_X = coef_der_X,
@@ -38,6 +44,9 @@ optim_config <- function(
     limit_X = limit_X,
     limit_Omega = limit_Omega,
     cosine_thresh = cosine_thresh,
+    x_center = x_center,
+    omega_center = omega_center,
+    theta_threshold = theta_threshold,
     method = method
   ))
 }
@@ -142,32 +151,37 @@ optimize_solution <- function(
   r_limits <- calc_r_limits(proj, config$limit_X, config$limit_Omega)
 
   optimization_params <- list(
-    solution_proj$X,
-    t(solution_proj$Omega),
-    solution_proj$D_w,
-    proj$meta$Sigma, # Should be equal to SVRt
-    proj$meta$R,
-    proj$meta$S,
-    config$coef_der_X,
-    config$coef_der_Omega,
-    config$coef_hinge_H,
-    config$coef_hinge_W,
-    config$coef_pos_D_h,
-    config$coef_pos_D_w,
-    n_cell_types,
-    proj$meta$N,
-    proj$meta$M,
-    iterations,
-    mean_radius_X,
-    mean_radius_Omega,
-    r_limits$R_limit_X,
-    r_limits$R_limit_Omega,
-    config$cosine_thresh
+    X = solution_proj$X,
+    Omega = t(solution_proj$Omega),
+    D_w = solution_proj$D_w,
+    SVRt = proj$meta$Sigma, # Should be equal to SVRt
+    R = proj$meta$R,
+    S = proj$meta$S,
+    coef_der_X = config$coef_der_X,
+    coef_der_Omega = config$coef_der_Omega,
+    coef_hinge_H = config$coef_hinge_H,
+    coef_hinge_W = config$coef_hinge_W,
+    coef_pos_D_h = config$coef_pos_D_h,
+    coef_pos_D_w = config$coef_pos_D_w,
+    cell_types = n_cell_types,
+    N = proj$meta$N,
+    M = proj$meta$M,
+    iterations = iterations,
+    mean_radius_X = mean_radius_X,
+    mean_radius_Omega = mean_radius_Omega,
+    r_const_X = r_limits$R_limit_X,
+    r_const_Omega = r_limits$R_limit_Omega,
+    thresh = config$cosine_thresh
   )
   optimization_result <- if (config$method == "positivity") {
     do.call(alternative_derivative_stage2, optimization_params)
   } else if (config$method == "basic") {
     do.call(derivative_stage2, optimization_params)
+  } else if (config$method == "theta") {
+    optimization_params$X_center <- config$x_center
+    optimization_params$Omega_center <- config$omega_center
+    optimization_params$theta_threshold <- config$theta_threshold
+    do.call(theta_derivative_stage2, optimization_params)
   } else {
     print("Unknown optimization method. Will do the basic one")
     do.call(derivative_stage2, optimization_params)

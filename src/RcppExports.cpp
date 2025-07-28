@@ -11,45 +11,26 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// alternative_derivative_stage2
-Rcpp::List alternative_derivative_stage2(const arma::mat& X, const arma::mat& Omega, const arma::mat& D_w, const arma::mat& SVRt, const arma::mat& R, const arma::mat& S, const double coef_der_X, const double coef_der_Omega, const double coef_hinge_H, const double coef_hinge_W, const double coef_pos_D_h, const double coef_pos_D_w, const int cell_types, const double N, const double M, const int iterations, const double mean_radius_X, const double mean_radius_Omega, const double r_const_X, const double r_const_Omega, const double thresh);
-RcppExport SEXP _DualSimplex_alternative_derivative_stage2(SEXP XSEXP, SEXP OmegaSEXP, SEXP D_wSEXP, SEXP SVRtSEXP, SEXP RSEXP, SEXP SSEXP, SEXP coef_der_XSEXP, SEXP coef_der_OmegaSEXP, SEXP coef_hinge_HSEXP, SEXP coef_hinge_WSEXP, SEXP coef_pos_D_hSEXP, SEXP coef_pos_D_wSEXP, SEXP cell_typesSEXP, SEXP NSEXP, SEXP MSEXP, SEXP iterationsSEXP, SEXP mean_radius_XSEXP, SEXP mean_radius_OmegaSEXP, SEXP r_const_XSEXP, SEXP r_const_OmegaSEXP, SEXP threshSEXP) {
+// cosine_distance
+double cosine_distance(const arma::rowvec& a, const arma::rowvec& b);
+RcppExport SEXP _DualSimplex_cosine_distance(SEXP aSEXP, SEXP bSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type Omega(OmegaSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type D_w(D_wSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type SVRt(SVRtSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type R(RSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type S(SSEXP);
-    Rcpp::traits::input_parameter< const double >::type coef_der_X(coef_der_XSEXP);
-    Rcpp::traits::input_parameter< const double >::type coef_der_Omega(coef_der_OmegaSEXP);
-    Rcpp::traits::input_parameter< const double >::type coef_hinge_H(coef_hinge_HSEXP);
-    Rcpp::traits::input_parameter< const double >::type coef_hinge_W(coef_hinge_WSEXP);
-    Rcpp::traits::input_parameter< const double >::type coef_pos_D_h(coef_pos_D_hSEXP);
-    Rcpp::traits::input_parameter< const double >::type coef_pos_D_w(coef_pos_D_wSEXP);
-    Rcpp::traits::input_parameter< const int >::type cell_types(cell_typesSEXP);
-    Rcpp::traits::input_parameter< const double >::type N(NSEXP);
-    Rcpp::traits::input_parameter< const double >::type M(MSEXP);
-    Rcpp::traits::input_parameter< const int >::type iterations(iterationsSEXP);
-    Rcpp::traits::input_parameter< const double >::type mean_radius_X(mean_radius_XSEXP);
-    Rcpp::traits::input_parameter< const double >::type mean_radius_Omega(mean_radius_OmegaSEXP);
-    Rcpp::traits::input_parameter< const double >::type r_const_X(r_const_XSEXP);
-    Rcpp::traits::input_parameter< const double >::type r_const_Omega(r_const_OmegaSEXP);
-    Rcpp::traits::input_parameter< const double >::type thresh(threshSEXP);
-    rcpp_result_gen = Rcpp::wrap(alternative_derivative_stage2(X, Omega, D_w, SVRt, R, S, coef_der_X, coef_der_Omega, coef_hinge_H, coef_hinge_W, coef_pos_D_h, coef_pos_D_w, cell_types, N, M, iterations, mean_radius_X, mean_radius_Omega, r_const_X, r_const_Omega, thresh));
+    Rcpp::traits::input_parameter< const arma::rowvec& >::type a(aSEXP);
+    Rcpp::traits::input_parameter< const arma::rowvec& >::type b(bSEXP);
+    rcpp_result_gen = Rcpp::wrap(cosine_distance(a, b));
     return rcpp_result_gen;
 END_RCPP
 }
-// find_cosine
-arma::rowvec find_cosine(const arma::mat& X);
-RcppExport SEXP _DualSimplex_find_cosine(SEXP XSEXP) {
+// cosine_between_rows
+arma::rowvec cosine_between_rows(const arma::mat& X);
+RcppExport SEXP _DualSimplex_cosine_between_rows(SEXP XSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
-    rcpp_result_gen = Rcpp::wrap(find_cosine(X));
+    rcpp_result_gen = Rcpp::wrap(cosine_between_rows(X));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -247,6 +228,71 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// alternative_derivative_stage2
+Rcpp::List alternative_derivative_stage2(const arma::mat& X, const arma::mat& Omega, const arma::mat& D_w, const arma::mat& SVRt, const arma::mat& R, const arma::mat& S, const double coef_der_X, const double coef_der_Omega, const double coef_hinge_H, const double coef_hinge_W, const double coef_pos_D_h, const double coef_pos_D_w, const int cell_types, const double N, const double M, const int iterations, const double mean_radius_X, const double mean_radius_Omega, const double r_const_X, const double r_const_Omega, const double thresh);
+RcppExport SEXP _DualSimplex_alternative_derivative_stage2(SEXP XSEXP, SEXP OmegaSEXP, SEXP D_wSEXP, SEXP SVRtSEXP, SEXP RSEXP, SEXP SSEXP, SEXP coef_der_XSEXP, SEXP coef_der_OmegaSEXP, SEXP coef_hinge_HSEXP, SEXP coef_hinge_WSEXP, SEXP coef_pos_D_hSEXP, SEXP coef_pos_D_wSEXP, SEXP cell_typesSEXP, SEXP NSEXP, SEXP MSEXP, SEXP iterationsSEXP, SEXP mean_radius_XSEXP, SEXP mean_radius_OmegaSEXP, SEXP r_const_XSEXP, SEXP r_const_OmegaSEXP, SEXP threshSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type Omega(OmegaSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type D_w(D_wSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type SVRt(SVRtSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type R(RSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type S(SSEXP);
+    Rcpp::traits::input_parameter< const double >::type coef_der_X(coef_der_XSEXP);
+    Rcpp::traits::input_parameter< const double >::type coef_der_Omega(coef_der_OmegaSEXP);
+    Rcpp::traits::input_parameter< const double >::type coef_hinge_H(coef_hinge_HSEXP);
+    Rcpp::traits::input_parameter< const double >::type coef_hinge_W(coef_hinge_WSEXP);
+    Rcpp::traits::input_parameter< const double >::type coef_pos_D_h(coef_pos_D_hSEXP);
+    Rcpp::traits::input_parameter< const double >::type coef_pos_D_w(coef_pos_D_wSEXP);
+    Rcpp::traits::input_parameter< const int >::type cell_types(cell_typesSEXP);
+    Rcpp::traits::input_parameter< const double >::type N(NSEXP);
+    Rcpp::traits::input_parameter< const double >::type M(MSEXP);
+    Rcpp::traits::input_parameter< const int >::type iterations(iterationsSEXP);
+    Rcpp::traits::input_parameter< const double >::type mean_radius_X(mean_radius_XSEXP);
+    Rcpp::traits::input_parameter< const double >::type mean_radius_Omega(mean_radius_OmegaSEXP);
+    Rcpp::traits::input_parameter< const double >::type r_const_X(r_const_XSEXP);
+    Rcpp::traits::input_parameter< const double >::type r_const_Omega(r_const_OmegaSEXP);
+    Rcpp::traits::input_parameter< const double >::type thresh(threshSEXP);
+    rcpp_result_gen = Rcpp::wrap(alternative_derivative_stage2(X, Omega, D_w, SVRt, R, S, coef_der_X, coef_der_Omega, coef_hinge_H, coef_hinge_W, coef_pos_D_h, coef_pos_D_w, cell_types, N, M, iterations, mean_radius_X, mean_radius_Omega, r_const_X, r_const_Omega, thresh));
+    return rcpp_result_gen;
+END_RCPP
+}
+// theta_derivative_stage2
+Rcpp::List theta_derivative_stage2(const arma::mat& X, const arma::mat& Omega, const arma::mat& D_w, const arma::mat& SVRt, const arma::mat& R, const arma::mat& S, const arma::mat& X_center, const arma::mat& Omega_center, const double coef_der_X, const double coef_der_Omega, const double coef_hinge_H, const double coef_hinge_W, const double coef_pos_D_h, const double coef_pos_D_w, const int cell_types, const double N, const double M, const int iterations, const double mean_radius_X, const double mean_radius_Omega, const double r_const_X, const double r_const_Omega, const double thresh, const double theta_threshold);
+RcppExport SEXP _DualSimplex_theta_derivative_stage2(SEXP XSEXP, SEXP OmegaSEXP, SEXP D_wSEXP, SEXP SVRtSEXP, SEXP RSEXP, SEXP SSEXP, SEXP X_centerSEXP, SEXP Omega_centerSEXP, SEXP coef_der_XSEXP, SEXP coef_der_OmegaSEXP, SEXP coef_hinge_HSEXP, SEXP coef_hinge_WSEXP, SEXP coef_pos_D_hSEXP, SEXP coef_pos_D_wSEXP, SEXP cell_typesSEXP, SEXP NSEXP, SEXP MSEXP, SEXP iterationsSEXP, SEXP mean_radius_XSEXP, SEXP mean_radius_OmegaSEXP, SEXP r_const_XSEXP, SEXP r_const_OmegaSEXP, SEXP threshSEXP, SEXP theta_thresholdSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type Omega(OmegaSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type D_w(D_wSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type SVRt(SVRtSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type R(RSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type S(SSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type X_center(X_centerSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type Omega_center(Omega_centerSEXP);
+    Rcpp::traits::input_parameter< const double >::type coef_der_X(coef_der_XSEXP);
+    Rcpp::traits::input_parameter< const double >::type coef_der_Omega(coef_der_OmegaSEXP);
+    Rcpp::traits::input_parameter< const double >::type coef_hinge_H(coef_hinge_HSEXP);
+    Rcpp::traits::input_parameter< const double >::type coef_hinge_W(coef_hinge_WSEXP);
+    Rcpp::traits::input_parameter< const double >::type coef_pos_D_h(coef_pos_D_hSEXP);
+    Rcpp::traits::input_parameter< const double >::type coef_pos_D_w(coef_pos_D_wSEXP);
+    Rcpp::traits::input_parameter< const int >::type cell_types(cell_typesSEXP);
+    Rcpp::traits::input_parameter< const double >::type N(NSEXP);
+    Rcpp::traits::input_parameter< const double >::type M(MSEXP);
+    Rcpp::traits::input_parameter< const int >::type iterations(iterationsSEXP);
+    Rcpp::traits::input_parameter< const double >::type mean_radius_X(mean_radius_XSEXP);
+    Rcpp::traits::input_parameter< const double >::type mean_radius_Omega(mean_radius_OmegaSEXP);
+    Rcpp::traits::input_parameter< const double >::type r_const_X(r_const_XSEXP);
+    Rcpp::traits::input_parameter< const double >::type r_const_Omega(r_const_OmegaSEXP);
+    Rcpp::traits::input_parameter< const double >::type thresh(threshSEXP);
+    Rcpp::traits::input_parameter< const double >::type theta_threshold(theta_thresholdSEXP);
+    rcpp_result_gen = Rcpp::wrap(theta_derivative_stage2(X, Omega, D_w, SVRt, R, S, X_center, Omega_center, coef_der_X, coef_der_Omega, coef_hinge_H, coef_hinge_W, coef_pos_D_h, coef_pos_D_w, cell_types, N, M, iterations, mean_radius_X, mean_radius_Omega, r_const_X, r_const_Omega, thresh, theta_threshold));
+    return rcpp_result_gen;
+END_RCPP
+}
 // reverse_sinkhorn_c
 Rcpp::List reverse_sinkhorn_c(const arma::mat& result_H_row, const arma::mat& result_W_col, const arma::mat& D_vs_row, const arma::mat& D_vs_col, int iterations);
 RcppExport SEXP _DualSimplex_reverse_sinkhorn_c(SEXP result_H_rowSEXP, SEXP result_W_colSEXP, SEXP D_vs_rowSEXP, SEXP D_vs_colSEXP, SEXP iterationsSEXP) {
@@ -306,8 +352,8 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_DualSimplex_alternative_derivative_stage2", (DL_FUNC) &_DualSimplex_alternative_derivative_stage2, 21},
-    {"_DualSimplex_find_cosine", (DL_FUNC) &_DualSimplex_find_cosine, 1},
+    {"_DualSimplex_cosine_distance", (DL_FUNC) &_DualSimplex_cosine_distance, 2},
+    {"_DualSimplex_cosine_between_rows", (DL_FUNC) &_DualSimplex_cosine_between_rows, 1},
     {"_DualSimplex_getNonnegativeLowRankApproximationWithSVD", (DL_FUNC) &_DualSimplex_getNonnegativeLowRankApproximationWithSVD, 5},
     {"_DualSimplex_getNonnegativeLowRankApproximationWithHMT", (DL_FUNC) &_DualSimplex_getNonnegativeLowRankApproximationWithHMT, 7},
     {"_DualSimplex_getNonnegativeLowRankApproximationWithGN", (DL_FUNC) &_DualSimplex_getNonnegativeLowRankApproximationWithGN, 6},
@@ -320,6 +366,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_DualSimplex_hinge_C__", (DL_FUNC) &_DualSimplex_hinge_C__, 1},
     {"_DualSimplex_calcErrors", (DL_FUNC) &_DualSimplex_calcErrors, 14},
     {"_DualSimplex_derivative_stage2", (DL_FUNC) &_DualSimplex_derivative_stage2, 21},
+    {"_DualSimplex_alternative_derivative_stage2", (DL_FUNC) &_DualSimplex_alternative_derivative_stage2, 21},
+    {"_DualSimplex_theta_derivative_stage2", (DL_FUNC) &_DualSimplex_theta_derivative_stage2, 24},
     {"_DualSimplex_reverse_sinkhorn_c", (DL_FUNC) &_DualSimplex_reverse_sinkhorn_c, 5},
     {"_DualSimplex_sinkhorn_scale_c", (DL_FUNC) &_DualSimplex_sinkhorn_scale_c, 2},
     {"_DualSimplex_efficient_sinkhorn", (DL_FUNC) &_DualSimplex_efficient_sinkhorn, 5},

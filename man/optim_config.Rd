@@ -14,6 +14,9 @@ optim_config(
   limit_X = 0,
   limit_Omega = 0,
   cosine_thresh = 0,
+  x_center = NULL,
+  omega_center = NULL,
+  theta_threshold = 0,
   method = "basic"
 )
 }
@@ -35,6 +38,12 @@ optim_config(
 \item{limit_Omega}{EXPERIMENTAL: if you want to restrict Omega from changing to much. should be 0 since not tested.}
 
 \item{cosine_thresh}{EXPERIMENTAL: if you want to restrict derivative from changing to much. should be 0 since not tested.}
+
+\item{x_center}{X rays around which to perform search in theta search.}
+
+\item{omega_center}{Omega rays around which to perform search in theta search.}
+
+\item{theta_threshold}{theta param.}
 
 \item{method}{method of optimization to use can be  basic/positivity.}
 }
