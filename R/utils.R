@@ -142,7 +142,7 @@ calc_dist_from_truncated_svd <- function(approximated, original = NULL, residual
 #'@return  a numeric vector
 row_dist_from_mean <- function(mtx) {
   # Notice that standard deviation estimates is devided by sqrt(N-1)
-  matrixStats::rowSds(mtx) * sqrt(ncol(mtx) - 1)
+    matrixStats::rowSds(mtx) * sqrt(ncol(mtx) - 1)
 }
 
 #' Calculate Euclidean distance around the mean for each column

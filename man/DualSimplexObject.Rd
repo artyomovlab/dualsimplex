@@ -45,12 +45,16 @@ dso$plot_projected("zero_distance",
 \item \href{#method-DualSimplexSolver-plot_mad}{\code{DualSimplexSolver$plot_mad()}}
 \item \href{#method-DualSimplexSolver-basic_filter}{\code{DualSimplexSolver$basic_filter()}}
 \item \href{#method-DualSimplexSolver-add_knn_distances_anno}{\code{DualSimplexSolver$add_knn_distances_anno()}}
+\item \href{#method-DualSimplexSolver-add_density_anno}{\code{DualSimplexSolver$add_density_anno()}}
 \item \href{#method-DualSimplexSolver-plot_svd}{\code{DualSimplexSolver$plot_svd()}}
 \item \href{#method-DualSimplexSolver-plot_svd_history}{\code{DualSimplexSolver$plot_svd_history()}}
 \item \href{#method-DualSimplexSolver-project}{\code{DualSimplexSolver$project()}}
 \item \href{#method-DualSimplexSolver-plot_projection_diagnostics}{\code{DualSimplexSolver$plot_projection_diagnostics()}}
 \item \href{#method-DualSimplexSolver-plot_distances_distribution}{\code{DualSimplexSolver$plot_distances_distribution()}}
 \item \href{#method-DualSimplexSolver-distance_filter}{\code{DualSimplexSolver$distance_filter()}}
+\item \href{#method-DualSimplexSolver-iterative_n_sigma_filter}{\code{DualSimplexSolver$iterative_n_sigma_filter()}}
+\item \href{#method-DualSimplexSolver-iterative_density_filter}{\code{DualSimplexSolver$iterative_density_filter()}}
+\item \href{#method-DualSimplexSolver-iterative_mahalanobis_filter}{\code{DualSimplexSolver$iterative_mahalanobis_filter()}}
 \item \href{#method-DualSimplexSolver-run_umap}{\code{DualSimplexSolver$run_umap()}}
 \item \href{#method-DualSimplexSolver-plot_projected}{\code{DualSimplexSolver$plot_projected()}}
 \item \href{#method-DualSimplexSolver-init_solution}{\code{DualSimplexSolver$init_solution()}}
@@ -198,6 +202,25 @@ Add additional distance annotation based on KNN distances to selected annotation
 }
 }
 \if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-DualSimplexSolver-add_density_anno"></a>}}
+\if{latex}{\out{\hypertarget{method-DualSimplexSolver-add_density_anno}{}}}
+\subsection{Method \code{add_density_anno()}}{
+Add additional density annotation to points.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$add_density_anno(radius = NULL, genes = T)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{radius}}{radius to count neighbors within.}
+
+\item{\code{genes}}{calculate for gene annotations or sample annotations.}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-DualSimplexSolver-plot_svd"></a>}}
 \if{latex}{\out{\hypertarget{method-DualSimplexSolver-plot_svd}{}}}
 \subsection{Method \code{plot_svd()}}{
@@ -305,6 +328,93 @@ Filter points based on distance thresholds. (keep lower).
 \item{\code{plane_d_lt}}{threshold for plane distance.}
 
 \item{\code{zero_d_lt}}{threshold for zero distance.}
+
+\item{\code{genes}}{TRUE if filter rows, otherwise columns.}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-DualSimplexSolver-iterative_n_sigma_filter"></a>}}
+\if{latex}{\out{\hypertarget{method-DualSimplexSolver-iterative_n_sigma_filter}{}}}
+\subsection{Method \code{iterative_n_sigma_filter()}}{
+Iteratively filter by N sigma using all the features provided.
+aplication of  n_sigma_filter <- function(eset, feature, n_sigma = 3, genes = T)
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$iterative_n_sigma_filter(
+  features = NULL,
+  n_sigma = 3,
+  max_filtering_iterations = 500,
+  genes = T
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{features}}{feature names (columns of pData or fData) as a vector.}
+
+\item{\code{n_sigma}}{number of sigmas to keep.}
+
+\item{\code{max_filtering_iterations}}{maximum fitering iterations to be performed}
+
+\item{\code{genes}}{TRUE if filter rows, otherwise columns.}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-DualSimplexSolver-iterative_density_filter"></a>}}
+\if{latex}{\out{\hypertarget{method-DualSimplexSolver-iterative_density_filter}{}}}
+\subsection{Method \code{iterative_density_filter()}}{
+Iteratively filter by N sigma using all the features provided.
+aplication of  n_sigma_filter <- function(eset, feature, n_sigma = 3, genes = T)
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$iterative_density_filter(
+  threshold = 0,
+  max_filtering_iterations = 500,
+  density_radius = NULL,
+  genes = T
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{threshold}}{threshold to filter neighborhoods}
+
+\item{\code{max_filtering_iterations}}{maximum fitering iterations to be performed}
+
+\item{\code{density_radius}}{radius for density calculation.}
+
+\item{\code{genes}}{TRUE if filter rows, otherwise columns.}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-DualSimplexSolver-iterative_mahalanobis_filter"></a>}}
+\if{latex}{\out{\hypertarget{method-DualSimplexSolver-iterative_mahalanobis_filter}{}}}
+\subsection{Method \code{iterative_mahalanobis_filter()}}{
+Iteratively filter by N sigma using all the features provided simultaniously.
+aplication of  n_sigma_filter <- function(eset, feature, n_sigma = 3, genes = T)
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$iterative_mahalanobis_filter(
+  features = NULL,
+  n_sigma = 3,
+  max_filtering_iterations = 500,
+  genes = T
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{features}}{feature names (columns of pData or fData) as a vector.}
+
+\item{\code{n_sigma}}{number of sigmas to keep.}
+
+\item{\code{max_filtering_iterations}}{maximum fitering iterations to be performed}
 
 \item{\code{genes}}{TRUE if filter rows, otherwise columns.}
 }

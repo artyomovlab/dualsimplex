@@ -11,6 +11,7 @@
 #' @param ... additional arguments passed to function `run_svd`
 #' 
 #' @return list with all calculated matrices
+#' @export
 calc_svd_ops <- function(V_row, max_dim = 50L, method = "svd", ...) {
   dims <- 1:min(dim(V_row), max_dim)
 

@@ -55,7 +55,8 @@ Imports:
     combinat,
     scales,
     FNN,
-    matrixStats
+    matrixStats,
+    dbscan
 Suggests:
     Seurat,
     gganimate

@@ -94,6 +94,37 @@ threshold_filter <- function(
   return(set_anno(anno_flt, eset, genes))
 }
 
+#' Simple range filter based on annotation values
+#'
+#' will remove or keep only values in specified range
+#'
+#' @param eset Expression set (annotated matrix)
+#' @param feature numerical feature to test
+#' @param threshold_lower numerical threshold value
+#' @param threshold_upper numerical threshold value
+#' @param genes if TRUE filter rows else columns
+#' @param keep_within should we keep or remove values within the range
+#' @return modified set
+#' @export
+range_filter <- function(
+  eset,
+  feature,
+  threshold_lower,
+  threshold_upper,
+  genes = T,
+  keep_within = T
+) {
+  anno <- get_anno(eset, genes)
+  if (keep_within) {
+    anno_flt <- dplyr::filter(anno, between(get(feature),threshold_lower, threshold_upper))
+  } else {
+    anno_flt <- dplyr::filter(anno, !between(get(feature),threshold_lower, threshold_upper))
+  }
+  return(set_anno(anno_flt, eset, genes))
+}
+
+
+
 
 #' Simple top_filter filter based on annotation values
 #'
@@ -144,6 +175,34 @@ quantile_filter <- function(eset, feature, quant, genes = T, keep_lower = T) {
 #' @export
 n_sigma_filter <- function(eset, feature, n_sigma = 3, genes = T) {
   feature_col <- get_anno(eset, genes, feature)
-  threshold <- mean(feature_col) + n_sigma * stats::sd(feature_col)
-  return(threshold_filter(eset, feature, threshold, genes, keep_lower = T))
+  sigma <-  stats::sd(feature_col)
+  lower_bound <- mean(feature_col) - n_sigma * sigma
+  upper_bound <- mean(feature_col) + n_sigma * sigma
+  print(paste("Sigma:", sigma))
+  return(range_filter(eset, feature, threshold_lower = lower_bound,  threshold_upper = upper_bound, genes, keep_within = T))
+}
+
+
+#' Simple n_sigma filter based on annotation values
+#'
+#' will keep only values lying in a n_sigma interval for the feature
+#'
+#' @param eset Expression set (annotated matrix)
+#' @param features numerical features to test
+#' @param n_sigma how many standard deviations to keep
+#' @param genes if TRUE filter rows else columns
+#' @param keep_lower wether to take values inside interval
+#' @return modified set
+#' @export
+mahalanobis_n_sigma_filter <- function(eset, features, n_sigma = 3, genes = T, keep_lower=T) {
+  feature_cols <- get_anno(eset, genes, features)
+  Sx <- stats::cov(feature_cols)
+  distance_values <- sqrt(stats::mahalanobis(feature_cols, colMeans(feature_cols), Sx))
+  anno <- get_anno(eset, genes)
+  if (keep_lower) {
+    anno_flt <- anno[distance_values < n_sigma,]
+  } else {
+    anno_flt <- anno[distance_values < n_sigma,]
+  }
+  return(set_anno(anno_flt, eset, genes))
 }

@@ -144,23 +144,50 @@ add_distances_anno <- function(eset, V_row, proj) {
   Biobase::fData(eset)$plane_distance <- feature_dists$plane_distance
   Biobase::fData(eset)$zero_distance <- feature_dists$zero_distance
 
+  # Also include projection coordinates as a columns into fData
+  Biobase::fData(eset)[, colnames(proj$X)] <- proj$X
+
 
   # For samples (using V_column)
   d <- ncol(V_row) / nrow(V_row)
   sample_dists <- calc_dist_from_truncated_svd(approx * d, residual = residual * d, margin = 2)
   Biobase::pData(eset)$plane_distance <- sample_dists$plane_distance
   Biobase::pData(eset)$zero_distance <- sample_dists$zero_distance
-
+  # Also include projection coordinates as a columns into pData
+  Biobase::pData(eset)[, colnames(proj$Omega)] <- proj$Omega
   return(eset)
 }
 
-add_knn_distances_anno <- function(eset, proj_full, annotation_columns,  k_neighbors, genes=T) {
+add_knn_distances_anno <- function(eset, proj, annotation_columns,  k_neighbors, genes=T) {
   anno <- get_anno(eset, genes)
   for (anno_name in annotation_columns) {
-    knns <-  FNN::get.knnx(proj_full$X[anno[[anno_name]], ], proj_full$X, k = k_neighbors)
+    knns <-  FNN::get.knnx(proj$X[anno[[anno_name]], ], proj$X, k = k_neighbors)
     distances <- apply(knns$nn.dist, 1, min, na.rm=T)
     anno[, paste0(anno_name, "_subset_distance")] <- distances
   }
+  eset <- set_anno(anno, eset, genes)
+  return(eset)
+}
+
+add_density_annotation <- function(eset, proj, genes=T, radius=NULL) {
+  anno <- get_anno(eset, genes)
+  if (genes) {
+    if (is.null(radius)) {
+      print("Set the radius to mad since the value was not provided")
+      radius <- stats::mad(proj$X[,2:dim(proj$X)[[2]]])
+    }
+    nn_result <- dbscan::frNN(proj$X, eps = radius)
+  } else {
+    if (is.null(radius)) {
+      print("Set the radius to mad since the value was not provided")
+      radius <- stats::mad(proj$Omega[,2:dim(proj$Omega)[[2]]])
+    }
+    nn_result <- dbscan::frNN(proj$Omega, eps = radius)
+  }
+  nn_count <-  unlist(lapply(nn_result$id, length))
+  nn_mean_distance <-  unlist(lapply(nn_result$dist, mean))
+  anno$density <-  nn_count[rownames(anno)]
+  anno$mean_nn_distance <-  nn_mean_distance[rownames(anno)]
   eset <- set_anno(anno, eset, genes)
   return(eset)
 }
