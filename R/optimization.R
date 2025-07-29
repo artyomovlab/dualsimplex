@@ -183,6 +183,8 @@ optimize_solution <- function(
     optimization_params$X_center <- config$x_center # predefined center point for X space. could be NULL
     if (! is.null(config$omega_center)) {
         optimization_params$Omega_center <- t(config$omega_center) # predefined center point for Omega space. could be NULL
+    } else {
+        optimization_params$Omega_center  <- config$omega_center
     }
     optimization_params$theta_threshold <- config$theta_threshold # threshold for the angle
     do.call(theta_derivative_stage2, optimization_params)
