@@ -84,7 +84,7 @@ Rcpp::List theta_derivative_stage2(const arma::mat& X,
                             // Rcout << "Now cos is  : " << cos_distance_result << "\n";
                             shrink_iteration++;
                           }
-                        Rcpp::Rcout << "X shrink iterations performed for component " << c <<: " is " << shrink_iteration << "\n";
+                        Rcpp::Rcout << "X shrink iterations performed for component " << c << " is: " << shrink_iteration << "\n";
                     }
                 }
 
@@ -145,7 +145,7 @@ Rcpp::List theta_derivative_stage2(const arma::mat& X,
                             // Rcout << "Now cos is  : " << cos_distance_result << "\n";
                             shrink_iteration++;
                           }
-                          Rcpp::Rcout << "Omega shrink iterations performed for component " << c <<: " is " << shrink_iteration << "\n";
+                          Rcpp::Rcout << "Omega shrink iterations performed for component " << c << " is: " << shrink_iteration << "\n";
                     }
                 }
             }
