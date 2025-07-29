@@ -181,7 +181,9 @@ optimize_solution <- function(
     # this optimization ensures that solution points are not going away to far from the predefined center points.
     # the distance is measured as cosine distance between rays originating from 0.
     optimization_params$X_center <- config$x_center # predefined center point for X space. could be NULL
-    optimization_params$Omega_center <- t(config$omega_center) # predefined center point for Omega space. could be NULL
+    if (! is.null(config$omega_center)) {
+        optimization_params$Omega_center <- t(config$omega_center) # predefined center point for Omega space. could be NULL
+    }
     optimization_params$theta_threshold <- config$theta_threshold # threshold for the angle
     do.call(theta_derivative_stage2, optimization_params)
   } else {
