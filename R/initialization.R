@@ -23,7 +23,37 @@ initializers <- list(
       if (length(sel) == 0) stop("One or more cell types has zero markers present")
       colMeans(proj$X[sel, ])
     })
-    X <- matrix(unlist(mm), ncol = length(kwargs$marker_list), byrow = T)
+    K <- proj$meta$K
+    X <- matrix(unlist(mm), ncol = K, byrow = T)
+
+    rownames(X) <-  paste0("marker_derived", 1:nrow(X))
+    # Check if we have enough markers
+
+    if (length(kwargs$marker_list) < K) {
+        print("Not enough markers were provided for the current K. Will set other vertices randomly with the highest center property after n attempts")
+        if (!is.null(kwargs) && "n" %in% kwargs) {
+            n <- kwargs$n
+        } else {
+         n <- 100
+         }
+        M <- proj$meta$M
+        n_to_sample <- K - length(kwargs$marker_list)
+        n <- 100
+        idx_table_X <- matrix(0, ncol = n_to_sample + 1, nrow = n)
+        for (i in 1:n) {
+          #X
+          ids_X <- sample(1:M, n_to_sample)
+          extra_rows <- proj$X[ids_X, ]
+          candidate_X <- rbind(X, extra_rows)
+          metric_X <- sqrt(sum(apply(candidate_X[, -1], 2, mean) ^ 2))
+          idx_table_X[i, ] <- c(ids_X, metric_X)
+        }
+
+        minrow <- function(mat) mat[which.min(mat[, ncol(mat)]), ]
+        # X
+        ids_X <- minrow(idx_table_X)[1:n_to_sample]
+        X <- rbind(X, proj$X[ids_X, ])
+    }
     return(set_solution_from_x(X, proj))
   },
 

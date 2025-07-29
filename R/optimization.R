@@ -179,7 +179,7 @@ optimize_solution <- function(
     do.call(derivative_stage2, optimization_params)
   } else if (config$method == "theta") {
     optimization_params$X_center <- config$x_center
-    optimization_params$Omega_center <- config$omega_center
+    optimization_params$Omega_center <- t(config$omega_center)
     optimization_params$theta_threshold <- config$theta_threshold
     do.call(theta_derivative_stage2, optimization_params)
   } else {
