@@ -35,10 +35,11 @@ Rcpp::List theta_derivative_stage2(const arma::mat& X,
     arma::mat points_statistics_X(iterations, cell_types * cell_types, arma::fill::zeros);
     arma::mat points_statistics_Omega(iterations, cell_types * cell_types, arma::fill::zeros);
 
+    // start the same way as for usual optimization.
     arma::mat new_X = X;
     arma::mat new_Omega = Omega;
     arma::mat new_D_w = D_w;
-    arma::mat new_D_h = new_D_w * (N / M);
+    arma::mat new_D_h = new_D_w * (N / M); // according to our proofs this property should hold
     arma::mat jump_X, jump_Omega;
     arma::vec vectorised_SVRt = arma::vectorise(SVRt);
     arma::colvec sum_rows_R = arma::sum(R, 1);
@@ -53,23 +54,28 @@ Rcpp::List theta_derivative_stage2(const arma::mat& X,
 
     for (int itr_ = 0; itr_ < iterations; itr_++) {
         // derivative X
-        //der_X = -2 * (new_Omega.t() * (SVRt - new_Omega * new_X));
-        //der_X +=  coef_hinge_H * hinge_der_proportions_C__(new_X  * R, R);
-
+        // all derivative terms are the same as for basic optimization
         der_X =
             -2 * (diagmat(new_D_w) * new_Omega.t() * (SVRt - new_Omega * diagmat(new_D_w) * new_X));
         der_X += coef_hinge_H * hinge_der_proportions_C__(new_X * R, R);
         der_X += coef_pos_D_h * 2 * new_D_h * (new_X.t() * new_D_h - sum_rows_R).t();
+
         der_X.col(0).zeros(); // no movement needed for first coordinate
         der_X = correctByNorm(der_X) * mean_radius_X;
 
         if (theta_threshold > 0) {
-            tmp_X = (new_X - coef_der_X * der_X);
+            // Here all the job starts. We always expect point is already within the theta threshold!
+            tmp_X = (new_X - coef_der_X * der_X); // estimate new X given derivative
             for (int c=0; c < cell_types; c++) {
+                // iteratively check each result point of the X.
+                // Rows of X are individual points. Same is provided for the X centers.
                 if (!(X_center.row(c).subvec(1, cell_types - 1).is_zero())) {
+                    // If given center point is different from 0. Then check properties
+                    // First calculate cosine distance between given row of new X and center (for dimensions 2:K)
                     double cos_distance_result = cosine_distance(tmp_X.row(c).subvec(1, cell_types - 1), X_center.row(c).subvec(1, cell_types - 1));
                     if (cos_distance_result < cos_theta) {
-                        // start shrinking derivative to be inside
+                        // cosine is to low. So we need to move point to be within the range
+                        // start shrinking derivative to be inside. Just simply divide it by 2 util convergence.
                         int shrink_iteration = 0;
                         while(cos_distance_result < cos_theta) {
                             der_X.row(c) /=  2;
@@ -78,12 +84,15 @@ Rcpp::List theta_derivative_stage2(const arma::mat& X,
                             // Rcout << "Now cos is  : " << cos_distance_result << "\n";
                             shrink_iteration++;
                           }
+                        Rcpp::Rcout << "X shrink iterations performed for component " << c <<: " is " << shrink_iteration << "\n";
                     }
                 }
+
             }
+            // Now we ensured that X points are within the specified range
         }
         // continue conventional optimization
-        // cosine threshold correction if needed
+        // cosine threshold correction if needed (legacy)
         if (thresh > 0) {
             arma::mat tmp_X = (new_X - coef_der_X * der_X).t();
             arma::mat tmp_X_2 = (new_X).t();
@@ -106,9 +115,9 @@ Rcpp::List theta_derivative_stage2(const arma::mat& X,
         }
         arma::mat A = arma::join_cols((M / N) * vec_mtx, coef_pos_D_h * new_X.t());
 
-        new_D_h = nnls_C__(A, C);
-        new_D_w = new_D_h * (M / N);
-
+        new_D_h = nnls_C__(A, C);  // Get Dh value from X using NNLS
+        new_D_w = new_D_h * (M / N); // This still should hold
+        // Now switch to Omega space
         // derivative Omega
         der_Omega =  -2 * (SVRt - new_Omega * diagmat(new_D_w) * new_X) * new_X.t() * diagmat(new_D_w);
         der_Omega += coef_hinge_W * hinge_der_basis_C__(S.t() * new_Omega, S);
@@ -116,12 +125,16 @@ Rcpp::List theta_derivative_stage2(const arma::mat& X,
         der_Omega.row(0).zeros();
         der_Omega = correctByNorm(der_Omega) * mean_radius_Omega;
         if (theta_threshold > 0) {
+            // Again estimate new Omega
             tmp_Omega = new_Omega - coef_der_Omega * der_Omega;
             for (int c=0; c < cell_types; c++) {
+                // Check iteratively for each new omega point if it is within the threshold
+                // Now columns of Omega are new points. The same should be for centers.
                 if (!(Omega_center.col(c).subvec(1, cell_types - 1).is_zero())) {
+                    // If this threshold is set (column of center is not zero)
                     double cos_distance_result = cosine_distance(
                         tmp_Omega.col(c).subvec(1, cell_types - 1).t(), 
-                        Omega_center.col(c).subvec(1, cell_types - 1).t()); //need rowvec here
+                        Omega_center.col(c).subvec(1, cell_types - 1).t()); //need rowvecs here
                     if (cos_distance_result < cos_theta) {
                         // start shrinking derivative to be inside
                         int shrink_iteration = 0;
@@ -132,7 +145,7 @@ Rcpp::List theta_derivative_stage2(const arma::mat& X,
                             // Rcout << "Now cos is  : " << cos_distance_result << "\n";
                             shrink_iteration++;
                           }
-                          Rcpp::Rcout << "Omega shrink iterations performed : " << shrink_iteration << "\n";
+                          Rcpp::Rcout << "Omega shrink iterations performed for component " << c <<: " is " << shrink_iteration << "\n";
                     }
                 }
             }
