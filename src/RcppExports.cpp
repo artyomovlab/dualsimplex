@@ -111,6 +111,20 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// nnls_nonzero_C__
+arma::mat nnls_nonzero_C__(arma::mat A, arma::mat b, int max_iter, double tol);
+RcppExport SEXP _DualSimplex_nnls_nonzero_C__(SEXP ASEXP, SEXP bSEXP, SEXP max_iterSEXP, SEXP tolSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type A(ASEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type b(bSEXP);
+    Rcpp::traits::input_parameter< int >::type max_iter(max_iterSEXP);
+    Rcpp::traits::input_parameter< double >::type tol(tolSEXP);
+    rcpp_result_gen = Rcpp::wrap(nnls_nonzero_C__(A, b, max_iter, tol));
+    return rcpp_result_gen;
+END_RCPP
+}
 // jump_norm
 arma::mat jump_norm(arma::mat& X, const double r_const_X);
 RcppExport SEXP _DualSimplex_jump_norm(SEXP XSEXP, SEXP r_const_XSEXP) {
@@ -359,6 +373,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_DualSimplex_getNonnegativeLowRankApproximationWithGN", (DL_FUNC) &_DualSimplex_getNonnegativeLowRankApproximationWithGN, 6},
     {"_DualSimplex_getNonnegativeLowRankApproximationWithTangentMethod", (DL_FUNC) &_DualSimplex_getNonnegativeLowRankApproximationWithTangentMethod, 5},
     {"_DualSimplex_nnls_C__", (DL_FUNC) &_DualSimplex_nnls_C__, 4},
+    {"_DualSimplex_nnls_nonzero_C__", (DL_FUNC) &_DualSimplex_nnls_nonzero_C__, 4},
     {"_DualSimplex_jump_norm", (DL_FUNC) &_DualSimplex_jump_norm, 2},
     {"_DualSimplex_update_idx", (DL_FUNC) &_DualSimplex_update_idx, 3},
     {"_DualSimplex_hinge_der_proportions_C__", (DL_FUNC) &_DualSimplex_hinge_der_proportions_C__, 3},

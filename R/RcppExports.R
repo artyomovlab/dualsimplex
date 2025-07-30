@@ -85,6 +85,18 @@ nnls_C__ <- function(A, b, max_iter = 500L, tol = 1e-6) {
     .Call('_DualSimplex_nnls_C__', PACKAGE = 'DualSimplex', A, b, max_iter, tol)
 }
 
+#' Get nnls solution
+#'
+#' @param A matrix A
+#' @param b coefficients
+#' @param max_iter max number of iterations
+#' @param tol precision
+#' @return derivative for X
+#' @export
+nnls_nonzero_C__ <- function(A, b, max_iter = 500L, tol = 1e-6) {
+    .Call('_DualSimplex_nnls_nonzero_C__', PACKAGE = 'DualSimplex', A, b, max_iter, tol)
+}
+
 #' Experimental jump norm calculation. legacy
 #'
 #' @param X matrix to check
