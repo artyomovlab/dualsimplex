@@ -319,7 +319,7 @@ set_solution_from_x <- function(X, proj) {
 
 #' Infer solution matrices D from predefined matrices X and Omega
 #'
-#' Uses properties of sinkhorn transformed matrices. Performs NNLS
+#' Uses properties of sinkhorn transfor{}med matrices. Performs NNLS
 #'
 #' @param X KxK solution matrix X
 #' @param Omega KxK solution matrix Omega

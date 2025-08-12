@@ -15,7 +15,7 @@
 #' @param cosine_thresh  EXPERIMENTAL: if you want to restrict derivative from changing to much. should be 0 since not tested.
 #' @param x_center X rays around which to perform search in theta search.
 #' @param omega_center Omega rays around which to perform search in theta search.
-#' @param theta_threshold theta param.
+#' @param center_threshold constraint for the  step.
 #' @param method method of optimization to use can be  basic/positivity.
 #' @return ready to use list with algorithm configuration
 #' @export
@@ -31,8 +31,8 @@ optim_config <- function(
   cosine_thresh = 0,
   x_center = NULL,
   omega_center = NULL,
-  theta_threshold = 0,
-  method = "basic" # basic/positivity/theta
+  center_threshold = 0,
+  method = "basic" # basic/positivity/markers/theta
 ) {
   return(list(
     coef_der_X = coef_der_X,
@@ -46,7 +46,7 @@ optim_config <- function(
     cosine_thresh = cosine_thresh,
     x_center = x_center,
     omega_center = omega_center,
-    theta_threshold = theta_threshold,
+    center_threshold = center_threshold,
     method = method
   ))
 }
@@ -186,8 +186,18 @@ optimize_solution <- function(
     } else {
         optimization_params$Omega_center  <- config$omega_center
     }
-    optimization_params$theta_threshold <- config$theta_threshold # threshold for the angle
+    optimization_params$theta_threshold <- config$center_threshold # threshold for the angle
     do.call(theta_derivative_stage2, optimization_params)
+  } else if (config$method == "markers") {
+     optimization_params$X_center <- config$x_center # predefined center point for X space. could be NULL
+    if (! is.null(config$omega_center)) {
+        optimization_params$Omega_center <- t(config$omega_center) # predefined center point for Omega space. could be NULL
+    } else {
+        optimization_params$Omega_center  <- config$omega_center
+    }
+    optimization_params$center_constraint <- config$center_threshold # threshold for the angle
+    do.call(markers_derivative_stage2, optimization_params)
+
   } else {
     print("Unknown optimization method. Will do the basic one")
     do.call(derivative_stage2, optimization_params)

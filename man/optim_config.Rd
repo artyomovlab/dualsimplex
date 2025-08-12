@@ -16,7 +16,7 @@ optim_config(
   cosine_thresh = 0,
   x_center = NULL,
   omega_center = NULL,
-  theta_threshold = 0,
+  center_threshold = 0,
   method = "basic"
 )
 }
@@ -43,7 +43,7 @@ optim_config(
 
 \item{omega_center}{Omega rays around which to perform search in theta search.}
 
-\item{theta_threshold}{theta param.}
+\item{center_threshold}{constraint for the  step.}
 
 \item{method}{method of optimization to use can be  basic/positivity.}
 }
