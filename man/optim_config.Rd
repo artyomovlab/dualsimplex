@@ -5,9 +5,9 @@
 \title{Make optimization config object for the training method}
 \usage{
 optim_config(
-  coef_der_X = 0.001,
-  coef_der_Omega = 0.001,
-  coef_hinge_H = 10,
+  coef_der_X = 0.1,
+  coef_der_Omega = 0.1,
+  coef_hinge_H = 1,
   coef_hinge_W = 1,
   coef_pos_D_h = 0,
   coef_pos_D_w = 0,

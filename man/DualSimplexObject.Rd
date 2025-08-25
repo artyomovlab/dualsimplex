@@ -59,6 +59,7 @@ dso$plot_projected("zero_distance",
 \item \href{#method-DualSimplexSolver-plot_projected}{\code{DualSimplexSolver$plot_projected()}}
 \item \href{#method-DualSimplexSolver-init_solution}{\code{DualSimplexSolver$init_solution()}}
 \item \href{#method-DualSimplexSolver-optim_solution}{\code{DualSimplexSolver$optim_solution()}}
+\item \href{#method-DualSimplexSolver-default_optimization}{\code{DualSimplexSolver$default_optimization()}}
 \item \href{#method-DualSimplexSolver-plot_error_history}{\code{DualSimplexSolver$plot_error_history()}}
 \item \href{#method-DualSimplexSolver-finalize_solution}{\code{DualSimplexSolver$finalize_solution()}}
 \item \href{#method-DualSimplexSolver-plot_negative_basis_change}{\code{DualSimplexSolver$plot_negative_basis_change()}}
@@ -537,6 +538,24 @@ Perform optimization for current solution
 \describe{
 \item{\code{iterations}}{number of steps to perform}
 
+\item{\code{config}}{optimization config (result of optim_config method)}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-DualSimplexSolver-default_optimization"></a>}}
+\if{latex}{\out{\hypertarget{method-DualSimplexSolver-default_optimization}{}}}
+\subsection{Method \code{default_optimization()}}{
+This is best starting point to run optimization
+This is how we run optimization while performed comparison with other methods. you can use this method as a template for yourself
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$default_optimization(config = OPTIM_CONFIG_DEFAULT)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
 \item{\code{config}}{optimization config (result of optim_config method)}
 }
 \if{html}{\out{</div>}}

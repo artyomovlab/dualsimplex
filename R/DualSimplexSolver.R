@@ -23,6 +23,7 @@
 #' @importFrom Biobase exprs AnnotatedDataFrame ExpressionSet fData pData
 #' @import irlba
 #' @import knitr
+#' @import progress
 #'
 #' @examples
 #' M <-  8000 # number of genes (rows)
@@ -708,6 +709,43 @@ DualSimplexSolver <- R6Class(
         iterations,
         config
       )
+    },
+
+    #' @description
+    #' This is best starting point to run optimization
+    #' This is how we run optimization while performed comparison with other methods. you can use this method as a template for yourself
+    #' @param config optimization config (result of optim_config method)
+    default_optimization = function(
+    config = OPTIM_CONFIG_DEFAULT
+    ) {
+      private$initialize_first()
+      LR_DECAY_STEPS = 15
+      PARAMETERS_INCREASE_STEPS = 5
+      lr_decay <- 0.5
+      params_increase <- 10
+      original_lambda_term <- 1  #coef_hinge_H
+      original_beta_term <- 1 #coef_hinge_W
+      lr_x <- 1
+      lr_omega <- 1
+      RUNS_EACH_STEP <- 1000
+      pb <- progress_bar$new(total = LR_DECAY_STEPS * PARAMETERS_INCREASE_STEPS)
+      for (lr_step in 1:LR_DECAY_STEPS) {
+        lambda_term <-  original_lambda_term * lr_x * lr_x
+        beta_term <- original_beta_term   * lr_omega * lr_omega
+            for (x in 1:PARAMETERS_INCREASE_STEPS) {
+                # Main training method, you can just run this
+                config$coef_hinge_H <- lambda_term
+                config$coef_hinge_W <- beta_term
+                coef_der_X <- lr_x
+                coef_der_Omega <- lr_omega
+                self$optim_solution(RUNS_EACH_STEP, config)
+        lambda_term <- lambda_term * params_increase
+        beta_term <- beta_term * params_increase
+        pb$tick()
+      }
+      lr_x <- lr_x * lr_decay
+      lr_omega <- lr_omega * lr_decay
+    }
     },
 
     #' @description

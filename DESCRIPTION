@@ -50,6 +50,7 @@ Imports:
     R6,
     Metrics,
     Biobase,
+    progress,
     uwot (>= 0.1.11),
     knitr,
     combinat,

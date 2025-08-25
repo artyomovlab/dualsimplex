@@ -7,6 +7,9 @@ title: "Notebook to check your code changes before submitting PR"
 ```{r}
 library(devtools)
 ```
+```{r}
+Rcpp::compileAttributes(verbose = T)
+```
 
 ## Documentation files will be generated
 ```{r}

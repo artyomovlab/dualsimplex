@@ -76,8 +76,6 @@ markers_derivative_stage2(
 \item{thresh}{experimental. not tested}
 
 \item{center_constraint}{value to restrict optimization from going to far}
-
-\item{Omega_center}{optimization restriction direcitons of Omega.}
 }
 \value{
 new parameters

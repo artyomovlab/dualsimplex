@@ -245,7 +245,6 @@ alternative_derivative_stage2 <- function(X, Omega, D_w, SVRt, R, S, coef_der_X,
 #' @param r_const_Omega experimental. not tested
 #' @param thresh experimental. not tested
 #' @param X_center optimization restriction directions for X.
-#' @param Omega_center optimization restriction direcitons of Omega.
 #' @param center_constraint value to restrict optimization from going to far
 #' @return new parameters
 markers_derivative_stage2 <- function(X, Omega, D_w, SVRt, R, S, X_center, coef_der_X, coef_der_Omega, coef_hinge_H, coef_hinge_W, coef_pos_D_h, coef_pos_D_w, cell_types, N, M, iterations, mean_radius_X, mean_radius_Omega, r_const_X = 0, r_const_Omega = 0, thresh = 0.8, center_constraint = 0) {
