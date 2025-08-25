@@ -714,7 +714,7 @@ DualSimplexSolver <- R6Class(
     #' @description
     #' This is best starting point to run optimization
     #' This is how we run optimization while performed comparison with other methods. you can use this method as a template for yourself
-    #' @param config optimization config (result of optim_config method)
+    #' @param config optimization config (coef_hinge_H, coef_hinge_W, coef_der_X, coef_der_Omega) will be overwritten.
     default_optimization = function(
     config = OPTIM_CONFIG_DEFAULT
     ) {
@@ -736,8 +736,8 @@ DualSimplexSolver <- R6Class(
                 # Main training method, you can just run this
                 config$coef_hinge_H <- lambda_term
                 config$coef_hinge_W <- beta_term
-                coef_der_X <- lr_x
-                coef_der_Omega <- lr_omega
+                config$coef_der_X <- lr_x
+                config$coef_der_Omega <- lr_omega
                 self$optim_solution(RUNS_EACH_STEP, config)
         lambda_term <- lambda_term * params_increase
         beta_term <- beta_term * params_increase
