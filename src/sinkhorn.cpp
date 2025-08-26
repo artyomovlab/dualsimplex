@@ -183,8 +183,8 @@ Rcpp::List extended_sinkhorn(const arma::mat& V,
     arma::mat W_ = W;
     arma::mat H_ = H;
 
-    arma::mat D_w_right(K, K, arma::fill::ones);
-    arma::mat D_h_left(K, K, arma::fill::ones);
+    arma::mat D_w_right(K, n_iter + 1, arma::fill::ones);
+    arma::mat D_h_left(K, n_iter + 1, arma::fill::ones);
     // Main algorithm
     int i;
     for (i = 0; i < n_iter; i++) {
