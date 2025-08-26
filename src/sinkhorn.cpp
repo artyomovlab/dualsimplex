@@ -174,10 +174,10 @@ Rcpp::List extended_sinkhorn(const arma::mat& V,
     arma::mat D_v_col(n_iter + 1, N, arma::fill::ones);
 
     arma::rowvec D_w_col_sum_current(K);
-    arma::mat D_w_col(K, K, arma::fill::ones);
+    arma::mat D_w_col(n_iter + 1, K, arma::fill::ones);
 
     arma::vec D_h_row_sum_current(K);
-    arma::mat D_h_row(K, K, arma::fill::ones);
+    arma::mat D_h_row(K, n_iter + 1, arma::fill::ones);
 
     arma::mat V_ = V;
     arma::mat W_ = W;
