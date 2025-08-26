@@ -382,6 +382,20 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// extended_sinkhorn
+Rcpp::List extended_sinkhorn(const arma::mat& V, const arma::mat& W, const arma::mat& H, const int n_iter);
+RcppExport SEXP _DualSimplex_extended_sinkhorn(SEXP VSEXP, SEXP WSEXP, SEXP HSEXP, SEXP n_iterSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type V(VSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type W(WSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type H(HSEXP);
+    Rcpp::traits::input_parameter< const int >::type n_iter(n_iterSEXP);
+    rcpp_result_gen = Rcpp::wrap(extended_sinkhorn(V, W, H, n_iter));
+    return rcpp_result_gen;
+END_RCPP
+}
 // sinkhorn_sweep_c
 arma::mat sinkhorn_sweep_c(const arma::mat& V, const arma::mat& D_vs_row, const arma::mat& D_vs_col, unsigned int iter, unsigned int return_col_norm);
 RcppExport SEXP _DualSimplex_sinkhorn_sweep_c(SEXP VSEXP, SEXP D_vs_rowSEXP, SEXP D_vs_colSEXP, SEXP iterSEXP, SEXP return_col_normSEXP) {
@@ -420,6 +434,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_DualSimplex_reverse_sinkhorn_c", (DL_FUNC) &_DualSimplex_reverse_sinkhorn_c, 5},
     {"_DualSimplex_sinkhorn_scale_c", (DL_FUNC) &_DualSimplex_sinkhorn_scale_c, 2},
     {"_DualSimplex_efficient_sinkhorn", (DL_FUNC) &_DualSimplex_efficient_sinkhorn, 5},
+    {"_DualSimplex_extended_sinkhorn", (DL_FUNC) &_DualSimplex_extended_sinkhorn, 4},
     {"_DualSimplex_sinkhorn_sweep_c", (DL_FUNC) &_DualSimplex_sinkhorn_sweep_c, 5},
     {NULL, NULL, 0}
 };

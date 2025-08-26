@@ -130,7 +130,6 @@ Rcpp::List efficient_sinkhorn(const arma::mat& V,
 
 }
 
-
 arma::mat sinkhorn_sweep_c(const arma::mat& V,
                            const arma::mat& D_vs_row,
                            const arma::mat& D_vs_col,
@@ -157,3 +156,71 @@ arma::mat sinkhorn_sweep_c(const arma::mat& V,
 
     return(V_);
 }
+
+Rcpp::List extended_sinkhorn(const arma::mat& V,
+                              const arma::mat& W,
+                              const arma::mat& H,
+                              const int n_iter) {
+    // Setup
+    double M = V.n_rows;
+    double N = V.n_cols;
+    double K = W.n_cols;
+
+    // Initial normalization matrix with 1s.
+    arma::vec D_v_row_sum_current(M);
+    arma::mat D_v_row(M, n_iter + 1, arma::fill::ones);
+
+    arma::rowvec D_v_col_sum_current(N);
+    arma::mat D_v_col(n_iter + 1, N, arma::fill::ones);
+
+    arma::vec D_w_col_sum_current(K);
+    arma::mat D_w_col(K, K, arma::fill::ones);
+
+    arma::vec D_h_row_sum_current(K);
+    arma::mat D_h_row(K, K, arma::fill::ones);
+
+    arma::mat V_ = V;
+    arma::mat W_ = W;
+    arma::mat H_ = H;
+
+    // Main algorithm
+    int i;
+    for (i = 0; i < n_iter; i++) {
+        // Row normalize
+        D_v_row_sum_current = 1 / arma::sum(V_, 1);
+        D_v_row.col(i) = D_v_row_sum_current;
+        V_.each_col() %= D_v_row_sum_current;
+
+        D_h_row_sum_current = 1 / arma::sum(H_, 1);
+        D_h_row.col(i) = D_h_row_sum_current;
+        H_.each_col() %= D_h_row_sum_current;
+
+        // for W we need to divide it by all these matrices
+        W_.each_col() /= D_v_row_sum_current;
+        W_.each_row() /= D_h_row_sum_current;
+
+
+        // Column normalize
+        D_v_col_sum_current = 1 / arma::sum(V_, 0);
+        D_v_col.row(i) = D_v_col_sum_current;
+        V_.each_row() %= D_v_col_sum_current;
+
+        D_w_col_sum_current = 1 / arma::sum(W_, 0);
+        D_w_col.row(i) = D_w_col_sum_current;
+        W_.each_row() %= D_w_col_sum_current;
+
+        // for H we need to divide it by all these matrices
+        H_.each_col() /= D_w_col_sum_current;
+        H_.each_row() /= D_v_row_sum_current;
+
+    }
+
+
+    // will return all 1 columns for D_vs_row and D_vs_col if no normalizations performed
+    return Rcpp::List::create(Rcpp::Named("D_vs_row") = (i > 0) ? D_v_row.cols(0, i - 1) :  D_v_row.cols(0,0),
+                              Rcpp::Named("D_vs_col") = (i > 0) ? D_v_col.rows(0, i - 1).t() : D_v_col.rows(0,0).t(),
+                              Rcpp::Named("D_hs_row") = (i > 0) ? D_h_row.cols(0, i - 1) : D_h_row.cols(0,0),
+                              Rcpp::Named("D_ws_col") = (i > 0) ? D_w_col.rows(0, i - 1).t() : D_w_col.rows(0,0).t());
+
+}
+

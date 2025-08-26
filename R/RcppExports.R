@@ -318,6 +318,17 @@ efficient_sinkhorn <- function(V, max_iter = 20L, iter_start_check = 5L, check_e
     .Call('_DualSimplex_efficient_sinkhorn', PACKAGE = 'DualSimplex', V, max_iter, iter_start_check, check_every_iter, epsilon)
 }
 
+#' Extended version of sinkhorn transformation, returning all Dv, Dh, Dw matrices
+#'
+#' @param V matrix to scale. (V=WH)
+#' @param W matrix to scale.
+#' @param H matrix to scale.
+#' @param n_iter exact number of iterations
+#' @export
+extended_sinkhorn <- function(V, W, H, n_iter) {
+    .Call('_DualSimplex_extended_sinkhorn', PACKAGE = 'DualSimplex', V, W, H, n_iter)
+}
+
 #' Helper function to perfrom iteration scaling
 #'
 #' @param V matrix to scale.

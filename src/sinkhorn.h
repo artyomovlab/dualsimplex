@@ -47,6 +47,20 @@ Rcpp::List efficient_sinkhorn(
     const double epsilon = 1.490116e-08 // similar to R's all.equal
 );
 
+//' Extended version of sinkhorn transformation, returning all Dv, Dh, Dw matrices
+//'
+//' @param V matrix to scale. (V=WH)
+//' @param W matrix to scale.
+//' @param H matrix to scale.
+//' @param n_iter exact number of iterations
+//' @export
+// [[Rcpp::export]]
+Rcpp::List extended_sinkhorn(const arma::mat& V,
+                              const arma::mat& W,
+                              const arma::mat& H,
+                              const int n_iter);
+
+
 //' Helper function to perfrom iteration scaling
 //'
 //' @param V matrix to scale.
@@ -64,3 +78,5 @@ arma::mat sinkhorn_sweep_c(
     unsigned int iter,
     unsigned int return_col_norm
 );
+
+
