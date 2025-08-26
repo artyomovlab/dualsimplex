@@ -141,10 +141,10 @@ extended_scaling_result <- extended_sinkhorn_scale(V = data_raw, W=true_basis, H
 ```
 
 ```{r}
-v <- data_raw
+V <- data_raw
 W <-  true_basis
 H <- true_proportions
-extended_scaling_result <- extended_sinkhorn(V, W, H, n_iter)
+extended_scaling_result <- extended_sinkhorn(V, W, H, dso$st$scaling$iterations)
 
 ```
 
