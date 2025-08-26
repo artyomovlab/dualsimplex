@@ -148,3 +148,8 @@ extended_scaling_result <- extended_sinkhorn(V, W, H, dso$st$scaling$iterations)
 
 ```
 
+
+```{r}
+extended_scaling_result$
+```
+

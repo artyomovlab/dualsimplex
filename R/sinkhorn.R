@@ -83,7 +83,7 @@ extended_sinkhorn_scale <- function(
     D_vs_row = extended_scaling_result$D_vs_row,
     D_vs_col = extended_scaling_result$D_vs_col,
     iter = n_iter,
-    return_col_norm = 0
+    do_last_step = 0
    )
   rownames(V_row) <- rownames(V)
   colnames(V_row) <- colnames(V)
@@ -93,27 +93,27 @@ extended_sinkhorn_scale <- function(
   D_vs_row = extended_scaling_result$D_vs_row,
   D_vs_col = extended_scaling_result$D_vs_col,
   iter = n_iter,
-  return_col_norm = 1
+  do_last_step = 1
   )
   rownames(V_col) <- rownames(V)
   colnames(V_col) <- colnames(V)
 
   H_row <- sinkhorn_sweep_c(
   V = H,
-  D_vs_row = extended_scaling_result$D_h_left,
+  D_vs_row = extended_scaling_result$D_hs_row,
   D_vs_col = extended_scaling_result$D_vs_col,
   iter = n_iter,
-  return_col_norm = 0
+  do_last_step = 1
  )
   rownames(H_row) <- rownames(H)
   colnames(H_row) <- colnames(H)
 
   H_col <- sinkhorn_sweep_c(
   V = H,
-  D_vs_row = extended_scaling_result$D_h_left,
+  D_vs_row = extended_scaling_result$D_hs_col,
   D_vs_col = extended_scaling_result$D_vs_col,
   iter = n_iter,
-  return_col_norm = 1
+  do_last_step = 1
  )
   rownames(H_col) <- rownames(H)
   colnames(H_col) <- colnames(H)
@@ -122,20 +122,20 @@ extended_sinkhorn_scale <- function(
   W_row <- sinkhorn_sweep_c(
   V = W,
   D_vs_row = extended_scaling_result$D_vs_row,
-  D_vs_col = extended_scaling_result$D_w_right,
+  D_vs_col = extended_scaling_result$D_ws_row,
   iter = n_iter,
-  return_col_norm = 0
+  do_last_step = 1
  )
   rownames(H_row) <- rownames(H)
   colnames(H_row) <- colnames(H)
 
 
   W_col <- sinkhorn_sweep_c(
-  V = H,
+  V = W,
   D_vs_row = extended_scaling_result$D_vs_row,
-  D_vs_col = extended_scaling_result$D_w_right,
+  D_vs_col = extended_scaling_result$D_ws_col,
   iter = n_iter,
-  return_col_norm = 1
+  do_last_step = 1
  )
   rownames(W_col) <- rownames(W)
   colnames(W_col) <- colnames(W)
@@ -151,7 +151,7 @@ extended_sinkhorn_scale <- function(
     D_vs_col =  extended_scaling_result$D_vs_col,
     D_hs_row =  extended_scaling_result$D_hs_row,
     D_ws_col =  extended_scaling_result$D_hs_col,
-    D_h_left = extended_scaling_result$D_h_left,
-    D_w_right = extended_scaling_result$D_w_right
+    D_hs_col = extended_scaling_result$D_hs_col,
+    D_ws_row = extended_scaling_result$D_ws_row
   ))
 }

@@ -134,7 +134,7 @@ arma::mat sinkhorn_sweep_c(const arma::mat& V,
                            const arma::mat& D_vs_row,
                            const arma::mat& D_vs_col,
                            unsigned int iter,
-                           unsigned int return_col_norm) {
+                           unsigned int do_last_step) {
     // This function simply does D_v_2n-2 * D_v_2n-4 * ... * D_v_0 * V * D_v_1 * ... * D_v_2n-1
     // iteratively. Iterative scaling is to prevent potential floating-point underflow (remember
     // that during scaling, the value getting smaller and smaller).
@@ -149,7 +149,7 @@ arma::mat sinkhorn_sweep_c(const arma::mat& V,
         }
         // Last normalization, returning V_row or V_column is controled by the size of D_vs_row and D_vs_col
         V_.each_col() %= D_vs_row.col(iter);
-        if (return_col_norm == 1) {
+        if (do_last_step == 1) {
             V_.each_row() %= D_vs_col.col(iter).t();
         }
     }
@@ -176,15 +176,16 @@ Rcpp::List extended_sinkhorn(const arma::mat& V,
     arma::rowvec D_w_col_sum_current(K);
     arma::mat D_w_col(n_iter + 1, K, arma::fill::ones);
 
+    arma::mat D_w_row(n_iter + 1, K, arma::fill::ones);
+
     arma::vec D_h_row_sum_current(K);
     arma::mat D_h_row(K, n_iter + 1, arma::fill::ones);
+    arma::mat D_h_col(K, n_iter + 1, arma::fill::ones);
 
     arma::mat V_ = V;
     arma::mat W_ = W;
     arma::mat H_ = H;
 
-    arma::mat D_w_right(K, n_iter + 1, arma::fill::ones);
-    arma::mat D_h_left(K, n_iter + 1, arma::fill::ones);
     // Main algorithm
     int i;
     for (i = 0; i < n_iter; i++) {
@@ -194,19 +195,15 @@ Rcpp::List extended_sinkhorn(const arma::mat& V,
         V_.each_col() %= D_v_row_sum_current;
 
         D_h_row_sum_current = 1 / arma::sum(H_, 1);
-        D_h_row.col(i) = D_h_row_sum_current;
         H_.each_col() %= D_h_row_sum_current;
-
 
 
         // for W we need to divide it by all these matrices
         W_.each_col() %= D_v_row_sum_current;
         W_.each_row() /= D_h_row_sum_current.t();
 
-
-        D_w_right.col(i) =  1 / D_h_row_sum_current;
-        D_h_left.col(i) = D_h_row_sum_current;
-
+        D_h_row.col(i) = D_h_row_sum_current;
+        D_w_row.col(i) /= D_h_row_sum_current;
 
         // Column normalize
         D_v_col_sum_current = 1 / arma::sum(V_, 0);
@@ -214,16 +211,15 @@ Rcpp::List extended_sinkhorn(const arma::mat& V,
         V_.each_row() %= D_v_col_sum_current;
 
         D_w_col_sum_current = 1 / arma::sum(W_, 0);
-        D_w_col.row(i) = D_w_col_sum_current;
-        W_.each_row() %= D_w_col_sum_current;
 
+        W_.each_row() %= D_w_col_sum_current;
 
         // for H we need to divide it by all these matrices
         H_.each_col() /= D_w_col_sum_current.t();
         H_.each_row() %= D_v_col_sum_current;
 
-        D_w_right.col(i) = D_w_col_sum_current.t();
-        D_h_left.col(i) = 1 / D_w_col_sum_current.t();
+        D_w_col.col(i) =   D_w_row.col(i) % D_w_col_sum_current.t();
+        D_h_col.col(i) = D_h_row.col(i) / D_w_col_sum_current.t();
     }
 
     // will return all 1 columns for D_vs_row and D_vs_col if no normalizations performed
@@ -231,7 +227,7 @@ Rcpp::List extended_sinkhorn(const arma::mat& V,
                               Rcpp::Named("D_vs_col") = (i > 0) ? D_v_col.rows(0, i - 1).t() : D_v_col.rows(0,0).t(),
                               Rcpp::Named("D_hs_row") = (i > 0) ? D_h_row.cols(0, i - 1) : D_h_row.cols(0,0),
                               Rcpp::Named("D_ws_col") = (i > 0) ? D_w_col.rows(0, i - 1).t() : D_w_col.rows(0,0).t(),
-                              Rcpp::Named("D_h_left") = (i > 0) ? D_h_left.cols(0, i - 1) : D_h_left.cols(0,0),
-                              Rcpp::Named("D_w_right") = (i > 0) ? D_w_right.cols(0, i - 1) : D_w_right.cols(0,0));
+                              Rcpp::Named("D_hs_col") = (i > 0) ? D_h_col.cols(0, i - 1) : D_h_col.cols(0,0),
+                              Rcpp::Named("D_ws_row") = (i > 0) ? D_w_row.cols(0, i - 1) : D_w_row.cols(0,0));
 }
 

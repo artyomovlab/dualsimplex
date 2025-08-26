@@ -397,8 +397,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // sinkhorn_sweep_c
-arma::mat sinkhorn_sweep_c(const arma::mat& V, const arma::mat& D_vs_row, const arma::mat& D_vs_col, unsigned int iter, unsigned int return_col_norm);
-RcppExport SEXP _DualSimplex_sinkhorn_sweep_c(SEXP VSEXP, SEXP D_vs_rowSEXP, SEXP D_vs_colSEXP, SEXP iterSEXP, SEXP return_col_normSEXP) {
+arma::mat sinkhorn_sweep_c(const arma::mat& V, const arma::mat& D_vs_row, const arma::mat& D_vs_col, unsigned int iter, unsigned int do_last_step);
+RcppExport SEXP _DualSimplex_sinkhorn_sweep_c(SEXP VSEXP, SEXP D_vs_rowSEXP, SEXP D_vs_colSEXP, SEXP iterSEXP, SEXP do_last_stepSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -406,8 +406,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::mat& >::type D_vs_row(D_vs_rowSEXP);
     Rcpp::traits::input_parameter< const arma::mat& >::type D_vs_col(D_vs_colSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type iter(iterSEXP);
-    Rcpp::traits::input_parameter< unsigned int >::type return_col_norm(return_col_normSEXP);
-    rcpp_result_gen = Rcpp::wrap(sinkhorn_sweep_c(V, D_vs_row, D_vs_col, iter, return_col_norm));
+    Rcpp::traits::input_parameter< unsigned int >::type do_last_step(do_last_stepSEXP);
+    rcpp_result_gen = Rcpp::wrap(sinkhorn_sweep_c(V, D_vs_row, D_vs_col, iter, do_last_step));
     return rcpp_result_gen;
 END_RCPP
 }

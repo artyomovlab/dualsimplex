@@ -1001,7 +1001,7 @@ DualSimplexSolver <- R6Class(
         D_vs_row = self$st$scaling$D_vs_row,
         D_vs_col = self$st$scaling$D_vs_col,
         iter = self$st$scaling$iterations,
-        return_col_norm = 0
+        do_last_step = 0
       )
 
       rownames(res) <- rownames(self$get_data())
@@ -1020,7 +1020,7 @@ DualSimplexSolver <- R6Class(
         D_vs_row = self$st$scaling$D_vs_row,
         D_vs_col = self$st$scaling$D_vs_col,
         iter = self$st$scaling$iterations,
-        return_col_norm = 1
+        do_last_step = 1
       )
 
       rownames(res) <- rownames(self$get_data())
