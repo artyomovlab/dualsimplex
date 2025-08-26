@@ -53,11 +53,11 @@ Imports:
     progress,
     uwot (>= 0.1.11),
     knitr,
-    combinat,
     scales,
     FNN,
     matrixStats,
-    dbscan
+    dbscan,
+    lpSolve
 Suggests:
     Seurat,
     gganimate

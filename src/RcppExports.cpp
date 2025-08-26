@@ -11,15 +11,15 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// cosine_distance
-double cosine_distance(const arma::rowvec& a, const arma::rowvec& b);
-RcppExport SEXP _DualSimplex_cosine_distance(SEXP aSEXP, SEXP bSEXP) {
+// cosine_similarity
+double cosine_similarity(const arma::rowvec& a, const arma::rowvec& b);
+RcppExport SEXP _DualSimplex_cosine_similarity(SEXP aSEXP, SEXP bSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::rowvec& >::type a(aSEXP);
     Rcpp::traits::input_parameter< const arma::rowvec& >::type b(bSEXP);
-    rcpp_result_gen = Rcpp::wrap(cosine_distance(a, b));
+    rcpp_result_gen = Rcpp::wrap(cosine_similarity(a, b));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -399,7 +399,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_DualSimplex_cosine_distance", (DL_FUNC) &_DualSimplex_cosine_distance, 2},
+    {"_DualSimplex_cosine_similarity", (DL_FUNC) &_DualSimplex_cosine_similarity, 2},
     {"_DualSimplex_cosine_between_rows", (DL_FUNC) &_DualSimplex_cosine_between_rows, 1},
     {"_DualSimplex_getNonnegativeLowRankApproximationWithSVD", (DL_FUNC) &_DualSimplex_getNonnegativeLowRankApproximationWithSVD, 5},
     {"_DualSimplex_getNonnegativeLowRankApproximationWithHMT", (DL_FUNC) &_DualSimplex_getNonnegativeLowRankApproximationWithHMT, 7},

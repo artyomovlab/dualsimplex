@@ -154,3 +154,102 @@ col_dist_from_mean <- function(mtx) {
   # Notice that standard deviation estimates is devided by sqrt(N-1)
   matrixStats::colSds(mtx) * sqrt(nrow(mtx) - 1)
 }
+
+##### Metric functions #####
+
+##### Metric functions #####
+
+#' Calculate pearson correlation. From -1 to 1. Further away from zero is better.
+#'
+#'@param estimated_vector estimated row or column vector
+#'@param true_vector row or column vector to compare with
+#'@return  a value
+#'@export
+pearson_correlation_function <- function(estimated_vector, true_vector) {
+    return(stats::cor(estimated_vector, true_vector, method ="pearson"))
+}
+
+#' Calculate 1 - squared(pearson) metric value.  From 0 to 1. Lower values are better.
+#'
+#'@param estimated_vector estimated row or column vector
+#'@param true_vector row or column vector to compare with
+#'@return  a value
+#'@export
+pearson_loss_function <- function(estimated_vector, true_vector) {
+  return(1-pearson_correlation_function(estimated_vector, true_vector)^2)
+}
+
+#' Calculate spearman correlation. From -1 to 1. Further away from zero is better.
+#'
+#'@param estimated_vector estimated row or column vector
+#'@param true_vector row or column vector to compare with
+#'@return  a value
+#'@export
+spearman_correlation_function <- function(estimated_vector, true_vector) {
+    return(stats::cor(estimated_vector, true_vector, method ="spearman"))
+}
+
+#' Calculate 1 - squared(spearman) metric value.  From 0 to 1. Lower values are better.
+#'
+#'@param estimated_vector estimated row or column vector
+#'@param true_vector row or column vector to compare with
+#'@return  a value
+#'@export
+spearman_loss_function <- function(estimated_vector, true_vector) {
+  return(1-spearman_correlation_function(estimated_vector, true_vector)^2)
+}
+
+#' Calculate cosine similarity function.  From 0 to 1. Higher is better
+#'
+#'@param estimated_vector estimated row or column vector
+#'@param true_vector row or column vector to compare with
+#'@return  a value
+#'@export
+cosine_similarity_function <- function(estimated_vector, true_vector) {
+  return(cosine_similarity(estimated_vector, true_vector))
+}
+
+#' Calculate 1 - cosine metric value.  From 0 to 1. Lower values are better.
+#'
+#'@param estimated_vector estimated row or column vector
+#'@param true_vector row or column vector to compare with
+#'@return  a value
+#'@export
+cosine_loss_function <- function(estimated_vector, true_vector) {
+  return(1 - cosine_similarity(estimated_vector, true_vector))
+}
+
+#' Calculate RMSE metric value.  From 0 to 1. Lower values are better.
+#'
+#'@param estimated_vector estimated row or column vector
+#'@param true_vector row or column vector to compare with
+#'@return  a value
+#'@export
+rmse_loss_function <- function(estimated_vector, true_vector) {
+  return(sqrt((1/(length(estimated_vector)) * sum( (true_vector - estimated_vector)^2 ))))
+}
+
+#' Calculate normalized RMSE metric value.  From 0 to 1. Lower values are better.
+#'
+#'@param estimated_vector estimated row or column vector. Should be all positive.
+#'@param true_vector row or column vector to compare with.  Should be all positive.
+#'@return  a value
+#'@export
+normalized_rmse_loss_function <- function(estimated_vector, true_vector) {
+    true_vector <- (true_vector - min(true_vector)) / (max(true_vector) - min(true_vector))
+    estimated_vector <- (estimated_vector - min(estimated_vector)) / (max(estimated_vector) - min(estimated_vector))
+    return(rmse_loss_function(estimated_vector, true_vector))
+}
+
+
+
+
+
+
+
+
+
+
+
+
+

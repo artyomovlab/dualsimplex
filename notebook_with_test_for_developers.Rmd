@@ -23,7 +23,7 @@ devtools::check()
 ```
 
 # Install from your branch
-ensure you unloaded tha package, removed the previous version and restarted the R session.
+ensure you unloaded the package, removed the previous version and restarted the R session.
 ```{r}
 devtools::install_github("your_github/DualSimplex@your_branch")
 library(DualSimplex)

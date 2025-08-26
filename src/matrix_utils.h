@@ -1,13 +1,13 @@
 // [[Rcpp::depends(RcppArmadillo)]]
 #include <RcppArmadillo.h>
 
-//' Get cosine distance between columns
+//' Get cosine similarity between columns
 //'
 //' @param a input vector a.
 //' @param b input vector b.
 //' @return double value of cosine distance
 // [[Rcpp::export]]
-double cosine_distance(const arma::rowvec& a,const arma::rowvec& b);
+double cosine_similarity(const arma::rowvec& a,const arma::rowvec& b);
 
 //' Get cosine distance between columns
 //'

@@ -10,7 +10,7 @@ arma::mat correctByNorm(arma::mat& X) {
     return B;
 }
 
-double  cosine_distance(const arma::rowvec& a,const arma::rowvec& b) {
+double  cosine_similarity(const arma::rowvec& a,const arma::rowvec& b) {
     double Y = arma::dot(a,  b);
     double res_dist = Y / ( arma::norm(a,2) *  arma::norm(b,2));
     return res_dist;

@@ -556,7 +556,7 @@ This is how we run optimization while performed comparison with other methods. y
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{config}}{optimization config (result of optim_config method)}
+\item{\code{config}}{optimization config (coef_hinge_H, coef_hinge_W, coef_der_X, coef_der_Omega) will be overwritten.}
 }
 \if{html}{\out{</div>}}
 }

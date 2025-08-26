@@ -72,7 +72,7 @@ Rcpp::List theta_derivative_stage2(const arma::mat& X,
                 if (!(X_center.row(c).subvec(1, cell_types - 1).is_zero())) {
                     // If given center point is different from 0. Then check properties
                     // First calculate cosine distance between given row of new X and center (for dimensions 2:K)
-                    double cos_distance_result = cosine_distance(tmp_X.row(c).subvec(1, cell_types - 1), X_center.row(c).subvec(1, cell_types - 1));
+                    double cos_distance_result = cosine_similarity(tmp_X.row(c).subvec(1, cell_types - 1), X_center.row(c).subvec(1, cell_types - 1));
                     if (cos_distance_result < cos_theta) {
                         // cosine is to low. So we need to move point to be within the range
                         // start shrinking derivative to be inside. Just simply divide it by 2 util convergence.
@@ -80,7 +80,7 @@ Rcpp::List theta_derivative_stage2(const arma::mat& X,
                         while(cos_distance_result < cos_theta) {
                             der_X.row(c) /=  2;
                             tmp_X = (new_X - coef_der_X * der_X);
-                            cos_distance_result = cosine_distance(tmp_X.row(c).subvec(1, cell_types - 1), X_center.row(c).subvec(1, cell_types - 1));
+                            cos_distance_result = cosine_similarity(tmp_X.row(c).subvec(1, cell_types - 1), X_center.row(c).subvec(1, cell_types - 1));
                             // Rcout << "Now cos is  : " << cos_distance_result << "\n";
                             shrink_iteration++;
                           }
@@ -132,7 +132,7 @@ Rcpp::List theta_derivative_stage2(const arma::mat& X,
                 // Now columns of Omega are new points. The same should be for centers.
                 if (!(Omega_center.col(c).subvec(1, cell_types - 1).is_zero())) {
                     // If this threshold is set (column of center is not zero)
-                    double cos_distance_result = cosine_distance(
+                    double cos_distance_result = cosine_similarity(
                         tmp_Omega.col(c).subvec(1, cell_types - 1).t(), 
                         Omega_center.col(c).subvec(1, cell_types - 1).t()); //need rowvecs here
                     if (cos_distance_result < cos_theta) {
@@ -141,7 +141,7 @@ Rcpp::List theta_derivative_stage2(const arma::mat& X,
                         while(cos_distance_result < cos_theta) {
                             der_Omega.col(c) /=  2;
                             tmp_Omega = new_Omega - coef_der_Omega * der_Omega;
-                            cos_distance_result = cosine_distance(tmp_Omega.col(c).subvec(1, cell_types - 1).t(), Omega_center.col(c).subvec(1, cell_types - 1).t());
+                            cos_distance_result = cosine_similarity(tmp_Omega.col(c).subvec(1, cell_types - 1).t(), Omega_center.col(c).subvec(1, cell_types - 1).t());
                             // Rcout << "Now cos is  : " << cos_distance_result << "\n";
                             shrink_iteration++;
                           }
