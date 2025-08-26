@@ -100,7 +100,7 @@ extended_sinkhorn_scale <- function(
 
   H_row <- sinkhorn_sweep_c(
   V = H,
-  D_vs_row = extended_scaling_result$D_hs_row,
+  D_vs_row = extended_scaling_result$D_h_left,
   D_vs_col = extended_scaling_result$D_vs_col,
   iter = n_iter,
   return_col_norm = 0
@@ -110,7 +110,7 @@ extended_sinkhorn_scale <- function(
 
   H_col <- sinkhorn_sweep_c(
   V = H,
-  D_vs_row = extended_scaling_result$D_hs_row,
+  D_vs_row = extended_scaling_result$D_h_left,
   D_vs_col = extended_scaling_result$D_vs_col,
   iter = n_iter,
   return_col_norm = 1
@@ -122,7 +122,7 @@ extended_sinkhorn_scale <- function(
   W_row <- sinkhorn_sweep_c(
   V = W,
   D_vs_row = extended_scaling_result$D_vs_row,
-  D_vs_col = extended_scaling_result$D_ws_col,
+  D_vs_col = extended_scaling_result$D_w_right,
   iter = n_iter,
   return_col_norm = 0
  )
@@ -133,7 +133,7 @@ extended_sinkhorn_scale <- function(
   W_col <- sinkhorn_sweep_c(
   V = H,
   D_vs_row = extended_scaling_result$D_vs_row,
-  D_vs_col = extended_scaling_result$D_ws_col,
+  D_vs_col = extended_scaling_result$D_w_right,
   iter = n_iter,
   return_col_norm = 1
  )

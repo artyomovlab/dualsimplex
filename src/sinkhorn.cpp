@@ -221,10 +221,6 @@ Rcpp::List extended_sinkhorn(const arma::mat& V,
         H_.each_row() /= D_v_row_sum_current;
     }
 
-
-
-
-
     // will return all 1 columns for D_vs_row and D_vs_col if no normalizations performed
     return Rcpp::List::create(Rcpp::Named("D_vs_row") = (i > 0) ? D_v_row.cols(0, i - 1) :  D_v_row.cols(0,0),
                               Rcpp::Named("D_vs_col") = (i > 0) ? D_v_col.rows(0, i - 1).t() : D_v_col.rows(0,0).t(),
