@@ -173,7 +173,7 @@ Rcpp::List extended_sinkhorn(const arma::mat& V,
     arma::rowvec D_v_col_sum_current(N);
     arma::mat D_v_col(n_iter + 1, N, arma::fill::ones);
 
-    arma::vec D_w_col_sum_current(K);
+    arma::rowvec D_w_col_sum_current(K);
     arma::mat D_w_col(K, K, arma::fill::ones);
 
     arma::vec D_h_row_sum_current(K);
@@ -183,6 +183,8 @@ Rcpp::List extended_sinkhorn(const arma::mat& V,
     arma::mat W_ = W;
     arma::mat H_ = H;
 
+    arma::mat D_w_right(K, K, arma::fill::ones);
+    arma::mat D_h_left(K, K, arma::fill::ones);
     // Main algorithm
     int i;
     for (i = 0; i < n_iter; i++) {
@@ -194,6 +196,8 @@ Rcpp::List extended_sinkhorn(const arma::mat& V,
         D_h_row_sum_current = 1 / arma::sum(H_, 1);
         D_h_row.col(i) = D_h_row_sum_current;
         H_.each_col() %= D_h_row_sum_current;
+        D_w_right.col(i) /= D_h_row_sum_current;
+        D_h_left.col(i) = D_h_row_sum_current;
 
         // for W we need to divide it by all these matrices
         W_.each_col() /= D_v_row_sum_current;
@@ -209,18 +213,24 @@ Rcpp::List extended_sinkhorn(const arma::mat& V,
         D_w_col.row(i) = D_w_col_sum_current;
         W_.each_row() %= D_w_col_sum_current;
 
+        D_w_right.col(i) /= D_w_col_sum_current.t();
+        D_h_left.col(i) = D_w_col_sum_current.t();
+
         // for H we need to divide it by all these matrices
         H_.each_col() /= D_w_col_sum_current;
         H_.each_row() /= D_v_row_sum_current;
-
     }
+
+
+
 
 
     // will return all 1 columns for D_vs_row and D_vs_col if no normalizations performed
     return Rcpp::List::create(Rcpp::Named("D_vs_row") = (i > 0) ? D_v_row.cols(0, i - 1) :  D_v_row.cols(0,0),
                               Rcpp::Named("D_vs_col") = (i > 0) ? D_v_col.rows(0, i - 1).t() : D_v_col.rows(0,0).t(),
                               Rcpp::Named("D_hs_row") = (i > 0) ? D_h_row.cols(0, i - 1) : D_h_row.cols(0,0),
-                              Rcpp::Named("D_ws_col") = (i > 0) ? D_w_col.rows(0, i - 1).t() : D_w_col.rows(0,0).t());
-
+                              Rcpp::Named("D_ws_col") = (i > 0) ? D_w_col.rows(0, i - 1).t() : D_w_col.rows(0,0).t(),
+                              Rcpp::Named("D_h_left") = (i > 0) ? D_h_left.cols(0, i - 1) : D_h_left.cols(0,0),
+                              Rcpp::Named("D_w_right") = (i > 0) ? D_w_right.cols(0, i - 1) : D_w_right.cols(0,0));
 }
 
