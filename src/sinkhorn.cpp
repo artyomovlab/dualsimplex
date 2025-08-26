@@ -201,7 +201,7 @@ Rcpp::List extended_sinkhorn(const arma::mat& V,
 
         // for W we need to divide it by all these matrices
         W_.each_col() /= D_v_row_sum_current;
-        W_.each_row() /= D_h_row_sum_current;
+        W_.each_row() /= D_h_row_sum_current.t();
 
 
         // Column normalize
@@ -217,7 +217,7 @@ Rcpp::List extended_sinkhorn(const arma::mat& V,
         D_h_left.col(i) = D_w_col_sum_current.t();
 
         // for H we need to divide it by all these matrices
-        H_.each_col() /= D_w_col_sum_current;
+        H_.each_col() /= D_w_col_sum_current.t();
         H_.each_row() /= D_v_row_sum_current;
     }
 
