@@ -204,7 +204,7 @@ Rcpp::List extended_sinkhorn(const arma::mat& V,
         W_.each_row() /= D_h_row_sum_current.t();
 
 
-        D_w_right.col(i) /= D_h_row_sum_current;
+        D_w_right.col(i) =  1 / D_h_row_sum_current;
         D_h_left.col(i) = D_h_row_sum_current;
 
 
@@ -223,7 +223,7 @@ Rcpp::List extended_sinkhorn(const arma::mat& V,
         H_.each_row() %= D_v_col_sum_current;
 
         D_w_right.col(i) = D_w_col_sum_current.t();
-        D_h_left.col(i) /= D_w_col_sum_current.t();
+        D_h_left.col(i) = 1 / D_w_col_sum_current.t();
     }
 
     // will return all 1 columns for D_vs_row and D_vs_col if no normalizations performed
