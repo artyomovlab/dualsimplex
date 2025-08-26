@@ -25,8 +25,6 @@ devtools::check()
 # Install from your branch
 ensure you unloaded the package, removed the previous version and restarted the R session.
 ```{r}
-unload("DualSimplex")
-remove.packages("DualSimplex")
 devtools::install_github("artyomovlab/DualSimplex@theta_optimization_revised")
 library(DualSimplex)
 ```
@@ -140,5 +138,13 @@ plot_ptp_lines(ptp)
 
 ```{r}
 extended_scaling_result <- extended_sinkhorn_scale(V = data_raw, W=true_basis, H=true_proportions, n_iter = dso$st$scaling$iterations)
+```
+
+```{r}
+v <- data_raw
+W <-  true_basis
+H <- true_proportions
+extended_scaling_result <- extended_sinkhorn(V, W, H, n_iter)
+
 ```
 
