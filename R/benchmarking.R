@@ -213,7 +213,6 @@ plot_ptp_lines <- function(ptp) {
 #'
 #' @param ptp result of coerce_pred_true_props or list of two matrices with the same order of rows
 #' @return  gridExtra::grid.arrange() plot
-#' @importFrom Metrics rmse
 #' @importFrom gridExtra grid.arrange arrangeGrob
 #' @importFrom grid textGrob
 #' @export
@@ -226,7 +225,7 @@ plot_ptp_scatter <- function(ptp) {
       other = ptp[[2]][ct, ]
     ))
 
-    rmse_value <- round(Metrics::rmse(ptp[[1]][ct, ], ptp[[2]][ct, ]), 2)
+    rmse_value <- round(rmse_loss_function(ptp[[1]][ct, ], ptp[[2]][ct, ]), 2)
 
     mx <- 1
 
@@ -266,7 +265,6 @@ plot_ptp_scatter <- function(ptp) {
 #' @param max_expr limit for the scale. set manually if you want to adjust how much is shown
 #' @param pt_alpha alphavalue for points
 #' @return list of plots grid extra
-#' @importFrom Metrics rmse
 #' @importFrom gridExtra grid.arrange arrangeGrob
 #' @importFrom grid textGrob
 #' @importFrom grDevices adjustcolor
@@ -281,7 +279,7 @@ plot_ptb_scatter <- function(ptb, max_expr = 1, pt_alpha = 0.2) {
     ))
 
     # Calculate RMSE value
-    rmse_value <- round(Metrics::rmse(to_plot$DualSimplex, to_plot$other), 2)
+    rmse_value <- round(rmse_loss_function(to_plot$DualSimplex, to_plot$other), 2)
 
     mx <- max(max_expr, max(max(to_plot$other, to_plot$DualSimplex))) + 1
     plot_list[[ct]] <- ggplot(to_plot, aes(x = .data$other, y = .data$DualSimplex)) +

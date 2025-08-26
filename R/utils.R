@@ -105,7 +105,9 @@ read_gene_list <- function(path) {
 }
 
 rasterize_if_needed <- function(plot) {
+  if (requireNamespace('ggrastr', quietly = TRUE)) {
   plot <- if(getOption("dualsimplex-rasterize", default=FALSE)) ggrastr::rasterise(plot, dpi=600) else plot
+  }
   return(plot)
 }
 

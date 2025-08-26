@@ -342,12 +342,16 @@ plot_numeric_features <- function(
 #'
 #' @param eset Expression set
 #' @param genes if TRUE plot for plot for rows, otherwise columns
-#' @return Hmisc result plot
-#' @importFrom Hmisc describe
+#' @return Info about the feature
 #' @export
 describe_cat_features <- function(eset, genes = T) {
   anno <- get_anno(eset, genes)
   cat_cols <- colnames(anno)[sapply(colnames(anno), function(x) is.factor(anno[, x]) | is.logical(anno[, x]))]
   cat_features_anno <- anno[, cat_cols, drop = F]
-  return(Hmisc::describe(cat_features_anno))
+  if (requireNamespace('Hmisc', quietly = TRUE)) {
+      return(Hmisc::describe(cat_features_anno))
+  }
+  else {
+    return(summary(cat_features_anno))
+  }
 }

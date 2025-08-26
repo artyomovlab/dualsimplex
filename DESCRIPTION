@@ -6,7 +6,7 @@ Date: 2023-08-24
 Authors@R:
   c(person(given = "Denis",
            family = "Kleverov",
-           role = c("aut"),
+           role = c("aut", "cre"),
            email = "denisk@wustl.edu",
            comment = c(ORCID = "0009-0002-1362-486X")),
     person(given = "Ekaterina",
@@ -15,7 +15,7 @@ Authors@R:
            comment = c(ORCID = "0000-0002-3483-6944")),
     person(given = "Alexey",
            family = "Serdyukov",
-           role = c("aut", "cre"),
+           role = c("aut"),
            email = "leshaserdyukov@gmail.com",
            comment = c(ORCID = "0009-0004-4155-5237")),
     person(given = "Maxim",
@@ -24,8 +24,8 @@ Authors@R:
            role = c("aut", "ths"),
           comment = c(ORCID = "0000-0002-1133-4212"))
            )
-Maintainer: Alexey Serdyukov <leshaserdyukov@gmail.com>
-Description: Gene expression deconvolution, based on finding SVD projections and dual simplex corners.
+Maintainer: Denis Kleverov <denisk@wustl.edu>
+Description: Package for non-negative matrix factorization and deconvolution of the data based on geometrical properties of Sinkhorned matrices.
 License: MIT + file LICENSE
 biocViews:
 Imports:
@@ -33,33 +33,31 @@ Imports:
     RcppArmadillo,
     rlang,
     irlba,
-    nnls,
     limma,
     Matrix,
     ggplot2,
-    ggrastr,
     cowplot,
     gridExtra,
     RColorBrewer,
     reshape2,
     stringr,
-    Hmisc,
     MASS,
     dplyr,
     tidyr,
     R6,
-    Metrics,
     Biobase,
     progress,
     uwot (>= 0.1.11),
     knitr,
-    scales,
     FNN,
     matrixStats,
     dbscan,
     lpSolve
 Suggests:
     Seurat,
-    gganimate
+    gganimate,
+    ggrastr,
+    Hmisc,
+    scales
 LinkingTo: Rcpp, RcppArmadillo
 RoxygenNote: 7.3.1

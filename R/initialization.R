@@ -383,11 +383,11 @@ get_Dwh_from_XOmega <- function(X, Omega, proj) {
     vec_mtx[, col] <- cbind(c(t(t(Omega[, col])) %*% X[col, ]))
   }
 
-  ## adding sum-to-one constraint
+  ## adding sum-to-one constraint and solving NNLS
   D_w <-
-    matrix(nnls::nnls(rbind(vec_mtx, Omega), rbind(cbind(c(
+    matrix(nnls_C__(rbind(vec_mtx, Omega), rbind(cbind(c(
       V__
-    )), proj$meta$B))$x,
+    )), proj$meta$B)),
     nrow = K,
     ncol = 1)
   D_h <- D_w * (N / M)
