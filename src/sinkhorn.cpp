@@ -222,10 +222,10 @@ Rcpp::List extended_sinkhorn(const arma::mat& V,
     }
 
     // will return all 1 columns for D_vs_row and D_vs_col if no normalizations performed
-    return Rcpp::List::create(Rcpp::Named("D_vs_row") = (i > 0) ? D_v_row.cols(0, i - 1) :  D_v_row.cols(0,0),
-                              Rcpp::Named("D_vs_col") = (i > 0) ? D_v_col.rows(0, i - 1) : D_v_col.rows(0,0),
+    return Rcpp::List::create(Rcpp::Named("D_vs_row") = (i > 0) ? D_v_row.cols(0, i - 1) : D_v_row.cols(0,0),
+                              Rcpp::Named("D_vs_col") = (i > 0) ? D_v_col.cols(0, i - 1) : D_v_col.cols(0,0),
                               Rcpp::Named("D_hs_row") = (i > 0) ? D_h_row.cols(0, i - 1) : D_h_row.cols(0,0),
-                              Rcpp::Named("D_ws_col") = (i > 0) ? D_w_col.rows(0, i - 1) : D_w_col.rows(0,0),
+                              Rcpp::Named("D_ws_col") = (i > 0) ? D_w_col.cols(0, i - 1) : D_w_col.cols(0,0),
                               Rcpp::Named("D_hs_col") = (i > 0) ? D_h_col.cols(0, i - 1) : D_h_col.cols(0,0),
                               Rcpp::Named("D_ws_row") = (i > 0) ? D_w_row.cols(0, i - 1) : D_w_row.cols(0,0));
 }
