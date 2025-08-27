@@ -16,10 +16,10 @@ arma::vec nnls_col(const arma::mat &A,
     while (i < max_iter && max(abs(x - x0)) > tol) {
         x0 = x;
         for (unsigned int k = 0; k < A.n_cols; k++) {
-            tmp = x[k] - mu[k] / H.at(k, k);
+            tmp = x(k) - mu(k) / H.at(k, k);
             if (tmp < 0) tmp = 0;
-            if (tmp != x[k]) mu += (tmp - x[k]) * H.col(k);
-            x[k] = tmp;
+            if (tmp != x(k)) mu += (tmp - x(k)) * H.col(k);
+            x(k) = tmp;
         }
         ++i;
     }
@@ -44,10 +44,10 @@ arma::vec nnls_nonzero_col(const arma::mat &A,
     while (i < max_iter && max(abs(x - x0)) > tol) {
         x0 = x;
         for (unsigned int k = 0; k < A.n_cols; k++) {
-            tmp = x[k] - mu[k] / H.at(k, k);
+            tmp = x(k) - mu(k) / H.at(k, k);
             if (tmp < 0) tmp = 1e-5;
-            if (tmp != x[k]) mu += (tmp - x[k]) * H.col(k);
-            x[k] = tmp;
+            if (tmp != x(k)) mu += (tmp - x(k)) * H.col(k);
+            x(k) = tmp;
         }
         ++i;
     }

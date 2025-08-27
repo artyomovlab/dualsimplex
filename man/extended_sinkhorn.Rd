@@ -2,7 +2,8 @@
 % Please edit documentation in R/RcppExports.R
 \name{extended_sinkhorn}
 \alias{extended_sinkhorn}
-\title{Extended version of sinkhorn transformation, returning all Dv, Dh, Dw matrices}
+\title{Extended version of sinkhorn transformation, returning all matrices produced. (time/memory consuming)
+Matrices include V_ss, W_ss, H_ss, V_gs, W_gs, H_gs, D_v_col, D_v_row, D_h_row, D_h_col}
 \usage{
 extended_sinkhorn(V, W, H, n_iter)
 }
@@ -16,5 +17,6 @@ extended_sinkhorn(V, W, H, n_iter)
 \item{n_iter}{exact number of iterations}
 }
 \description{
-Extended version of sinkhorn transformation, returning all Dv, Dh, Dw matrices
+Extended version of sinkhorn transformation, returning all matrices produced. (time/memory consuming)
+Matrices include V_ss, W_ss, H_ss, V_gs, W_gs, H_gs, D_v_col, D_v_row, D_h_row, D_h_col
 }

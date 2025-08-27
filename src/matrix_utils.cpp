@@ -3,7 +3,7 @@
 arma::mat correctByNorm(arma::mat& X) {
     arma::vec norm_(X.n_rows);
     for (unsigned int k = 0; k < X.n_rows; k++) {
-        norm_[k] = arma::norm(X.row(k), 2);
+        norm_(k) = arma::norm(X.row(k), 2);
     }
     arma::mat B = diagmat(1 / norm_) * X;
     B.elem(arma::find_nonfinite(B)).zeros();

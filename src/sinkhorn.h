@@ -47,7 +47,8 @@ Rcpp::List efficient_sinkhorn(
     const double epsilon = 1.490116e-08 // similar to R's all.equal
 );
 
-//' Extended version of sinkhorn transformation, returning all Dv, Dh, Dw matrices
+//' Extended version of sinkhorn transformation, returning all matrices produced. (time/memory consuming)
+//' Matrices include V_ss, W_ss, H_ss, V_gs, W_gs, H_gs, D_v_col, D_v_row, D_h_row, D_h_col
 //'
 //' @param V matrix to scale. (V=WH)
 //' @param W matrix to scale.

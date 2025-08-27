@@ -28,10 +28,10 @@ arma::uvec update_idx(const arma::mat& prev_X, const arma::mat& new_X, const dou
     arma::uvec idx2 = find(new_values >= thresh);
     arma::uvec new_idx = {};
     for (unsigned int i = 0; i < idx2.n_elem; i++) {
-        if (new_values.at(idx2[i]) >= prev_values.at(idx2[i])) {
+        if (new_values.at(idx2(i)) >= prev_values.at(idx2(i))) {
             int sz = new_idx.size();
             new_idx.resize(sz + 1);
-            new_idx(sz) = idx2[i];
+            new_idx(sz) = idx2(i);
         }
     }
     return new_idx;

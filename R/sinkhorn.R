@@ -71,87 +71,31 @@ reverse_solution_sinkhorn <- function(solution_scaled, scaling) {
 #' @param n_iter exact number of iterations performed
 
 #' @export
-extended_sinkhorn_scale <- function(
-  V,
-  W,
-  H,
-  n_iter
-) {
+extended_sinkhorn_scale <- function(V, W, H, n_iter) {
   extended_scaling_result <- extended_sinkhorn(V, W, H, n_iter)
-  V_row <- sinkhorn_sweep_c(
-    V = V,
-    D_vs_row = extended_scaling_result$D_vs_row,
-    D_vs_col = extended_scaling_result$D_vs_col,
-    iter = n_iter,
-    do_last_step = 0
-   )
-  rownames(V_row) <- rownames(V)
-  colnames(V_row) <- colnames(V)
-
-  V_col <- sinkhorn_sweep_c(
-  V = V,
-  D_vs_row = extended_scaling_result$D_vs_row,
-  D_vs_col = extended_scaling_result$D_vs_col,
-  iter = n_iter,
-  do_last_step = 1
-  )
-  rownames(V_col) <- rownames(V)
-  colnames(V_col) <- colnames(V)
-
-  H_row <- sinkhorn_sweep_c(
-  V = H,
-  D_vs_row = extended_scaling_result$D_hs_row,
-  D_vs_col = extended_scaling_result$D_vs_col,
-  iter = n_iter,
-  do_last_step = 1
- )
-  rownames(H_row) <- rownames(H)
-  colnames(H_row) <- colnames(H)
-
-  H_col <- sinkhorn_sweep_c(
-  V = H,
-  D_vs_row = extended_scaling_result$D_hs_col,
-  D_vs_col = extended_scaling_result$D_vs_col,
-  iter = n_iter,
-  do_last_step = 1
- )
-  rownames(H_col) <- rownames(H)
-  colnames(H_col) <- colnames(H)
-
-
-  W_row <- sinkhorn_sweep_c(
-  V = W,
-  D_vs_row = extended_scaling_result$D_vs_row,
-  D_vs_col = extended_scaling_result$D_ws_row,
-  iter = n_iter,
-  do_last_step = 1
- )
-  rownames(H_row) <- rownames(H)
-  colnames(H_row) <- colnames(H)
-
-
-  W_col <- sinkhorn_sweep_c(
-  V = W,
-  D_vs_row = extended_scaling_result$D_vs_row,
-  D_vs_col = extended_scaling_result$D_ws_col,
-  iter = n_iter,
-  do_last_step = 1
- )
-  rownames(W_col) <- rownames(W)
-  colnames(W_col) <- colnames(W)
+  rownames(extended_sinkhorn_scale$V_row) <- rownames(V)
+  colnames(extended_sinkhorn_scale$V_row) <- colnames(V)
+  rownames(extended_sinkhorn_scale$V_col) <- rownames(V)
+  colnames(extended_sinkhorn_scale$V_col) <- colnames(V)
+  rownames(extended_sinkhorn_scale$H_row) <- rownames(H)
+  colnames(extended_sinkhorn_scale$H_row) <- colnames(H)
+  rownames(extended_sinkhorn_scale$H_col) <- rownames(H)
+  colnames(extended_sinkhorn_scale$H_col) <- colnames(H)
+  rownames(extended_sinkhorn_scale$H_row) <- rownames(H)
+  colnames(extended_sinkhorn_scale$H_row) <- colnames(H)
+  rownames(extended_sinkhorn_scale$W_col) <- rownames(W)
+  colnames(extended_sinkhorn_scale$W_col) <- colnames(W)
 
   return(list(
-    V_row = V_row,
-    V_col = V_col,
-    W_row = W_row,
-    W_col = W_col,
-    H_row = H_row,
-    H_col = H_col,
+    V_row = extended_sinkhorn_scale$V_row,
+    V_col = extended_sinkhorn_scale$V_col,
+    W_row = extended_sinkhorn_scale$W_row,
+    W_col = extended_sinkhorn_scale$W_col,
+    H_row = extended_sinkhorn_scale$H_row,
+    H_col = extended_sinkhorn_scale$H_col,
     D_vs_row =  extended_scaling_result$D_vs_row,
     D_vs_col =  extended_scaling_result$D_vs_col,
     D_hs_row =  extended_scaling_result$D_hs_row,
-    D_ws_col =  extended_scaling_result$D_hs_col,
-    D_hs_col = extended_scaling_result$D_hs_col,
-    D_ws_row = extended_scaling_result$D_ws_row
+    D_ws_col =  extended_scaling_result$D_hs_col
   ))
 }

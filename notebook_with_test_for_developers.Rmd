@@ -137,8 +137,134 @@ plot_ptp_lines(ptp)
 
 
 ```{r}
-extended_scaling_result <- extended_sinkhorn_scale(V = data_raw, W=true_basis, H=true_proportions, n_iter = dso$st$scaling$iterations)
+extended_sinkhorn_scale2 <- function(
+  V,
+  W,
+  H,
+  n_iter
+) {
+  extended_scaling_result <- extended_sinkhorn(V, W, H, n_iter)
+  V_row <- sinkhorn_sweep_c(
+    V = V,
+    D_vs_row = extended_scaling_result$D_vs_row,
+    D_vs_col = extended_scaling_result$D_vs_col,
+    iter = n_iter,
+    do_last_step = 0
+   )
+  rownames(V_row) <- rownames(V)
+  colnames(V_row) <- colnames(V)
+
+  V_col <- sinkhorn_sweep_c(
+  V = V,
+  D_vs_row = extended_scaling_result$D_vs_row,
+  D_vs_col = extended_scaling_result$D_vs_col,
+  iter = n_iter,
+  do_last_step = 1
+  )
+  rownames(V_col) <- rownames(V)
+  colnames(V_col) <- colnames(V)
+
+  H_row <- sinkhorn_sweep_c(
+  V = H,
+  D_vs_row = extended_scaling_result$D_hs_row,
+  D_vs_col = extended_scaling_result$D_vs_col,
+  iter = n_iter - 1,
+  do_last_step = 0
+ )
+  rownames(H_row) <- rownames(H)
+  colnames(H_row) <- colnames(H)
+
+  H_col <- sinkhorn_sweep_c(
+  V = H,
+  D_vs_row = extended_scaling_result$D_hs_col,
+  D_vs_col = extended_scaling_result$D_vs_col,
+  iter = n_iter,
+  do_last_step = 1
+ )
+  rownames(H_col) <- rownames(H)
+  colnames(H_col) <- colnames(H)
+
+
+  W_row <- sinkhorn_sweep_c(
+  V = W,
+  D_vs_row = extended_scaling_result$D_vs_row,
+  D_vs_col = extended_scaling_result$D_ws_row,
+  iter = n_iter,
+  do_last_step = 1
+ )
+  rownames(H_row) <- rownames(H)
+  colnames(H_row) <- colnames(H)
+
+
+  W_col <- sinkhorn_sweep_c(
+  V = W,
+  D_vs_row = extended_scaling_result$D_vs_row,
+  D_vs_col = extended_scaling_result$D_ws_col,
+  iter = n_iter,
+  do_last_step = 1
+ )
+  rownames(W_col) <- rownames(W)
+  colnames(W_col) <- colnames(W)
+
+  return(list(
+    V_row = V_row,
+    V_col = V_col,
+    W_row = W_row,
+    W_col = W_col,
+    H_row = H_row,
+    H_col = H_col,
+    D_vs_row =  extended_scaling_result$D_vs_row,
+    D_vs_col =  extended_scaling_result$D_vs_col,
+    D_hs_row =  extended_scaling_result$D_hs_row,
+    D_ws_col =  extended_scaling_result$D_hs_col,
+    D_hs_col = extended_scaling_result$D_hs_col,
+    D_ws_row = extended_scaling_result$D_ws_row
+  ))
+}
 ```
+
+
+
+
+```{r}
+extended_scaling_result <- extended_sinkhorn_scale2(V = data_raw, W=true_basis, H=true_proportions, n_iter = dso$st$scaling$iterations)
+```
+
+
+## Check true solution
+```{r}
+R <-  dso$st$proj$meta$R
+S <-  dso$st$proj$meta$S
+H_ss <-  extended_scaling_result$H_row
+W_ss<-  extended_scaling_result$W_row
+W_gs <-  extended_scaling_result$W_col
+H_gs <-  extended_scaling_result$H_col
+
+X_result <- H_ss %*% t(R)
+Omega_result <- t(S %*% W_gs)
+```
+```{r}
+dso$init_solution("random")
+```
+```{r fig.width=5, fig.height=5}
+library(ggplot2)
+res_plots <- dso$plot_projected(use_dims = 2:3, with_solution = T, with_history = F, wrap = F, show_plots = F) 
+res_plots[[1]] + geom_point(
+    data = X_result,
+    color = "purple",
+    pch = 22,
+    size = 3
+  ) 
+
+
+res_plots[[2]] + geom_point(
+    data = Omega_result,
+    color = "purple",
+    pch = 22,
+    size = 3
+  ) 
+```
+
 
 ```{r}
 V <- data_raw
@@ -147,7 +273,14 @@ H <- true_proportions
 extended_scaling_result <- extended_sinkhorn(V, W, H, dso$st$scaling$iterations)
 
 ```
+```{r}
+Rcpp::sourceCpp(file = "test_cpp.cpp")
+```
 
+```{r}
+extended_scaling_result <- extended_sinkhorn(V, W, H, dso$st$scaling$iterations)
+
+```
 
 ```{r}
 extended_scaling_result$
