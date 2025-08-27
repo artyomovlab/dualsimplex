@@ -73,26 +73,26 @@ reverse_solution_sinkhorn <- function(solution_scaled, scaling) {
 #' @export
 extended_sinkhorn_scale <- function(V, W, H, n_iter) {
   extended_scaling_result <- extended_sinkhorn(V, W, H, n_iter)
-  rownames(extended_sinkhorn_scale$V_row) <- rownames(V)
-  colnames(extended_sinkhorn_scale$V_row) <- colnames(V)
-  rownames(extended_sinkhorn_scale$V_col) <- rownames(V)
-  colnames(extended_sinkhorn_scale$V_col) <- colnames(V)
-  rownames(extended_sinkhorn_scale$H_row) <- rownames(H)
-  colnames(extended_sinkhorn_scale$H_row) <- colnames(H)
-  rownames(extended_sinkhorn_scale$H_col) <- rownames(H)
-  colnames(extended_sinkhorn_scale$H_col) <- colnames(H)
-  rownames(extended_sinkhorn_scale$H_row) <- rownames(H)
-  colnames(extended_sinkhorn_scale$H_row) <- colnames(H)
-  rownames(extended_sinkhorn_scale$W_col) <- rownames(W)
-  colnames(extended_sinkhorn_scale$W_col) <- colnames(W)
+  rownames(extended_scaling_result$V_row) <- rownames(V)
+  colnames(extended_scaling_result$V_row) <- colnames(V)
+  rownames(extended_scaling_result$V_col) <- rownames(V)
+  colnames(extended_scaling_result$V_col) <- colnames(V)
+  rownames(extended_scaling_result$H_row) <- rownames(H)
+  colnames(extended_scaling_result$H_row) <- colnames(H)
+  rownames(extended_scaling_result$H_col) <- rownames(H)
+  colnames(extended_scaling_result$H_col) <- colnames(H)
+  rownames(extended_scaling_result$H_row) <- rownames(H)
+  colnames(extended_scaling_result$H_row) <- colnames(H)
+  rownames(extended_scaling_result$W_col) <- rownames(W)
+  colnames(extended_scaling_result$W_col) <- colnames(W)
 
   return(list(
-    V_row = extended_sinkhorn_scale$V_row,
-    V_col = extended_sinkhorn_scale$V_col,
-    W_row = extended_sinkhorn_scale$W_row,
-    W_col = extended_sinkhorn_scale$W_col,
-    H_row = extended_sinkhorn_scale$H_row,
-    H_col = extended_sinkhorn_scale$H_col,
+    V_row = extended_scaling_result$V_row,
+    V_col = extended_scaling_result$V_col,
+    W_row = extended_scaling_result$W_row,
+    W_col = extended_scaling_result$W_col,
+    H_row = extended_scaling_result$H_row,
+    H_col = extended_scaling_result$H_col,
     D_vs_row =  extended_scaling_result$D_vs_row,
     D_vs_col =  extended_scaling_result$D_vs_col,
     D_hs_row =  extended_scaling_result$D_hs_row,
