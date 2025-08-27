@@ -231,6 +231,24 @@ reverse_solution_projection <- function(solution_proj, proj) {
   return(solution_scaled)
 }
 
+#' Go from H_ss, W_gs to X and Omega coordinates. Used get coordinates for external W, H matrices.
+#'
+#' @param X_space_pts points in samples space (X space, samples space, left simplex)
+#' @param Omega_space_pts   points in features space (Omega space, genes space, right simplex)
+#' @param proj dso$st$proj object containing projected points and umap info
+#' @return list of two matrices (X, Omega)
+#' @export
+get_coordinates_from_scaled_matrices <- function(H_ss, W_gs, proj) {
+  R <-  proj$meta$R
+  S <-  proj$meta$S
+  X_result <- H_ss %*% t(R)
+  Omega_result <- t(S %*% W_gs)
+  return(list(
+    X = X_result,
+    Omega = Omega_result
+  ))
+}
+
 
 ############ PLOTTING ############
 

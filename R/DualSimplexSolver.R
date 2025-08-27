@@ -1027,7 +1027,23 @@ DualSimplexSolver <- R6Class(
       colnames(res) <- colnames(self$get_data())
 
       res
+    },
+
+    #' @description
+    #' Get coordinates from external W and H using extended sinkhorn procedure.
+    #'
+    #' @param W  first factorization matrix for original V (V = WH)
+    #' @param H  second factorization matrix for original V (V = WH)
+    get_coordinates_from_external_matrices = function(W, H) {
+      private$project_first()
+      extended_scaling_result <- extended_sinkhorn_scale(V = data_raw, W=true_basis, H=true_proportions, n_iter = dso$st$scaling$iterations)
+      H_ss <-  extended_scaling_result$H_row
+      W_gs <-  extended_scaling_result$W_col
+      res <- get_coordinates_from_scaled_matrices(H_ss = H_ss, W_gs=W_gs, proj=self$st$proj)
+      return(res)
     }
+
+
   )
 )
 
