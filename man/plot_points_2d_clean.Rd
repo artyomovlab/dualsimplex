@@ -12,6 +12,7 @@ plot_points_2d_clean(
   y_col,
   color_col,
   color_scheme,
+  base_color,
   pt_opacity = 0.2,
   pt_size = 1,
   ...
@@ -27,6 +28,8 @@ plot_points_2d_clean(
 \item{color_col}{which column is color}
 
 \item{color_scheme}{color scheme identified by color params parsing}
+
+\item{base_color}{for points}
 
 \item{pt_opacity}{opasity for points}
 

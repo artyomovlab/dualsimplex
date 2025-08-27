@@ -120,8 +120,10 @@ DualSimplexSolver <- R6Class(
         } else if (color %in% colnames(anno)) {
           name <- color
           color <- anno[, color]
+        } else if (color %in% rownames(anno)) {
+          name <-  "individual_highlight"
         } else {
-          name <- NULL
+          name <- "direct_single_color"
         }
       } else {
         name <- NULL

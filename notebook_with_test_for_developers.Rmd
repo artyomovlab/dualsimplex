@@ -80,7 +80,132 @@ dso$plot_projected(
   use_dims = list(2:3)
 )
 ```
+```{r}
+dso$plot_projected(
+  color_genes="green",
+  "zero_distance",
+  with_solution = TRUE,
+  use_dims = list(2:3)
+)
+```
+```{r}
+genes <- T
+color = "red"
+anno <- get_anno(dso$st$data, genes)
+      if (is.character(color) && length(color) == 1) {
+        if (!is.null(dso$st$solution) && (color %in% colnames(dso$st$solution$W))) {
+          name <- color
+          if (genes) {
+            color <- log(dso$st$solution$W[, color] + 1)
+          } else {
+            color <- dso$st$solution$H[color, ]
+          }
+        } else if (genes && !is.null(dso$st$marker_genes) && (color == "markers")) {
+          name <- color
+          color <- which_marker(rownames(dso$st$data), dso$st$marker_genes)
+        } else if (color %in% colnames(anno)) {
+          name <- color
+          color <- anno[, color]
+        } else if (color %in% rownames(anno)) {
+          name <-  "individual_highlight"
+        } else {
+          name <- "direct_single_color"
+        }
+      } else {
+        name <- NULL
+      }
+```
 
+```{r}
+get_color_params <- function(to_plot, color, color_name) {
+  base_color <-  "black"
+  if (is.null(color)) {
+    return(list(
+      color_vec = NULL,
+      color_name = NULL,
+      color_scheme = "default",
+      base_color = base_color
+    ))
+  }
+
+  if (is.null(color_name)) color_name <- "annotation"
+  if (length(color[[1]]) > 1) color <- unlist(color)
+
+  if (length(color) == nrow(to_plot)) {
+    if (is.factor(color) || is.logical(color)) {
+      return(list(
+        color_vec = color,
+        color_name = color_name,
+        color_scheme = "factor",
+        base_color = NULL
+      ))
+    } else {
+      return(list(
+        color_vec = color,
+        color_name = color_name,
+        color_scheme = "direct_multiple_colors",
+        base_color = NULL
+      ))
+    }
+  } else {
+    if (color_name == "direct_single_color") {
+      base_color <-  color
+      return (list(
+        color_vec = NULL,
+        color_name = NULL,
+        color_scheme = "direct_single_color",
+        base_color = base_color
+      ))
+    }
+    if (color_name == "individual_highlight") {
+      color_name <- "highlight"
+      return(list(
+        color_vec = rownames(to_plot) %in% color,
+        color_name = color_name,
+        color_scheme = "highlight",
+        base_color = base_color
+    ))
+    }
+    if (color_name == "annotation")
+    return(list(
+      color_vec = rownames(to_plot) %in% color,
+      color_name = "highlight",
+      color_scheme = "highlight",
+      base_color = base_color
+    ))
+  }
+}
+```
+
+```{r}
+color_name <-  name
+
+points_2d <-  get_2d_subset(dso$st$proj, 2:3)[c("X")]
+
+  to_plot <- as.data.frame(points_2d)
+cp <- get_color_params(to_plot, color, color_name)
+
+x_col <- colnames(to_plot)[1]
+y_col <- colnames(to_plot)[2]
+```
+
+```{r}
+library(ggplot2)
+color_col <- cp$color_name
+
+plt <- ggplot(to_plot, aes_string(x = x_col, y = y_col, color = color_col))
+plt + geom_point(size = 1, color = cp$base_color) +geom_point(
+        data = to_plot[to_plot[[color_col]], ],
+        size = 1 * 2,
+        alpha = 1,
+        color = "green"
+      )
+```
+
+
+```{r}
+to_plot[, cp$color_name] <- cp$color_vec
+```
 
 ## Make 5000 steps of optimization
 ```{r}
@@ -138,23 +263,20 @@ plot_ptp_lines(ptp)
 
 
 
-
 ```{r}
-extended_scaling_result <- extended_sinkhorn_scale(V = data_raw, W=true_basis, H=true_proportions, n_iter = dso$st$scaling$iterations)
+dso$init_solution("random")
+res <-  dso$get_coordinates_from_external_matrices(true_basis, true_proportions)
 ```
+
+
 
 
 ## Check true solution
 ```{r}
-R <-  dso$st$proj$meta$R
-S <-  dso$st$proj$meta$S
-H_ss <-  extended_scaling_result$H_row
-W_ss<-  extended_scaling_result$W_row
-W_gs <-  extended_scaling_result$W_col
-H_gs <-  extended_scaling_result$H_col
 
-X_result <- H_ss %*% t(R)
-Omega_result <- t(S %*% W_gs)
+
+X_result <- res$X
+Omega_result <- res$Omega
 ```
 ```{r}
 dso$init_solution("random")
