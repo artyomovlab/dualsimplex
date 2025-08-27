@@ -1037,8 +1037,8 @@ DualSimplexSolver <- R6Class(
     get_coordinates_from_external_matrices = function(W, H) {
       private$project_first()
       extended_scaling_result <- extended_sinkhorn_scale(V = dso$st$data,
-                                                         W=true_basis[rownames(dso$st$data),],
-                                                         H=true_proportions[, colnames(dso$st$data)],
+                                                         W=W[rownames(dso$st$data),],
+                                                         H=H[, colnames(dso$st$data)],
                                                          n_iter = dso$st$scaling$iterations)
       H_ss <-  extended_scaling_result$H_row
       W_gs <-  extended_scaling_result$W_col

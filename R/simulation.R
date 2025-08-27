@@ -250,3 +250,5 @@ generate_basis_samples <- function(basis) {
   colnames(data) <- colnames(proportions)
   list(proportions = proportions, data = data)
 }
+
+
