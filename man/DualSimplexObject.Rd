@@ -863,9 +863,9 @@ Get coordinates from external W and H using extended sinkhorn procedure.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{W}}{first factorization matrix for original V (V = WH)}
+\item{\code{W}}{first factorization matrix for original V (V = WH). Rownames should match dso$st$data.}
 
-\item{\code{H}}{second factorization matrix for original V (V = WH)}
+\item{\code{H}}{second factorization matrix for original V (V = WH). Colnames should match dso$st$data.}
 }
 \if{html}{\out{</div>}}
 }
