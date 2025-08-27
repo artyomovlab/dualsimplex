@@ -170,15 +170,14 @@ Rcpp::List extended_sinkhorn(const arma::mat& V,
     arma::vec D_v_row_sum_current(M);
     arma::mat D_v_row(M, n_iter + 1, arma::fill::ones);
 
-    arma::rowvec D_v_col_sum_current(N);
+    arma::vec D_v_col_sum_current(N);
     arma::mat D_v_col(n_iter + 1, N, arma::fill::ones);
 
-    arma::rowvec D_w_col_sum_current(K);
-    arma::mat D_w_col(n_iter + 1, K, arma::fill::ones);
-
-    arma::mat D_w_row(n_iter + 1, K, arma::fill::ones);
-
+    arma::vec D_w_col_sum_current(K);
     arma::vec D_h_row_sum_current(K);
+
+    arma::mat D_w_col(K, n_iter + 1, arma::fill::ones);
+    arma::mat D_w_row(K, n_iter + 1, arma::fill::ones);
     arma::mat D_h_row(K, n_iter + 1, arma::fill::ones);
     arma::mat D_h_col(K, n_iter + 1, arma::fill::ones);
 
@@ -206,27 +205,27 @@ Rcpp::List extended_sinkhorn(const arma::mat& V,
         D_w_row.col(i) /= D_h_row_sum_current;
 
         // Column normalize
-        D_v_col_sum_current = 1 / arma::sum(V_, 0);
-        D_v_col.row(i) = D_v_col_sum_current;
-        V_.each_row() %= D_v_col_sum_current;
+        D_v_col_sum_current = 1 / arma::sum(V_, 0).t();
+        D_v_col.row(i) = D_v_col_sum_current.t();
+        V_.each_row() %= D_v_col_sum_current.t();
 
-        D_w_col_sum_current = 1 / arma::sum(W_, 0);
+        D_w_col_sum_current = 1 / arma::sum(W_, 0).t();
 
-        W_.each_row() %= D_w_col_sum_current;
+        W_.each_row() %= D_w_col_sum_current.t();
 
         // for H we need to divide it by all these matrices
-        H_.each_col() /= D_w_col_sum_current.t();
-        H_.each_row() %= D_v_col_sum_current;
+        H_.each_col() /= D_w_col_sum_current;
+        H_.each_row() %= D_v_col_sum_current.t();
 
-        D_w_col.col(i) =   D_w_row.col(i) % D_w_col_sum_current.t();
-        D_h_col.col(i) = D_h_row.col(i) / D_w_col_sum_current.t();
+        D_w_col.col(i) =   D_w_row.col(i) % D_w_col_sum_current;
+        D_h_col.col(i) = D_h_row.col(i) / D_w_col_sum_current;
     }
 
     // will return all 1 columns for D_vs_row and D_vs_col if no normalizations performed
     return Rcpp::List::create(Rcpp::Named("D_vs_row") = (i > 0) ? D_v_row.cols(0, i - 1) :  D_v_row.cols(0,0),
-                              Rcpp::Named("D_vs_col") = (i > 0) ? D_v_col.rows(0, i - 1).t() : D_v_col.rows(0,0).t(),
+                              Rcpp::Named("D_vs_col") = (i > 0) ? D_v_col.rows(0, i - 1) : D_v_col.rows(0,0),
                               Rcpp::Named("D_hs_row") = (i > 0) ? D_h_row.cols(0, i - 1) : D_h_row.cols(0,0),
-                              Rcpp::Named("D_ws_col") = (i > 0) ? D_w_col.rows(0, i - 1).t() : D_w_col.rows(0,0).t(),
+                              Rcpp::Named("D_ws_col") = (i > 0) ? D_w_col.rows(0, i - 1) : D_w_col.rows(0,0),
                               Rcpp::Named("D_hs_col") = (i > 0) ? D_h_col.cols(0, i - 1) : D_h_col.cols(0,0),
                               Rcpp::Named("D_ws_row") = (i > 0) ? D_w_row.cols(0, i - 1) : D_w_row.cols(0,0));
 }
