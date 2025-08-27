@@ -206,7 +206,7 @@ Rcpp::List extended_sinkhorn(const arma::mat& V,
 
         // Column normalize
         D_v_col_sum_current = 1 / arma::sum(V_, 0).t();
-        D_v_col.row(i) = D_v_col_sum_current.t();
+        D_v_col.col(i) = D_v_col_sum_current;
         V_.each_row() %= D_v_col_sum_current.t();
 
         D_w_col_sum_current = 1 / arma::sum(W_, 0).t();
