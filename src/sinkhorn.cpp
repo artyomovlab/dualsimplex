@@ -168,14 +168,12 @@ Rcpp::List extended_sinkhorn(const arma::mat& V,
 
     // Initial normalization matrix with 1s.
     arma::vec D_v_row_sum_current(M);
-    arma::mat D_v_row(M, n_iter + 1, arma::fill::ones);
-
     arma::vec D_v_col_sum_current(N);
-    arma::mat D_v_col(n_iter + 1, N, arma::fill::ones);
-
     arma::vec D_w_col_sum_current(K);
     arma::vec D_h_row_sum_current(K);
 
+    arma::mat D_v_row(M, n_iter + 1, arma::fill::ones);
+    arma::mat D_v_col(N, n_iter + 1, arma::fill::ones);
     arma::mat D_w_col(K, n_iter + 1, arma::fill::ones);
     arma::mat D_w_row(K, n_iter + 1, arma::fill::ones);
     arma::mat D_h_row(K, n_iter + 1, arma::fill::ones);
