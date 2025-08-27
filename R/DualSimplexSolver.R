@@ -1036,7 +1036,7 @@ DualSimplexSolver <- R6Class(
     #' @param H  second factorization matrix for original V (V = WH). Colnames should match dso$st$data.
     get_coordinates_from_external_matrices = function(W, H) {
       private$project_first()
-      extended_scaling_result <- extended_sinkhorn_scale(V = dso$st$data,
+      extended_scaling_result <- extended_sinkhorn_scale(V = Biobase::exprs(self$st$data),
                                                          W=W[rownames(dso$st$data),],
                                                          H=H[, colnames(dso$st$data)],
                                                          n_iter = dso$st$scaling$iterations)
