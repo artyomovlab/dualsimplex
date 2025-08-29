@@ -381,7 +381,7 @@ plot_points_2d_clean <- function(
   plt <- ggplot(to_plot, aes_string(x = x_col, y = y_col, color = color_col))
 
 
-  if (color_scheme == "default" || color_scheme == "highlight" || color_scheme == "direct_single_color") {
+  if (color_scheme == "default" || color_scheme == "highlight" || color_scheme == "direct_single_color" ) {
     plt <- plt + rasterize_if_needed(geom_point(size = pt_size, color = base_color, alpha = pt_opacity))
     if (color_scheme == "highlight") {
       plt <- plt +

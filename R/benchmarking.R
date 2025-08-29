@@ -1,6 +1,6 @@
 ############ MAIN LOGIC ############
 
-#' Get similarity matrix for two matrices using specified metric and comparing rows.
+#' Get matrix with metric values for two matrices using specified metric and comparing rows.
 #' If row has sd 0 it will add some random value to the row avoiding NaNs
 #'
 #'@param matrix_a first matrix
@@ -9,12 +9,12 @@
 #'@param sd_fix_value standard deviation of the random values to add to the row in case it has sd of 0
 #'@return result similarity matrix. Rows from the first matrix, columns from the second matrix.
 #'@export
-get_similarity_matrix_for_rows <- function(matrix_a, matrix_b, metric="rmse", sd_fix_value = 1e-4) {
+get_metric_matrix_for_rows <- function(matrix_a, matrix_b, metric="rmse", sd_fix_value = 1e-4) {
   num_rows_a <-  dim(matrix_a)[[1]]
   num_rows_b <-  dim(matrix_b)[[1]]
-  similarities <-  lapply(c(1:num_rows_a), function(index_a){
+  similarities <-  lapply(1:num_rows_a, function(index_a){
     vector_of_a <- matrix_a[index_a,]
-    candidates <- lapply(c(1:num_rows_b), function(index_b){
+    candidates <- lapply(1:num_rows_b, function(index_b){
       vector_of_b <- matrix_b[index_b,]
       if (metric %in% c('pearson', 'spearman')) {
         random_vector <-  abs(stats::rnorm(matrix_b[index_b,],0, sd=sd_fix_value))
@@ -26,10 +26,15 @@ get_similarity_matrix_for_rows <- function(matrix_a, matrix_b, metric="rmse", sd
         }
       }
       result <- switch(metric,
-                       "rmse" = 1 - rmse_loss_function(vector_of_a, vector_of_b),
+                       "rmse" = 1 - normalized_rmse_loss_function(vector_of_a, vector_of_b),
                        "pearson" = pearson_correlation_function(vector_of_a, vector_of_b),
+                       "abs_pearson" = abs(pearson_correlation_function(vector_of_a, vector_of_b)),
                        "spearman" = spearman_correlation_function(vector_of_a, vector_of_b),
-                       "cosine" = cosine_similarity_function(vector_of_a, vector_of_b)
+                       "cosine" = cosine_similarity_function(vector_of_a, vector_of_b),
+                       "rmse_loss" = normalized_rmse_loss_function(vector_of_a, vector_of_b),
+                       "pearson_loss" = pearson_loss_function(vector_of_a, vector_of_b),
+                       "spearman_loss" = spearman_loss_function(vector_of_a, vector_of_b),
+                       "cosine_loss" = cosine_loss_function(vector_of_a, vector_of_b)
                        )
       return(result)
     })
@@ -37,12 +42,11 @@ get_similarity_matrix_for_rows <- function(matrix_a, matrix_b, metric="rmse", sd
     colnames(current_a_component_sim_row) <-  rownames(matrix_b)
     return(current_a_component_sim_row)
   })
-  similarity_matrix <- do.call(rbind, similarities)
-  rownames(similarity_matrix) <- rownames(matrix_a)
-  colnames(similarity_matrix) <- rownames(matrix_b)
-  return(abs(similarity_matrix))
+  metric_matrix <- do.call(rbind, similarities)
+  rownames(metric_matrix) <- rownames(matrix_a)
+  colnames(metric_matrix) <- rownames(matrix_b)
+  return(metric_matrix)
 }
-
 
 
 #' Function to gess order of rows for the predicted markers to have the highest sum correlation with true matrix.
@@ -56,22 +60,62 @@ get_similarity_matrix_for_rows <- function(matrix_a, matrix_b, metric="rmse", sd
 #' @export
 guess_order <- function(predicted_matrix, true_matrix) {
   # similarity matrix (rows are predicted rows, columns are estimated columns)
-  similarity_matrix <- get_similarity_matrix_for_rows(matrix_a = predicted_matrix, matrix_b = true_matrix, metric = "pearson")
+  similarity_matrix <- get_metric_matrix_for_rows(matrix_a = predicted_matrix, matrix_b = true_matrix, metric = "abs_pearson")
+  # Add extra rows if we don't have enough true cell types
+  if (dim(similarity_matrix)[[1]] > dim(similarity_matrix)[[2]]) {
+    need_to_add <-dim(similarity_matrix)[[1]] - dim(similarity_matrix)[[2]]
+    separate_columns <- lapply(c(1:need_to_add), function(x) matrix(rep(0, dim(similarity_matrix)[[1]])))
+    new_columns <-  do.call(cbind, separate_columns)
+    colnames(new_columns) <-  paste0("extra_", c(1:need_to_add))
+    similarity_matrix <- cbind(similarity_matrix, new_columns)
+  }
+    asignment_result <- lpSolve::lp.assign(t(similarity_matrix), direction="max")
+    new_order <-  apply(asignment_result$solution, MARGIN = 1, which.max)
+    new_order <- as.list(new_order)
+    names(new_order) <-  colnames(similarity_matrix)
+    return(new_order)
+  }
 
-# Add extra rows if we don't have enough true cell types
-if (dim(similarity_matrix)[[1]] > dim(similarity_matrix)[[2]]) {
-  need_to_add <-dim(similarity_matrix)[[1]] - dim(similarity_matrix)[[2]]
-  separate_columns <- lapply(c(1:need_to_add), function(x) matrix(rep(0, dim(similarity_matrix)[[1]])))
-  new_columns <-  do.call(cbind, separate_columns)
-  colnames(new_columns) <-  paste0("extra_", c(1:need_to_add))
-  similarity_matrix <- cbind(similarity_matrix, new_columns)
+
+#' Get table containing best combination of metric values.
+#' By best we mean maximum summary correlation between predicted component and true component
+#'
+#'@param named_multiple_results named list of matrices to test
+#'@param true_matrix true matrix to compare to
+#'@param metric which metric to use
+#'@param per_row wether to calculate metric per row or per column
+#'@param normalize wether to sum-to-one normalize rows for metric calculation
+#'@param sd_fix_value deviation of small random value to add in order to avoid NA for correlations
+#'@return result similarity matrix. Rows from the first matrix, columns from the second matrix.
+#'@export
+get_metric_values <- function(named_multiple_results, true_matrix, metric, per_row=TRUE, normalize=TRUE,  sd_fix_value = 1e-4) {
+  separate_results <- list()
+  for (current_result_name in names(named_multiple_results)) {
+    estimated_matrix <- named_multiple_results[[current_result_name]]
+    if (!per_row) {
+      estimated_matrix <- t(estimated_matrix)
+      true_matrix <-  t(true_matrix)
+    }
+    estimated_matrix <-  estimated_matrix[, colnames(true_matrix)]
+    new_row_order <-  guess_order(estimated_matrix, true_matrix)
+    reordered_matrix <-  estimated_matrix[unlist(new_row_order), ]
+    if (normalize) {
+      reordered_matrix <- t(t(reordered_matrix)/colSums(reordered_matrix))
+      true_matrix <- t(t(true_matrix)/colSums(true_matrix))
+    }
+    # Here we already assuming that matrices are in the correct order, so we need only diagonal elements of the matrix
+    metric_matrix <- get_metric_matrix_for_rows(reordered_matrix, true_matrix, metric = metric,  sd_fix_value = 1e-4)
+    target_values <-  diag(metric_matrix)
+    result_distance_table <- data.frame(target_values)
+    colnames(result_distance_table) <-  c(metric)
+    result_distance_table$cell_type <-rownames(true_matrix)
+    result_distance_table$method <- current_result_name
+    separate_results[[current_result_name]] <- result_distance_table
+  }
+  total_results_for_method <- do.call(rbind, separate_results)
+  return(total_results_for_method)
 }
-  asignment_result <- lpSolve::lp.assign(t(similarity_matrix), direction="max")
-  new_order <-  apply(asignment_result$solution, MARGIN = 1, which.max)
-  new_order <- as.list(new_order)
-  names(new_order) <-  colnames(similarity_matrix)
-  return(new_order)
-}
+
 
 
 
@@ -110,7 +154,6 @@ coerce_pred_true_props <- function(pred_props, true_props) {
 
 
 
-
 toMatrix <- function(x) {
     if (is.data.frame(x)) {
         # Convert data frame (or tibble) to a plain matrix
@@ -122,6 +165,8 @@ toMatrix <- function(x) {
     }
     stop("Invalid type for plotting: ", paste(class(x), collapse = ", "))
 }
+
+
 
 
 ############ PLOTTING ############

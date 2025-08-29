@@ -7,11 +7,11 @@
 get_coordinates_from_scaled_matrices(H_ss, W_gs, proj)
 }
 \arguments{
+\item{H_ss}{scaled proportion matrix (result of extended sinkhorn or optimization in sinkhorn space)}
+
+\item{W_gs}{scaled components matrix (result of extended sinkhorn or optimization in sinkhorn space)}
+
 \item{proj}{dso$st$proj object containing projected points and umap info}
-
-\item{X_space_pts}{points in samples space (X space, samples space, left simplex)}
-
-\item{Omega_space_pts}{points in features space (Omega space, genes space, right simplex)}
 }
 \value{
 list of two matrices (X, Omega)
