@@ -107,7 +107,7 @@ get_metric_values <- function(named_multiple_results, true_matrix, metric, per_r
     metric_matrix <- get_metric_matrix_for_rows(reordered_matrix, true_matrix, metric = metric,  sd_fix_value = 1e-4)
     target_values <-  diag(metric_matrix)
     result_distance_table <- data.frame(target_values)
-    colnames(result_distance_table) <-  c(metric)
+    colnames(result_distance_table) <-  c("metric_value")
     result_distance_table$cell_type <-rownames(true_matrix)
     result_distance_table$method <- current_result_name
     separate_results[[current_result_name]] <- result_distance_table
