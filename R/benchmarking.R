@@ -16,7 +16,7 @@ get_metric_matrix_for_rows <- function(matrix_a, matrix_b, metric="rmse", sd_fix
     vector_of_a <- matrix_a[index_a,]
     candidates <- lapply(1:num_rows_b, function(index_b){
       vector_of_b <- matrix_b[index_b,]
-      if (metric %in% c('pearson', 'spearman', 'abs_pearson', 'pearson_loss', 'spearman_loss')) {
+      if (metric %in% c('pearson', 'spearman', 'abs_pearson', 'pearson_loss', 'spearman_loss', 'rmse_loss')) {
         random_vector <-  abs(stats::rnorm(matrix_b[index_b,],0, sd=sd_fix_value))
         if (stats::sd(vector_of_a) == 0) {
           vector_of_a <- vector_of_a + random_vector
