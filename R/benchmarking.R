@@ -365,7 +365,7 @@ plot_correlation_matrix <- function(estimated_matrix, true_matrix) {
   estimated_matrix <- t(estimated_matrix)
   true_matrix <- t(true_matrix)
 
-  plot.data <- stats::cor(estimated_matrix, true_matrix, method = "p")
+  plot.data <- get_metric_matrix_for_rows(estimated_matrix, true_matrix, metric="pearson")
 
   plot.data <- as.data.frame(plot.data)
   plot.data[['estimated']] <- colnames(estimated_matrix)
