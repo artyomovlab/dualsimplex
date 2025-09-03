@@ -362,13 +362,11 @@ plot_ptb_scatter <- function(ptb, max_expr = 1, pt_alpha = 0.2) {
 plot_correlation_matrix <- function(estimated_matrix, true_matrix) {
   gradient_colors <-  c("#798234FF", "#A3AD62FF", "#D0D3A2FF", "#FDFBE4FF", "#F0C6C3FF", "#DF91A3FF", "#D46780FF")
   invis <- element_blank()
-  estimated_matrix <- t(estimated_matrix)
-  true_matrix <- t(true_matrix)
 
   plot.data <- get_metric_matrix_for_rows(estimated_matrix, true_matrix, metric="pearson")
 
   plot.data <- as.data.frame(plot.data)
-  plot.data[['estimated']] <- colnames(estimated_matrix)
+  plot.data[['estimated']] <- rownames(estimated_matrix)
   plot.data[['estimated']] <-  factor( plot.data[['estimated']], levels =  plot.data[['estimated']])
   plot.data <- reshape2::melt(plot.data, value.name = "Correlation",id="estimated")
 
