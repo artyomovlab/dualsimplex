@@ -395,8 +395,10 @@ plot_points_2d_clean <- function(
     }
   } else if (color_scheme == "direct_multiple_colors") {
     plt <- plt +
-      rasterize_if_needed(geom_point(size = pt_size, alpha = min(1, pt_opacity * 4), ...)) +
-      scale_color_distiller(palette = "Spectral", name = color_col)
+      rasterize_if_needed(geom_point(size = pt_size, alpha = min(1, pt_opacity * 4), ...)
+      + scale_color_distiller(palette = "Spectral", name = color_col)
+      )
+
   } else if (color_scheme == "factor") {
     plt <- plt +
     rasterize_if_needed(geom_point(size = pt_size, color = "grey70", alpha = pt_opacity, ...)) +
