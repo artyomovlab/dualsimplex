@@ -90,11 +90,13 @@ guess_order <- function(predicted_matrix, true_matrix) {
 #'@export
 get_metric_values <- function(named_multiple_results, true_matrix, metric, per_row=TRUE, normalize=TRUE,  sd_fix_value = 1e-4) {
   separate_results <- list()
+  if (!per_row)  {
+    true_matrix <-  t(true_matrix)
+  }
   for (current_result_name in names(named_multiple_results)) {
     estimated_matrix <- named_multiple_results[[current_result_name]]
     if (!per_row) {
       estimated_matrix <- t(estimated_matrix)
-      true_matrix <-  t(true_matrix)
     }
     estimated_matrix <-  estimated_matrix[, colnames(true_matrix)]
     new_row_order <-  guess_order(estimated_matrix, true_matrix)
