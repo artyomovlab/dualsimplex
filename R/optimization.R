@@ -32,7 +32,7 @@ optim_config <- function(
   x_center = NULL,
   omega_center = NULL,
   center_threshold = 0,
-  method = "basic" # basic/positivity/markers/theta
+  method = "basic" # basic/positivity/theta
 ) {
   return(list(
     coef_der_X = coef_der_X,
@@ -188,16 +188,6 @@ optimize_solution <- function(
     }
     optimization_params$theta_threshold <- config$center_threshold # threshold for the angle
     do.call(theta_derivative_stage2, optimization_params)
-  } else if (config$method == "markers") {
-     optimization_params$X_center <- config$x_center # predefined center point for X space. could be NULL
-    if (! is.null(config$omega_center)) {
-        optimization_params$Omega_center <- t(config$omega_center) # predefined center point for Omega space. could be NULL
-    } else {
-        optimization_params$Omega_center  <- config$omega_center
-    }
-    optimization_params$center_constraint <- config$center_threshold # threshold for the angle
-    do.call(markers_derivative_stage2, optimization_params)
-
   } else {
     print("Unknown optimization method. Will do the basic one")
     do.call(derivative_stage2, optimization_params)

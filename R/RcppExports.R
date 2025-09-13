@@ -245,36 +245,6 @@ alternative_derivative_stage2 <- function(X, Omega, D_w, SVRt, R, S, coef_der_X,
 #' @param r_const_Omega experimental. not tested
 #' @param thresh experimental. not tested
 #' @param X_center optimization restriction directions for X.
-#' @param center_constraint value to restrict optimization from going to far
-#' @return new parameters
-markers_derivative_stage2 <- function(X, Omega, D_w, SVRt, R, S, X_center, coef_der_X, coef_der_Omega, coef_hinge_H, coef_hinge_W, coef_pos_D_h, coef_pos_D_w, cell_types, N, M, iterations, mean_radius_X, mean_radius_Omega, r_const_X = 0, r_const_Omega = 0, thresh = 0.8, center_constraint = 0) {
-    .Call('_DualSimplex_markers_derivative_stage2', PACKAGE = 'DualSimplex', X, Omega, D_w, SVRt, R, S, X_center, coef_der_X, coef_der_Omega, coef_hinge_H, coef_hinge_W, coef_pos_D_h, coef_pos_D_w, cell_types, N, M, iterations, mean_radius_X, mean_radius_Omega, r_const_X, r_const_Omega, thresh, center_constraint)
-}
-
-#' Main function to calculate error terms
-#'
-#' @param X current X
-#' @param Omega current Omega
-#' @param D_w current D_w
-#' @param SVRt current SVRt (sigma)
-#' @param R current R
-#' @param S current S
-#' @param coef_der_X learning rate X
-#' @param coef_der_Omega learning rate Omega
-#' @param coef_hinge_H lambda
-#' @param coef_hinge_W beta
-#' @param coef_pos_D_h experimental coefficient for D. legacy not tested.
-#' @param coef_pos_D_w experimental coefficient for D. legacy not tested.
-#' @param cell_types number of components (K)
-#' @param N current N
-#' @param M current M
-#' @param iterations number of iterations
-#' @param mean_radius_X data dependent restriction for updates
-#' @param mean_radius_Omega dependent restriction for updates
-#' @param r_const_X experimental. not tested
-#' @param r_const_Omega experimental. not tested
-#' @param thresh experimental. not tested
-#' @param X_center optimization restriction directions for X.
 #' @param Omega_center optimization restriction direcitons of Omega.
 #' @param theta_threshold angle to restrict optimization/
 #' @return new parameters
