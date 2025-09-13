@@ -25,7 +25,7 @@ devtools::check()
 # Install from your branch
 ensure you unloaded the package, removed the previous version and restarted the R session.
 ```{r}
-devtools::install_github("artyomovlab/DualSimplex@theta_optimization_revised")
+devtools::install_github("your_github/DualSimplex@your_branch")
 library(DualSimplex)
 ```
 
