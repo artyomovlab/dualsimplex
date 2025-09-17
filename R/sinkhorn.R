@@ -3,8 +3,9 @@
 #' @param V input matrix
 #' @param max_iter Maximum iterations of the Sinkhorn scaling. Default is 20 iterations.
 #' @param iter_start_check From which iteration should the function checks the convergence. By default, check started from iteration 5.
-#' @param check_every_iter How offeten should we check the convergence. The default is check every 3 iterations
+#' @param check_every_iter How offeten should we check the convergence. The default is check every 3 iterations.
 #' @param epsilon The tolerance for convergece. Default value is same as R's built in `all.equal` function.
+#' @param return_scaled_matrix wether to return actual scaled matrix. By default FALSE for efficiency.
 #' @return scaling object (find it in dso$st$scaling)
 #' @export
 sinkhorn_scale <- function(
@@ -12,9 +13,18 @@ sinkhorn_scale <- function(
   max_iter = 20L,
   iter_start_check = 5L,
   check_every_iter = 3L,
-  epsilon = sqrt(.Machine$double.eps)
+  epsilon = sqrt(.Machine$double.eps),
+  return_scaled_matrix = FALSE
 ) {
-  efficient_sinkhorn(V, max_iter, iter_start_check, check_every_iter, epsilon)
+  scaling <- efficient_sinkhorn(V, max_iter, iter_start_check, check_every_iter, epsilon)
+  if (return_scaled_matrix) {
+  scaling$V_row  <- sinkhorn_sweep_c(V = V,
+                                     D_vs_row = scaling$D_vs_row,
+                                     D_vs_col = scaling$D_vs_col,
+                                     iter = scaling$iterations,
+                                     do_last_step = 1)
+  }
+  return(scaling)
 }
 
 #' reverse Sinkhorn transform scaled matrix
