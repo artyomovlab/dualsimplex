@@ -4,12 +4,12 @@
 \alias{plot_ptb_scatter}
 \title{Plot predicted/true scatter plot for basis (matrix W)}
 \usage{
-plot_ptb_scatter(ptb, max_expr = 25, pt_alpha = 0.2)
+plot_ptb_scatter(ptb, max_expr = 1, pt_alpha = 0.2)
 }
 \arguments{
 \item{ptb}{result of coerce_pred_true_props or list of two matrices with the same order of rows}
 
-\item{max_expr}{all bigger values will be replaced to this value}
+\item{max_expr}{limit for the scale. set manually if you want to adjust how much is shown}
 
 \item{pt_alpha}{alphavalue for points}
 }

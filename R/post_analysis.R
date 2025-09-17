@@ -216,7 +216,7 @@ convert_sc_markers <- function(markers_seurat, allowed_genes, n_markers = 100) {
 #' @return single plot or multiple plots
 #' @import RColorBrewer
 #' @import cowplot
-#' @import scales
+#' @import ggplot2
 #' @export
 plot_marker_enrichment <- function(
   so, marker_names, ncol = 4, limits = NULL, ggadd = function(plt, i) plt, wrap = T, ...

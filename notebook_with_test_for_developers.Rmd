@@ -7,6 +7,9 @@ title: "Notebook to check your code changes before submitting PR"
 ```{r}
 library(devtools)
 ```
+```{r}
+Rcpp::compileAttributes(verbose = T)
+```
 
 ## Documentation files will be generated
 ```{r}
@@ -20,7 +23,7 @@ devtools::check()
 ```
 
 # Install from your branch
-ensure you unloaded tha package, removed the previous version and restarted the R session.
+ensure you unloaded the package, removed the previous version and restarted the R session.
 ```{r}
 devtools::install_github("your_github/DualSimplex@your_branch")
 library(DualSimplex)
@@ -31,7 +34,7 @@ library(DualSimplex)
 ## Create object
 ```{r fig.height = 5, fig.width = 11}
 library(dplyr)
-
+library(ggrastr)
 n_ct <- 3
 
 set.seed(3)
@@ -65,7 +68,6 @@ dso$plot_projected(
 )
 ```
 
-
 ## Make specific init, which was in a paper
 ```{r}
 set.seed(23)
@@ -77,7 +79,6 @@ dso$plot_projected(
   use_dims = list(2:3)
 )
 ```
-
 
 ## Make 5000 steps of optimization
 ```{r}
@@ -131,3 +132,14 @@ plot_ptb_scatter(ptb)
 ```{r}
 plot_ptp_lines(ptp)
 ```
+
+
+
+
+```{r}
+dso$init_solution("random")
+res <-  dso$get_coordinates_from_external_matrices(true_basis, true_proportions)
+```
+
+
+

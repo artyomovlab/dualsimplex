@@ -23,7 +23,37 @@ initializers <- list(
       if (length(sel) == 0) stop("One or more cell types has zero markers present")
       colMeans(proj$X[sel, ])
     })
-    X <- matrix(unlist(mm), ncol = length(kwargs$marker_list), byrow = T)
+    K <- proj$meta$K
+    X <- matrix(unlist(mm), ncol = K, byrow = T)
+
+    rownames(X) <-  paste0("marker_derived", 1:nrow(X))
+    # Check if we have enough markers
+
+    if (length(kwargs$marker_list) < K) {
+        print("Not enough markers were provided for the current K. Will set other vertices randomly with the highest center property after n attempts")
+        if (!is.null(kwargs) && "n" %in% kwargs) {
+            n <- kwargs$n
+        } else {
+         n <- 100
+         }
+        M <- proj$meta$M
+        n_to_sample <- K - length(kwargs$marker_list)
+        n <- 100
+        idx_table_X <- matrix(0, ncol = n_to_sample + 1, nrow = n)
+        for (i in 1:n) {
+          #X
+          ids_X <- sample(1:M, n_to_sample)
+          extra_rows <- proj$X[ids_X, ]
+          candidate_X <- rbind(X, extra_rows)
+          metric_X <- sqrt(sum(apply(candidate_X[, -1], 2, mean) ^ 2))
+          idx_table_X[i, ] <- c(ids_X, metric_X)
+        }
+
+        minrow <- function(mat) mat[which.min(mat[, ncol(mat)]), ]
+        # X
+        ids_X <- minrow(idx_table_X)[1:n_to_sample]
+        X <- rbind(X, proj$X[ids_X, ])
+    }
     return(set_solution_from_x(X, proj))
   },
 
@@ -185,6 +215,82 @@ initializers <- list(
       D_w = Dw,
       D_h = Dh
     ))
+  },
+  random_X_within_theta_angle = function(proj, kwargs) {
+    # Having center points provided we want to initialize in some
+    # random point within theta angle
+    if (!"init_centers" %in% names(kwargs)) {
+      stop("Put init_centers with X and optionaly Omega in kwargs to set
+      some starting point for this initialization.")
+    }
+    if (!"theta" %in% names(kwargs)) {
+      stop("Put theta in kwargs to set some constraint on theta.")
+    }
+    max_length <- 1.5
+    n_cell_types <- proj$meta$K
+    init_centers <- kwargs$init_centers
+    center_points <- init_centers$X
+    theta_max_div <- kwargs$theta
+    generated_vectors <- lapply(c(1:n_cell_types),  function(cell_type) {
+      # original vector is a medoid for cell type (transposed)
+      orig_vector <-  as.matrix(center_points[cell_type, ])
+      # generate rotated vector
+      cur_theta <- runif(1, min = -theta_max_div, max = theta_max_div)
+      random_multiplier <-  runif(1, min = 0.4, max = max_length)
+      u <-  as.matrix(orig_vector[2:n_cell_types])
+      u <-  random_multiplier * u
+      # random direction
+      p <- as.matrix(rnorm(n_cell_types - 1, mean = 0, sd = 1))
+      nom <- t(p) %*% u
+      denom <-  t(u) %*% u
+      multiplier <- (nom / denom)[1]
+      w_prime <- p - multiplier * u
+      w <- norm(u) * w_prime / norm(w_prime)
+      v <- cos(cur_theta) * u + sin(cur_theta) * w   # new vector
+      result_vector <- c()
+      result_vector[2:n_cell_types] <- v
+      result_vector[1] <- orig_vector[1]
+      return(result_vector)
+    })
+    X <- t(do.call("cbind", generated_vectors))
+    colnames(X) <- colnames(proj$X)
+    # Set Omega, same or not same
+    if ("Omega" %in% names(init_centers)) {
+      center_points <- init_centers$Omega
+      generated_vectors <- lapply(c(1:n_cell_types),  function(cell_type) {
+        # original vector is a medoid for cell type (transposed)
+        orig_vector <-  as.matrix(center_points[cell_type, ])
+        # generate rotated vector
+        cur_theta <- runif(1, min = -theta_max_div, max = theta_max_div)
+        random_multiplier <-  runif(1, min = 0.4, max = max_length)
+        u <-  as.matrix(orig_vector[2:n_cell_types])
+        u <-  random_multiplier * u
+        # random direction
+        p <- as.matrix(rnorm(n_cell_types - 1, mean = 0, sd = 1))
+        nom <- t(p) %*% u
+        denom <-  t(u) %*% u
+        multiplier <- (nom / denom)[1]
+        w_prime <- p - multiplier * u
+        w <- norm(u) * w_prime / norm(w_prime)
+        v <- cos(cur_theta) * u + sin(cur_theta) * w   # new vector
+        result_vector <- c()
+        result_vector[2:n_cell_types] <- v
+        result_vector[1] <- orig_vector[1]
+        return(result_vector)
+      })
+      Omega <- t(do.call("cbind", generated_vectors))
+      colnames(Omega) <- colnames(proj$Omega)
+      Ds <- get_Dwh_from_XOmega(X, Omega, proj)
+      new_solution_proj <- list(
+        X = X,
+        Omega = Omega,
+        D_w = Ds$D_w,
+        D_h = Ds$D_h
+      )
+    } else {
+      new_solution_proj <- set_solution_from_x(X, proj)
+    }
+    return(new_solution_proj)
   }
 )
 
@@ -232,11 +338,11 @@ get_Dwh_from_XOmega <- function(X, Omega, proj) {
     vec_mtx[, col] <- cbind(c(t(t(Omega[, col])) %*% X[col, ]))
   }
 
-  ## adding sum-to-one constraint
+  ## adding sum-to-one constraint and solving NNLS
   D_w <-
-    matrix(nnls::nnls(rbind(vec_mtx, Omega), rbind(cbind(c(
+    matrix(nnls_C__(rbind(vec_mtx, Omega), rbind(cbind(c(
       V__
-    )), proj$meta$B))$x,
+    )), proj$meta$B)),
     nrow = K,
     ncol = 1)
   D_h <- D_w * (N / M)

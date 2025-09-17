@@ -23,15 +23,15 @@ arma::mat jump_norm(arma::mat& X, const double r_const_X) {
 }
 
 arma::uvec update_idx(const arma::mat& prev_X, const arma::mat& new_X, const double thresh) {
-    arma::rowvec prev_values = find_cosine(prev_X);
-    arma::rowvec new_values = find_cosine(new_X);
+    arma::rowvec prev_values = cosine_between_rows(prev_X);
+    arma::rowvec new_values = cosine_between_rows(new_X);
     arma::uvec idx2 = find(new_values >= thresh);
     arma::uvec new_idx = {};
     for (unsigned int i = 0; i < idx2.n_elem; i++) {
-        if (new_values.at(idx2[i]) >= prev_values.at(idx2[i])) {
+        if (new_values.at(idx2(i)) >= prev_values.at(idx2(i))) {
             int sz = new_idx.size();
             new_idx.resize(sz + 1);
-            new_idx(sz) = idx2[i];
+            new_idx(sz) = idx2(i);
         }
     }
     return new_idx;
@@ -155,8 +155,8 @@ Rcpp::List derivative_stage2(const arma::mat& X,
     arma::colvec sum_rows_R = arma::sum(R, 1);
     arma::colvec sum_rows_S = arma::sum(S, 1);
 
-    arma::mat B = join_cols(vectorised_SVRt, coef_pos_D_w * sum_rows_S);
-    arma::mat C = join_cols(vectorised_SVRt, coef_pos_D_h * sum_rows_R);
+    arma::mat B = arma::join_cols(vectorised_SVRt, coef_pos_D_w * sum_rows_S);
+    arma::mat C = arma::join_cols(vectorised_SVRt, coef_pos_D_h * sum_rows_R);
     arma::mat der_X, der_Omega;
 
     for (int itr_ = 0; itr_ < iterations; itr_++) {
@@ -190,7 +190,7 @@ Rcpp::List derivative_stage2(const arma::mat& X,
         for (int c = 0; c < cell_types; c++) {
             vec_mtx.col(c) = arma::vectorise(new_Omega.col(c) * new_X.row(c));
         }
-        arma::mat A = join_cols((M / N) * vec_mtx, coef_pos_D_h * new_X.t());
+        arma::mat A = arma::join_cols((M / N) * vec_mtx, coef_pos_D_h * new_X.t());
 
         new_D_h = nnls_C__(A, C);
         new_D_w = new_D_h * (M / N);
@@ -228,7 +228,7 @@ Rcpp::List derivative_stage2(const arma::mat& X,
         for (int c = 0; c < cell_types; c++) {
             vec_mtx.col(c) = arma::vectorise(new_Omega.col(c) * new_X.row(c));
         }
-        A = join_cols(vec_mtx, coef_pos_D_w * new_Omega);
+        A = arma::join_cols(vec_mtx, coef_pos_D_w * new_Omega);
 
         new_D_w = nnls_C__(A, B);
 

@@ -3,14 +3,20 @@
 arma::mat correctByNorm(arma::mat& X) {
     arma::vec norm_(X.n_rows);
     for (unsigned int k = 0; k < X.n_rows; k++) {
-        norm_[k] = arma::norm(X.row(k), 2);
+        norm_(k) = arma::norm(X.row(k), 2);
     }
     arma::mat B = diagmat(1 / norm_) * X;
     B.elem(arma::find_nonfinite(B)).zeros();
     return B;
 }
 
-arma::rowvec find_cosine(const arma::mat& X) {
+double  cosine_similarity(const arma::rowvec& a,const arma::rowvec& b) {
+    double Y = arma::dot(a,  b);
+    double res_dist = Y / ( arma::norm(a,2) *  arma::norm(b,2));
+    return res_dist;
+}
+
+arma::rowvec cosine_between_rows(const arma::mat& X) {
     arma::mat Y = arma::trans(X) * X;
     arma::mat res = Y / (arma::sqrt(arma::diagvec(Y)) * arma::trans(arma::sqrt(arma::diagvec(Y))));
     res.diag(0).fill(0);

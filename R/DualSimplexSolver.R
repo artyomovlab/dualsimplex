@@ -23,6 +23,7 @@
 #' @importFrom Biobase exprs AnnotatedDataFrame ExpressionSet fData pData
 #' @import irlba
 #' @import knitr
+#' @import progress
 #'
 #' @examples
 #' M <-  8000 # number of genes (rows)
@@ -119,8 +120,10 @@ DualSimplexSolver <- R6Class(
         } else if (color %in% colnames(anno)) {
           name <- color
           color <- anno[, color]
+        } else if (color %in% rownames(anno)) {
+          name <-  "individual_highlight"
         } else {
-          name <- NULL
+          name <- "direct_single_color"
         }
       } else {
         name <- NULL
@@ -711,6 +714,43 @@ DualSimplexSolver <- R6Class(
     },
 
     #' @description
+    #' This is best starting point to run optimization
+    #' This is how we run optimization while performed comparison with other methods. you can use this method as a template for yourself
+    #' @param config optimization config (coef_hinge_H, coef_hinge_W, coef_der_X, coef_der_Omega) will be overwritten.
+    default_optimization = function(
+    config = OPTIM_CONFIG_DEFAULT
+    ) {
+      private$initialize_first()
+      LR_DECAY_STEPS = 15
+      PARAMETERS_INCREASE_STEPS = 5
+      lr_decay <- 0.5
+      params_increase <- 10
+      original_lambda_term <- 1  #coef_hinge_H
+      original_beta_term <- 1 #coef_hinge_W
+      lr_x <- 1
+      lr_omega <- 1
+      RUNS_EACH_STEP <- 1000
+      pb <- progress_bar$new(total = LR_DECAY_STEPS * PARAMETERS_INCREASE_STEPS)
+      for (lr_step in 1:LR_DECAY_STEPS) {
+        lambda_term <-  original_lambda_term * lr_x * lr_x
+        beta_term <- original_beta_term   * lr_omega * lr_omega
+            for (x in 1:PARAMETERS_INCREASE_STEPS) {
+                # Main training method, you can just run this
+                config$coef_hinge_H <- lambda_term
+                config$coef_hinge_W <- beta_term
+                config$coef_der_X <- lr_x
+                config$coef_der_Omega <- lr_omega
+                self$optim_solution(RUNS_EACH_STEP, config)
+        lambda_term <- lambda_term * params_increase
+        beta_term <- beta_term * params_increase
+        pb$tick()
+      }
+      lr_x <- lr_x * lr_decay
+      lr_omega <- lr_omega * lr_decay
+    }
+    },
+
+    #' @description
     #' Plot errors log
     plot_error_history = function() {
       private$optimize_first()
@@ -963,7 +1003,7 @@ DualSimplexSolver <- R6Class(
         D_vs_row = self$st$scaling$D_vs_row,
         D_vs_col = self$st$scaling$D_vs_col,
         iter = self$st$scaling$iterations,
-        return_col_norm = 0
+        do_last_step = 0
       )
 
       rownames(res) <- rownames(self$get_data())
@@ -982,14 +1022,33 @@ DualSimplexSolver <- R6Class(
         D_vs_row = self$st$scaling$D_vs_row,
         D_vs_col = self$st$scaling$D_vs_col,
         iter = self$st$scaling$iterations,
-        return_col_norm = 1
+        do_last_step = 1
       )
 
       rownames(res) <- rownames(self$get_data())
       colnames(res) <- colnames(self$get_data())
 
       res
+    },
+
+    #' @description
+    #' Get coordinates from external W and H using extended sinkhorn procedure.
+    #'
+    #' @param W  first factorization matrix for original V (V = WH). Rownames should match dso$st$data.
+    #' @param H  second factorization matrix for original V (V = WH). Colnames should match dso$st$data.
+    get_coordinates_from_external_matrices = function(W, H) {
+      private$project_first()
+      extended_scaling_result <- extended_sinkhorn_scale(V = Biobase::exprs(self$st$data),
+                                                         W=W[rownames(dso$st$data),],
+                                                         H=H[, colnames(dso$st$data)],
+                                                         n_iter = dso$st$scaling$iterations)
+      H_ss <-  extended_scaling_result$H_row
+      W_gs <-  extended_scaling_result$W_col
+      res <- get_coordinates_from_scaled_matrices(H_ss = H_ss, W_gs=W_gs, proj=self$st$proj)
+      return(res)
     }
+
+
   )
 )
 

@@ -5,15 +5,18 @@
 \title{Make optimization config object for the training method}
 \usage{
 optim_config(
-  coef_der_X = 0.001,
-  coef_der_Omega = 0.001,
-  coef_hinge_H = 10,
+  coef_der_X = 0.1,
+  coef_der_Omega = 0.1,
+  coef_hinge_H = 1,
   coef_hinge_W = 1,
   coef_pos_D_h = 0,
   coef_pos_D_w = 0,
   limit_X = 0,
   limit_Omega = 0,
   cosine_thresh = 0,
+  x_center = NULL,
+  omega_center = NULL,
+  center_threshold = 0,
   method = "basic"
 )
 }
@@ -35,6 +38,12 @@ optim_config(
 \item{limit_Omega}{EXPERIMENTAL: if you want to restrict Omega from changing to much. should be 0 since not tested.}
 
 \item{cosine_thresh}{EXPERIMENTAL: if you want to restrict derivative from changing to much. should be 0 since not tested.}
+
+\item{x_center}{X rays around which to perform search in theta search.}
+
+\item{omega_center}{Omega rays around which to perform search in theta search.}
+
+\item{center_threshold}{constraint for the  step.}
 
 \item{method}{method of optimization to use can be  basic/positivity.}
 }

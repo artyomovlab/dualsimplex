@@ -2,18 +2,24 @@
 % Please edit documentation in R/benchmarking.R
 \name{guess_order}
 \alias{guess_order}
-\title{Function to gess order of rows}
+\title{Function to gess order of rows for the predicted markers to have the highest sum correlation with true matrix.
+If the number of true matrix rows is smaller, will mark some rows as "extra rows" to keep predicted rows.
+Implemented using lp.assign method.
+Ensure your columns are in the matching order!}
 \usage{
-guess_order(predicted, actual)
+guess_order(predicted_matrix, true_matrix)
 }
 \arguments{
-\item{predicted}{predicted matrix}
+\item{predicted_matrix}{predicted matrix}
 
-\item{actual}{true matrix}
+\item{true_matrix}{true matrix}
 }
 \value{
-reordered row names
+list containing row numbers for selected predicted cell type for given true cell type.
 }
 \description{
-Just calculates pairwise distance and takes argmin for each column.
+Function to gess order of rows for the predicted markers to have the highest sum correlation with true matrix.
+If the number of true matrix rows is smaller, will mark some rows as "extra rows" to keep predicted rows.
+Implemented using lp.assign method.
+Ensure your columns are in the matching order!
 }

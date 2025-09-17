@@ -112,11 +112,13 @@ get_solution_history <- function(solution_proj, step, from_iter = 1, to_iter = N
 #' @param color_name color column or values
 #' @return list of values to be used for coloring
 get_color_params <- function(to_plot, color, color_name) {
+  base_color <-  "black"
   if (is.null(color)) {
     return(list(
       color_vec = NULL,
       color_name = NULL,
-      color_scheme = "black"
+      color_scheme = "default",
+      base_color = base_color
     ))
   }
 
@@ -128,21 +130,42 @@ get_color_params <- function(to_plot, color, color_name) {
       return(list(
         color_vec = color,
         color_name = color_name,
-        color_scheme = "factor"
+        color_scheme = "factor",
+        base_color = NULL
       ))
     } else {
       return(list(
         color_vec = color,
         color_name = color_name,
-        color_scheme = "direct"
+        color_scheme = "direct_multiple_colors",
+        base_color = NULL
       ))
     }
   } else {
-    if (color_name == "annotation") color_name <- "highlight"
+    if (color_name == "direct_single_color") {
+      base_color <-  color
+      return (list(
+        color_vec = NULL,
+        color_name = NULL,
+        color_scheme = "direct_single_color",
+        base_color = base_color
+      ))
+    }
+    if (color_name == "individual_highlight") {
+      color_name <- "highlight"
+      return(list(
+        color_vec = rownames(to_plot) %in% color,
+        color_name = color_name,
+        color_scheme = "highlight",
+        base_color = base_color
+    ))
+    }
+    if (color_name == "annotation")
     return(list(
       color_vec = rownames(to_plot) %in% color,
       color_name = "highlight",
-      color_scheme = "highlight"
+      color_scheme = "highlight",
+      base_color = base_color
     ))
   }
 }
@@ -313,9 +336,8 @@ plot_points_2d <- function(
 
   cp <- get_color_params(points_2d, color, color_name)
 
-  if (cp$color_scheme != "black") {
+  if ((cp$color_scheme != "default") & (cp$color_scheme != "direct_single_color")) {
     to_plot[, cp$color_name] <- cp$color_vec
-
     if (order_by_color)
       to_plot <- to_plot[order(to_plot[, cp$color_name]), ]
   }
@@ -326,6 +348,7 @@ plot_points_2d <- function(
     y_col,
     cp$color_name,
     cp$color_scheme,
+    cp$base_color,
     ...
   ))
 }
@@ -339,6 +362,7 @@ plot_points_2d <- function(
 #' @param y_col y axe column
 #' @param color_col which column is color
 #' @param color_scheme color scheme identified by color params parsing
+#' @param base_color for points
 #' @param pt_opacity opasity for points
 #' @param pt_size point size
 #' @param ... any additional geom_point params
@@ -349,14 +373,16 @@ plot_points_2d_clean <- function(
   y_col,
   color_col,
   color_scheme,
+  base_color,
   pt_opacity = 0.2,
   pt_size = 1,
   ...
 ) {
   plt <- ggplot(to_plot, aes_string(x = x_col, y = y_col, color = color_col))
 
-  if (color_scheme == "black" || color_scheme == "highlight") {
-    plt <- plt + rasterize_if_needed(geom_point(size = pt_size, color = "black", alpha = pt_opacity))
+
+  if (color_scheme == "default" || color_scheme == "highlight" || color_scheme == "direct_single_color" ) {
+    plt <- plt + rasterize_if_needed(geom_point(size = pt_size, color = base_color, alpha = pt_opacity))
     if (color_scheme == "highlight") {
       plt <- plt +
       rasterize_if_needed(geom_point(
@@ -367,10 +393,11 @@ plot_points_2d_clean <- function(
         ...
       ))
     }
-  } else if (color_scheme == "direct") {
-    plt <- plt +
-      rasterize_if_needed(geom_point(size = pt_size, alpha = min(1, pt_opacity * 4), ...)) +
-      scale_color_distiller(palette = "Spectral", name = color_col)
+  } else if (color_scheme == "direct_multiple_colors") {
+    plt <- plt + scale_color_distiller(palette = "Spectral", name = color_col) +
+      rasterize_if_needed(geom_point(size = pt_size, alpha = min(1, pt_opacity * 4), ...)
+      )
+
   } else if (color_scheme == "factor") {
     plt <- plt +
     rasterize_if_needed(geom_point(size = pt_size, color = "grey70", alpha = pt_opacity, ...)) +

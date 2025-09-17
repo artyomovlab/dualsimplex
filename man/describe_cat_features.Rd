@@ -12,7 +12,7 @@ describe_cat_features(eset, genes = T)
 \item{genes}{if TRUE plot for plot for rows, otherwise columns}
 }
 \value{
-Hmisc result plot
+Info about the feature
 }
 \description{
 You need Hmisc package to run this.

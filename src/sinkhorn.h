@@ -47,13 +47,28 @@ Rcpp::List efficient_sinkhorn(
     const double epsilon = 1.490116e-08 // similar to R's all.equal
 );
 
+//' Extended version of sinkhorn transformation, returning all matrices produced. (time/memory consuming)
+//' Matrices include V_ss, W_ss, H_ss, V_gs, W_gs, H_gs, D_v_col, D_v_row, D_h_row, D_h_col
+//'
+//' @param V matrix to scale. (V=WH)
+//' @param W matrix to scale.
+//' @param H matrix to scale.
+//' @param n_iter exact number of iterations
+//' @export
+// [[Rcpp::export]]
+Rcpp::List extended_sinkhorn(const arma::mat& V,
+                              const arma::mat& W,
+                              const arma::mat& H,
+                              const int n_iter);
+
+
 //' Helper function to perfrom iteration scaling
 //'
 //' @param V matrix to scale.
 //' @param D_vs_row matrix stroing row scaling at each iteration  
 //' @param D_vs_col matrix stroing column scaling at each iteration
 //' @param iter iteration at which Sinkhorn is converged
-//' @param return_col_norm whether to perform very last normalization
+//' @param do_last_step whether to perform  very last normalization
 //' @return scaled matrix
 //' @export
 // [[Rcpp::export]]
@@ -62,5 +77,7 @@ arma::mat sinkhorn_sweep_c(
     const arma::mat& D_vs_row,
     const arma::mat& D_vs_col,
     unsigned int iter,
-    unsigned int return_col_norm
+    unsigned int do_last_step
 );
+
+

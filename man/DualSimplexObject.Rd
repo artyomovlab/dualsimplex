@@ -59,6 +59,7 @@ dso$plot_projected("zero_distance",
 \item \href{#method-DualSimplexSolver-plot_projected}{\code{DualSimplexSolver$plot_projected()}}
 \item \href{#method-DualSimplexSolver-init_solution}{\code{DualSimplexSolver$init_solution()}}
 \item \href{#method-DualSimplexSolver-optim_solution}{\code{DualSimplexSolver$optim_solution()}}
+\item \href{#method-DualSimplexSolver-default_optimization}{\code{DualSimplexSolver$default_optimization()}}
 \item \href{#method-DualSimplexSolver-plot_error_history}{\code{DualSimplexSolver$plot_error_history()}}
 \item \href{#method-DualSimplexSolver-finalize_solution}{\code{DualSimplexSolver$finalize_solution()}}
 \item \href{#method-DualSimplexSolver-plot_negative_basis_change}{\code{DualSimplexSolver$plot_negative_basis_change()}}
@@ -82,6 +83,7 @@ dso$plot_projected("zero_distance",
 \item \href{#method-DualSimplexSolver-get_marker_genes}{\code{DualSimplexSolver$get_marker_genes()}}
 \item \href{#method-DualSimplexSolver-get_V_row}{\code{DualSimplexSolver$get_V_row()}}
 \item \href{#method-DualSimplexSolver-get_V_column}{\code{DualSimplexSolver$get_V_column()}}
+\item \href{#method-DualSimplexSolver-get_coordinates_from_external_matrices}{\code{DualSimplexSolver$get_coordinates_from_external_matrices()}}
 \item \href{#method-DualSimplexSolver-clone}{\code{DualSimplexSolver$clone()}}
 }
 }
@@ -543,6 +545,24 @@ Perform optimization for current solution
 }
 }
 \if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-DualSimplexSolver-default_optimization"></a>}}
+\if{latex}{\out{\hypertarget{method-DualSimplexSolver-default_optimization}{}}}
+\subsection{Method \code{default_optimization()}}{
+This is best starting point to run optimization
+This is how we run optimization while performed comparison with other methods. you can use this method as a template for yourself
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$default_optimization(config = OPTIM_CONFIG_DEFAULT)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{config}}{optimization config (coef_hinge_H, coef_hinge_W, coef_der_X, coef_der_Omega) will be overwritten.}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-DualSimplexSolver-plot_error_history"></a>}}
 \if{latex}{\out{\hypertarget{method-DualSimplexSolver-plot_error_history}{}}}
 \subsection{Method \code{plot_error_history()}}{
@@ -830,6 +850,25 @@ Calculate V_column on the fly.
 \if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$get_V_column()}\if{html}{\out{</div>}}
 }
 
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-DualSimplexSolver-get_coordinates_from_external_matrices"></a>}}
+\if{latex}{\out{\hypertarget{method-DualSimplexSolver-get_coordinates_from_external_matrices}{}}}
+\subsection{Method \code{get_coordinates_from_external_matrices()}}{
+Get coordinates from external W and H using extended sinkhorn procedure.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$get_coordinates_from_external_matrices(W, H)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{W}}{first factorization matrix for original V (V = WH). Rownames should match dso$st$data.}
+
+\item{\code{H}}{second factorization matrix for original V (V = WH). Colnames should match dso$st$data.}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-DualSimplexSolver-clone"></a>}}
