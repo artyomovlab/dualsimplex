@@ -22,7 +22,12 @@ sinkhorn_scale <- function(
                                      D_vs_row = scaling$D_vs_row,
                                      D_vs_col = scaling$D_vs_col,
                                      iter = scaling$iterations,
-                                     do_last_step = 1)
+                                     do_last_step = 0)
+  scaling$V_column  <- sinkhorn_sweep_c(V = V,
+                                 D_vs_row = scaling$D_vs_row,
+                                 D_vs_col = scaling$D_vs_col,
+                                 iter = scaling$iterations,
+                                 do_last_step = 1)
   }
   return(scaling)
 }
