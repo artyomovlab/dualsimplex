@@ -136,9 +136,9 @@ DualSimplexSolver <- R6Class(
     },
 
     update_variables = function(data,gene_anno_lists = NULL, sample_anno_lists = NULL, ...) {
-      if (any(rowSums(as.matrix(data)) == 0))
+      if (any(rowSums(Biobase::exprs(data)) == 0))
         stop("The data matrix should not contain all zero rows. Use remove_zero_rows() method")
-      if (any(colSums(as.matrix(data)) == 0))
+      if (any(colSums(Biobase::exprs(data)) == 0))
         stop("The data matrix should not contain all zero columns. Use remove_zero_cols() method")
       if (!inherits(data, "ExpressionSet")) data <- create_eset(data)
 
