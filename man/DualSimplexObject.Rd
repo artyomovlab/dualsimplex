@@ -52,6 +52,7 @@ dso$plot_projected("zero_distance",
 \item \href{#method-DualSimplexSolver-plot_projection_diagnostics}{\code{DualSimplexSolver$plot_projection_diagnostics()}}
 \item \href{#method-DualSimplexSolver-plot_distances_distribution}{\code{DualSimplexSolver$plot_distances_distribution()}}
 \item \href{#method-DualSimplexSolver-distance_filter}{\code{DualSimplexSolver$distance_filter()}}
+\item \href{#method-DualSimplexSolver-distance_quantile_filter}{\code{DualSimplexSolver$distance_quantile_filter()}}
 \item \href{#method-DualSimplexSolver-iterative_n_sigma_filter}{\code{DualSimplexSolver$iterative_n_sigma_filter()}}
 \item \href{#method-DualSimplexSolver-iterative_density_filter}{\code{DualSimplexSolver$iterative_density_filter()}}
 \item \href{#method-DualSimplexSolver-iterative_mahalanobis_filter}{\code{DualSimplexSolver$iterative_mahalanobis_filter()}}
@@ -332,6 +333,34 @@ Filter points based on distance thresholds. (keep lower).
 \item{\code{zero_d_lt}}{threshold for zero distance.}
 
 \item{\code{genes}}{TRUE if filter rows, otherwise columns.}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-DualSimplexSolver-distance_quantile_filter"></a>}}
+\if{latex}{\out{\hypertarget{method-DualSimplexSolver-distance_quantile_filter}{}}}
+\subsection{Method \code{distance_quantile_filter()}}{
+Filter points based on distance thresholds. (keep lower).
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$distance_quantile_filter(
+  plane_quantile = NULL,
+  zero_quantile = NULL,
+  genes = T,
+  keep_lower = T
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{plane_quantile}}{quantile for plane distance.}
+
+\item{\code{zero_quantile}}{quantile for zero distance.}
+
+\item{\code{genes}}{TRUE if filter rows, otherwise columns.}
+
+\item{\code{keep_lower}}{TRUE if keep lower, FALSE to keep higher}
 }
 \if{html}{\out{</div>}}
 }
