@@ -136,12 +136,11 @@ DualSimplexSolver <- R6Class(
     },
 
     update_variables = function(data,gene_anno_lists = NULL, sample_anno_lists = NULL, ...) {
+      if (!inherits(data, "ExpressionSet")) data <- create_eset(data)
       if (any(rowSums(Biobase::exprs(data)) == 0))
         stop("The data matrix should not contain all zero rows. Use remove_zero_rows() method")
       if (any(colSums(Biobase::exprs(data)) == 0))
         stop("The data matrix should not contain all zero columns. Use remove_zero_cols() method")
-      if (!inherits(data, "ExpressionSet")) data <- create_eset(data)
-
       self$st$data <- add_default_anno(data, gene_anno_lists, sample_anno_lists)
       self$st$scaling <- sinkhorn_scale(Biobase::exprs(self$st$data), max_iter = self$st$max_sinkhorn_iterations, epsilon=self$st$sinkhorn_tol)
       self$st$proj_ops <- calc_svd_ops(self$get_V_row(), max_dim = self$st$max_dim, self$st$svd_method, ...)
