@@ -136,12 +136,11 @@ DualSimplexSolver <- R6Class(
     },
 
     update_variables = function(data,gene_anno_lists = NULL, sample_anno_lists = NULL, ...) {
-      if (any(rowSums(as.matrix(data)) == 0))
-        stop("The data matrix should not contain all zero rows. Use remove_zero_rows() method")
-      if (any(colSums(as.matrix(data)) == 0))
-        stop("The data matrix should not contain all zero columns. Use remove_zero_cols() method")
       if (!inherits(data, "ExpressionSet")) data <- create_eset(data)
-
+      if (any(rowSums(Biobase::exprs(data)) == 0))
+        stop("The data matrix should not contain all zero rows. Use remove_zero_rows() method")
+      if (any(colSums(Biobase::exprs(data)) == 0))
+        stop("The data matrix should not contain all zero columns. Use remove_zero_cols() method")
       self$st$data <- add_default_anno(data, gene_anno_lists, sample_anno_lists)
       self$st$scaling <- sinkhorn_scale(Biobase::exprs(self$st$data), max_iter = self$st$max_sinkhorn_iterations, epsilon=self$st$sinkhorn_tol)
       self$st$proj_ops <- calc_svd_ops(self$get_V_row(), max_dim = self$st$max_dim, self$st$svd_method, ...)
@@ -418,6 +417,56 @@ DualSimplexSolver <- R6Class(
         )
       )
     },
+
+    #' @description
+    #' Filter points based on distance thresholds. (keep lower).
+    #'
+    #' @param plane_quantile quantile for plane distance.
+    #' @param zero_quantile quantile for zero distance.
+    #' @param genes TRUE if filter rows, otherwise columns.
+    #' @param keep_lower TRUE if keep lower, FALSE to keep higher
+    distance_quantile_filter = function(
+      plane_quantile = NULL,
+      zero_quantile = NULL,
+      genes = T,
+      keep_lower = T
+    ) {
+      private$project_first()
+      if (is.null(plane_quantile) && is.null(zero_quantile)) {
+        stop("Choose at least one distance to filter by")
+      }
+      new_data <- self$get_data()
+
+      if (!is.null(plane_quantile))
+        new_data <- quantile_filter(
+          eset = new_data,
+          feature = "plane_distance",
+          quant =  plane_quantile,
+          keep_lower = keep_lower,
+          genes = genes
+        )
+      if (!is.null(zero_quantile))
+        new_data <- quantile_filter(
+          eset = new_data,
+          feature = "zero_distance",
+          quant =  zero_quantile,
+          keep_lower = keep_lower,
+          genes = genes
+        )
+      new_data <- remove_zero_cols(new_data)
+      new_data <- remove_zero_rows(new_data)
+
+      private$update_variables(new_data)
+      private$add_filtering_log_step(
+        "distance_quantile_filter",
+        paste(
+          paste0("zero_quant = ", zero_quantile),
+          paste0("plane_quant = ", plane_quantile),
+          sep = ", "
+        )
+      )
+    },
+
 
     #' @description
     #' Iteratively filter by N sigma using all the features provided.
@@ -725,10 +774,10 @@ DualSimplexSolver <- R6Class(
       PARAMETERS_INCREASE_STEPS = 5
       lr_decay <- 0.5
       params_increase <- 10
-      original_lambda_term <- 1  #coef_hinge_H
-      original_beta_term <- 1 #coef_hinge_W
-      lr_x <- 1
-      lr_omega <- 1
+      original_lambda_term <- config$coef_hinge_H #coef_hinge_H
+      original_beta_term <- config$coef_hinge_W #coef_hinge_W
+      lr_x <- config$coef_der_X
+      lr_omega <- config$coef_der_Omega
       RUNS_EACH_STEP <- 1000
       pb <- progress_bar$new(total = LR_DECAY_STEPS * PARAMETERS_INCREASE_STEPS)
       for (lr_step in 1:LR_DECAY_STEPS) {

@@ -145,6 +145,7 @@ top_filter <- function(eset, feature, top_n, genes = T, max = T) {
   return(set_anno(anno_flt, eset, genes))
 }
 
+
 #' Simple quantile filter based on annotation values
 #'
 #' will remove or keep only top N falling in specific quantile based on params

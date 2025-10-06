@@ -26,7 +26,7 @@ get_metric_matrix_for_rows <- function(matrix_a, matrix_b, metric="rmse", sd_fix
         }
       }
       result <- switch(metric,
-                       "rmse" = 1 - normalized_rmse_loss_function(vector_of_a, vector_of_b),
+                       "rmse" = normalized_rmse_loss_function(vector_of_a, vector_of_b),
                        "pearson" = pearson_correlation_function(vector_of_a, vector_of_b),
                        "abs_pearson" = abs(pearson_correlation_function(vector_of_a, vector_of_b)),
                        "spearman" = spearman_correlation_function(vector_of_a, vector_of_b),
