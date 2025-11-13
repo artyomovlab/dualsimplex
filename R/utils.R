@@ -65,8 +65,9 @@ is_logscale <- function(x) {
 #' @return clean data
 #' @export
 remove_zero_rows <- function(ge) {
-  if (!is.matrix(ge)) {
-    temp <-  Biobase::exprs(ge)
+  temp <- ge
+  if (!is.matrix(temp)) {
+    temp <-  Biobase::exprs(temp)
   }
   zero_rows <- apply(temp, 1, function(x) all(x == 0))
   return(ge[!zero_rows, ])
@@ -78,8 +79,9 @@ remove_zero_rows <- function(ge) {
 #' @return clean data
 #' @export
 remove_zero_cols <- function(ge) {
-  if (!is.matrix(ge)) {
-    temp <- Biobase::exprs(ge)
+  temp <- ge
+  if (!is.matrix(temp)) {
+    temp <- Biobase::exprs(temp)
   }
   zero_cols <- apply(temp, 2, function(x) all(x == 0))
   return(ge[,!zero_cols ])
