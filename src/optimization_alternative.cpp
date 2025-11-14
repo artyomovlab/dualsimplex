@@ -148,10 +148,16 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         catch (const std::runtime_error& e)
         {
          Rcpp::Rcout << "Error in inverse \n" << e.what() << std::endl;
+
+
           Rcpp::Rcout << "---Old X_X---"  << std::endl;
          Rcpp::Rcout << old_X_X << "\n";
-         Rcpp::Rcout << "---Old Omega---"  << std::endl;
+         Rcpp::Rcout << "---Old Omega_X---"  << std::endl;
          Rcpp::Rcout << old_Omega_X << "\n";
+         Rcpp::Rcout << "---New X_X---"  << std::endl;
+         Rcpp::Rcout << new_X_after_X << "\n";
+         Rcpp::Rcout << "---New Omega X---"  << std::endl;
+         Rcpp::Rcout << new_Omega_after_X << "\n";
          Rcpp::Rcout << "---Old X---"  << std::endl;
          Rcpp::Rcout << old_X << "\n";
          Rcpp::Rcout << "---Old Omega---"  << std::endl;
