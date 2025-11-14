@@ -74,7 +74,7 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
     arma::mat der_X, der_Omega;
     arma::mat old_X, old_Omega;
     arma::mat old_X_X, old_Omega_X;
-
+    arma::mat new_X_after_X, new_Omega_after_X;
     for (int itr_ = 0; itr_ < iterations; itr_++) {
         // derivative X
         //der_X = -2 * (new_Omega.t() * (SVRt - new_Omega * new_X));
@@ -110,6 +110,8 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
          Rcpp::Rcout << "---Current Domega---"<< std::endl;
          Rcpp::Rcout << new_D_w_omega << "\n";
         }
+        new_X_after_X = new_X;
+        new_Omega_after_X = new_Omega;
 
 
         new_D_w_x_sqrt =  new_X.col(0) * sqrt_Sigma.at(0) * sqrt(N);
