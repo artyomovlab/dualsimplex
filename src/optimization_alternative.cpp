@@ -87,6 +87,7 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
 
         // Update X
         old_X = new_X;
+        old_Omega = new_Omega;
         new_X = new_X - coef_der_X * der_X;
         // threshold for length of the new X
 
@@ -133,6 +134,9 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
 
 
         der_Omega = correctByNorm(der_Omega) * mean_radius_Omega;
+
+        old_X = new_X;
+        old_Omega = new_Omega;
 
 
         new_Omega = new_Omega - coef_der_Omega * der_Omega;
