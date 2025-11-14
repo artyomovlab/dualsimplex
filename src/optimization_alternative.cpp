@@ -73,7 +73,7 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
     arma::mat B = join_cols(vectorised_SVRt, coef_pos_D_w * sum_rows_S);
     arma::mat C = join_cols(vectorised_SVRt, coef_pos_D_h * sum_rows_R);
     arma::mat der_X, der_Omega;
-    arma::mat old_X;
+    arma::mat old_X, old_Omega;
 
     for (int itr_ = 0; itr_ < iterations; itr_++) {
         // derivative X
@@ -136,7 +136,30 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
 
 
         new_Omega = new_Omega - coef_der_Omega * der_Omega;
+        try {
         new_X = arma::pinv(new_Omega);
+          }
+        catch (const std::runtime_error& e)
+        {
+         Rcpp::Rcout << "Error in inverse \n" << e.what() << std::endl;
+         Rcpp::Rcout << "---Old X---"  << std::endl;
+         Rcpp::Rcout << old_X << "\n";
+         Rcpp::Rcout << "---Old Omega---"  << std::endl;
+         Rcpp::Rcout << old_Omega << "\n";
+         Rcpp::Rcout << "---Derrivative X---" << std::endl;
+         Rcpp::Rcout << der_X << "\n";
+         Rcpp::Rcout << "---Derrivative Omega---" << std::endl;
+         Rcpp::Rcout << der_Omega << "\n";
+         Rcpp::Rcout << "---New X---" << std::endl;
+         Rcpp::Rcout << new_X << "\n";
+         Rcpp::Rcout << "---New Omega---" << std::endl;
+         Rcpp::Rcout << new_Omega << "\n";
+         Rcpp::Rcout << "---Current Dx---" << std::endl;
+         Rcpp::Rcout << new_D_w_x << "\n";
+         Rcpp::Rcout << "---Current Domega---"<< std::endl;
+         Rcpp::Rcout << new_D_w_omega << "\n";
+        }
+
 
 
        // Rcpp::Rcout << "going to get D_w from first column" << std::endl;
