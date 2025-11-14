@@ -56,7 +56,6 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
 
     arma::vec Sigma = arma::diagvec(SVRt);
     arma::vec sqrt_Sigma = arma::sqrt(Sigma);
-    arma::vec sqrt_D_w = arma::sqrt(D_w);
 
 
     new_X =  arma::diagmat(new_D_w_x_sqrt) * new_X * arma::diagmat(1 / sqrt_Sigma);
@@ -74,6 +73,7 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
     arma::mat C = join_cols(vectorised_SVRt, coef_pos_D_h * sum_rows_R);
     arma::mat der_X, der_Omega;
     arma::mat old_X, old_Omega;
+    arma::mat old_X_X, old_Omega_X;
 
     for (int itr_ = 0; itr_ < iterations; itr_++) {
         // derivative X
@@ -86,8 +86,8 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
 
 
         // Update X
-        old_X = new_X;
-        old_Omega = new_Omega;
+        old_X_X = new_X;
+        old_Omega_X = new_Omega;
         new_X = new_X - coef_der_X * der_X;
         // threshold for length of the new X
 
@@ -98,13 +98,13 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         {
          Rcpp::Rcout << "Error in inverse \n" << e.what() << std::endl;
          Rcpp::Rcout << "---Old X---"  << std::endl;
-         Rcpp::Rcout << old_X << "\n";
+         Rcpp::Rcout << old_X_X << "\n";
          Rcpp::Rcout << "---Derrivative ---" << std::endl;
          Rcpp::Rcout << der_X << "\n";
          Rcpp::Rcout << "---New X---" << std::endl;
          Rcpp::Rcout << new_X << "\n";
          Rcpp::Rcout << "---Old Omega---" << std::endl;
-         Rcpp::Rcout << new_Omega << "\n";
+         Rcpp::Rcout << old_Omega_X << "\n";
          Rcpp::Rcout << "---Current Dx---" << std::endl;
          Rcpp::Rcout << new_D_w_x << "\n";
          Rcpp::Rcout << "---Current Domega---"<< std::endl;
@@ -146,6 +146,10 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         catch (const std::runtime_error& e)
         {
          Rcpp::Rcout << "Error in inverse \n" << e.what() << std::endl;
+          Rcpp::Rcout << "---Old X_X---"  << std::endl;
+         Rcpp::Rcout << old_X_X << "\n";
+         Rcpp::Rcout << "---Old Omega---"  << std::endl;
+         Rcpp::Rcout << old_Omega_X << "\n";
          Rcpp::Rcout << "---Old X---"  << std::endl;
          Rcpp::Rcout << old_X << "\n";
          Rcpp::Rcout << "---Old Omega---"  << std::endl;
