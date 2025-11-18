@@ -89,10 +89,15 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         old_X_X = new_X;
         old_Omega_X = new_Omega;
         new_X = new_X - coef_der_X * der_X;
-        // threshold for length of the new X
+
+        // replace negative values with very small number
+        new_X.col(0).clamp(arma::datum::eps,arma::datum::inf);
+
 
         try {
             new_Omega = arma::pinv(new_X);
+            // replace negative values with very small number
+            new_Omega.row(0).clamp(arma::datum::eps,arma::datum::inf);
         }
         catch (const std::runtime_error& e)
         {
@@ -112,7 +117,6 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         }
         new_X_after_X = new_X;
         new_Omega_after_X = new_Omega;
-
 
         new_D_w_x_sqrt =  new_X.col(0) * sqrt_Sigma.at(0) * sqrt(N);
         new_D_w_x = arma::pow(new_D_w_x_sqrt, 2);
@@ -142,8 +146,12 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
 
 
         new_Omega = new_Omega - coef_der_Omega * der_Omega;
+        new_Omega.row(0).clamp(arma::datum::eps,arma::datum::inf);
+
         try {
         new_X = arma::pinv(new_Omega);
+        new_X.col(0).clamp(arma::datum::eps,arma::datum::inf);
+
           }
         catch (const std::runtime_error& e)
         {
