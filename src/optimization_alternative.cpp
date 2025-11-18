@@ -91,13 +91,30 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         new_X = new_X - coef_der_X * der_X;
 
         // replace negative values with very small number
-        new_X.col(0).clamp(arma::datum::eps,arma::datum::inf);
+        if (any( new_X.col(0) < 0)) {
+           Rcpp::Rcout << "Derrivative caused negative for X \n"  << std::endl;
+           Rcpp::Rcout << "---New X---" << std::endl;
+           Rcpp::Rcout << new_X << "\n";
+           new_X.col(0).clamp(arma::datum::eps,arma::datum::inf);
+           Rcpp::Rcout << "---Clamped X---" << std::endl;
+           Rcpp::Rcout << new_X << "\n";
+        }
+
 
 
         try {
             new_Omega = arma::pinv(new_X);
             // replace negative values with very small number
-            new_Omega.row(0).clamp(arma::datum::eps,arma::datum::inf);
+           if (any( new_Omega.row(0) < 0)) {
+               Rcpp::Rcout << "Inverse caused negative for Omega \n"  << std::endl;
+               Rcpp::Rcout << "---New Omega---" << std::endl;
+               Rcpp::Rcout << new_Omega << "\n";
+               new_Omega.row(0).clamp(arma::datum::eps,arma::datum::inf);
+               Rcpp::Rcout << "---Clamped Omega---" << std::endl;
+               Rcpp::Rcout << new_Omega << "\n";
+           }
+
+
         }
         catch (const std::runtime_error& e)
         {
@@ -146,11 +163,26 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
 
 
         new_Omega = new_Omega - coef_der_Omega * der_Omega;
-        new_Omega.row(0).clamp(arma::datum::eps,arma::datum::inf);
+        if (any( new_Omega.row(0) < 0)) {
+               Rcpp::Rcout << "Derrivative caused negative for Omega \n"  << std::endl;
+               Rcpp::Rcout << "---New Omega---" << std::endl;
+               Rcpp::Rcout << new_Omega << "\n";
+               new_Omega.row(0).clamp(arma::datum::eps,arma::datum::inf);
+               Rcpp::Rcout << "---Clamped Omega---" << std::endl;
+               Rcpp::Rcout << new_Omega << "\n";
+        }
+
 
         try {
         new_X = arma::pinv(new_Omega);
-        new_X.col(0).clamp(arma::datum::eps,arma::datum::inf);
+                if (any( new_X.col(0) < 0)) {
+           Rcpp::Rcout << "Inverse caused negative for X \n"  << std::endl;
+           Rcpp::Rcout << "---New X---" << std::endl;
+           Rcpp::Rcout << new_X << "\n";
+           new_X.col(0).clamp(arma::datum::eps,arma::datum::inf);
+           Rcpp::Rcout << "---Clamped X---" << std::endl;
+           Rcpp::Rcout << new_X << "\n";
+        }
 
           }
         catch (const std::runtime_error& e)
