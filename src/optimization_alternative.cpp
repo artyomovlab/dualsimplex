@@ -85,13 +85,13 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
 
        tmp_X = (new_X - coef_der_X * der_X); // estimate new X given derivative
 
-       if (any( tmp_X.col(0) < 0)) {
+       if (any( tmp_X.col(0) <= 0)) {
            Rcpp::Rcout << "Derrivative caused negative for X \n"  << std::endl;
             for (int c=0; c < cell_types; c++) {
                 double matrix_value =  tmp_X(c,0);
-                 if (matrix_value < 0) {
+                 if (matrix_value <= 0) {
                    int shrink_iteration = 0;
-                   while(matrix_value < 0) {
+                   while(matrix_value <= 0) {
                     der_X.row(c) /=  2;
                     tmp_X = (new_X - coef_der_X * der_X);
                     matrix_value =  tmp_X(c,0);
@@ -105,13 +105,13 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         try {
             new_Omega = arma::pinv(tmp_X);
             // replace negative values with very small number
-           if (any( new_Omega.row(0) < 0)) {
+           if (any( new_Omega.row(0) <= 0)) {
                Rcpp::Rcout << "Inverse of X caused negative for Omega \n"  << std::endl;
                for (int c=0; c < cell_types; c++) {
                double matrix_value =  new_Omega(0,c);
-               if (matrix_value < 0) {
+               if (matrix_value <= 0) {
                    int shrink_iteration = 0;
-                   while(matrix_value < 0) {
+                   while(matrix_value <= 0) {
                     der_X /=  2;
                     der_X.row(c) *= 2;
                     tmp_X = (new_X - coef_der_X * der_X);
@@ -150,14 +150,14 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
 
         tmp_Omega = new_Omega - coef_der_Omega * der_Omega;
 
-        if (any( tmp_Omega.row(0) < 0)) {
+        if (any( tmp_Omega.row(0) <= 0)) {
                Rcpp::Rcout << "Derrivative caused negative for Omega \n"  << std::endl;
                                        // start shrinking derivative to be inside
              for (int c=0; c < cell_types; c++) {
                 double matrix_value =  tmp_Omega(0,c);
-                 if (matrix_value < 0) {
+                 if (matrix_value <= 0) {
                    int shrink_iteration = 0;
-                   while(matrix_value < 0) {
+                   while(matrix_value <= 0) {
                     der_Omega.col(c) /=  2;
                     tmp_Omega = new_Omega - coef_der_Omega * der_Omega;
                     matrix_value =  tmp_Omega(0,c);
@@ -169,13 +169,13 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         // Now try estimate X as inverse
         try {
             new_X = arma::pinv(tmp_Omega);
-            if (any( new_X.col(0) < 0)) {
+            if (any( new_X.col(0) <= 0)) {
                 Rcpp::Rcout << "Inverse of Omega caused negative for X \n"  << std::endl;
                 for (int c=0; c < cell_types; c++) {
                 double matrix_value =  new_X(c,0);
                  if (matrix_value < 0) {
                    int shrink_iteration = 0;
-                   while(matrix_value < 0) {
+                   while(matrix_value <= 0) {
                     der_Omega /=  2;
                     der_Omega.col(c) *=  2;
                     tmp_Omega = new_Omega - coef_der_Omega * der_Omega;
