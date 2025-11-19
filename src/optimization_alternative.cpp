@@ -105,7 +105,6 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         }
         // Now estimate omega
        tmp_Omega = arma::pinv(tmp_X);
-       // replace negative values with very small number
         if (any( tmp_Omega.row(0) <= 0)) {
             Rcpp::Rcout << "Inverse of X caused negative for Omega \n"  << std::endl;
             for (int c=0; c < cell_types; c++) {
@@ -124,6 +123,8 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                     // if we were able to find the solution. accept these new X and Omega
                     new_Omega = tmp_Omega;
                     new_X = tmp_X;
+                    } else {
+                        Rcpp::Rcout << "Couldn't find good inverse X, reject X for one of the steps\n"  << std::endl;
                     }
                 }
             }
@@ -133,6 +134,18 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         }
         // continue conventional optimization
         // at this stage we are sure that first first row/col of X/omega are positive
+
+        // Ensure Omega vectors norm is adequate
+        for (int c=0; c < cell_types; c++) {
+            double col_omega_norm = arma::norm(new_Omega.col(c).subvec(1, cell_types - 1), 2);
+            double row_x_norm = arma::norm(new_X.row(c).subvec(1, cell_types - 1), 2);
+            double ratio_x = row_x_norm / mean_radius_X;
+            double ratio_omega = col_omega_norm / mean_radius_Omega;
+            new_X.row(c) *= ratio_omega/ratio_x;
+            new_Omega.col(c) *= ratio_x/ratio_omega;
+        }
+
+        // Get matrix D
         new_D_w_x_sqrt =  new_X.col(0) * sqrt_Sigma.at(0) * sqrt(N);
         new_D_w_x = arma::pow(new_D_w_x_sqrt, 2);
         new_D_w_omega_sqrt =  new_Omega.row(0).as_col() * sqrt_Sigma.at(0) * sqrt(M);
@@ -145,6 +158,10 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         new_Omega = new_Omega * arma::diagmat(1/new_D_w_omega_sqrt) * arma::diagmat(new_D_w_sqrt);
         new_D_w_x_sqrt = new_D_w_sqrt;
         new_D_w_omega_sqrt = new_D_w_sqrt;
+
+
+
+
 
         // derivative Omega
 
@@ -172,7 +189,6 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         // Now try estimate X as inverse
         tmp_X = arma::pinv(tmp_Omega);
         if (any(tmp_X.col(0) <= 0)) {
-            Rcpp::Rcout << "Inverse of Omega caused negative for X \n"  << std::endl;
             for (int c=0; c < cell_types; c++) {
                 double matrix_value =  tmp_X(c,0);
                 if (matrix_value < 0) {
@@ -189,6 +205,8 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                         // if we were able to find the solution. accept these new X and Omega
                         new_Omega = tmp_Omega;
                         new_X = tmp_X;
+                    } else {
+                        Rcpp::Rcout << "Couldn't find good inverse Omega, reject Omega for one of the steps \n"  << std::endl;
                     }
                 }
             }
@@ -198,6 +216,15 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         }
         // continue conventional optimization
         // at this stage we are sure that first first row/col of X/omega are positive
+                // Ensure Omega vectors norm is adequate
+        for (int c=0; c < cell_types; c++) {
+            double col_omega_norm = arma::norm(new_Omega.col(c).subvec(1, cell_types - 1), 2);
+            double row_x_norm = arma::norm(new_X.row(c).subvec(1, cell_types - 1), 2);
+            double ratio_x = row_x_norm / mean_radius_X;
+            double ratio_omega = col_omega_norm / mean_radius_Omega;
+            new_X.row(c) *= ratio_omega/ratio_x;
+            new_Omega.col(c) *= ratio_x/ratio_omega;
+        }
 
        // Rcpp::Rcout << "going to get D_w from first column" << std::endl;
         new_D_w_omega_sqrt = new_Omega.row(0).as_col() * sqrt_Sigma.at(0) * sqrt(M);
