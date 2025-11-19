@@ -16,6 +16,7 @@
 #' @param x_center X rays around which to perform search in theta search.
 #' @param omega_center Omega rays around which to perform search in theta search.
 #' @param center_threshold constraint for the  step.
+#' @param solution_balancing_threshold EXPERIMENTAL: only for positivity so far. If optimization going to far from the points in one space, some value of this distance will be transferred to the second space/
 #' @param method method of optimization to use can be  basic/positivity.
 #' @return ready to use list with algorithm configuration
 #' @export
@@ -32,6 +33,7 @@ optim_config <- function(
   x_center = NULL,
   omega_center = NULL,
   center_threshold = 0,
+  solution_balancing_threshold= 10000,
   method = "basic" # basic/positivity/theta
 ) {
   return(list(
@@ -47,6 +49,7 @@ optim_config <- function(
     x_center = x_center,
     omega_center = omega_center,
     center_threshold = center_threshold,
+    solution_balancing_threshold=solution_balancing_threshold,
     method = method
   ))
 }
@@ -174,6 +177,7 @@ optimize_solution <- function(
     thresh = config$cosine_thresh
   )
   optimization_result <- if (config$method == "positivity") {
+    optimization_params$solution_balancing_threshold <- config$solution_balancing_threshold
     do.call(alternative_derivative_stage2, optimization_params)
   } else if (config$method == "basic") {
     do.call(derivative_stage2, optimization_params)

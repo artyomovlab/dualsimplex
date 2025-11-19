@@ -25,7 +25,8 @@ alternative_derivative_stage2(
   mean_radius_Omega,
   r_const_X = 0,
   r_const_Omega = 0,
-  thresh = 0.8
+  thresh = 0.8,
+  solution_balancing_threshold = 10
 )
 }
 \arguments{
@@ -70,6 +71,8 @@ alternative_derivative_stage2(
 \item{r_const_Omega}{experimental. not tested}
 
 \item{thresh}{experimental. not tested}
+
+\item{solution_balancing_threshold}{experimental. If solution is to far away we re-balance norms of the solution vectors between X and Omega}
 }
 \value{
 new parameters
