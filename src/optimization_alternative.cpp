@@ -140,9 +140,9 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         for (int c=0; c < cell_types; c++) {
             double col_omega_norm = arma::norm(new_Omega.col(c).subvec(1, cell_types - 1), 2);
             double row_x_norm = arma::norm(new_X.row(c).subvec(1, cell_types - 1), 2);
-            if (col_omega_norm > solution_balancing_threshold * mean_radius_Omega) {
-                Rcpp::Rcout << "Looks like Omega points are way far away after inverse of X. \n"  << std::endl;
-                Rcpp::Rcout << "We will balance solution by moving some magnitude from Omega to X. \n"  << std::endl;
+            if ((col_omega_norm > 1) & (col_omega_norm > solution_balancing_threshold * mean_radius_Omega)) {
+//                Rcpp::Rcout << "Looks like Omega points are way far away after inverse of X. \n"  << std::endl;
+//                Rcpp::Rcout << "We will balance solution by moving some magnitude from Omega to X. \n"  << std::endl;
                 double ratio_x = row_x_norm / mean_radius_X;
                 double ratio_omega = col_omega_norm / mean_radius_Omega;
                 new_X.row(c) *= ratio_omega/ratio_x;
@@ -177,7 +177,7 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         tmp_Omega = new_Omega - coef_der_Omega * der_Omega;
 
         if (any(tmp_Omega.row(0) <= 0)) {
-//        Rcpp::Rcout << "Derrivative caused negative for Omega \n"  << std::endl;
+        //Rcpp::Rcout << "Derrivative caused negative for Omega \n"  << std::endl;
         // start shrinking derivative to be inside the range
         for (int c=0; c < cell_types; c++) {
             double matrix_value =  tmp_Omega(0,c);
@@ -222,13 +222,13 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         }
         // continue conventional optimization
         // at this stage we are sure that first first row/col of X/omega are positive
-                // Ensure Omega vectors norm is adequate
+        // Ensure Omega vectors norm is adequate
         for (int c=0; c < cell_types; c++) {
             double col_omega_norm = arma::norm(new_Omega.col(c).subvec(1, cell_types - 1), 2);
             double row_x_norm = arma::norm(new_X.row(c).subvec(1, cell_types - 1), 2);
-            if (row_x_norm > solution_balancing_threshold * mean_radius_X) {
-                Rcpp::Rcout << "Looks like X point are way far away after inverse of Omega. \n"  << std::endl;
-                Rcpp::Rcout << "We will balance solution by moving some magnitude from X to Omega. \n"  << std::endl;
+            if ((row_x_norm > 1) & (row_x_norm > solution_balancing_threshold * mean_radius_X)) {
+//                Rcpp::Rcout << "Looks like X point are way far away after inverse of Omega. \n"  << std::endl;
+//                Rcpp::Rcout << "We will balance solution by moving some magnitude from X to Omega. \n"  << std::endl;
                 double ratio_x = row_x_norm / mean_radius_X;
                 double ratio_omega = col_omega_norm / mean_radius_Omega;
                 new_X.row(c) *= ratio_omega/ratio_x;
@@ -254,15 +254,15 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         new_D_w_omega_sqrt = new_D_w_sqrt;
 
         new_D_h = new_D_w * (N / M);
-        arma::uword neg_props = getNegative(new_X * R);
-        arma::uword neg_basis = getNegative(S.t() * new_Omega);
+
         double sum_ = accu(new_D_w) / M;
 
         // result X and omega
         final_X = arma::diagmat(1/new_D_w_x_sqrt) * new_X * arma::diagmat(sqrt_Sigma);
 
         final_Omega = arma::diagmat(sqrt_Sigma)* new_Omega * arma::diagmat(1/new_D_w_omega_sqrt);
-
+        arma::uword neg_props = getNegative(final_X * R);
+        arma::uword neg_basis = getNegative(S.t() * final_Omega);
 
         Rcpp::List current_errors = calcErrors(final_X,
                                                final_Omega,

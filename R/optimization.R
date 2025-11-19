@@ -33,7 +33,7 @@ optim_config <- function(
   x_center = NULL,
   omega_center = NULL,
   center_threshold = 0,
-  solution_balancing_threshold= 10,
+  solution_balancing_threshold= 10000,
   method = "basic" # basic/positivity/theta
 ) {
   return(list(
