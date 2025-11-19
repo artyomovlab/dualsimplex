@@ -37,7 +37,8 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                              const double mean_radius_Omega,
                              const double r_const_X,
                              const double r_const_Omega,
-                             const double thresh) {
+                             const double thresh,
+                             const double solution_balancing_threshold) {
     arma::mat errors_statistics(iterations, 9, arma::fill::zeros);
     arma::mat points_statistics_X(iterations, cell_types * cell_types, arma::fill::zeros);
     arma::mat points_statistics_Omega(iterations, cell_types * cell_types, arma::fill::zeros);
@@ -88,7 +89,7 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
        tmp_X = (new_X - coef_der_X * der_X); // estimate new X given derivative
 
        if (any( tmp_X.col(0) <= 0)) {
-           Rcpp::Rcout << "Derrivative caused negative for X \n"  << std::endl;
+//           Rcpp::Rcout << "Derrivative caused negative for X \n"  << std::endl;
             for (int c=0; c < cell_types; c++) {
                 double matrix_value =  tmp_X(c,0);
                  if (matrix_value <= 0) {
@@ -106,7 +107,7 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         // Now estimate omega
        tmp_Omega = arma::pinv(tmp_X);
         if (any( tmp_Omega.row(0) <= 0)) {
-            Rcpp::Rcout << "Inverse of X caused negative for Omega \n"  << std::endl;
+//            Rcpp::Rcout << "Inverse of X caused negative for Omega \n"  << std::endl;
             for (int c=0; c < cell_types; c++) {
                 double matrix_value =  tmp_Omega(0,c);
                 if (matrix_value <= 0) {
@@ -139,10 +140,15 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         for (int c=0; c < cell_types; c++) {
             double col_omega_norm = arma::norm(new_Omega.col(c).subvec(1, cell_types - 1), 2);
             double row_x_norm = arma::norm(new_X.row(c).subvec(1, cell_types - 1), 2);
-            double ratio_x = row_x_norm / mean_radius_X;
-            double ratio_omega = col_omega_norm / mean_radius_Omega;
-            new_X.row(c) *= ratio_omega/ratio_x;
-            new_Omega.col(c) *= ratio_x/ratio_omega;
+            if (col_omega_norm > solution_balancing_threshold * mean_radius_Omega) {
+                Rcpp::Rcout << "Looks like Omega points are way far away after inverse of X. \n"  << std::endl;
+                Rcpp::Rcout << "We will balance solution by moving some magnitude from Omega to X. \n"  << std::endl;
+                double ratio_x = row_x_norm / mean_radius_X;
+                double ratio_omega = col_omega_norm / mean_radius_Omega;
+                new_X.row(c) *= ratio_omega/ratio_x;
+                new_Omega.col(c) *= ratio_x/ratio_omega;
+            }
+
         }
 
         // Get matrix D
@@ -171,7 +177,7 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         tmp_Omega = new_Omega - coef_der_Omega * der_Omega;
 
         if (any(tmp_Omega.row(0) <= 0)) {
-        Rcpp::Rcout << "Derrivative caused negative for Omega \n"  << std::endl;
+//        Rcpp::Rcout << "Derrivative caused negative for Omega \n"  << std::endl;
         // start shrinking derivative to be inside the range
         for (int c=0; c < cell_types; c++) {
             double matrix_value =  tmp_Omega(0,c);
@@ -220,10 +226,14 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         for (int c=0; c < cell_types; c++) {
             double col_omega_norm = arma::norm(new_Omega.col(c).subvec(1, cell_types - 1), 2);
             double row_x_norm = arma::norm(new_X.row(c).subvec(1, cell_types - 1), 2);
-            double ratio_x = row_x_norm / mean_radius_X;
-            double ratio_omega = col_omega_norm / mean_radius_Omega;
-            new_X.row(c) *= ratio_omega/ratio_x;
-            new_Omega.col(c) *= ratio_x/ratio_omega;
+            if (row_x_norm > solution_balancing_threshold * mean_radius_X) {
+                Rcpp::Rcout << "Looks like X point are way far away after inverse of Omega. \n"  << std::endl;
+                Rcpp::Rcout << "We will balance solution by moving some magnitude from X to Omega. \n"  << std::endl;
+                double ratio_x = row_x_norm / mean_radius_X;
+                double ratio_omega = col_omega_norm / mean_radius_Omega;
+                new_X.row(c) *= ratio_omega/ratio_x;
+                new_Omega.col(c) *= ratio_x/ratio_omega;
+            }
         }
 
        // Rcpp::Rcout << "going to get D_w from first column" << std::endl;

@@ -17,6 +17,7 @@ optim_config(
   x_center = NULL,
   omega_center = NULL,
   center_threshold = 0,
+  solution_balancing_threshold = 10,
   method = "basic"
 )
 }
@@ -44,6 +45,8 @@ optim_config(
 \item{omega_center}{Omega rays around which to perform search in theta search.}
 
 \item{center_threshold}{constraint for the  step.}
+
+\item{solution_balancing_threshold}{EXPERIMENTAL: only for positivity so far. If optimization going to far from the points in one space, some value of this distance will be transferred to the second space/}
 
 \item{method}{method of optimization to use can be  basic/positivity.}
 }

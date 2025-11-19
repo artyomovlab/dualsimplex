@@ -26,6 +26,7 @@ arma::mat alternative_hinge_der_basis_C__(const arma::mat& W, const arma::mat& S
 //' @param r_const_X experimental. not tested
 //' @param r_const_Omega experimental. not tested
 //' @param thresh experimental. not tested
+//' @param solution_balancing_threshold experimental. If solution is to far away we re-balance norms of the solution vectors between X and Omega
 //' @return new parameters
 // [[Rcpp::export]]
 Rcpp::List alternative_derivative_stage2(const arma::mat& X,
@@ -48,4 +49,5 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                              const double mean_radius_Omega,
                              const double r_const_X = 0,
                              const double r_const_Omega = 0,
-                             const double thresh = 0.8);
+                             const double thresh = 0.8,
+                             const double solution_balancing_threshold = 10);
