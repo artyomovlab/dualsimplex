@@ -72,9 +72,7 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
     arma::mat B = join_cols(vectorised_SVRt, coef_pos_D_w * sum_rows_S);
     arma::mat C = join_cols(vectorised_SVRt, coef_pos_D_h * sum_rows_R);
     arma::mat der_X, der_Omega;
-    arma::mat old_X, old_Omega;
-    arma::mat old_X_X, old_Omega_X;
-    arma::mat new_X_after_X, new_Omega_after_X;
+    arma::mat tmp_X, tmp_Omega;
     for (int itr_ = 0; itr_ < iterations; itr_++) {
         // derivative X
         //der_X = -2 * (new_Omega.t() * (SVRt - new_Omega * new_X));
@@ -85,138 +83,115 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         der_X = correctByNorm(der_X) * mean_radius_X;
 
 
-        // Update X
-        old_X_X = new_X;
-        old_Omega_X = new_Omega;
-        new_X = new_X - coef_der_X * der_X;
+       tmp_X = (new_X - coef_der_X * der_X); // estimate new X given derivative
 
-        // replace negative values with very small number
-        if (any( new_X.col(0) < 0)) {
+       if (any( tmp_X.col(0) < 0)) {
            Rcpp::Rcout << "Derrivative caused negative for X \n"  << std::endl;
-           Rcpp::Rcout << "---New X---" << std::endl;
-           Rcpp::Rcout << new_X << "\n";
-           new_X.col(0).clamp(arma::datum::eps,arma::datum::inf);
-           Rcpp::Rcout << "---Clamped X---" << std::endl;
-           Rcpp::Rcout << new_X << "\n";
+            for (int c=0; c < cell_types; c++) {
+                double matrix_value =  tmp_X(c,0);
+                 if (matrix_value < 0) {
+                   int shrink_iteration = 0;
+                   while(matrix_value < 0) {
+                    der_X.row(c) /=  2;
+                    tmp_X = (new_X - coef_der_X * der_X);
+                    matrix_value =  tmp_X(c,0);
+                    shrink_iteration++;
+                   }
+                 }
+            }
+           //Rcpp::Rcout << "X shrink iterations performed for component " << c << " is: " << shrink_iteration << "\n";
         }
-
-
-
+        // Now estimate omega
         try {
-            new_Omega = arma::pinv(new_X);
+            new_Omega = arma::pinv(tmp_X);
             // replace negative values with very small number
            if (any( new_Omega.row(0) < 0)) {
-               Rcpp::Rcout << "Inverse caused negative for Omega \n"  << std::endl;
-               Rcpp::Rcout << "---New Omega---" << std::endl;
-               Rcpp::Rcout << new_Omega << "\n";
-               new_Omega.row(0).clamp(arma::datum::eps,arma::datum::inf);
-               Rcpp::Rcout << "---Clamped Omega---" << std::endl;
-               Rcpp::Rcout << new_Omega << "\n";
+               Rcpp::Rcout << "Inverse of X caused negative for Omega \n"  << std::endl;
+               for (int c=0; c < cell_types; c++) {
+               double matrix_value =  new_Omega(0,c);
+               if (matrix_value < 0) {
+                   int shrink_iteration = 0;
+                   while(matrix_value < 0) {
+                    der_X /=  2;
+                    der_X.row(c) *= 2;
+                    tmp_X = (new_X - coef_der_X * der_X);
+                    new_Omega = arma::pinv(tmp_X);
+                    matrix_value =  new_Omega(0,c);
+                    shrink_iteration++;
+                   }
+                 }
+            }
            }
-
-
         }
         catch (const std::runtime_error& e)
         {
          Rcpp::Rcout << "Error in inverse \n" << e.what() << std::endl;
-         Rcpp::Rcout << "---Old X---"  << std::endl;
-         Rcpp::Rcout << old_X_X << "\n";
-         Rcpp::Rcout << "---Derrivative ---" << std::endl;
-         Rcpp::Rcout << der_X << "\n";
-         Rcpp::Rcout << "---New X---" << std::endl;
-         Rcpp::Rcout << new_X << "\n";
-         Rcpp::Rcout << "---Old Omega---" << std::endl;
-         Rcpp::Rcout << old_Omega_X << "\n";
-         Rcpp::Rcout << "---Current Dx---" << std::endl;
-         Rcpp::Rcout << new_D_w_x << "\n";
-         Rcpp::Rcout << "---Current Domega---"<< std::endl;
-         Rcpp::Rcout << new_D_w_omega << "\n";
         }
-        new_X_after_X = new_X;
-        new_Omega_after_X = new_Omega;
-
+        new_X = tmp_X;
+        // continue conventional optimization
+        // at this stage we are sure that first first row/col of X/omega are positive
         new_D_w_x_sqrt =  new_X.col(0) * sqrt_Sigma.at(0) * sqrt(N);
         new_D_w_x = arma::pow(new_D_w_x_sqrt, 2);
-
         new_D_w_omega_sqrt =  new_Omega.row(0).as_col() * sqrt_Sigma.at(0) * sqrt(M);
         new_D_w_omega = arma::pow(new_D_w_omega_sqrt, 2);
-
         new_D_w = new_D_w_x_sqrt % new_D_w_omega_sqrt;
-
         new_D_w_sqrt = arma::sqrt(new_D_w);
+
+        // Fix X and omega accordingly
         new_X = arma::diagmat(1/new_D_w_x_sqrt)* arma::diagmat(new_D_w_sqrt) * new_X;
         new_Omega = new_Omega * arma::diagmat(1/new_D_w_omega_sqrt) * arma::diagmat(new_D_w_sqrt);
         new_D_w_x_sqrt = new_D_w_sqrt;
         new_D_w_omega_sqrt = new_D_w_sqrt;
 
-
-
         // derivative Omega
 
         der_Omega = coef_hinge_W * arma::diagmat(1 / sqrt_Sigma) * alternative_hinge_der_basis_C__(S.t() * arma::diagmat(sqrt_Sigma) * new_Omega, S);
-
-
         der_Omega = correctByNorm(der_Omega) * mean_radius_Omega;
 
-        old_X = new_X;
-        old_Omega = new_Omega;
+        tmp_Omega = new_Omega - coef_der_Omega * der_Omega;
 
-
-        new_Omega = new_Omega - coef_der_Omega * der_Omega;
-        if (any( new_Omega.row(0) < 0)) {
+        if (any( tmp_Omega.row(0) < 0)) {
                Rcpp::Rcout << "Derrivative caused negative for Omega \n"  << std::endl;
-               Rcpp::Rcout << "---New Omega---" << std::endl;
-               Rcpp::Rcout << new_Omega << "\n";
-               new_Omega.row(0).clamp(arma::datum::eps,arma::datum::inf);
-               Rcpp::Rcout << "---Clamped Omega---" << std::endl;
-               Rcpp::Rcout << new_Omega << "\n";
+                                       // start shrinking derivative to be inside
+             for (int c=0; c < cell_types; c++) {
+                double matrix_value =  tmp_Omega(0,c);
+                 if (matrix_value < 0) {
+                   int shrink_iteration = 0;
+                   while(matrix_value < 0) {
+                    der_Omega.col(c) /=  2;
+                    tmp_Omega = new_Omega - coef_der_Omega * der_Omega;
+                    matrix_value =  tmp_Omega(0,c);
+                    shrink_iteration++;
+                   }
+                 }
+            }
         }
-
-
+        // Now try estimate X as inverse
         try {
-        new_X = arma::pinv(new_Omega);
-                if (any( new_X.col(0) < 0)) {
-           Rcpp::Rcout << "Inverse caused negative for X \n"  << std::endl;
-           Rcpp::Rcout << "---New X---" << std::endl;
-           Rcpp::Rcout << new_X << "\n";
-           new_X.col(0).clamp(arma::datum::eps,arma::datum::inf);
-           Rcpp::Rcout << "---Clamped X---" << std::endl;
-           Rcpp::Rcout << new_X << "\n";
-        }
-
+            new_X = arma::pinv(tmp_Omega);
+            if (any( new_X.col(0) < 0)) {
+                Rcpp::Rcout << "Inverse of Omega caused negative for X \n"  << std::endl;
+                for (int c=0; c < cell_types; c++) {
+                double matrix_value =  new_X(c,0);
+                 if (matrix_value < 0) {
+                   int shrink_iteration = 0;
+                   while(matrix_value < 0) {
+                    der_Omega /=  2;
+                    der_Omega.col(c) *=  2;
+                    tmp_Omega = new_Omega - coef_der_Omega * der_Omega;
+                    new_X = arma::pinv(tmp_Omega);
+                    matrix_value =  new_X(c,0);
+                    shrink_iteration++;
+                   }
+                 }
+            }
+            }
           }
         catch (const std::runtime_error& e)
         {
          Rcpp::Rcout << "Error in inverse \n" << e.what() << std::endl;
-
-
-          Rcpp::Rcout << "---Old X_X---"  << std::endl;
-         Rcpp::Rcout << old_X_X << "\n";
-         Rcpp::Rcout << "---Old Omega_X---"  << std::endl;
-         Rcpp::Rcout << old_Omega_X << "\n";
-         Rcpp::Rcout << "---New X_X---"  << std::endl;
-         Rcpp::Rcout << new_X_after_X << "\n";
-         Rcpp::Rcout << "---New Omega X---"  << std::endl;
-         Rcpp::Rcout << new_Omega_after_X << "\n";
-         Rcpp::Rcout << "---Old X---"  << std::endl;
-         Rcpp::Rcout << old_X << "\n";
-         Rcpp::Rcout << "---Old Omega---"  << std::endl;
-         Rcpp::Rcout << old_Omega << "\n";
-         Rcpp::Rcout << "---Derrivative X---" << std::endl;
-         Rcpp::Rcout << der_X << "\n";
-         Rcpp::Rcout << "---Derrivative Omega---" << std::endl;
-         Rcpp::Rcout << der_Omega << "\n";
-         Rcpp::Rcout << "---New X---" << std::endl;
-         Rcpp::Rcout << new_X << "\n";
-         Rcpp::Rcout << "---New Omega---" << std::endl;
-         Rcpp::Rcout << new_Omega << "\n";
-         Rcpp::Rcout << "---Current Dx---" << std::endl;
-         Rcpp::Rcout << new_D_w_x << "\n";
-         Rcpp::Rcout << "---Current Domega---"<< std::endl;
-         Rcpp::Rcout << new_D_w_omega << "\n";
         }
-
-
+        new_Omega = tmp_Omega;
 
        // Rcpp::Rcout << "going to get D_w from first column" << std::endl;
         new_D_w_omega_sqrt = new_Omega.row(0).as_col() * sqrt_Sigma.at(0) * sqrt(M);
