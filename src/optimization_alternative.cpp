@@ -107,13 +107,13 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                         Rcpp::Rcout << "Derrivative X" << "\n";
                         Rcpp::Rcout << der_X << "\n";
                         Rcpp::Rcout << "Current Omega" << "\n";
-                        Rcpp::Rcout << new_Omega << "\n"
+                        Rcpp::Rcout << new_Omega << "\n";
                         Rcpp::Rcout << "Current Dw" << "\n";
-                        Rcpp::Rcout << new_D_w << "\n"
+                        Rcpp::Rcout << new_D_w << "\n";
                         Rcpp::Rcout << "Current Dh" << "\n";
-                        Rcpp::Rcout << new_D_h << "\n"
+                        Rcpp::Rcout << new_D_h << "\n";
                         Rcpp::Rcout << "Current Sigma" << "\n";
-                        Rcpp::Rcout << Sigma << "\n"
+                        Rcpp::Rcout << Sigma << "\n";
                         // looks like any derrivative step leads to negativity
                         // we zero derrivative for this corner
                         der_X.row(c).zeros();
@@ -215,13 +215,13 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                         Rcpp::Rcout << "Derrivative Omega" << "\n";
                         Rcpp::Rcout << der_Omega << "\n";
                         Rcpp::Rcout << "Current Omega" << "\n";
-                        Rcpp::Rcout << new_Omega << "\n"
+                        Rcpp::Rcout << new_Omega << "\n";
                         Rcpp::Rcout << "Current Dw" << "\n";
-                        Rcpp::Rcout << new_D_w << "\n"
+                        Rcpp::Rcout << new_D_w << "\n";
                         Rcpp::Rcout << "Current Dh" << "\n";
-                        Rcpp::Rcout << new_D_h << "\n"
+                        Rcpp::Rcout << new_D_h << "\n";
                         Rcpp::Rcout << "Current Sigma" << "\n";
-                        Rcpp::Rcout << Sigma << "\n"
+                        Rcpp::Rcout << Sigma << "\n";
                         // looks like any derivative step leads to negativity
                         // we zero derrivative for this corner
                         der_Omega.col(c).zeros();
