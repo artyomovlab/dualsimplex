@@ -103,7 +103,7 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                    if (shrink_iteration == shrink_limit) {
                         // looks like any derrivative step leads to negativity
                         // we zero derrivative for this corner
-                        der_X.row(c) =  0;
+                        der_X.row(c).zeros();
                         tmp_X = (new_X - coef_der_X * der_X);
                    }
                  }
@@ -198,7 +198,7 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                    if (shrink_iteration == shrink_limit) {
                         // looks like any derivative step leads to negativity
                         // we zero derrivative for this corner
-                        der_Omega.col(c) =  0;
+                        der_Omega.col(c).zeros();
                         tmp_Omega = new_Omega - coef_der_Omega * der_Omega;                   }
                 }
             }
