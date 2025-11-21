@@ -94,11 +94,17 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                 double matrix_value =  tmp_X(c,0);
                  if (matrix_value <= 0) {
                    int shrink_iteration = 0;
-                   while(matrix_value <= 0) {
-                    der_X.row(c) /=  2;
-                    tmp_X = (new_X - coef_der_X * der_X);
-                    matrix_value =  tmp_X(c,0);
-                    shrink_iteration++;
+                   while((matrix_value <= 0) & (shrink_iteration < shrink_limit)) {
+                        der_X.row(c) /=  2;
+                        tmp_X = (new_X - coef_der_X * der_X);
+                        matrix_value =  tmp_X(c,0);
+                        shrink_iteration++;
+                   }
+                   if (shrink_iteration == shrink_limit) {
+                        // looks like any derrivative step leads to negativity
+                        // we zero derrivative for this corner
+                        der_X.row(c) =  0;
+                        tmp_X = (new_X - coef_der_X * der_X);
                    }
                  }
             }
@@ -120,10 +126,10 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                     matrix_value =  tmp_Omega(0,c);
                     shrink_iteration++;
                    }
-                if (shrink_iteration != shrink_limit) {
-                    // if we were able to find the solution. accept these new X and Omega
-                    new_Omega = tmp_Omega;
-                    new_X = tmp_X;
+                    if (shrink_iteration != shrink_limit) {
+                        // if we were able to find the solution. accept these new X and Omega
+                        new_Omega = tmp_Omega;
+                        new_X = tmp_X;
                     } else {
                         Rcpp::Rcout << "Couldn't find good inverse X, reject X for one of the steps\n"  << std::endl;
                     }
@@ -177,18 +183,23 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         tmp_Omega = new_Omega - coef_der_Omega * der_Omega;
 
         if (any(tmp_Omega.row(0) <= 0)) {
-        //Rcpp::Rcout << "Derrivative caused negative for Omega \n"  << std::endl;
+        //Rcpp::Rcout << "Derivative caused negative for Omega \n"  << std::endl;
         // start shrinking derivative to be inside the range
         for (int c=0; c < cell_types; c++) {
             double matrix_value =  tmp_Omega(0,c);
             if (matrix_value <= 0) {
                 int shrink_iteration = 0;
-                while(matrix_value <= 0) {
+                   while((matrix_value <= 0) & (shrink_iteration < shrink_limit)) {
                     der_Omega.col(c) /=  2;
                     tmp_Omega = new_Omega - coef_der_Omega * der_Omega;
                     matrix_value =  tmp_Omega(0,c);
                     shrink_iteration++;
                    }
+                   if (shrink_iteration == shrink_limit) {
+                        // looks like any derivative step leads to negativity
+                        // we zero derrivative for this corner
+                        der_Omega.col(c) =  0;
+                        tmp_Omega = new_Omega - coef_der_Omega * der_Omega;                   }
                 }
             }
         }
