@@ -111,6 +111,6 @@ extended_sinkhorn_scale <- function(V, W, H, n_iter) {
     D_vs_row =  extended_scaling_result$D_vs_row,
     D_vs_col =  extended_scaling_result$D_vs_col,
     D_hs_row =  extended_scaling_result$D_hs_row,
-    D_ws_col =  extended_scaling_result$D_hs_col
+    D_ws_col =  extended_scaling_result$D_ws_col
   ))
 }
