@@ -350,9 +350,9 @@ DualSimplexSolver <- R6Class(
 
     #' @description
     #' A set of plots to extimate the projection.
-    plot_projection_diagnostics = function() {
-      plt1 <- self$plot_projected("zero_distance", "zero_distance")
-      plt2 <- self$plot_projected("plane_distance", "plane_distance")
+    plot_projection_diagnostics = function(use_dims = private$display_dims) {
+      plt1 <- self$plot_projected("zero_distance", "zero_distance", use_dims = use_dims)
+      plt2 <- self$plot_projected("plane_distance", "plane_distance", use_dims = use_dims)
       plt3 <- self$plot_distances_distribution()
       plt4 <- self$plot_svd()
       return(list(plt1, plt2, plt3, plt4))

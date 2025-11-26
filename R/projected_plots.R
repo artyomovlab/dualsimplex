@@ -30,7 +30,7 @@ get_2d_subset <- function(proj, use_dims, extra_points_proj = NULL) {
         return(proj$umap[c("X", "Omega")])
       }
     } else {
-      if (proj$meta$K == 3) {
+      if (proj$meta$K > 3) {
         stop("Specify use_dims (e.g. 2:3) or calculate umap")
       } else {
         use_dims <- 2:3
