@@ -136,11 +136,11 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         // continue conventional optimization
         // at this stage we are sure that first first row/col of X/omega are positive
 
-        // Ensure Omega vectors norm is adequate
+        // Ensure Omega and X vectors norms are  adequate
         for (int c=0; c < cell_types; c++) {
             double col_omega_norm = arma::norm(new_Omega.col(c).subvec(1, cell_types - 1), 2);
             double row_x_norm = arma::norm(new_X.row(c).subvec(1, cell_types - 1), 2);
-            if ((col_omega_norm > 1) & (col_omega_norm > solution_balancing_threshold * mean_radius_Omega)) {
+            if ((col_omega_norm > solution_balancing_threshold * mean_radius_Omega)) {
 //                Rcpp::Rcout << "Looks like Omega points are way far away after inverse of X. \n"  << std::endl;
 //                Rcpp::Rcout << "We will balance solution by moving some magnitude from Omega to X. \n"  << std::endl;
                 double ratio_x = row_x_norm / mean_radius_X;
@@ -226,7 +226,7 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         for (int c=0; c < cell_types; c++) {
             double col_omega_norm = arma::norm(new_Omega.col(c).subvec(1, cell_types - 1), 2);
             double row_x_norm = arma::norm(new_X.row(c).subvec(1, cell_types - 1), 2);
-            if ((row_x_norm > 1) & (row_x_norm > solution_balancing_threshold * mean_radius_X)) {
+            if (((row_x_norm > solution_balancing_threshold * mean_radius_X)) {
 //                Rcpp::Rcout << "Looks like X point are way far away after inverse of Omega. \n"  << std::endl;
 //                Rcpp::Rcout << "We will balance solution by moving some magnitude from X to Omega. \n"  << std::endl;
                 double ratio_x = row_x_norm / mean_radius_X;
