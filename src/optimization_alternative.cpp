@@ -145,8 +145,16 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                 Rcpp::Rcout << "We will balance solution by moving some magnitude from Omega to X. \n"  << std::endl;
                 double ratio_x = row_x_norm / mean_radius_X;
                 double ratio_omega = col_omega_norm / mean_radius_Omega;
+                Rcpp::Rcout << " X row" << new_X.row(c) << std::endl;
+                Rcpp::Rcout << " Omega col" << new_Omega.col(c)<< std::endl;
+                Rcpp::Rcout << " ratio X" << ratio_x<< std::endl;
+                Rcpp::Rcout << " ratio Omega" << ratio_omega<< std::endl;
+
                 new_X.row(c) *= ratio_omega/ratio_x;
                 new_Omega.col(c) *= ratio_x/ratio_omega;
+
+                Rcpp::Rcout << "new  X row" << new_X.row(c) << std::endl;
+                Rcpp::Rcout << "new  Omega col" << new_Omega.col(c)<< std::endl;
             }
 
         }
@@ -227,12 +235,18 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
             double col_omega_norm = arma::norm(new_Omega.col(c).subvec(1, cell_types - 1), 2);
             double row_x_norm = arma::norm(new_X.row(c).subvec(1, cell_types - 1), 2);
             if (row_x_norm > solution_balancing_threshold * mean_radius_X) {
-//                Rcpp::Rcout << "Looks like X point are way far away after inverse of Omega. \n"  << std::endl;
-//                Rcpp::Rcout << "We will balance solution by moving some magnitude from X to Omega. \n"  << std::endl;
+                Rcpp::Rcout << "Looks like X point are way far away after inverse of Omega. \n"  << std::endl;
+                Rcpp::Rcout << "We will balance solution by moving some magnitude from X to Omega. \n"  << std::endl;
                 double ratio_x = row_x_norm / mean_radius_X;
                 double ratio_omega = col_omega_norm / mean_radius_Omega;
+                Rcpp::Rcout << " X row" << new_X.row(c) << std::endl;
+                Rcpp::Rcout << " Omega col" << new_Omega.col(c)<< std::endl;
+                Rcpp::Rcout << " ratio X" << ratio_x<< std::endl;
+                Rcpp::Rcout << " ratio Omega" << ratio_omega<< std::endl;
                 new_X.row(c) *= ratio_omega/ratio_x;
                 new_Omega.col(c) *= ratio_x/ratio_omega;
+                Rcpp::Rcout << "new  X row" << new_X.row(c) << std::endl;
+                Rcpp::Rcout << "new  Omega col" << new_Omega.col(c)<< std::endl;
             }
         }
 
