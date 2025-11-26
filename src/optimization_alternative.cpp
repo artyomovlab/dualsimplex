@@ -141,8 +141,8 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
             double col_omega_norm = arma::norm(new_Omega.col(c).subvec(1, cell_types - 1), 2);
             double row_x_norm = arma::norm(new_X.row(c).subvec(1, cell_types - 1), 2);
             if (col_omega_norm > solution_balancing_threshold * mean_radius_Omega) {
-//                Rcpp::Rcout << "Looks like Omega points are way far away after inverse of X. \n"  << std::endl;
-//                Rcpp::Rcout << "We will balance solution by moving some magnitude from Omega to X. \n"  << std::endl;
+               Rcpp::Rcout << "Looks like Omega points are way far away after inverse of X. \n"  << std::endl;
+                Rcpp::Rcout << "We will balance solution by moving some magnitude from Omega to X. \n"  << std::endl;
                 double ratio_x = row_x_norm / mean_radius_X;
                 double ratio_omega = col_omega_norm / mean_radius_Omega;
                 new_X.row(c) *= ratio_omega/ratio_x;
