@@ -3,19 +3,44 @@
 #include "matrix_utils.h"
 #include "nnls.h"
 #include "optimization.h"
+#include <tuple>
+
 
 arma::mat alternative_hinge_der_basis_C__(const arma::mat& W, const arma::mat& S, double precision_) {
     int n = W.n_cols;
-
     arma::mat res(n, n, arma::fill::zeros);
-
     for (int j = 0; j < n; j++) {
         arma::vec t = W.col(j);
         res.col(j) = arma::sum(-S.cols(find(t < -precision_)), 1);
     }
-
     return res;
 }
+
+
+std::tuple<arma::mat, arma::mat, arma::mat> ensure_D_integrity(const arma::mat& X_dtilde,
+                              const arma::mat& Omega_dtilde,
+                              const arma::vec sqrt_Sigma,
+                              const double N,
+                              const double M) {
+    arma::mat new_D_w, new_D_h;
+    arma::mat new_D_w_sqrt;
+    arma::mat new_D_w_x_sqrt, new_D_w_omega_sqrt;
+    arma::mat corrected_X_dtilde, corrected_Omega_dtilde;
+    // Get matrix D estimate from X
+    new_D_w_x_sqrt =  X_dtilde.col(0) * sqrt_Sigma.at(0) * sqrt(N);
+    // Get matrix D estimate from Omega
+    new_D_w_omega_sqrt =  Omega_dtilde.row(0).as_col() * sqrt_Sigma.at(0) * sqrt(M);
+    // Combine estimates into signle matrix
+    new_D_w = new_D_w_x_sqrt % new_D_w_omega_sqrt;
+    new_D_w_sqrt = arma::sqrt(new_D_w);
+
+    // Fix X and omega accordingly
+    corrected_X_dtilde = arma::diagmat(1/new_D_w_x_sqrt)* arma::diagmat(new_D_w_sqrt) * X_dtilde;
+    corrected_Omega_dtilde = Omega_dtilde * arma::diagmat(1/new_D_w_omega_sqrt) * arma::diagmat(new_D_w_sqrt);
+
+    return {corrected_X_dtilde, corrected_Omega_dtilde, new_D_w_sqrt};
+}
+
 
 Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                              const arma::mat& Omega,
@@ -49,21 +74,14 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
     arma::mat final_Omega = Omega;
     arma::mat new_D_w = D_w;
     arma::mat new_D_w_sqrt = arma::sqrt(new_D_w);
-    arma::mat new_D_w_x = D_w;
-    arma::mat new_D_w_x_sqrt = arma::sqrt(new_D_w_x);
-    arma::mat new_D_w_omega = D_w;
-    arma::mat new_D_w_omega_sqrt = arma::sqrt(new_D_w_omega);
     arma::mat new_D_h = new_D_w * (N / M);
 
     arma::vec Sigma = arma::diagvec(SVRt);
     arma::vec sqrt_Sigma = arma::sqrt(Sigma);
 
 
-    new_X =  arma::diagmat(new_D_w_x_sqrt) * new_X * arma::diagmat(1 / sqrt_Sigma);
-    new_Omega =  arma::diagmat(1 / sqrt_Sigma) *  new_Omega * arma::diagmat(new_D_w_omega_sqrt);
-
-
-
+    new_X =  arma::diagmat(new_D_w_sqrt) * new_X * arma::diagmat(1 / sqrt_Sigma);
+    new_Omega =  arma::diagmat(1 / sqrt_Sigma) *  new_Omega * arma::diagmat(new_D_w_sqrt);
     arma::mat jump_X, jump_Omega;
 
     arma::vec vectorised_SVRt = arma::vectorise(SVRt);
@@ -135,11 +153,17 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         }
         // continue conventional optimization
         // at this stage we are sure that first first row/col of X/omega are positive
+        // Correct X and Omega to have corresponding first row/column and get D matrix
+        std::tie(new_X, new_Omega, new_D_w_sqrt) = ensure_D_integrity(new_X, new_Omega, sqrt_Sigma, N, M);
+
 
         // Ensure Omega and X vectors norms are  adequate
+        // Get temporary final X and Omega
+        final_X = arma::diagmat(1/new_D_w_sqrt) * new_X * arma::diagmat(sqrt_Sigma);
+        final_Omega = arma::diagmat(sqrt_Sigma)* new_Omega * arma::diagmat(1/new_D_w_sqrt);
         for (int c=0; c < cell_types; c++) {
-            double col_omega_norm = arma::norm(new_Omega.col(c).subvec(1, cell_types - 1), 2);
-            double row_x_norm = arma::norm(new_X.row(c).subvec(1, cell_types - 1), 2);
+            double col_omega_norm = arma::norm(final_Omega.col(c).subvec(1, cell_types - 1), 2);
+            double row_x_norm = arma::norm(final_X.row(c).subvec(1, cell_types - 1), 2);
             if (col_omega_norm > solution_balancing_threshold * mean_radius_Omega) {
                Rcpp::Rcout << "Looks like Omega points are way far away after inverse of X. \n"  << std::endl;
                 Rcpp::Rcout << "We will balance solution by moving some magnitude from Omega to X. \n"  << std::endl;
@@ -149,33 +173,11 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                 Rcpp::Rcout << " Omega col" << new_Omega.col(c)<< std::endl;
                 Rcpp::Rcout << " ratio X" << ratio_x<< std::endl;
                 Rcpp::Rcout << " ratio Omega" << ratio_omega<< std::endl;
-
                 new_X.row(c) *= ratio_omega/ratio_x;
                 new_Omega.col(c) *= ratio_x/ratio_omega;
-
-                Rcpp::Rcout << "new  X row" << new_X.row(c) << std::endl;
-                Rcpp::Rcout << "new  Omega col" << new_Omega.col(c)<< std::endl;
             }
 
         }
-
-        // Get matrix D
-        new_D_w_x_sqrt =  new_X.col(0) * sqrt_Sigma.at(0) * sqrt(N);
-        new_D_w_x = arma::pow(new_D_w_x_sqrt, 2);
-        new_D_w_omega_sqrt =  new_Omega.row(0).as_col() * sqrt_Sigma.at(0) * sqrt(M);
-        new_D_w_omega = arma::pow(new_D_w_omega_sqrt, 2);
-        new_D_w = new_D_w_x_sqrt % new_D_w_omega_sqrt;
-        new_D_w_sqrt = arma::sqrt(new_D_w);
-
-        // Fix X and omega accordingly
-        new_X = arma::diagmat(1/new_D_w_x_sqrt)* arma::diagmat(new_D_w_sqrt) * new_X;
-        new_Omega = new_Omega * arma::diagmat(1/new_D_w_omega_sqrt) * arma::diagmat(new_D_w_sqrt);
-        new_D_w_x_sqrt = new_D_w_sqrt;
-        new_D_w_omega_sqrt = new_D_w_sqrt;
-
-
-
-
 
         // derivative Omega
 
@@ -187,17 +189,17 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         if (any(tmp_Omega.row(0) <= 0)) {
         //Rcpp::Rcout << "Derrivative caused negative for Omega \n"  << std::endl;
         // start shrinking derivative to be inside the range
-        for (int c=0; c < cell_types; c++) {
-            double matrix_value =  tmp_Omega(0,c);
-            if (matrix_value <= 0) {
-                int shrink_iteration = 0;
-                while(matrix_value <= 0) {
-                    der_Omega.col(c) /=  2;
-                    tmp_Omega = new_Omega - coef_der_Omega * der_Omega;
-                    matrix_value =  tmp_Omega(0,c);
-                    shrink_iteration++;
-                   }
-                }
+            for (int c=0; c < cell_types; c++) {
+                double matrix_value =  tmp_Omega(0,c);
+                if (matrix_value <= 0) {
+                    int shrink_iteration = 0;
+                    while(matrix_value <= 0) {
+                        der_Omega.col(c) /=  2;
+                        tmp_Omega = new_Omega - coef_der_Omega * der_Omega;
+                        matrix_value =  tmp_Omega(0,c);
+                        shrink_iteration++;
+                       }
+                    }
             }
         }
         // Now try estimate X as inverse
@@ -228,53 +230,41 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
             new_Omega = tmp_Omega;
             new_X = tmp_X;
         }
+        // Correct X and Omega to have corresponding first row/column and derrive D
+        std::tie(new_X, new_Omega, new_D_w_sqrt) = ensure_D_integrity(new_X, new_Omega, sqrt_Sigma, N, M);
         // continue conventional optimization
         // at this stage we are sure that first first row/col of X/omega are positive
         // Ensure Omega vectors norm is adequate
+        // Get temporary final X and Omega
+        final_X = arma::diagmat(1/new_D_w_sqrt) * new_X * arma::diagmat(sqrt_Sigma);
+        final_Omega = arma::diagmat(sqrt_Sigma)* new_Omega * arma::diagmat(1/new_D_w_sqrt);
         for (int c=0; c < cell_types; c++) {
-            double col_omega_norm = arma::norm(new_Omega.col(c).subvec(1, cell_types - 1), 2);
-            double row_x_norm = arma::norm(new_X.row(c).subvec(1, cell_types - 1), 2);
+            double col_omega_norm = arma::norm(final_Omega.col(c).subvec(1, cell_types - 1), 2);
+            double row_x_norm = arma::norm(final_X.row(c).subvec(1, cell_types - 1), 2);
             if (row_x_norm > solution_balancing_threshold * mean_radius_X) {
                 Rcpp::Rcout << "Looks like X point are way far away after inverse of Omega. \n"  << std::endl;
                 Rcpp::Rcout << "We will balance solution by moving some magnitude from X to Omega. \n"  << std::endl;
                 double ratio_x = row_x_norm / mean_radius_X;
                 double ratio_omega = col_omega_norm / mean_radius_Omega;
-                Rcpp::Rcout << " X row" << new_X.row(c) << std::endl;
+                Rcpp::Rcout << " X row" << final_X.row(c) << std::endl;
                 Rcpp::Rcout << " Omega col" << new_Omega.col(c)<< std::endl;
                 Rcpp::Rcout << " ratio X" << ratio_x<< std::endl;
                 Rcpp::Rcout << " ratio Omega" << ratio_omega<< std::endl;
                 new_X.row(c) *= ratio_omega/ratio_x;
                 new_Omega.col(c) *= ratio_x/ratio_omega;
-                Rcpp::Rcout << "new  X row" << new_X.row(c) << std::endl;
-                Rcpp::Rcout << "new  Omega col" << new_Omega.col(c)<< std::endl;
             }
         }
-
-       // Rcpp::Rcout << "going to get D_w from first column" << std::endl;
-        new_D_w_omega_sqrt = new_Omega.row(0).as_col() * sqrt_Sigma.at(0) * sqrt(M);
-        new_D_w_omega = arma::pow(new_D_w_omega_sqrt, 2);
-
-
-        new_D_w_x_sqrt =  new_X.col(0) * sqrt_Sigma.at(0) * sqrt(N);
-        new_D_w_x = arma::pow(new_D_w_x_sqrt, 2);
-
-
-        // correct D_w to make it the same matrix
-        new_D_w = new_D_w_x_sqrt % new_D_w_omega_sqrt;
-        new_D_w_sqrt = arma::sqrt(new_D_w);
-        new_X = arma::diagmat(1/new_D_w_x_sqrt)* arma::diagmat(new_D_w_sqrt) * new_X;
-        new_Omega = new_Omega * arma::diagmat(1/new_D_w_omega_sqrt) * arma::diagmat(new_D_w_sqrt);
-        new_D_w_x_sqrt = new_D_w_sqrt;
-        new_D_w_omega_sqrt = new_D_w_sqrt;
-
+        // Correct X and Omega to have corresponding first row/column and derrive D
+        std::tie(new_X, new_Omega, new_D_w_sqrt) = ensure_D_integrity(new_X, new_Omega, sqrt_Sigma, N, M);
+        new_D_w = arma::pow(new_D_w_sqrt, 2);
         new_D_h = new_D_w * (N / M);
 
         double sum_ = accu(new_D_w) / M;
 
         // result X and omega
-        final_X = arma::diagmat(1/new_D_w_x_sqrt) * new_X * arma::diagmat(sqrt_Sigma);
+        final_X = arma::diagmat(1/new_D_w_sqrt) * new_X * arma::diagmat(sqrt_Sigma);
+        final_Omega = arma::diagmat(sqrt_Sigma)* new_Omega * arma::diagmat(1/new_D_w_sqrt);
 
-        final_Omega = arma::diagmat(sqrt_Sigma)* new_Omega * arma::diagmat(1/new_D_w_omega_sqrt);
         arma::uword neg_props = getNegative(final_X * R);
         arma::uword neg_basis = getNegative(S.t() * final_Omega);
 
