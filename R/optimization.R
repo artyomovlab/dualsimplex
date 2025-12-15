@@ -178,6 +178,13 @@ optimize_solution <- function(
   )
   optimization_result <- if (config$method == "positivity") {
     optimization_params$solution_balancing_threshold <- config$solution_balancing_threshold
+    mean_radius_X <-  mean(apply(proj$X[, -1] %*%  sqrt(proj$meta$Sigma, 1, function(x) {
+      norm(x, "2")
+    })))
+
+    mean_radius_Omega <- mean(apply(proj$Omega[, -1] %*%  proj$meta$Sigma, 1, function(x) {
+      norm(x, "2")
+    }))
     do.call(alternative_derivative_stage2, optimization_params)
   } else if (config$method == "basic") {
     do.call(derivative_stage2, optimization_params)

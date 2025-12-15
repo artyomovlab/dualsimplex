@@ -17,7 +17,7 @@ arma::mat alternative_hinge_der_basis_C__(const arma::mat& W, const arma::mat& S
 }
 
 
-std::tuple<arma::mat, arma::mat, arma::mat> ensure_D_integrity(const arma::mat& X_dtilde,
+std::tuple<arma::mat, arma::mat, arma::mat> ensure_D_integrity_c(const arma::mat& X_dtilde,
                               const arma::mat& Omega_dtilde,
                               const arma::vec sqrt_Sigma,
                               const double N,
@@ -30,7 +30,7 @@ std::tuple<arma::mat, arma::mat, arma::mat> ensure_D_integrity(const arma::mat& 
     new_D_w_x_sqrt =  X_dtilde.col(0) * sqrt_Sigma.at(0) * sqrt(N);
     // Get matrix D estimate from Omega
     new_D_w_omega_sqrt =  Omega_dtilde.row(0).as_col() * sqrt_Sigma.at(0) * sqrt(M);
-    // Combine estimates into signle matrix
+    // Combine estimates into single matrix
     new_D_w = new_D_w_x_sqrt % new_D_w_omega_sqrt;
     new_D_w_sqrt = arma::sqrt(new_D_w);
 
@@ -40,6 +40,23 @@ std::tuple<arma::mat, arma::mat, arma::mat> ensure_D_integrity(const arma::mat& 
 
     return {corrected_X_dtilde, corrected_Omega_dtilde, new_D_w_sqrt};
 }
+
+Rcpp::List ensure_D_integrity(const arma::mat& X_dtilde,
+                              const arma::mat& Omega_dtilde,
+                              const arma::vec sqrt_Sigma,
+                              const double N,
+                              const double M) {
+    arma::mat new_X = X_dtilde;
+    arma::mat new_Omega = Omega_dtilde;
+    arma::mat new_D_w_sqrt;
+    std::tie(new_X, new_Omega, new_D_w_sqrt) = ensure_D_integrity_c(new_X, new_Omega, sqrt_Sigma, N, M);
+
+    return Rcpp::List::create(Rcpp::Named("corrected_X_dtilde") = new_X,
+                              Rcpp::Named("corrected_Omega_dtilde") = new_Omega,
+                              Rcpp::Named("new_D_w_sqrt") = new_D_w_sqrt);
+}
+
+
 
 
 Rcpp::List alternative_derivative_stage2(const arma::mat& X,
@@ -154,13 +171,15 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         // continue conventional optimization
         // at this stage we are sure that first first row/col of X/omega are positive
         // Correct X and Omega to have corresponding first row/column and get D matrix
-        std::tie(new_X, new_Omega, new_D_w_sqrt) = ensure_D_integrity(new_X, new_Omega, sqrt_Sigma, N, M);
+        std::tie(new_X, new_Omega, new_D_w_sqrt) = ensure_D_integrity_c(new_X, new_Omega, sqrt_Sigma, N, M);
 
 
         // Ensure Omega and X vectors norms are  adequate
         // Get temporary final X and Omega
         final_X = arma::diagmat(1/new_D_w_sqrt) * new_X * arma::diagmat(sqrt_Sigma);
         final_Omega = arma::diagmat(sqrt_Sigma)* new_Omega * arma::diagmat(1/new_D_w_sqrt);
+
+
         for (int c=0; c < cell_types; c++) {
             double col_omega_norm = arma::norm(final_Omega.col(c).subvec(1, cell_types - 1), 2);
             double row_x_norm = arma::norm(final_X.row(c).subvec(1, cell_types - 1), 2);
@@ -231,7 +250,7 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
             new_X = tmp_X;
         }
         // Correct X and Omega to have corresponding first row/column and derrive D
-        std::tie(new_X, new_Omega, new_D_w_sqrt) = ensure_D_integrity(new_X, new_Omega, sqrt_Sigma, N, M);
+        std::tie(new_X, new_Omega, new_D_w_sqrt) = ensure_D_integrity_c(new_X, new_Omega, sqrt_Sigma, N, M);
         // continue conventional optimization
         // at this stage we are sure that first first row/col of X/omega are positive
         // Ensure Omega vectors norm is adequate
@@ -255,7 +274,7 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
             }
         }
         // Correct X and Omega to have corresponding first row/column and derrive D
-        std::tie(new_X, new_Omega, new_D_w_sqrt) = ensure_D_integrity(new_X, new_Omega, sqrt_Sigma, N, M);
+        std::tie(new_X, new_Omega, new_D_w_sqrt) = ensure_D_integrity_c(new_X, new_Omega, sqrt_Sigma, N, M);
         new_D_w = arma::pow(new_D_w_sqrt, 2);
         new_D_h = new_D_w * (N / M);
 

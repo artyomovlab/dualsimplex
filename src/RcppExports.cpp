@@ -242,6 +242,21 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// ensure_D_integrity
+Rcpp::List ensure_D_integrity(const arma::mat& X_dtilde, const arma::mat& Omega_dtilde, const arma::vec sqrt_Sigma, const double N, const double M);
+RcppExport SEXP _DualSimplex_ensure_D_integrity(SEXP X_dtildeSEXP, SEXP Omega_dtildeSEXP, SEXP sqrt_SigmaSEXP, SEXP NSEXP, SEXP MSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type X_dtilde(X_dtildeSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type Omega_dtilde(Omega_dtildeSEXP);
+    Rcpp::traits::input_parameter< const arma::vec >::type sqrt_Sigma(sqrt_SigmaSEXP);
+    Rcpp::traits::input_parameter< const double >::type N(NSEXP);
+    Rcpp::traits::input_parameter< const double >::type M(MSEXP);
+    rcpp_result_gen = Rcpp::wrap(ensure_D_integrity(X_dtilde, Omega_dtilde, sqrt_Sigma, N, M));
+    return rcpp_result_gen;
+END_RCPP
+}
 // alternative_derivative_stage2
 Rcpp::List alternative_derivative_stage2(const arma::mat& X, const arma::mat& Omega, const arma::mat& D_w, const arma::mat& SVRt, const arma::mat& R, const arma::mat& S, const double coef_der_X, const double coef_der_Omega, const double coef_hinge_H, const double coef_hinge_W, const double coef_pos_D_h, const double coef_pos_D_w, const int cell_types, const double N, const double M, const int iterations, const double mean_radius_X, const double mean_radius_Omega, const double r_const_X, const double r_const_Omega, const double thresh, const double solution_balancing_threshold);
 RcppExport SEXP _DualSimplex_alternative_derivative_stage2(SEXP XSEXP, SEXP OmegaSEXP, SEXP D_wSEXP, SEXP SVRtSEXP, SEXP RSEXP, SEXP SSEXP, SEXP coef_der_XSEXP, SEXP coef_der_OmegaSEXP, SEXP coef_hinge_HSEXP, SEXP coef_hinge_WSEXP, SEXP coef_pos_D_hSEXP, SEXP coef_pos_D_wSEXP, SEXP cell_typesSEXP, SEXP NSEXP, SEXP MSEXP, SEXP iterationsSEXP, SEXP mean_radius_XSEXP, SEXP mean_radius_OmegaSEXP, SEXP r_const_XSEXP, SEXP r_const_OmegaSEXP, SEXP threshSEXP, SEXP solution_balancing_thresholdSEXP) {
@@ -396,6 +411,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_DualSimplex_hinge_C__", (DL_FUNC) &_DualSimplex_hinge_C__, 1},
     {"_DualSimplex_calcErrors", (DL_FUNC) &_DualSimplex_calcErrors, 14},
     {"_DualSimplex_derivative_stage2", (DL_FUNC) &_DualSimplex_derivative_stage2, 21},
+    {"_DualSimplex_ensure_D_integrity", (DL_FUNC) &_DualSimplex_ensure_D_integrity, 5},
     {"_DualSimplex_alternative_derivative_stage2", (DL_FUNC) &_DualSimplex_alternative_derivative_stage2, 22},
     {"_DualSimplex_theta_derivative_stage2", (DL_FUNC) &_DualSimplex_theta_derivative_stage2, 24},
     {"_DualSimplex_reverse_sinkhorn_c", (DL_FUNC) &_DualSimplex_reverse_sinkhorn_c, 5},

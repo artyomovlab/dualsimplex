@@ -193,6 +193,20 @@ derivative_stage2 <- function(X, Omega, D_w, SVRt, R, S, coef_der_X, coef_der_Om
     .Call('_DualSimplex_derivative_stage2', PACKAGE = 'DualSimplex', X, Omega, D_w, SVRt, R, S, coef_der_X, coef_der_Omega, coef_hinge_H, coef_hinge_W, coef_pos_D_h, coef_pos_D_w, cell_types, N, M, iterations, mean_radius_X, mean_radius_Omega, r_const_X, r_const_Omega, thresh)
 }
 
+#' Transform X and Omega points enforcing the desired equality for first coordinates
+#' This is done by moving magnitude from  i-th point of X to respective i-th point of the Omega and vice versa.
+#'
+#' @param X_dtilde current X_tilde_tilde matrix
+#' @param Omega_dtilde current Omega_tilde_tilde matrix
+#' @param sqrt_Sigma current sqrt of Omega
+#' @param N current sqrt of Omega
+#' @param M current sqrt of Omega
+#' @return corrected params
+#' @export
+ensure_D_integrity <- function(X_dtilde, Omega_dtilde, sqrt_Sigma, N, M) {
+    .Call('_DualSimplex_ensure_D_integrity', PACKAGE = 'DualSimplex', X_dtilde, Omega_dtilde, sqrt_Sigma, N, M)
+}
+
 #' Main function to calculate error terms
 #'
 #' @param X current X
