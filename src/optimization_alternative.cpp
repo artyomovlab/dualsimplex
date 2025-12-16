@@ -35,9 +35,14 @@ std::tuple<arma::mat, arma::mat, arma::mat> ensure_D_integrity_c(
     new_D_w = new_D_w_x_sqrt % new_D_w_omega_sqrt;
     new_D_w_sqrt = arma::sqrt(new_D_w);
 
+
+
     // Fix X and omega accordingly
-    corrected_X_dtilde = arma::diagmat(1/new_D_w_x_sqrt)* arma::diagmat(new_D_w_sqrt) * X_dtilde;
-    corrected_Omega_dtilde = Omega_dtilde * arma::diagmat(1/new_D_w_omega_sqrt) * arma::diagmat(new_D_w_sqrt);
+    corrected_X_dtilde = X_dtilde;
+    corrected_Omega_dtilde = Omega_dtilde;
+    corrected_X_dtilde.col(0) %= 1/new_D_w_x_sqrt % new_D_w_sqrt;
+    corrected_Omega_dtilde.row(0) %= 1/new_D_w_omega_sqrt % new_D_w_sqrt;
+
 
     return {corrected_X_dtilde, corrected_Omega_dtilde, new_D_w_sqrt};
 }
@@ -184,7 +189,7 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
        Rcpp::Rcout << new_X << std::endl;
        Rcpp::Rcout << " Before correction Omega"  << std::endl;
        Rcpp::Rcout << new_Omega << std::endl;
-        std::tie(new_X, new_Omega, new_D_w_sqrt) = ensure_D_integrity_c(new_X, new_Omega, sqrt_Sigma, N, M);
+       std::tie(new_X, new_Omega, new_D_w_sqrt) = ensure_D_integrity_c(new_X, new_Omega, sqrt_Sigma, N, M);
        Rcpp::Rcout << " After correction X"  << std::endl;
        Rcpp::Rcout << new_X << std::endl;
        Rcpp::Rcout << " After correction Omega"  << std::endl;
