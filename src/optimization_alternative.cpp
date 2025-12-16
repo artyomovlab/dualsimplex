@@ -117,6 +117,8 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         //der_X +=  coef_hinge_H * hinge_der_proportions_C__(new_X  * R, R);
 
         der_X =  coef_hinge_H * hinge_der_proportions_C__(new_X  * arma::diagmat(sqrt_Sigma)  * R, R) * arma::diagmat(1 / sqrt_Sigma);
+        Rcpp::Rcout << "original der X"  << std::endl;
+        Rcpp::Rcout << der_X << std::endl;
         der_X = correctByNorm(der_X);
         Rcpp::Rcout << " der X"  << std::endl;
         Rcpp::Rcout << der_X << std::endl;
