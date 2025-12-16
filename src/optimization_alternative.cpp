@@ -41,7 +41,7 @@ std::tuple<arma::mat, arma::mat, arma::mat> ensure_D_integrity_c(
     corrected_X_dtilde = X_dtilde;
     corrected_Omega_dtilde = Omega_dtilde;
     corrected_X_dtilde.col(0) %= 1/new_D_w_x_sqrt % new_D_w_sqrt;
-    corrected_Omega_dtilde.row(0) %= 1/new_D_w_omega_sqrt % new_D_w_sqrt;
+    corrected_Omega_dtilde.row(0) %= 1/new_D_w_omega_sqrt.as_row()  % new_D_w_sqrt.as_row();
 
 
     return {corrected_X_dtilde, corrected_Omega_dtilde, new_D_w_sqrt};
