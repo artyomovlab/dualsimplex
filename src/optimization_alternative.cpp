@@ -17,7 +17,8 @@ arma::mat alternative_hinge_der_basis_C__(const arma::mat& W, const arma::mat& S
 }
 
 
-std::tuple<arma::mat, arma::mat, arma::mat> ensure_D_integrity_c(const arma::mat& X_dtilde,
+std::tuple<arma::mat, arma::mat, arma::mat> ensure_D_integrity_c(
+                              const arma::mat& X_dtilde,
                               const arma::mat& Omega_dtilde,
                               const arma::vec sqrt_Sigma,
                               const double N,
@@ -191,12 +192,12 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
 
         // Ensure Omega and X vectors norms are  adequate
         // Get temporary final X and Omega
-        final_X = arma::diagmat(1/new_D_w_sqrt) * new_X * arma::diagmat(sqrt_Sigma);
-        final_Omega = arma::diagmat(sqrt_Sigma)* new_Omega * arma::diagmat(1/new_D_w_sqrt);
+       final_X = arma::diagmat(1/new_D_w_sqrt) * new_X * arma::diagmat(sqrt_Sigma);
+       final_Omega = arma::diagmat(sqrt_Sigma)* new_Omega * arma::diagmat(1/new_D_w_sqrt);
 
        Rcpp::Rcout << " Final  X for X update"  << std::endl;
        Rcpp::Rcout << final_X << std::endl;
-       Rcpp::Rcout << " Final  Omega for Omega update"  << std::endl;
+       Rcpp::Rcout << " Final  Omega for X update"  << std::endl;
        Rcpp::Rcout << final_Omega << std::endl;
 
         for (int c=0; c < cell_types; c++) {
@@ -207,8 +208,8 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                 Rcpp::Rcout << "We will balance solution by moving some magnitude from Omega to X. \n"  << std::endl;
                 double ratio_x = row_x_norm / mean_radius_X;
                 double ratio_omega = col_omega_norm / mean_radius_Omega;
-                Rcpp::Rcout << " X row" << new_X.row(c) << std::endl;
-                Rcpp::Rcout << " Omega col" << new_Omega.col(c)<< std::endl;
+                Rcpp::Rcout << " X row" << final_X.row(c) << std::endl;
+                Rcpp::Rcout << " Omega col" << final_Omega.col(c)<< std::endl;
                 Rcpp::Rcout << " ratio X" << ratio_x<< std::endl;
                 Rcpp::Rcout << " ratio Omega" << ratio_omega<< std::endl;
                 new_X.row(c) *= sqrt(ratio_omega)/sqrt(ratio_x);
@@ -223,6 +224,15 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
        Rcpp::Rcout << " After norm correction X"  << std::endl;
        Rcpp::Rcout << new_X << std::endl;
        Rcpp::Rcout << " After norm correction Omega"  << std::endl;
+       Rcpp::Rcout << new_Omega << std::endl;
+
+
+       // Correct X and Omega to have corresponding first row/column and derrive D
+       std::tie(new_X, new_Omega, new_D_w_sqrt) = ensure_D_integrity_c(new_X, new_Omega, sqrt_Sigma, N, M);
+
+       Rcpp::Rcout << " After final correction X"  << std::endl;
+       Rcpp::Rcout << new_X << std::endl;
+       Rcpp::Rcout << " After final correction Omega"  << std::endl;
        Rcpp::Rcout << new_Omega << std::endl;
 
         // derivative Omega
