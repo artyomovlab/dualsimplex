@@ -98,7 +98,7 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
 
 
     new_X =  arma::diagmat(new_D_w_sqrt) * new_X * arma::diagmat(1 / sqrt_Sigma);
-    new_Omega =  arma::diagmat(1 / sqrt_Sigma) *  new_Omega * arma::diagmat(new_D_w_sqrt);
+    new_Omega =  arma::diagmat(1 / sqrt_Sigma) *  new_Omega  * arma::diagmat(new_D_w_sqrt);
     arma::mat jump_X, jump_Omega;
 
     arma::vec vectorised_SVRt = arma::vectorise(SVRt);
@@ -117,14 +117,13 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         //der_X +=  coef_hinge_H * hinge_der_proportions_C__(new_X  * R, R);
 
         der_X =  coef_hinge_H * hinge_der_proportions_C__(new_X  * arma::diagmat(sqrt_Sigma)  * R, R) * arma::diagmat(1 / sqrt_Sigma);
+        der_X = correctByNorm(der_X);
 
-        der_X = correctByNorm(der_X) * mean_radius_X;
 
+        tmp_X = (new_X - coef_der_X * der_X); // estimate new X given derivative
 
-       tmp_X = (new_X - coef_der_X * der_X); // estimate new X given derivative
-
-       if (any( tmp_X.col(0) <= 0)) {
-//           Rcpp::Rcout << "Derrivative caused negative for X \n"  << std::endl;
+        if (any( tmp_X.col(0) <= 0)) {
+//          Rcpp::Rcout << "Derrivative caused negative for X \n"  << std::endl;
             for (int c=0; c < cell_types; c++) {
                 double matrix_value =  tmp_X(c,0);
                  if (matrix_value <= 0) {
@@ -139,7 +138,7 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
             }
            //Rcpp::Rcout << "X shrink iterations performed for component " << c << " is: " << shrink_iteration << "\n";
         }
-        // Now estimate omega
+       // Now estimate omega
        tmp_Omega = arma::pinv(tmp_X);
         if (any( tmp_Omega.row(0) <= 0)) {
 //            Rcpp::Rcout << "Inverse of X caused negative for Omega \n"  << std::endl;
@@ -179,7 +178,6 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         final_X = arma::diagmat(1/new_D_w_sqrt) * new_X * arma::diagmat(sqrt_Sigma);
         final_Omega = arma::diagmat(sqrt_Sigma)* new_Omega * arma::diagmat(1/new_D_w_sqrt);
 
-
         for (int c=0; c < cell_types; c++) {
             double col_omega_norm = arma::norm(final_Omega.col(c).subvec(1, cell_types - 1), 2);
             double row_x_norm = arma::norm(final_X.row(c).subvec(1, cell_types - 1), 2);
@@ -192,8 +190,8 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                 Rcpp::Rcout << " Omega col" << new_Omega.col(c)<< std::endl;
                 Rcpp::Rcout << " ratio X" << ratio_x<< std::endl;
                 Rcpp::Rcout << " ratio Omega" << ratio_omega<< std::endl;
-                new_X.row(c) *= ratio_omega/ratio_x;
-                new_Omega.col(c) *= ratio_x/ratio_omega;
+                new_X.row(c) *= sqrt(ratio_omega)/sqrt(ratio_x);
+                new_Omega.col(c) *= sqrt(ratio_x)/sqrt(ratio_omega);
             }
 
         }
@@ -201,7 +199,7 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         // derivative Omega
 
         der_Omega = coef_hinge_W * arma::diagmat(1 / sqrt_Sigma) * alternative_hinge_der_basis_C__(S.t() * arma::diagmat(sqrt_Sigma) * new_Omega, S);
-        der_Omega = correctByNorm(der_Omega) * mean_radius_Omega;
+        der_Omega = correctByNorm(der_Omega);
 
         tmp_Omega = new_Omega - coef_der_Omega * der_Omega;
 
@@ -269,8 +267,8 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                 Rcpp::Rcout << " Omega col" << new_Omega.col(c)<< std::endl;
                 Rcpp::Rcout << " ratio X" << ratio_x<< std::endl;
                 Rcpp::Rcout << " ratio Omega" << ratio_omega<< std::endl;
-                new_X.row(c) *= ratio_omega/ratio_x;
-                new_Omega.col(c) *= ratio_x/ratio_omega;
+                new_X.row(c) *= sqrt(ratio_omega)/sqrt(ratio_x);
+                new_Omega.col(c) *= sqrt(ratio_x)/sqrt(ratio_omega);
             }
         }
         // Correct X and Omega to have corresponding first row/column and derrive D
