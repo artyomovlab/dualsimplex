@@ -118,9 +118,14 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
 
         der_X =  coef_hinge_H * hinge_der_proportions_C__(new_X  * arma::diagmat(sqrt_Sigma)  * R, R) * arma::diagmat(1 / sqrt_Sigma);
         der_X = correctByNorm(der_X);
+        Rcpp::Rcout << " der X"  << std::endl;
+        Rcpp::Rcout << der_X << std::endl;
+
 
 
         tmp_X = (new_X - coef_der_X * der_X); // estimate new X given derivative
+        Rcpp::Rcout << " X candidate"  << std::endl;
+        Rcpp::Rcout << tmp_X << std::endl;
 
         if (any( tmp_X.col(0) <= 0)) {
 //          Rcpp::Rcout << "Derrivative caused negative for X \n"  << std::endl;
@@ -140,6 +145,8 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         }
        // Now estimate omega
        tmp_Omega = arma::pinv(tmp_X);
+       Rcpp::Rcout << " Omega candidate"  << std::endl;
+       Rcpp::Rcout << tmp_Omega << std::endl;
         if (any( tmp_Omega.row(0) <= 0)) {
 //            Rcpp::Rcout << "Inverse of X caused negative for Omega \n"  << std::endl;
             for (int c=0; c < cell_types; c++) {
@@ -170,13 +177,25 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         // continue conventional optimization
         // at this stage we are sure that first first row/col of X/omega are positive
         // Correct X and Omega to have corresponding first row/column and get D matrix
+       Rcpp::Rcout << " Before correction X"  << std::endl;
+       Rcpp::Rcout << new_X << std::endl;
+       Rcpp::Rcout << " Before correction Omega"  << std::endl;
+       Rcpp::Rcout << new_Omega << std::endl;
         std::tie(new_X, new_Omega, new_D_w_sqrt) = ensure_D_integrity_c(new_X, new_Omega, sqrt_Sigma, N, M);
-
+       Rcpp::Rcout << " After correction X"  << std::endl;
+       Rcpp::Rcout << new_X << std::endl;
+       Rcpp::Rcout << " After correction Omega"  << std::endl;
+       Rcpp::Rcout << new_Omega << std::endl;
 
         // Ensure Omega and X vectors norms are  adequate
         // Get temporary final X and Omega
         final_X = arma::diagmat(1/new_D_w_sqrt) * new_X * arma::diagmat(sqrt_Sigma);
         final_Omega = arma::diagmat(sqrt_Sigma)* new_Omega * arma::diagmat(1/new_D_w_sqrt);
+
+       Rcpp::Rcout << " Final  X for X update"  << std::endl;
+       Rcpp::Rcout << final_X << std::endl;
+       Rcpp::Rcout << " Final  Omega for Omega update"  << std::endl;
+       Rcpp::Rcout << final_Omega << std::endl;
 
         for (int c=0; c < cell_types; c++) {
             double col_omega_norm = arma::norm(final_Omega.col(c).subvec(1, cell_types - 1), 2);
@@ -192,9 +211,17 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                 Rcpp::Rcout << " ratio Omega" << ratio_omega<< std::endl;
                 new_X.row(c) *= sqrt(ratio_omega)/sqrt(ratio_x);
                 new_Omega.col(c) *= sqrt(ratio_x)/sqrt(ratio_omega);
+                Rcpp::Rcout << " X multiplied by" << sqrt(ratio_omega)/sqrt(ratio_x)<< std::endl;
+                Rcpp::Rcout << " Omega multiplied by" << sqrt(ratio_x)/sqrt(ratio_omega)<< std::endl;
+                Rcpp::Rcout << " X row" << new_X.row(c) << std::endl;
+                Rcpp::Rcout << " Omega col" << new_Omega.col(c)<< std::endl;
             }
-
         }
+
+       Rcpp::Rcout << " After norm correction X"  << std::endl;
+       Rcpp::Rcout << new_X << std::endl;
+       Rcpp::Rcout << " After norm correction Omega"  << std::endl;
+       Rcpp::Rcout << new_Omega << std::endl;
 
         // derivative Omega
 
@@ -202,6 +229,8 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         der_Omega = correctByNorm(der_Omega);
 
         tmp_Omega = new_Omega - coef_der_Omega * der_Omega;
+        Rcpp::Rcout << " Omega candidate"  << std::endl;
+        Rcpp::Rcout << tmp_Omega << std::endl;
 
         if (any(tmp_Omega.row(0) <= 0)) {
         //Rcpp::Rcout << "Derrivative caused negative for Omega \n"  << std::endl;
