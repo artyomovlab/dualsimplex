@@ -110,8 +110,9 @@ Rcpp::List calcErrors(const arma::mat& X,
     arma::mat B = arma::sum(S, 1);
     double D_h_error = coef_pos_D_h * pow(norm(X.t() * D_h - A, "fro"), 2);
     double D_w_error = coef_pos_D_w * pow(norm(Omega * D_w - B, "fro"), 2);
-    double new_error = deconv_error + lambda_error + beta_error + D_h_error + D_w_error;
 
+
+    double new_error = deconv_error + lambda_error + beta_error + D_h_error + D_w_error;
     return Rcpp::List::create(Rcpp::Named("deconv_error") = deconv_error,
                               Rcpp::Named("lambda_error") = lambda_error,
                               Rcpp::Named("beta_error") = beta_error,

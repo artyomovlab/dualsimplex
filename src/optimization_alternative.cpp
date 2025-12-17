@@ -118,8 +118,8 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         // derivative X
         //der_X = -2 * (new_Omega.t() * (SVRt - new_Omega * new_X));
         //der_X +=  coef_hinge_H * hinge_der_proportions_C__(new_X  * R, R);
-
-        der_X =  coef_hinge_H * hinge_der_proportions_C__(new_X  * arma::diagmat(sqrt_Sigma)  * R, R) * arma::diagmat(1 / sqrt_Sigma);
+        der_X = -2 * new_X
+        der_X +=  coef_hinge_H * hinge_der_proportions_C__(new_X  * arma::diagmat(sqrt_Sigma)  * R, R) * arma::diagmat(1 / sqrt_Sigma);
 //        Rcpp::Rcout << "original der X"  << std::endl;
 //        Rcpp::Rcout << der_X << std::endl;
         der_X = correctByNorm(der_X);
@@ -130,7 +130,7 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
 
         tmp_X = (new_X - coef_der_X * der_X); // estimate new X given derivative
 //        Rcpp::Rcout << " X candidate"  << std::endl;
-        Rcpp::Rcout << tmp_X << std::endl;
+//        Rcpp::Rcout << tmp_X << std::endl;
 
         if (any( tmp_X.col(0) <= 0)) {
 //          Rcpp::Rcout << "Derrivative caused negative for X \n"  << std::endl;
@@ -206,38 +206,38 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
 //       Rcpp::Rcout << " Final  Omega for X update"  << std::endl;
 //       Rcpp::Rcout << final_Omega << std::endl;
 
-        for (int c=0; c < cell_types; c++) {
-            double col_omega_norm = arma::norm(final_Omega.col(c).subvec(1, cell_types - 1), 2);
-            double row_x_norm = arma::norm(final_X.row(c).subvec(1, cell_types - 1), 2);
-            if (col_omega_norm > solution_balancing_threshold * mean_radius_Omega) {
-                Rcpp::Rcout << "Looks like Omega points are way far away after inverse of X. \n"  << std::endl;
-                Rcpp::Rcout << "We will balance solution by moving some magnitude from Omega to X. \n"  << std::endl;
-                double ratio_x = row_x_norm / mean_radius_X;
-                double ratio_omega = col_omega_norm / mean_radius_Omega;
-                // stretch the space for all elements
-                double multiplier_x = sqrt(ratio_omega)/sqrt(ratio_x);
-                double multiplier_omega =  sqrt(ratio_x)/sqrt(ratio_omega);
-
-                for (int column=1; column < cell_types; column++) {
-                    std::tie(temporary_new_X, temporary_new_Omega, temporary_new_D_w_sqrt) = ensure_D_integrity_c(new_X, new_Omega, sqrt_Sigma, N, M);
-                    final_X = arma::diagmat(1/new_D_w_sqrt) * new_X * arma::diagmat(sqrt_Sigma);
-                    final_Omega = arma::diagmat(sqrt_Sigma)* new_Omega * arma::diagmat(1/new_D_w_sqrt);
-                    if (final_Omega.row(column).max()/mean_radius_Omega > solution_balancing_threshold * mean_radius_Omega) {
-                        Rcpp::Rcout << "row " << column << " balanced " << std::endl;
-                        new_X.col(column) *= multiplier_x;
-                        new_Omega.row(column) *= multiplier_omega;
-                    }
-                }
-//                Rcpp::Rcout << " X row" << final_X.row(c) << std::endl;
-//                Rcpp::Rcout << " Omega col" << final_Omega.col(c)<< std::endl;
-//                Rcpp::Rcout << " ratio X" << ratio_x<< std::endl;
-//                Rcpp::Rcout << " ratio Omega" << ratio_omega<< std::endl;
-//                Rcpp::Rcout << " X multiplied by" << sqrt(ratio_omega)/sqrt(ratio_x)<< std::endl;
-//                Rcpp::Rcout << " Omega multiplied by" << sqrt(ratio_x)/sqrt(ratio_omega)<< std::endl;
-//                Rcpp::Rcout << " X row" << new_X.row(c) << std::endl;
-//                Rcpp::Rcout << " Omega col" << new_Omega.col(c)<< std::endl;
-            }
-        }
+//        for (int c=0; c < cell_types; c++) {
+//            double col_omega_norm = arma::norm(final_Omega.col(c).subvec(1, cell_types - 1), 2);
+//            double row_x_norm = arma::norm(final_X.row(c).subvec(1, cell_types - 1), 2);
+//            if (col_omega_norm > solution_balancing_threshold * mean_radius_Omega) {
+//                Rcpp::Rcout << "Looks like Omega points are way far away after inverse of X. \n"  << std::endl;
+//                Rcpp::Rcout << "We will balance solution by moving some magnitude from Omega to X. \n"  << std::endl;
+//                double ratio_x = row_x_norm / mean_radius_X;
+//                double ratio_omega = col_omega_norm / mean_radius_Omega;
+//                // stretch the space for all elements
+//                double multiplier_x = sqrt(ratio_omega)/sqrt(ratio_x);
+//                double multiplier_omega =  sqrt(ratio_x)/sqrt(ratio_omega);
+//
+//                for (int column=1; column < cell_types; column++) {
+//                    std::tie(temporary_new_X, temporary_new_Omega, temporary_new_D_w_sqrt) = ensure_D_integrity_c(new_X, new_Omega, sqrt_Sigma, N, M);
+//                    final_X = arma::diagmat(1/new_D_w_sqrt) * new_X * arma::diagmat(sqrt_Sigma);
+//                    final_Omega = arma::diagmat(sqrt_Sigma)* new_Omega * arma::diagmat(1/new_D_w_sqrt);
+//                    if (final_Omega.row(column).max()/mean_radius_Omega > solution_balancing_threshold * mean_radius_Omega) {
+//                        Rcpp::Rcout << "row " << column << " balanced " << std::endl;
+//                        new_X.col(column) *= multiplier_x;
+//                        new_Omega.row(column) *= multiplier_omega;
+//                    }
+//                }
+////                Rcpp::Rcout << " X row" << final_X.row(c) << std::endl;
+////                Rcpp::Rcout << " Omega col" << final_Omega.col(c)<< std::endl;
+////                Rcpp::Rcout << " ratio X" << ratio_x<< std::endl;
+////                Rcpp::Rcout << " ratio Omega" << ratio_omega<< std::endl;
+////                Rcpp::Rcout << " X multiplied by" << sqrt(ratio_omega)/sqrt(ratio_x)<< std::endl;
+////                Rcpp::Rcout << " Omega multiplied by" << sqrt(ratio_x)/sqrt(ratio_omega)<< std::endl;
+////                Rcpp::Rcout << " X row" << new_X.row(c) << std::endl;
+////                Rcpp::Rcout << " Omega col" << new_Omega.col(c)<< std::endl;
+//            }
+//        }
        // Correct X and Omega to have corresponding first row/column and derrive D
        std::tie(new_X, new_Omega, new_D_w_sqrt) = ensure_D_integrity_c(new_X, new_Omega, sqrt_Sigma, N, M);
 
@@ -247,8 +247,8 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
 //       Rcpp::Rcout << new_Omega << std::endl;
 
         // derivative Omega
-
-        der_Omega = coef_hinge_W * arma::diagmat(1 / sqrt_Sigma) * alternative_hinge_der_basis_C__(S.t() * arma::diagmat(sqrt_Sigma) * new_Omega, S);
+        der_Omega = -2 * new_Omega
+        der_Omega += coef_hinge_W * arma::diagmat(1 / sqrt_Sigma) * alternative_hinge_der_basis_C__(S.t() * arma::diagmat(sqrt_Sigma) * new_Omega, S);
         der_Omega = correctByNorm(der_Omega);
 
         tmp_Omega = new_Omega - coef_der_Omega * der_Omega;
@@ -311,34 +311,34 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         // Get temporary final X and Omega
         final_X = arma::diagmat(1/new_D_w_sqrt) * new_X * arma::diagmat(sqrt_Sigma);
         final_Omega = arma::diagmat(sqrt_Sigma)* new_Omega * arma::diagmat(1/new_D_w_sqrt);
-        for (int c=0; c < cell_types; c++) {
-            double col_omega_norm = arma::norm(final_Omega.col(c).subvec(1, cell_types - 1), 2);
-            double row_x_norm = arma::norm(final_X.row(c).subvec(1, cell_types - 1), 2);
-            if (row_x_norm > solution_balancing_threshold * mean_radius_X) {
-                Rcpp::Rcout << "Looks like X point are way far away after inverse of Omega. \n"  << std::endl;
-                Rcpp::Rcout << "We will balance solution by moving some magnitude from X to Omega. \n"  << std::endl;
-                double ratio_x = row_x_norm / mean_radius_X;
-                double ratio_omega = col_omega_norm / mean_radius_Omega;
-                double multiplier_x = sqrt(ratio_omega)/sqrt(ratio_x);
-                double multiplier_omega =  sqrt(ratio_x)/sqrt(ratio_omega);
-
-//                Rcpp::Rcout << " X row" << final_X.row(c) << std::endl;
-//                Rcpp::Rcout << " Omega col" << new_Omega.col(c)<< std::endl;
-//                Rcpp::Rcout << " ratio X" << ratio_x<< std::endl;
-//                Rcpp::Rcout << " ratio Omega" << ratio_omega<< std::endl;
-                for (int column=1; column < cell_types; column++) {
-                    std::tie(temporary_new_X, temporary_new_Omega, temporary_new_D_w_sqrt) = ensure_D_integrity_c(new_X, new_Omega, sqrt_Sigma, N, M);
-                    final_X = arma::diagmat(1/new_D_w_sqrt) * new_X * arma::diagmat(sqrt_Sigma);
-                    final_Omega = arma::diagmat(sqrt_Sigma)* new_Omega * arma::diagmat(1/new_D_w_sqrt);
-                    if (final_X.col(column).max()/mean_radius_X > solution_balancing_threshold * mean_radius_X) {
-                        Rcpp::Rcout << "row " << column << " balanced " << std::endl;
-                        new_X.col(column) *= multiplier_x;
-                        new_Omega.row(column) *= multiplier_omega;
-                    }
-
-                }
-            }
-        }
+//        for (int c=0; c < cell_types; c++) {
+//            double col_omega_norm = arma::norm(final_Omega.col(c).subvec(1, cell_types - 1), 2);
+//            double row_x_norm = arma::norm(final_X.row(c).subvec(1, cell_types - 1), 2);
+//            if (row_x_norm > solution_balancing_threshold * mean_radius_X) {
+//                Rcpp::Rcout << "Looks like X point are way far away after inverse of Omega. \n"  << std::endl;
+//                Rcpp::Rcout << "We will balance solution by moving some magnitude from X to Omega. \n"  << std::endl;
+//                double ratio_x = row_x_norm / mean_radius_X;
+//                double ratio_omega = col_omega_norm / mean_radius_Omega;
+//                double multiplier_x = sqrt(ratio_omega)/sqrt(ratio_x);
+//                double multiplier_omega =  sqrt(ratio_x)/sqrt(ratio_omega);
+//
+////                Rcpp::Rcout << " X row" << final_X.row(c) << std::endl;
+////                Rcpp::Rcout << " Omega col" << new_Omega.col(c)<< std::endl;
+////                Rcpp::Rcout << " ratio X" << ratio_x<< std::endl;
+////                Rcpp::Rcout << " ratio Omega" << ratio_omega<< std::endl;
+//                for (int column=1; column < cell_types; column++) {
+//                    std::tie(temporary_new_X, temporary_new_Omega, temporary_new_D_w_sqrt) = ensure_D_integrity_c(new_X, new_Omega, sqrt_Sigma, N, M);
+//                    final_X = arma::diagmat(1/new_D_w_sqrt) * new_X * arma::diagmat(sqrt_Sigma);
+//                    final_Omega = arma::diagmat(sqrt_Sigma)* new_Omega * arma::diagmat(1/new_D_w_sqrt);
+//                    if (final_X.col(column).max()/mean_radius_X > solution_balancing_threshold * mean_radius_X) {
+//                        Rcpp::Rcout << "row " << column << " balanced " << std::endl;
+//                        new_X.col(column) *= multiplier_x;
+//                        new_Omega.row(column) *= multiplier_omega;
+//                    }
+//
+//                }
+//            }
+//        }
         // Correct X and Omega to have corresponding first row/column and derrive D
         std::tie(new_X, new_Omega, new_D_w_sqrt) = ensure_D_integrity_c(new_X, new_Omega, sqrt_Sigma, N, M);
         new_D_w = arma::pow(new_D_w_sqrt, 2);
