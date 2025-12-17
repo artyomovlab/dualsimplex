@@ -245,8 +245,8 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         der_Omega = correctByNorm(der_Omega);
 
         tmp_Omega = new_Omega - coef_der_Omega * der_Omega;
-        Rcpp::Rcout << " Omega candidate"  << std::endl;
-        Rcpp::Rcout << tmp_Omega << std::endl;
+//        Rcpp::Rcout << " Omega candidate"  << std::endl;
+//        Rcpp::Rcout << tmp_Omega << std::endl;
 
         if (any(tmp_Omega.row(0) <= 0)) {
         //Rcpp::Rcout << "Derrivative caused negative for Omega \n"  << std::endl;
