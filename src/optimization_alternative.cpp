@@ -151,7 +151,7 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
        // Now estimate omega
        tmp_Omega = arma::pinv(tmp_X);
 //       Rcpp::Rcout << " Omega candidate"  << std::endl;
-       Rcpp::Rcout << tmp_Omega << std::endl;
+//       Rcpp::Rcout << tmp_Omega << std::endl;
         if (any( tmp_Omega.row(0) <= 0)) {
 //            Rcpp::Rcout << "Inverse of X caused negative for Omega \n"  << std::endl;
             for (int c=0; c < cell_types; c++) {
@@ -215,10 +215,9 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                 double multiplier_omega =  sqrt(ratio_x)/sqrt(ratio_omega);
 
                 for (int column=1; column < cell_types; column++) {
-                    if (new_Omega.row(column).max()/mean_radius_Omega > solution_balancing_threshold * mean_radius_Omega) {
                         new_X.col(column) *= multiplier_x;
                         new_Omega.row(column) *= multiplier_omega;
-                    }
+
 
                 }
 //                Rcpp::Rcout << " X row" << final_X.row(c) << std::endl;
@@ -320,10 +319,9 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
 //                Rcpp::Rcout << " ratio X" << ratio_x<< std::endl;
 //                Rcpp::Rcout << " ratio Omega" << ratio_omega<< std::endl;
                 for (int column=1; column < cell_types; column++) {
-                    if (new_X.col(column).max()/mean_radius_X > solution_balancing_threshold * mean_radius_X) {
                         new_X.col(column) *= multiplier_x;
                         new_Omega.row(column) *= multiplier_omega;
-                    }
+
 
                 }
             }
