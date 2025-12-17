@@ -34,15 +34,8 @@ std::tuple<arma::mat, arma::mat, arma::mat> ensure_D_integrity_c(
     // Combine estimates into single matrix
     new_D_w = new_D_w_x_sqrt % new_D_w_omega_sqrt;
     new_D_w_sqrt = arma::sqrt(new_D_w);
-
-
-
-    // Fix X and omega accordingly
-    corrected_X_dtilde = X_dtilde;
-    corrected_Omega_dtilde = Omega_dtilde;
-    corrected_X_dtilde.col(0) %= 1/new_D_w_x_sqrt % new_D_w_sqrt;
-    corrected_Omega_dtilde.row(0) %= 1/new_D_w_omega_sqrt.as_row()  % new_D_w_sqrt.as_row();
-
+    corrected_X_dtilde = arma::diagmat(1/new_D_w_x_sqrt)* arma::diagmat(new_D_w_sqrt) * X_dtilde;
+    corrected_Omega_dtilde = Omega_dtilde * arma::diagmat(1/new_D_w_omega_sqrt) * arma::diagmat(new_D_w_sqrt);
 
     return {corrected_X_dtilde, corrected_Omega_dtilde, new_D_w_sqrt};
 }
@@ -123,16 +116,16 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         //der_X +=  coef_hinge_H * hinge_der_proportions_C__(new_X  * R, R);
 
         der_X =  coef_hinge_H * hinge_der_proportions_C__(new_X  * arma::diagmat(sqrt_Sigma)  * R, R) * arma::diagmat(1 / sqrt_Sigma);
-        Rcpp::Rcout << "original der X"  << std::endl;
-        Rcpp::Rcout << der_X << std::endl;
+//        Rcpp::Rcout << "original der X"  << std::endl;
+//        Rcpp::Rcout << der_X << std::endl;
         der_X = correctByNorm(der_X);
-        Rcpp::Rcout << " der X"  << std::endl;
-        Rcpp::Rcout << der_X << std::endl;
+//        Rcpp::Rcout << " der X"  << std::endl;
+//        Rcpp::Rcout << der_X << std::endl;
 
 
 
         tmp_X = (new_X - coef_der_X * der_X); // estimate new X given derivative
-        Rcpp::Rcout << " X candidate"  << std::endl;
+//        Rcpp::Rcout << " X candidate"  << std::endl;
         Rcpp::Rcout << tmp_X << std::endl;
 
         if (any( tmp_X.col(0) <= 0)) {
@@ -149,11 +142,15 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                    }
                  }
             }
+            if  (any( tmp_X.col(0) <= 0)) {
+                Rcpp::Rcout << "Any gradient step gives bad X, probably X was bad before\n"  << std::endl;
+
+            }
            //Rcpp::Rcout << "X shrink iterations performed for component " << c << " is: " << shrink_iteration << "\n";
         }
        // Now estimate omega
        tmp_Omega = arma::pinv(tmp_X);
-       Rcpp::Rcout << " Omega candidate"  << std::endl;
+//       Rcpp::Rcout << " Omega candidate"  << std::endl;
        Rcpp::Rcout << tmp_Omega << std::endl;
         if (any( tmp_Omega.row(0) <= 0)) {
 //            Rcpp::Rcout << "Inverse of X caused negative for Omega \n"  << std::endl;
@@ -185,60 +182,62 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         // continue conventional optimization
         // at this stage we are sure that first first row/col of X/omega are positive
         // Correct X and Omega to have corresponding first row/column and get D matrix
-       Rcpp::Rcout << " Before correction X"  << std::endl;
-       Rcpp::Rcout << new_X << std::endl;
-       Rcpp::Rcout << " Before correction Omega"  << std::endl;
-       Rcpp::Rcout << new_Omega << std::endl;
+//       Rcpp::Rcout << " Before correction X"  << std::endl;
+//       Rcpp::Rcout << new_X << std::endl;
+//       Rcpp::Rcout << " Before correction Omega"  << std::endl;
+//       Rcpp::Rcout << new_Omega << std::endl;
        std::tie(new_X, new_Omega, new_D_w_sqrt) = ensure_D_integrity_c(new_X, new_Omega, sqrt_Sigma, N, M);
-       Rcpp::Rcout << " After correction X"  << std::endl;
-       Rcpp::Rcout << new_X << std::endl;
-       Rcpp::Rcout << " After correction Omega"  << std::endl;
-       Rcpp::Rcout << new_Omega << std::endl;
+//       Rcpp::Rcout << " After correction X"  << std::endl;
+//       Rcpp::Rcout << new_X << std::endl;
+//       Rcpp::Rcout << " After correction Omega"  << std::endl;
+//       Rcpp::Rcout << new_Omega << std::endl;
 
         // Ensure Omega and X vectors norms are  adequate
         // Get temporary final X and Omega
        final_X = arma::diagmat(1/new_D_w_sqrt) * new_X * arma::diagmat(sqrt_Sigma);
        final_Omega = arma::diagmat(sqrt_Sigma)* new_Omega * arma::diagmat(1/new_D_w_sqrt);
 
-       Rcpp::Rcout << " Final  X for X update"  << std::endl;
-       Rcpp::Rcout << final_X << std::endl;
-       Rcpp::Rcout << " Final  Omega for X update"  << std::endl;
-       Rcpp::Rcout << final_Omega << std::endl;
+//       Rcpp::Rcout << " Final  X for X update"  << std::endl;
+//       Rcpp::Rcout << final_X << std::endl;
+//       Rcpp::Rcout << " Final  Omega for X update"  << std::endl;
+//       Rcpp::Rcout << final_Omega << std::endl;
 
         for (int c=0; c < cell_types; c++) {
             double col_omega_norm = arma::norm(final_Omega.col(c).subvec(1, cell_types - 1), 2);
             double row_x_norm = arma::norm(final_X.row(c).subvec(1, cell_types - 1), 2);
             if (col_omega_norm > solution_balancing_threshold * mean_radius_Omega) {
-               Rcpp::Rcout << "Looks like Omega points are way far away after inverse of X. \n"  << std::endl;
+                Rcpp::Rcout << "Looks like Omega points are way far away after inverse of X. \n"  << std::endl;
                 Rcpp::Rcout << "We will balance solution by moving some magnitude from Omega to X. \n"  << std::endl;
                 double ratio_x = row_x_norm / mean_radius_X;
                 double ratio_omega = col_omega_norm / mean_radius_Omega;
-                Rcpp::Rcout << " X row" << final_X.row(c) << std::endl;
-                Rcpp::Rcout << " Omega col" << final_Omega.col(c)<< std::endl;
-                Rcpp::Rcout << " ratio X" << ratio_x<< std::endl;
-                Rcpp::Rcout << " ratio Omega" << ratio_omega<< std::endl;
-                new_X.row(c) *= sqrt(ratio_omega)/sqrt(ratio_x);
-                new_Omega.col(c) *= sqrt(ratio_x)/sqrt(ratio_omega);
-                Rcpp::Rcout << " X multiplied by" << sqrt(ratio_omega)/sqrt(ratio_x)<< std::endl;
-                Rcpp::Rcout << " Omega multiplied by" << sqrt(ratio_x)/sqrt(ratio_omega)<< std::endl;
-                Rcpp::Rcout << " X row" << new_X.row(c) << std::endl;
-                Rcpp::Rcout << " Omega col" << new_Omega.col(c)<< std::endl;
+                // stretch the space for all elements
+                double multiplier_x = sqrt(ratio_omega)/sqrt(ratio_x);
+                double multiplier_omega =  sqrt(ratio_x)/sqrt(ratio_omega);
+
+                for (int column=1; column < cell_types; column++) {
+                    if (new_Omega.row(column).max()/mean_radius_Omega > solution_balancing_threshold * mean_radius_Omega) {
+                        new_X.col(column) *= multiplier_x;
+                        new_Omega.row(column) *= multiplier_omega;
+                    }
+
+                }
+//                Rcpp::Rcout << " X row" << final_X.row(c) << std::endl;
+//                Rcpp::Rcout << " Omega col" << final_Omega.col(c)<< std::endl;
+//                Rcpp::Rcout << " ratio X" << ratio_x<< std::endl;
+//                Rcpp::Rcout << " ratio Omega" << ratio_omega<< std::endl;
+//                Rcpp::Rcout << " X multiplied by" << sqrt(ratio_omega)/sqrt(ratio_x)<< std::endl;
+//                Rcpp::Rcout << " Omega multiplied by" << sqrt(ratio_x)/sqrt(ratio_omega)<< std::endl;
+//                Rcpp::Rcout << " X row" << new_X.row(c) << std::endl;
+//                Rcpp::Rcout << " Omega col" << new_Omega.col(c)<< std::endl;
             }
         }
-
-       Rcpp::Rcout << " After norm correction X"  << std::endl;
-       Rcpp::Rcout << new_X << std::endl;
-       Rcpp::Rcout << " After norm correction Omega"  << std::endl;
-       Rcpp::Rcout << new_Omega << std::endl;
-
-
        // Correct X and Omega to have corresponding first row/column and derrive D
        std::tie(new_X, new_Omega, new_D_w_sqrt) = ensure_D_integrity_c(new_X, new_Omega, sqrt_Sigma, N, M);
 
-       Rcpp::Rcout << " After final correction X"  << std::endl;
-       Rcpp::Rcout << new_X << std::endl;
-       Rcpp::Rcout << " After final correction Omega"  << std::endl;
-       Rcpp::Rcout << new_Omega << std::endl;
+//       Rcpp::Rcout << " After final correction X"  << std::endl;
+//       Rcpp::Rcout << new_X << std::endl;
+//       Rcpp::Rcout << " After final correction Omega"  << std::endl;
+//       Rcpp::Rcout << new_Omega << std::endl;
 
         // derivative Omega
 
@@ -263,6 +262,10 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                         shrink_iteration++;
                        }
                     }
+            }
+
+            if  (any( tmp_Omega.row(0) <= 0)) {
+                Rcpp::Rcout << "Any gradient step gives bad Omega, probably Omega was bad before\n"  << std::endl;
             }
         }
         // Now try estimate X as inverse
@@ -309,12 +312,20 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                 Rcpp::Rcout << "We will balance solution by moving some magnitude from X to Omega. \n"  << std::endl;
                 double ratio_x = row_x_norm / mean_radius_X;
                 double ratio_omega = col_omega_norm / mean_radius_Omega;
-                Rcpp::Rcout << " X row" << final_X.row(c) << std::endl;
-                Rcpp::Rcout << " Omega col" << new_Omega.col(c)<< std::endl;
-                Rcpp::Rcout << " ratio X" << ratio_x<< std::endl;
-                Rcpp::Rcout << " ratio Omega" << ratio_omega<< std::endl;
-                new_X.row(c) *= sqrt(ratio_omega)/sqrt(ratio_x);
-                new_Omega.col(c) *= sqrt(ratio_x)/sqrt(ratio_omega);
+                double multiplier_x = sqrt(ratio_omega)/sqrt(ratio_x);
+                double multiplier_omega =  sqrt(ratio_x)/sqrt(ratio_omega);
+
+//                Rcpp::Rcout << " X row" << final_X.row(c) << std::endl;
+//                Rcpp::Rcout << " Omega col" << new_Omega.col(c)<< std::endl;
+//                Rcpp::Rcout << " ratio X" << ratio_x<< std::endl;
+//                Rcpp::Rcout << " ratio Omega" << ratio_omega<< std::endl;
+                for (int column=1; column < cell_types; column++) {
+                    if (new_X.col(column).max()/mean_radius_X > solution_balancing_threshold * mean_radius_X) {
+                        new_X.col(column) *= multiplier_x;
+                        new_Omega.row(column) *= multiplier_omega;
+                    }
+
+                }
             }
         }
         // Correct X and Omega to have corresponding first row/column and derrive D
