@@ -86,10 +86,14 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
 
     arma::mat new_X = X;
     arma::mat new_Omega = Omega;
+    arma::mat temporary_new_X = X;
+    arma::mat temporary_new_Omega = Omega;
     arma::mat final_X = X;
     arma::mat final_Omega = Omega;
     arma::mat new_D_w = D_w;
     arma::mat new_D_w_sqrt = arma::sqrt(new_D_w);
+    arma::mat temporary_new_D_w_sqrt =arma::sqrt(new_D_w);
+
     arma::mat new_D_h = new_D_w * (N / M);
 
     arma::vec Sigma = arma::diagvec(SVRt);
@@ -215,10 +219,14 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                 double multiplier_omega =  sqrt(ratio_x)/sqrt(ratio_omega);
 
                 for (int column=1; column < cell_types; column++) {
+                    std::tie(temporary_new_X, temporary_new_Omega, temporary_new_D_w_sqrt) = ensure_D_integrity_c(new_X, new_Omega, sqrt_Sigma, N, M);
+                    final_X = arma::diagmat(1/new_D_w_sqrt) * new_X * arma::diagmat(sqrt_Sigma);
+                    final_Omega = arma::diagmat(sqrt_Sigma)* new_Omega * arma::diagmat(1/new_D_w_sqrt);
+                    if (final_Omega.row(column).max()/mean_radius_Omega > solution_balancing_threshold * mean_radius_Omega) {
+                        Rcpp::Rcout << "row " << column << " balanced " << std::endl;
                         new_X.col(column) *= multiplier_x;
                         new_Omega.row(column) *= multiplier_omega;
-
-
+                    }
                 }
 //                Rcpp::Rcout << " X row" << final_X.row(c) << std::endl;
 //                Rcpp::Rcout << " Omega col" << final_Omega.col(c)<< std::endl;
@@ -319,9 +327,14 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
 //                Rcpp::Rcout << " ratio X" << ratio_x<< std::endl;
 //                Rcpp::Rcout << " ratio Omega" << ratio_omega<< std::endl;
                 for (int column=1; column < cell_types; column++) {
+                    std::tie(temporary_new_X, temporary_new_Omega, temporary_new_D_w_sqrt) = ensure_D_integrity_c(new_X, new_Omega, sqrt_Sigma, N, M);
+                    final_X = arma::diagmat(1/new_D_w_sqrt) * new_X * arma::diagmat(sqrt_Sigma);
+                    final_Omega = arma::diagmat(sqrt_Sigma)* new_Omega * arma::diagmat(1/new_D_w_sqrt);
+                    if (final_X.col(column).max()/mean_radius_X > solution_balancing_threshold * mean_radius_X) {
+                        Rcpp::Rcout << "row " << column << " balanced " << std::endl;
                         new_X.col(column) *= multiplier_x;
                         new_Omega.row(column) *= multiplier_omega;
-
+                    }
 
                 }
             }
