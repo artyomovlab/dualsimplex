@@ -113,6 +113,7 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
     arma::mat B = join_cols(vectorised_SVRt, coef_pos_D_w * sum_rows_S);
     arma::mat C = join_cols(vectorised_SVRt, coef_pos_D_h * sum_rows_R);
     arma::mat der_X, der_Omega;
+    arma::mat norm_term_X, norm_term_Omega;
     arma::mat tmp_X, tmp_Omega;
     double shrink_limit = 500;
     double mean_norm_solution_X;
@@ -125,7 +126,8 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         //  der_X = -2 * new_X;
         der_X =  coef_hinge_H * hinge_der_proportions_C__(new_X  * arma::diagmat(sqrt_Sigma)  * R, R) * arma::diagmat(1 / sqrt_Sigma);
         der_X = correctByNorm(der_X);
-        der_X += correctByNorm(2 * new_X);
+        norm_term_X = 2 * new_X
+        der_X += correctByNorm(norm_term_X);
         //  Rcpp::Rcout << "original der X"  << std::endl;
         //  Rcpp::Rcout << der_X << std::endl;
 
@@ -249,8 +251,8 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         // der_Omega = -2 * new_Omega;
         der_Omega = coef_hinge_W * arma::diagmat(1 / sqrt_Sigma) * alternative_hinge_der_basis_C__(S.t() * arma::diagmat(sqrt_Sigma) * new_Omega, S);
         der_Omega = correctByNorm(der_Omega);
-        der_Omega += correctByNorm(2 * new_Omega);
-
+        norm_term_Omega = 2 * new_Omega;
+        der_Omega += correctByNorm(norm_term_Omega);
         mean_norm_solution_Omega = arma::mean(arma::vecnorm(new_Omega, 2, 0));
         der_Omega = correctByNorm(der_Omega) * mean_norm_solution_Omega;
 
