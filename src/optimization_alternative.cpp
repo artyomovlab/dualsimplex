@@ -83,8 +83,9 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                              const double r_const_X,
                              const double r_const_Omega,
                              const double thresh,
-                             const double solution_balancing_threshold) {
-    arma::mat errors_statistics(iterations, 9, arma::fill::zeros);
+                             const double solution_balancing_threshold,
+                             const double coef_norm) {
+    arma::mat errors_statistics(iterations, 10, arma::fill::zeros);
     arma::mat points_statistics_X(iterations, cell_types * cell_types, arma::fill::zeros);
     arma::mat points_statistics_Omega(iterations, cell_types * cell_types, arma::fill::zeros);
 
@@ -120,6 +121,11 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
     double shrink_limit = 500;
     double mean_norm_solution_X;
 
+    Rcpp::Rcout << "Start X"  << std::endl;
+    Rcpp::Rcout << new_X  << std::endl;
+    Rcpp::Rcout << "Start Omega"  << std::endl;
+    Rcpp::Rcout << new_Omega  << std::endl;
+
     // Start initial inverse search
     Rcpp::Rcout << "Start initial inverse search"  << std::endl;
     tmp_Omega = arma::pinv(new_X);
@@ -140,30 +146,16 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
 
     // here we assume X and Omega are inverse of each other and positive as needed
     for (int itr_ = 0; itr_ < iterations; itr_++) {
-        //  derivative X
-        //  der_X = -2 * (new_Omega.t() * (SVRt - new_Omega * new_X));
-        //  der_X +=  coef_hinge_H * hinge_der_proportions_C__(new_X  * R, R);
-        //  der_X = -2 * new_X;
         der_X =  coef_hinge_H * hinge_der_proportions_C__(new_X  * arma::diagmat(sqrt_Sigma)  * R, R) * arma::diagmat(1 / sqrt_Sigma);
-
         der_X += coef_hinge_W *  (-new_Omega.t())  * arma::diagmat(1 / sqrt_Sigma) * alternative_hinge_der_basis_C__(S.t() * arma::diagmat(sqrt_Sigma) * new_Omega, S) * (new_Omega.t());
 
-//        norm_term_X = 2 * new_X;
-//        der_X += norm_term_X;
-        //  Rcpp::Rcout << "original der X"  << std::endl;
-        //  Rcpp::Rcout << der_X << std::endl;
 
         mean_norm_solution_X = arma::mean(arma::vecnorm(new_X, 2, 1));
         der_X = correctByNorm(der_X) * mean_norm_solution_X;
 
-        //  Rcpp::Rcout << " der X"  << std::endl;
-        //  Rcpp::Rcout << der_X << std::endl;
         tmp_X = (new_X - coef_der_X * der_X); // estimate new X given derivative
-        //  Rcpp::Rcout << " X candidate"  << std::endl;
-        //  Rcpp::Rcout << tmp_X << std::endl;
-
+        // Check if first column of X is all-positive
         if (any( tmp_X.col(0) <= 0)) {
-        //  Rcpp::Rcout << "Derrivative caused negative for X \n"  << std::endl;
             for (int c=0; c < cell_types; c++) {
                 double matrix_value =  tmp_X(c,0);
                  if (matrix_value <= 0) {
@@ -178,16 +170,11 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
             }
             if  (any( tmp_X.col(0) <= 0)) {
                 Rcpp::Rcout << "Any gradient step gives bad X, probably X was bad before\n"  << std::endl;
-
             }
-        //  Rcpp::Rcout << "X shrink iterations performed for component " << c << " is: " << shrink_iteration << "\n";
         }
-       //  Now estimate omega
        tmp_Omega = arma::pinv(tmp_X);
-       //  Rcpp::Rcout << " Omega candidate"  << std::endl;
-       //  Rcpp::Rcout << tmp_Omega << std::endl;
+       // Check if first row of Omega is all positive
         if (any( tmp_Omega.row(0) <= 0)) {
-       //  Rcpp::Rcout << "Inverse of X caused negative for Omega \n"  << std::endl;
             for (int c=0; c < cell_types; c++) {
                 double matrix_value =  tmp_Omega(0,c);
                 if (matrix_value <= 0) {
@@ -215,7 +202,6 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         }
 
        std::tie(new_X, new_Omega, new_D_w_sqrt) = ensure_D_integrity_c(new_X, new_Omega, sqrt_Sigma, N, M);
-
        final_X = arma::diagmat(1/new_D_w_sqrt) * new_X * arma::diagmat(sqrt_Sigma);
        final_Omega = arma::diagmat(sqrt_Sigma)* new_Omega * arma::diagmat(1/new_D_w_sqrt);
 
@@ -280,7 +266,8 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                                                coef_hinge_H,
                                                coef_hinge_W,
                                                coef_pos_D_h,
-                                               coef_pos_D_w);
+                                               coef_pos_D_w,
+                                               coef_norm);
 
         errors_statistics.row(itr_) = arma::rowvec{current_errors["deconv_error"],
                                                    current_errors["lambda_error"],
@@ -290,7 +277,8 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                                                    current_errors["total_error"],
                                                    static_cast<double>(neg_props),
                                                    static_cast<double>(neg_basis),
-                                                   sum_};
+                                                   sum_,
+                                                   current_errors["average_norm"]};
 
 
         points_statistics_X.row(itr_) = final_X.as_row();

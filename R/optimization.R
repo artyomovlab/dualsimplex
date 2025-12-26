@@ -34,6 +34,7 @@ optim_config <- function(
   omega_center = NULL,
   center_threshold = 0,
   solution_balancing_threshold= 10000,
+  coef_norm = 0,
   method = "basic" # basic/positivity/theta
 ) {
   return(list(
@@ -50,6 +51,7 @@ optim_config <- function(
     omega_center = omega_center,
     center_threshold = center_threshold,
     solution_balancing_threshold=solution_balancing_threshold,
+    coef_norm =coef_norm,
     method = method
   ))
 }
@@ -178,6 +180,7 @@ optimize_solution <- function(
   )
   optimization_result <- if (config$method == "positivity") {
     optimization_params$solution_balancing_threshold <- config$solution_balancing_threshold
+    optimization_params$coef_norm <-  config$coef_norm
     do.call(alternative_derivative_stage2, optimization_params)
   } else if (config$method == "basic") {
     do.call(derivative_stage2, optimization_params)
@@ -229,7 +232,8 @@ optimize_solution <- function(
       "total_error",
       "neg_props_count",
       "neg_basis_count",
-      "sum_d_w"
+      "sum_d_w",
+      "average_norm"
     )
   return(solution_proj)
 }
