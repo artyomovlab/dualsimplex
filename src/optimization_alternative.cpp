@@ -150,8 +150,8 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         der_X += coef_hinge_W / M *  (-new_Omega.t())  * arma::diagmat(1 / sqrt_Sigma) * alternative_hinge_der_basis_C__(S.t() * arma::diagmat(sqrt_Sigma) * new_Omega, S) * (new_Omega.t());
 
 
-        mean_norm_solution_X = arma::mean(arma::vecnorm(new_X, 2, 1));
-        der_X = correctByNorm(der_X) * mean_norm_solution_X;
+        //mean_norm_solution_X = arma::mean(arma::vecnorm(new_X, 2, 1));
+        der_X = correctByNorm(der_X) *  arma::diagmat(new_D_w_sqrt)  * arma::diagmat(1 / sqrt_Sigma)  * mean_radius_X;
 
         tmp_X = (new_X - coef_der_X * der_X); // estimate new X given derivative
         // Check if first column of X is all-positive

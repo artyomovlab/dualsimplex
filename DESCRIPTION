@@ -60,4 +60,4 @@ Suggests:
     Hmisc,
     scales
 LinkingTo: Rcpp, RcppArmadillo
-RoxygenNote: 7.3.1
+RoxygenNote: 7.3.3
