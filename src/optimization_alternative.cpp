@@ -116,7 +116,7 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
     arma::mat B = join_cols(vectorised_SVRt, coef_pos_D_w * sum_rows_S);
     arma::mat C = join_cols(vectorised_SVRt, coef_pos_D_h * sum_rows_R);
     arma::mat der_X, der_Omega;
-    arma::mat norm_term_X, norm_term_Omega;
+    arma::mat hinge_term_H, hinge_term_W;
     arma::mat tmp_X, tmp_Omega;
     double shrink_limit = 500;
     double mean_norm_solution_X;
@@ -146,14 +146,19 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
 
     // here we assume X and Omega are inverse of each other and positive as needed
     for (int itr_ = 0; itr_ < iterations; itr_++) {
-        der_X =  coef_hinge_H / N * hinge_der_proportions_C__(new_X  * arma::diagmat(sqrt_Sigma)  * R, R) * arma::diagmat(1 / sqrt_Sigma);
-        der_X += coef_hinge_W / M *  (-new_Omega.t())  * arma::diagmat(1 / sqrt_Sigma) * alternative_hinge_der_basis_C__(S.t() * arma::diagmat(sqrt_Sigma) * new_Omega, S) * (new_Omega.t());
-        der_X += 2 * new_X;
-        der_X += (-new_Omega.t()) *2 * new_Omega * (new_Omega.t());
+        hinge_term_H = 1 / N * hinge_der_proportions_C__(new_X  * arma::diagmat(sqrt_Sigma)  * R, R) * arma::diagmat(1 / sqrt_Sigma);
+        hinge_term_H = correctByNorm(hinge_term_H);
+        hinge_term_W = 1 / M *  (-new_Omega.t())  * arma::diagmat(1 / sqrt_Sigma) * alternative_hinge_der_basis_C__(S.t() * arma::diagmat(sqrt_Sigma) * new_Omega, S) * (new_Omega.t());
+        hinge_term_W = correctByNorm(hinge_term_W);
+
+        der_X =  coef_hinge_H * hinge_term_H;
+        der_X += coef_hinge_W * hinge_term_W;
+        der_X += 2 * new_X; //regularization for X
+        der_X += (-new_Omega.t()) * 2 * new_Omega * (new_Omega.t()); //regularization for Omega
 
 
-        //mean_norm_solution_X = arma::mean(arma::vecnorm(new_X, 2, 1));
-        der_X = correctByNorm(der_X) *  arma::diagmat(new_D_w_sqrt)  * arma::diagmat(1 / sqrt_Sigma)  * mean_radius_X;
+        mean_norm_solution_X = arma::mean(arma::vecnorm(new_X, 2, 1));
+        der_X = correctByNorm(der_X) * mean_norm_solution_X; // arma::diagmat(new_D_w_sqrt)  * arma::diagmat(1 / sqrt_Sigma)  * mean_radius_X;
 
         tmp_X = (new_X - coef_der_X * der_X); // estimate new X given derivative
         // Check if first column of X is all-positive
