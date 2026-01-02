@@ -85,6 +85,13 @@ double hinge_C__(const arma::mat& X) {
     return accu(X_);
 }
 
+double squared_hinge_C__(const arma::mat& X) {
+    arma::mat X_ = -X;
+    X_.elem(arma::find(X_ < 0)).fill(0);
+    X_ %= X_;
+    return accu(X_);
+}
+
 Rcpp::List calcErrors(const arma::mat& X,
                       const arma::mat& Omega,
                       const arma::mat& D_w,
@@ -106,6 +113,10 @@ Rcpp::List calcErrors(const arma::mat& X,
     // double orig_deconv_error = pow(norm(V_row - S.t() * Omega * D_w_diag * X * R, "fro"), 2);
     double lambda_error = coef_ * coef_hinge_H * hinge_C__(X * R);
     double beta_error = coef_ * coef_hinge_W * hinge_C__(S.t() * Omega);
+
+    double squared_lambda_error = coef_ * coef_hinge_H * squared_hinge_C__(X * R);
+    double squared_beta_error = coef_ * coef_hinge_W * squared_hinge_C__(S.t() * Omega);
+
     arma::mat A = arma::sum(R, 1);
     arma::mat B = arma::sum(S, 1);
     double D_h_error = coef_pos_D_h * pow(norm(X.t() * D_h - A, "fro"), 2);
@@ -128,7 +139,9 @@ Rcpp::List calcErrors(const arma::mat& X,
                               Rcpp::Named("D_h_error") = D_h_error,
                               Rcpp::Named("D_w_error") = D_w_error,
                               Rcpp::Named("total_error") = new_error,
-                              Rcpp::Named("average_norm") = norm_term);
+                              Rcpp::Named("average_norm") = norm_term,
+                              Rcpp::Named("squared_lambda_error")= squared_lambda_error,
+                              Rcpp::Named("squared_beta_error")= squared_beta_error);
 }
 
 Rcpp::List derivative_stage2(const arma::mat& X,

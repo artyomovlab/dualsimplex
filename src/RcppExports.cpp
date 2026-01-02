@@ -187,6 +187,17 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// squared_hinge_C__
+double squared_hinge_C__(const arma::mat& X);
+RcppExport SEXP _DualSimplex_squared_hinge_C__(SEXP XSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
+    rcpp_result_gen = Rcpp::wrap(squared_hinge_C__(X));
+    return rcpp_result_gen;
+END_RCPP
+}
 // calcErrors
 Rcpp::List calcErrors(const arma::mat& X, const arma::mat& Omega, const arma::mat& D_w, const arma::mat& D_h, const arma::mat& SVRt, const arma::mat& R, const arma::mat& S, const double coef_, const double coef_der_X, const double coef_der_Omega, const double coef_hinge_H, const double coef_hinge_W, const double coef_pos_D_h, const double coef_pos_D_w, const double coef_norm);
 RcppExport SEXP _DualSimplex_calcErrors(SEXP XSEXP, SEXP OmegaSEXP, SEXP D_wSEXP, SEXP D_hSEXP, SEXP SVRtSEXP, SEXP RSEXP, SEXP SSEXP, SEXP coef_SEXP, SEXP coef_der_XSEXP, SEXP coef_der_OmegaSEXP, SEXP coef_hinge_HSEXP, SEXP coef_hinge_WSEXP, SEXP coef_pos_D_hSEXP, SEXP coef_pos_D_wSEXP, SEXP coef_normSEXP) {
@@ -240,6 +251,30 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const double >::type r_const_Omega(r_const_OmegaSEXP);
     Rcpp::traits::input_parameter< const double >::type thresh(threshSEXP);
     rcpp_result_gen = Rcpp::wrap(derivative_stage2(X, Omega, D_w, SVRt, R, S, coef_der_X, coef_der_Omega, coef_hinge_H, coef_hinge_W, coef_pos_D_h, coef_pos_D_w, cell_types, N, M, iterations, mean_radius_X, mean_radius_Omega, r_const_X, r_const_Omega, thresh));
+    return rcpp_result_gen;
+END_RCPP
+}
+// squared_hinge_der_proportions_C__
+arma::mat squared_hinge_der_proportions_C__(const arma::mat& H, const arma::mat& R);
+RcppExport SEXP _DualSimplex_squared_hinge_der_proportions_C__(SEXP HSEXP, SEXP RSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type H(HSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type R(RSEXP);
+    rcpp_result_gen = Rcpp::wrap(squared_hinge_der_proportions_C__(H, R));
+    return rcpp_result_gen;
+END_RCPP
+}
+// squared_hinge_der_basis_C__
+arma::mat squared_hinge_der_basis_C__(const arma::mat& W, const arma::mat& S);
+RcppExport SEXP _DualSimplex_squared_hinge_der_basis_C__(SEXP WSEXP, SEXP SSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type W(WSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type S(SSEXP);
+    rcpp_result_gen = Rcpp::wrap(squared_hinge_der_basis_C__(W, S));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -411,8 +446,11 @@ static const R_CallMethodDef CallEntries[] = {
     {"_DualSimplex_hinge_der_proportions_C__", (DL_FUNC) &_DualSimplex_hinge_der_proportions_C__, 3},
     {"_DualSimplex_hinge_der_basis_C__", (DL_FUNC) &_DualSimplex_hinge_der_basis_C__, 3},
     {"_DualSimplex_hinge_C__", (DL_FUNC) &_DualSimplex_hinge_C__, 1},
+    {"_DualSimplex_squared_hinge_C__", (DL_FUNC) &_DualSimplex_squared_hinge_C__, 1},
     {"_DualSimplex_calcErrors", (DL_FUNC) &_DualSimplex_calcErrors, 15},
     {"_DualSimplex_derivative_stage2", (DL_FUNC) &_DualSimplex_derivative_stage2, 21},
+    {"_DualSimplex_squared_hinge_der_proportions_C__", (DL_FUNC) &_DualSimplex_squared_hinge_der_proportions_C__, 2},
+    {"_DualSimplex_squared_hinge_der_basis_C__", (DL_FUNC) &_DualSimplex_squared_hinge_der_basis_C__, 2},
     {"_DualSimplex_ensure_D_integrity", (DL_FUNC) &_DualSimplex_ensure_D_integrity, 5},
     {"_DualSimplex_alternative_derivative_stage2", (DL_FUNC) &_DualSimplex_alternative_derivative_stage2, 23},
     {"_DualSimplex_theta_derivative_stage2", (DL_FUNC) &_DualSimplex_theta_derivative_stage2, 24},

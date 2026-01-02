@@ -3,6 +3,22 @@
 
 arma::mat alternative_hinge_der_basis_C__(const arma::mat& W, const arma::mat& S, double precision_ = 1e-10);
 
+//' Hinge loss derivative for proportion matrix (H)
+//'
+//' @param H result H matrix obtained from X
+//' @param R projection vectors R
+//' @return derivative for X
+// [[Rcpp::export]]
+arma::mat squared_hinge_der_proportions_C__(const arma::mat& H,
+                                    const arma::mat& R);
+
+//' Hinge loss derivative for basis matrix (W)
+//'
+//' @param W result W matrix obtained from Omega
+//' @param S projection vectors S
+//' @return derivative for Omega
+// [[Rcpp::export]]
+arma::mat squared_hinge_der_basis_C__(const arma::mat& W, const arma::mat& S);
 
 
 std::tuple<arma::mat, arma::mat, arma::mat> ensure_D_integrity_c(const arma::mat& X_dtilde,

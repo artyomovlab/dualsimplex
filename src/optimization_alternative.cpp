@@ -19,6 +19,25 @@ arma::mat alternative_hinge_der_basis_C__(const arma::mat& W, const arma::mat& S
 }
 
 
+arma::mat squared_hinge_der_proportions_C__(const arma::mat& H,
+                                    const arma::mat& R) {
+
+    int k = H.n_rows;
+    arma::mat H_neg = -2 * H;
+    H_neg.elem(arma::find(H_neg < 0)).fill(0);
+
+    arma::mat res(k, k, arma::fill::zeros);
+
+    res = H_neg * R.t();
+    return res;
+}
+
+arma::mat squared_hinge_der_basis_C__(const arma::mat& W, const arma::mat& S) {
+    // derrivative should be the same as for X but W is transposed
+    arma::mat res = squared_hinge_der_proportions_C__(W.t(), S);
+    return res;
+}
+
 std::tuple<arma::mat, arma::mat, arma::mat> ensure_D_integrity_c(
                               const arma::mat& X_dtilde,
                               const arma::mat& Omega_dtilde,
@@ -146,9 +165,9 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
 
     // here we assume X and Omega are inverse of each other and positive as needed
     for (int itr_ = 0; itr_ < iterations; itr_++) {
-        hinge_term_H = 1 / N * hinge_der_proportions_C__(new_X  * arma::diagmat(sqrt_Sigma)  * R, R) * arma::diagmat(1 / sqrt_Sigma);
+        hinge_term_H = 1 / N * squared_hinge_der_proportions_C__(new_X  * arma::diagmat(sqrt_Sigma)  * R, R) * arma::diagmat(1 / sqrt_Sigma);
         hinge_term_H = correctByNorm(hinge_term_H);
-        hinge_term_W = 1 / M *  (-new_Omega.t())  * arma::diagmat(1 / sqrt_Sigma) * alternative_hinge_der_basis_C__(S.t() * arma::diagmat(sqrt_Sigma) * new_Omega, S) * (new_Omega.t());
+        hinge_term_W = 1 / M *  (-new_Omega.t())  * arma::diagmat(1 / sqrt_Sigma) * squared_hinge_der_basis_C__(S.t() * arma::diagmat(sqrt_Sigma) * new_Omega, S) * (new_Omega.t());
         hinge_term_W = correctByNorm(hinge_term_W);
 
         der_X =  coef_hinge_H * hinge_term_H;
@@ -277,8 +296,8 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                                                coef_norm);
 
         errors_statistics.row(itr_) = arma::rowvec{current_errors["deconv_error"],
-                                                   current_errors["lambda_error"],
-                                                   current_errors["beta_error"],
+                                                   current_errors["squared_lambda_error"],
+                                                   current_errors["squared_beta_error"],
                                                    current_errors["D_h_error"],
                                                    current_errors["D_w_error"],
                                                    current_errors["total_error"],

@@ -144,6 +144,14 @@ hinge_C__ <- function(X) {
     .Call('_DualSimplex_hinge_C__', PACKAGE = 'DualSimplex', X)
 }
 
+#' Squared hinge function value for input matrix X
+#'
+#' @param X input matrix
+#' @return hinge function value
+squared_hinge_C__ <- function(X) {
+    .Call('_DualSimplex_squared_hinge_C__', PACKAGE = 'DualSimplex', X)
+}
+
 #' Main function to calculate error terms
 #'
 #' @param X current X
@@ -191,6 +199,24 @@ calcErrors <- function(X, Omega, D_w, D_h, SVRt, R, S, coef_, coef_der_X, coef_d
 #' @return new parameters
 derivative_stage2 <- function(X, Omega, D_w, SVRt, R, S, coef_der_X, coef_der_Omega, coef_hinge_H, coef_hinge_W, coef_pos_D_h, coef_pos_D_w, cell_types, N, M, iterations, mean_radius_X, mean_radius_Omega, r_const_X = 0, r_const_Omega = 0, thresh = 0.8) {
     .Call('_DualSimplex_derivative_stage2', PACKAGE = 'DualSimplex', X, Omega, D_w, SVRt, R, S, coef_der_X, coef_der_Omega, coef_hinge_H, coef_hinge_W, coef_pos_D_h, coef_pos_D_w, cell_types, N, M, iterations, mean_radius_X, mean_radius_Omega, r_const_X, r_const_Omega, thresh)
+}
+
+#' Hinge loss derivative for proportion matrix (H)
+#'
+#' @param H result H matrix obtained from X
+#' @param R projection vectors R
+#' @return derivative for X
+squared_hinge_der_proportions_C__ <- function(H, R) {
+    .Call('_DualSimplex_squared_hinge_der_proportions_C__', PACKAGE = 'DualSimplex', H, R)
+}
+
+#' Hinge loss derivative for basis matrix (W)
+#'
+#' @param W result W matrix obtained from Omega
+#' @param S projection vectors S
+#' @return derivative for Omega
+squared_hinge_der_basis_C__ <- function(W, S) {
+    .Call('_DualSimplex_squared_hinge_der_basis_C__', PACKAGE = 'DualSimplex', W, S)
 }
 
 #' Transform X and Omega points enforcing the desired equality for first coordinates

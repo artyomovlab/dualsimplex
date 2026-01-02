@@ -47,6 +47,15 @@ arma::mat hinge_der_basis_C__(const arma::mat& W, const arma::mat& S, double pre
 // [[Rcpp::export]]
 double hinge_C__(const arma::mat& X);
 
+
+//' Squared hinge function value for input matrix X
+//'
+//' @param X input matrix
+//' @return hinge function value
+// [[Rcpp::export]]
+double squared_hinge_C__(const arma::mat& X);
+
+
 //' Main function to calculate error terms
 //'
 //' @param X current X
