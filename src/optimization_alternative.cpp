@@ -29,13 +29,35 @@ arma::mat squared_hinge_der_proportions_C__(const arma::mat& H,
     arma::mat res(k, k, arma::fill::zeros);
 
     res = H_neg * R.t();
-    return res.t();
+    return res;
 }
+
+arma::mat l1_hinge_der_proportions_C__(const arma::mat& H,
+                                    const arma::mat& R) {
+
+    int k = H.n_rows;
+    arma::mat H_neg = - H;
+    H_neg.elem(arma::find(H_neg < 0)).fill(0);
+    H_neg.elem(arma::find(H_neg >0)).fill(1);
+
+    arma::mat res(k, k, arma::fill::zeros);
+
+    res = H_neg * R.t();
+    return res;
+}
+
 
 arma::mat squared_hinge_der_basis_C__(const arma::mat& W, const arma::mat& S) {
     // derrivative should be the same as for X but W is transposed
     arma::mat res = squared_hinge_der_proportions_C__(W.t(), S);
-    return res;
+    return res.t();
+}
+
+
+arma::mat l1_hinge_der_basis_C__(const arma::mat& W, const arma::mat& S) {
+    // derrivative should be the same as for X but W is transposed
+    arma::mat res = l1_hinge_der_proportions_C__(W.t(), S);
+    return res.t();
 }
 
 std::tuple<arma::mat, arma::mat, arma::mat> ensure_D_integrity_c(

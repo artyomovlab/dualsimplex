@@ -210,6 +210,15 @@ squared_hinge_der_proportions_C__ <- function(H, R) {
     .Call('_DualSimplex_squared_hinge_der_proportions_C__', PACKAGE = 'DualSimplex', H, R)
 }
 
+#' Hinge loss derivative for proportion matrix (H)
+#'
+#' @param H result H matrix obtained from X
+#' @param R projection vectors R
+#' @return derivative for X
+l1_hinge_der_proportions_C__ <- function(H, R) {
+    .Call('_DualSimplex_l1_hinge_der_proportions_C__', PACKAGE = 'DualSimplex', H, R)
+}
+
 #' Hinge loss derivative for basis matrix (W)
 #'
 #' @param W result W matrix obtained from Omega
@@ -217,6 +226,15 @@ squared_hinge_der_proportions_C__ <- function(H, R) {
 #' @return derivative for Omega
 squared_hinge_der_basis_C__ <- function(W, S) {
     .Call('_DualSimplex_squared_hinge_der_basis_C__', PACKAGE = 'DualSimplex', W, S)
+}
+
+#' Hinge loss derivative for basis matrix (W)
+#'
+#' @param W result W matrix obtained from Omega
+#' @param S projection vectors S
+#' @return derivative for Omega
+l1_hinge_der_basis_C__ <- function(W, S) {
+    .Call('_DualSimplex_l1_hinge_der_basis_C__', PACKAGE = 'DualSimplex', W, S)
 }
 
 #' Transform X and Omega points enforcing the desired equality for first coordinates
