@@ -39,7 +39,7 @@ arma::mat l1_hinge_der_proportions_C__(const arma::mat& H,
     arma::mat H_neg = - H;
     H_neg.elem(arma::find(H_neg < 0)).fill(0);
     H_neg.elem(arma::find(H_neg > 0)).fill(-1);
-    H_neg.elem(arma::find(H_neg == 0)).fill(-0.1);
+//    H_neg.elem(arma::find(H_neg == 0)).fill(-0.1);
     arma::mat res(k, k, arma::fill::zeros);
 
     res = H_neg * R.t();
