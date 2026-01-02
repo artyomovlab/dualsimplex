@@ -172,8 +172,8 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
 
         der_X =  coef_hinge_H * hinge_term_H;
         der_X += coef_hinge_W * hinge_term_W;
-        der_X += 2 * new_X; //regularization for X
-        der_X += (-new_Omega.t()) * 2 * new_Omega * (new_Omega.t()); //regularization for Omega
+//        der_X += 2 * new_X; //regularization for X
+//        der_X += (-new_Omega.t()) * 2 * new_Omega * (new_Omega.t()); //regularization for Omega
 
 
         mean_norm_solution_X = arma::mean(arma::vecnorm(new_X, 2, 1));
