@@ -32,8 +32,7 @@ arma::mat squared_hinge_der_proportions_C__(const arma::mat& H,
     return res;
 }
 
-arma::mat l1_hinge_der_proportions_C__(const arma::mat& H,
-                                    const arma::mat& R) {
+arma::mat l1_hinge_der_proportions_C__(const arma::mat& H, const arma::mat& R) {
 
     int k = H.n_rows;
     arma::mat H_neg = - H;
@@ -46,6 +45,12 @@ arma::mat l1_hinge_der_proportions_C__(const arma::mat& H,
     return res;
 }
 
+arma::mat l1_hinge_der_basis_C__(const arma::mat& W, const arma::mat& S) {
+    // derivative should be the same as for X but W is transposed
+    arma::mat res = l1_hinge_der_proportions_C__(W.t(), S);
+    return res.t();
+}
+
 
 arma::mat squared_hinge_der_basis_C__(const arma::mat& W, const arma::mat& S) {
     // derrivative should be the same as for X but W is transposed
@@ -54,11 +59,6 @@ arma::mat squared_hinge_der_basis_C__(const arma::mat& W, const arma::mat& S) {
 }
 
 
-arma::mat l1_hinge_der_basis_C__(const arma::mat& W, const arma::mat& S) {
-    // derrivative should be the same as for X but W is transposed
-    arma::mat res = l1_hinge_der_proportions_C__(W.t(), S);
-    return res.t();
-}
 
 std::tuple<arma::mat, arma::mat, arma::mat> ensure_D_integrity_c(
                               const arma::mat& X_dtilde,
@@ -194,8 +194,8 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
 
         der_X =  coef_hinge_H * hinge_term_H;
         der_X += coef_hinge_W * hinge_term_W;
-//        der_X += 2 * new_X; //regularization for X
-//        der_X += (-new_Omega.t()) * 2 * new_Omega * (new_Omega.t()); //regularization for Omega
+        der_X += 2 * new_X; //regularization for X
+        der_X += (-new_Omega.t()) * 2 * new_Omega * (new_Omega.t()); //regularization for Omega
 
 
         mean_norm_solution_X = arma::mean(arma::vecnorm(new_X, 2, 1));
