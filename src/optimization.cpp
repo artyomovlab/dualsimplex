@@ -117,8 +117,8 @@ Rcpp::List calcErrors(const arma::mat& X,
     double average_norm_Omega = arma::sum(arma::vecnorm(Omega, 2, 0));
     double average_norm_Omega_zero = arma::sum(arma::vecnorm(Omega, 1, 0));
 
-    Rcpp::Rcout << "Average norm X : l2" << average_norm_X << "l0" << average_norm_X_zero << ".\n";
-    Rcpp::Rcout << "Average norm Omega : l2" << average_norm_Omega << "l0" << average_norm_Omega_zero << ".\n";
+    Rcpp::Rcout << "Average norm l2 X: " << average_norm_X << "; l0:" << average_norm_X_zero << ".\n";
+    Rcpp::Rcout << "Average norm l2 Omega :" << average_norm_Omega << "; l0: " << average_norm_Omega_zero << ".\n";
 
     double norm_term = coef_norm * (average_norm_X + average_norm_Omega);
 
