@@ -8,9 +8,7 @@
 
 arma::mat alternative_hinge_der_basis_C__(const arma::mat& W, const arma::mat& S, double precision_) {
     int n = W.n_cols;
-
     arma::mat res(n, n, arma::fill::zeros);
-
     for (int j = 0; j < n; j++) {
         arma::vec t = W.col(j);
         res.col(j) = arma::sum(-S.cols(find(t < -precision_)), 1);
@@ -21,13 +19,10 @@ arma::mat alternative_hinge_der_basis_C__(const arma::mat& W, const arma::mat& S
 
 arma::mat squared_hinge_der_proportions_C__(const arma::mat& H,
                                     const arma::mat& R) {
-
     int k = H.n_rows;
     arma::mat H_neg = -2 * H;
     H_neg.elem(arma::find(H_neg < 0)).fill(0);
-
     arma::mat res(k, k, arma::fill::zeros);
-
     res = H_neg * R.t();
     return res;
 }
@@ -46,19 +41,16 @@ arma::mat l1_hinge_der_proportions_C__(const arma::mat& H, const arma::mat& R) {
 }
 
 arma::mat l1_hinge_der_basis_C__(const arma::mat& W, const arma::mat& S) {
-    // derivative should be the same as for X but W is transposed
+    // derivative should be the same as for X but W and Omega are transposed
     arma::mat res = l1_hinge_der_proportions_C__(W.t(), S);
     return res.t();
 }
-
 
 arma::mat squared_hinge_der_basis_C__(const arma::mat& W, const arma::mat& S) {
     // derrivative should be the same as for X but W is transposed
     arma::mat res = squared_hinge_der_proportions_C__(W.t(), S);
     return res.t();
 }
-
-
 
 std::tuple<arma::mat, arma::mat, arma::mat> ensure_D_integrity_c(
                               const arma::mat& X_dtilde,
@@ -97,11 +89,6 @@ Rcpp::List ensure_D_integrity(const arma::mat& X_dtilde,
                               Rcpp::Named("corrected_Omega_dtilde") = new_Omega,
                               Rcpp::Named("new_D_w_sqrt") = new_D_w_sqrt);
 }
-
-
-
-
-
 
 Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                              const arma::mat& Omega,
@@ -187,13 +174,12 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
 
     // here we assume X and Omega are inverse of each other and positive as needed
     for (int itr_ = 0; itr_ < iterations; itr_++) {
-        hinge_term_H = l1_hinge_der_proportions_C__(new_X  * arma::diagmat(sqrt_Sigma)  * R, R) * arma::diagmat(sqrt_Sigma);
-//        hinge_term_H = correctByNorm(hinge_term_H);
-        hinge_term_W = (-new_Omega.t())  * arma::diagmat(sqrt_Sigma) * l1_hinge_der_basis_C__(S.t() * arma::diagmat(sqrt_Sigma) * new_Omega, S) * (new_Omega.t());
-//        hinge_term_W = correctByNorm(hinge_term_W);
-
+        hinge_term_H = squared_hinge_der_proportions_C__(new_X  * arma::diagmat(sqrt_Sigma)  * R, R) * arma::diagmat(sqrt_Sigma);
+        hinge_term_W = (-new_Omega.t())  * arma::diagmat(sqrt_Sigma) * squared_hinge_der_basis_C__(S.t() * arma::diagmat(sqrt_Sigma) * new_Omega, S) * (new_Omega.t());
         der_X =  coef_hinge_H * hinge_term_H;
         der_X += coef_hinge_W * hinge_term_W;
+
+
         der_X += 2 * new_X; //regularization for X
         der_X += (-new_Omega.t()) * 2 * new_Omega * (new_Omega.t()); //regularization for Omega
 
@@ -318,7 +304,7 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                                                coef_norm);
 
         errors_statistics.row(itr_) = arma::rowvec{current_errors["deconv_error"],
-                                                   current_errors["squared_lambda_error"],
+                                                   current_errors["lambda_error"],
                                                    current_errors["squared_beta_error"],
                                                    current_errors["D_h_error"],
                                                    current_errors["D_w_error"],
