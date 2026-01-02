@@ -166,9 +166,9 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
     // here we assume X and Omega are inverse of each other and positive as needed
     for (int itr_ = 0; itr_ < iterations; itr_++) {
         hinge_term_H = 1 / N * squared_hinge_der_proportions_C__(new_X  * arma::diagmat(sqrt_Sigma)  * R, R) * arma::diagmat(1 / sqrt_Sigma);
-        hinge_term_H = correctByNorm(hinge_term_H);
+//        hinge_term_H = correctByNorm(hinge_term_H);
         hinge_term_W = 1 / M *  (-new_Omega.t())  * arma::diagmat(1 / sqrt_Sigma) * squared_hinge_der_basis_C__(S.t() * arma::diagmat(sqrt_Sigma) * new_Omega, S) * (new_Omega.t());
-        hinge_term_W = correctByNorm(hinge_term_W);
+//        hinge_term_W = correctByNorm(hinge_term_W);
 
         der_X =  coef_hinge_H * hinge_term_H;
         der_X += coef_hinge_W * hinge_term_W;
