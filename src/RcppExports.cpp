@@ -150,29 +150,51 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// hinge_der_proportions_C__
-arma::mat hinge_der_proportions_C__(const arma::mat& H, const arma::mat& R, double precision_);
-RcppExport SEXP _DualSimplex_hinge_der_proportions_C__(SEXP HSEXP, SEXP RSEXP, SEXP precision_SEXP) {
+// squared_hinge_der_proportions_C__
+arma::mat squared_hinge_der_proportions_C__(const arma::mat& H, const arma::mat& R);
+RcppExport SEXP _DualSimplex_squared_hinge_der_proportions_C__(SEXP HSEXP, SEXP RSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::mat& >::type H(HSEXP);
     Rcpp::traits::input_parameter< const arma::mat& >::type R(RSEXP);
-    Rcpp::traits::input_parameter< double >::type precision_(precision_SEXP);
-    rcpp_result_gen = Rcpp::wrap(hinge_der_proportions_C__(H, R, precision_));
+    rcpp_result_gen = Rcpp::wrap(squared_hinge_der_proportions_C__(H, R));
     return rcpp_result_gen;
 END_RCPP
 }
-// hinge_der_basis_C__
-arma::mat hinge_der_basis_C__(const arma::mat& W, const arma::mat& S, double precision_);
-RcppExport SEXP _DualSimplex_hinge_der_basis_C__(SEXP WSEXP, SEXP SSEXP, SEXP precision_SEXP) {
+// l1_hinge_der_proportions_C__
+arma::mat l1_hinge_der_proportions_C__(const arma::mat& H, const arma::mat& R);
+RcppExport SEXP _DualSimplex_l1_hinge_der_proportions_C__(SEXP HSEXP, SEXP RSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type H(HSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type R(RSEXP);
+    rcpp_result_gen = Rcpp::wrap(l1_hinge_der_proportions_C__(H, R));
+    return rcpp_result_gen;
+END_RCPP
+}
+// squared_hinge_der_basis_C__
+arma::mat squared_hinge_der_basis_C__(const arma::mat& W, const arma::mat& S);
+RcppExport SEXP _DualSimplex_squared_hinge_der_basis_C__(SEXP WSEXP, SEXP SSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::mat& >::type W(WSEXP);
     Rcpp::traits::input_parameter< const arma::mat& >::type S(SSEXP);
-    Rcpp::traits::input_parameter< double >::type precision_(precision_SEXP);
-    rcpp_result_gen = Rcpp::wrap(hinge_der_basis_C__(W, S, precision_));
+    rcpp_result_gen = Rcpp::wrap(squared_hinge_der_basis_C__(W, S));
+    return rcpp_result_gen;
+END_RCPP
+}
+// l1_hinge_der_basis_C__
+arma::mat l1_hinge_der_basis_C__(const arma::mat& W, const arma::mat& S);
+RcppExport SEXP _DualSimplex_l1_hinge_der_basis_C__(SEXP WSEXP, SEXP SSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type W(WSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type S(SSEXP);
+    rcpp_result_gen = Rcpp::wrap(l1_hinge_der_basis_C__(W, S));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -250,54 +272,6 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const double >::type r_const_Omega(r_const_OmegaSEXP);
     Rcpp::traits::input_parameter< const double >::type thresh(threshSEXP);
     rcpp_result_gen = Rcpp::wrap(derivative_stage2(X, Omega, D_w, SVRt, R, S, coef_der_X, coef_der_Omega, coef_hinge_H, coef_hinge_W, coef_pos_D_h, coef_pos_D_w, cell_types, N, M, iterations, mean_radius_X, mean_radius_Omega, r_const_X, r_const_Omega, thresh));
-    return rcpp_result_gen;
-END_RCPP
-}
-// squared_hinge_der_proportions_C__
-arma::mat squared_hinge_der_proportions_C__(const arma::mat& H, const arma::mat& R);
-RcppExport SEXP _DualSimplex_squared_hinge_der_proportions_C__(SEXP HSEXP, SEXP RSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::mat& >::type H(HSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type R(RSEXP);
-    rcpp_result_gen = Rcpp::wrap(squared_hinge_der_proportions_C__(H, R));
-    return rcpp_result_gen;
-END_RCPP
-}
-// l1_hinge_der_proportions_C__
-arma::mat l1_hinge_der_proportions_C__(const arma::mat& H, const arma::mat& R);
-RcppExport SEXP _DualSimplex_l1_hinge_der_proportions_C__(SEXP HSEXP, SEXP RSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::mat& >::type H(HSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type R(RSEXP);
-    rcpp_result_gen = Rcpp::wrap(l1_hinge_der_proportions_C__(H, R));
-    return rcpp_result_gen;
-END_RCPP
-}
-// squared_hinge_der_basis_C__
-arma::mat squared_hinge_der_basis_C__(const arma::mat& W, const arma::mat& S);
-RcppExport SEXP _DualSimplex_squared_hinge_der_basis_C__(SEXP WSEXP, SEXP SSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::mat& >::type W(WSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type S(SSEXP);
-    rcpp_result_gen = Rcpp::wrap(squared_hinge_der_basis_C__(W, S));
-    return rcpp_result_gen;
-END_RCPP
-}
-// l1_hinge_der_basis_C__
-arma::mat l1_hinge_der_basis_C__(const arma::mat& W, const arma::mat& S);
-RcppExport SEXP _DualSimplex_l1_hinge_der_basis_C__(SEXP WSEXP, SEXP SSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::mat& >::type W(WSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type S(SSEXP);
-    rcpp_result_gen = Rcpp::wrap(l1_hinge_der_basis_C__(W, S));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -465,16 +439,14 @@ static const R_CallMethodDef CallEntries[] = {
     {"_DualSimplex_nnls_nonzero_C__", (DL_FUNC) &_DualSimplex_nnls_nonzero_C__, 4},
     {"_DualSimplex_jump_norm", (DL_FUNC) &_DualSimplex_jump_norm, 2},
     {"_DualSimplex_update_idx", (DL_FUNC) &_DualSimplex_update_idx, 3},
-    {"_DualSimplex_hinge_der_proportions_C__", (DL_FUNC) &_DualSimplex_hinge_der_proportions_C__, 3},
-    {"_DualSimplex_hinge_der_basis_C__", (DL_FUNC) &_DualSimplex_hinge_der_basis_C__, 3},
-    {"_DualSimplex_hinge_C__", (DL_FUNC) &_DualSimplex_hinge_C__, 1},
-    {"_DualSimplex_squared_hinge_C__", (DL_FUNC) &_DualSimplex_squared_hinge_C__, 1},
-    {"_DualSimplex_calcErrors", (DL_FUNC) &_DualSimplex_calcErrors, 14},
-    {"_DualSimplex_derivative_stage2", (DL_FUNC) &_DualSimplex_derivative_stage2, 21},
     {"_DualSimplex_squared_hinge_der_proportions_C__", (DL_FUNC) &_DualSimplex_squared_hinge_der_proportions_C__, 2},
     {"_DualSimplex_l1_hinge_der_proportions_C__", (DL_FUNC) &_DualSimplex_l1_hinge_der_proportions_C__, 2},
     {"_DualSimplex_squared_hinge_der_basis_C__", (DL_FUNC) &_DualSimplex_squared_hinge_der_basis_C__, 2},
     {"_DualSimplex_l1_hinge_der_basis_C__", (DL_FUNC) &_DualSimplex_l1_hinge_der_basis_C__, 2},
+    {"_DualSimplex_hinge_C__", (DL_FUNC) &_DualSimplex_hinge_C__, 1},
+    {"_DualSimplex_squared_hinge_C__", (DL_FUNC) &_DualSimplex_squared_hinge_C__, 1},
+    {"_DualSimplex_calcErrors", (DL_FUNC) &_DualSimplex_calcErrors, 14},
+    {"_DualSimplex_derivative_stage2", (DL_FUNC) &_DualSimplex_derivative_stage2, 21},
     {"_DualSimplex_ensure_D_integrity", (DL_FUNC) &_DualSimplex_ensure_D_integrity, 5},
     {"_DualSimplex_alternative_derivative_stage2", (DL_FUNC) &_DualSimplex_alternative_derivative_stage2, 22},
     {"_DualSimplex_theta_derivative_stage2", (DL_FUNC) &_DualSimplex_theta_derivative_stage2, 24},

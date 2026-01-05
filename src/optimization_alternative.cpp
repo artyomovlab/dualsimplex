@@ -6,52 +6,6 @@
 #include <tuple>
 
 
-arma::mat alternative_hinge_der_basis_C__(const arma::mat& W, const arma::mat& S, double precision_) {
-    int n = W.n_cols;
-    arma::mat res(n, n, arma::fill::zeros);
-    for (int j = 0; j < n; j++) {
-        arma::vec t = W.col(j);
-        res.col(j) = arma::sum(-S.cols(find(t < -precision_)), 1);
-    }
-    return res;
-}
-
-
-arma::mat squared_hinge_der_proportions_C__(const arma::mat& H,
-                                    const arma::mat& R) {
-    int k = H.n_rows;
-    arma::mat H_neg = -2 * H;
-    H_neg.elem(arma::find(H_neg < 0)).fill(0);
-    arma::mat res(k, k, arma::fill::zeros);
-    res = H_neg * R.t();
-    return res;
-}
-
-arma::mat l1_hinge_der_proportions_C__(const arma::mat& H, const arma::mat& R) {
-    int k = H.n_rows;
-    arma::mat H_neg = - H;
-    // H_neg.elem(arma::find(H_neg == 0)).fill(-0.1); we could add this to always have derivative
-    H_neg.elem(arma::find(H_neg < 0)).fill(0);
-    H_neg.elem(arma::find(H_neg > 0)).fill(-1);
-
-    arma::mat res(k, k, arma::fill::zeros);
-
-    res = H_neg * R.t();
-    return res;
-}
-
-arma::mat l1_hinge_der_basis_C__(const arma::mat& W, const arma::mat& S) {
-    // derivative should be the same as for X but W and Omega are transposed
-    arma::mat res = l1_hinge_der_proportions_C__(W.t(), S);
-    return res.t();
-}
-
-arma::mat squared_hinge_der_basis_C__(const arma::mat& W, const arma::mat& S) {
-    // derivative should be the same as for X but W is transposed
-    arma::mat res = squared_hinge_der_proportions_C__(W.t(), S);
-    return res.t();
-}
-
 std::tuple<arma::mat, arma::mat, arma::mat> ensure_D_integrity_c(
                               const arma::mat& X_dtilde,
                               const arma::mat& Omega_dtilde,

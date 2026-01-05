@@ -20,25 +20,40 @@ arma::mat jump_norm(arma::mat& X, const double r_const_X = 0);
 // [[Rcpp::export]]
 arma::uvec update_idx(const arma::mat& prev_X, const arma::mat& new_X, const double thresh = 0.8);
 
+
+//' Squared Hinge loss derivative for proportion matrix (H)
+//'
+//' @param H result H matrix obtained from X
+//' @param R projection vectors R
+//' @return derivative for X
+// [[Rcpp::export]]
+arma::mat squared_hinge_der_proportions_C__(const arma::mat& H,
+                                    const arma::mat& R);
+
 //' Hinge loss derivative for proportion matrix (H)
 //'
 //' @param H result H matrix obtained from X
 //' @param R projection vectors R
-//' @param precision_ precision to calculate value
 //' @return derivative for X
 // [[Rcpp::export]]
-arma::mat hinge_der_proportions_C__(const arma::mat& H,
-                                    const arma::mat& R,
-                                    double precision_ = 1e-10);
+arma::mat l1_hinge_der_proportions_C__(const arma::mat& H,
+                                    const arma::mat& R);
+
+//' Squared Hinge loss derivative for basis matrix (W)
+//'
+//' @param W result W matrix obtained from Omega
+//' @param S projection vectors S
+//' @return derivative for Omega
+// [[Rcpp::export]]
+arma::mat squared_hinge_der_basis_C__(const arma::mat& W, const arma::mat& S);
 
 //' Hinge loss derivative for basis matrix (W)
 //'
 //' @param W result W matrix obtained from Omega
 //' @param S projection vectors S
-//' @param precision_ precision to calculate value
 //' @return derivative for Omega
 // [[Rcpp::export]]
-arma::mat hinge_der_basis_C__(const arma::mat& W, const arma::mat& S, double precision_ = 1e-10);
+arma::mat l1_hinge_der_basis_C__(const arma::mat& W, const arma::mat& S);
 
 //' Hinge function value for input matrix X
 //'

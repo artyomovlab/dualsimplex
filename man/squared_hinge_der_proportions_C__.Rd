@@ -2,7 +2,7 @@
 % Please edit documentation in R/RcppExports.R
 \name{squared_hinge_der_proportions_C__}
 \alias{squared_hinge_der_proportions_C__}
-\title{Hinge loss derivative for proportion matrix (H)}
+\title{Squared Hinge loss derivative for proportion matrix (H)}
 \usage{
 squared_hinge_der_proportions_C__(H, R)
 }
@@ -15,5 +15,5 @@ squared_hinge_der_proportions_C__(H, R)
 derivative for X
 }
 \description{
-Hinge loss derivative for proportion matrix (H)
+Squared Hinge loss derivative for proportion matrix (H)
 }

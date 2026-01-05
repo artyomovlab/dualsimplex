@@ -2,7 +2,7 @@
 % Please edit documentation in R/RcppExports.R
 \name{squared_hinge_der_basis_C__}
 \alias{squared_hinge_der_basis_C__}
-\title{Hinge loss derivative for basis matrix (W)}
+\title{Squared Hinge loss derivative for basis matrix (W)}
 \usage{
 squared_hinge_der_basis_C__(W, S)
 }
@@ -15,5 +15,5 @@ squared_hinge_der_basis_C__(W, S)
 derivative for Omega
 }
 \description{
-Hinge loss derivative for basis matrix (W)
+Squared Hinge loss derivative for basis matrix (W)
 }

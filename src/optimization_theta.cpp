@@ -57,7 +57,7 @@ Rcpp::List theta_derivative_stage2(const arma::mat& X,
         // all derivative terms are the same as for basic optimization
         der_X =
             -2 * (diagmat(new_D_w) * new_Omega.t() * (SVRt - new_Omega * diagmat(new_D_w) * new_X));
-        der_X += coef_hinge_H * hinge_der_proportions_C__(new_X * R, R);
+        der_X += coef_hinge_H * l1_hinge_der_proportions_C__(new_X * R, R);
         der_X += coef_pos_D_h * 2 * new_D_h * (new_X.t() * new_D_h - sum_rows_R).t();
 
         der_X.col(0).zeros(); // no movement needed for first coordinate
@@ -120,7 +120,7 @@ Rcpp::List theta_derivative_stage2(const arma::mat& X,
         // Now switch to Omega space
         // derivative Omega
         der_Omega =  -2 * (SVRt - new_Omega * diagmat(new_D_w) * new_X) * new_X.t() * diagmat(new_D_w);
-        der_Omega += coef_hinge_W * hinge_der_basis_C__(S.t() * new_Omega, S);
+        der_Omega += coef_hinge_W * l1_hinge_der_basis_C__(S.t() * new_Omega, S);
         der_Omega += coef_pos_D_w * 2 * (new_Omega * new_D_w - sum_rows_S) * new_D_w.t();
         der_Omega.row(0).zeros();
         der_Omega = correctByNorm(der_Omega) * mean_radius_Omega;
