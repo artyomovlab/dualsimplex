@@ -147,7 +147,7 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                 double matrix_value =  tmp_X(c,0);
                  if (matrix_value <= 0) {
                    int shrink_iteration = 0;
-                   while(matrix_value <= 0) {
+                   while((matrix_value <= 0) & (shrink_iteration < shrink_limit)) {
                     der_X.row(c) /=  2;
                     tmp_X = (new_X - coef_der_X * der_X);
                     matrix_value =  tmp_X(c,0);
