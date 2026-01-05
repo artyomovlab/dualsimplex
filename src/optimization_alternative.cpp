@@ -102,10 +102,10 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
     double shrink_limit = 500;
     double mean_norm_solution_X;
 
-    Rcpp::Rcout << "Start X"  << std::endl;
-    Rcpp::Rcout << new_X  << std::endl;
-    Rcpp::Rcout << "Start Omega"  << std::endl;
-    Rcpp::Rcout << new_Omega  << std::endl;
+//    Rcpp::Rcout << "Start X"  << std::endl;
+//    Rcpp::Rcout << new_X  << std::endl;
+//    Rcpp::Rcout << "Start Omega"  << std::endl;
+//    Rcpp::Rcout << new_Omega  << std::endl;
 
     // Start initial inverse search
     Rcpp::Rcout << "Start initial inverse search"  << std::endl;
@@ -124,6 +124,7 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
     else {
         new_Omega = tmp_Omega;
     }
+    Rcpp::Rcout << "X and Omega are acceptable now. Continue with optimization\n"  << std::endl;
 
     // here we assume X and Omega are inverse of each other and positive as needed
     for (int itr_ = 0; itr_ < iterations; itr_++) {
