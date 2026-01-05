@@ -113,5 +113,4 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                              const double r_const_X = 0,
                              const double r_const_Omega = 0,
                              const double thresh = 0.8,
-                             const double solution_balancing_threshold = 10,
-                             const double coef_norm = 0);
+                             const double solution_balancing_threshold = 10000);

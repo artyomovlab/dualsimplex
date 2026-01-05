@@ -18,8 +18,7 @@ calcErrors(
   coef_hinge_H,
   coef_hinge_W,
   coef_pos_D_h,
-  coef_pos_D_w,
-  coef_norm = 0
+  coef_pos_D_w
 )
 }
 \arguments{

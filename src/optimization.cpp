@@ -123,7 +123,6 @@ Rcpp::List calcErrors(const arma::mat& X,
     double new_error = deconv_error + lambda_error + beta_error + D_h_error + D_w_error;
     double average_norm_X = arma::mean(arma::vecnorm(X, 2, 1));
     double average_norm_Omega = arma::sum(arma::vecnorm(Omega, 2, 0));
-    double average_norm_Omega_zero = arma::sum(arma::vecnorm(Omega, 1, 0));
     double norm_term = (average_norm_X + average_norm_Omega);
 
     return Rcpp::List::create(Rcpp::Named("deconv_error") = deconv_error,

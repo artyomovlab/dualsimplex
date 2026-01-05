@@ -111,8 +111,7 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                              const double r_const_X,
                              const double r_const_Omega,
                              const double thresh,
-                             const double solution_balancing_threshold,
-                             const double coef_norm) {
+                             const double solution_balancing_threshold) {
     arma::mat errors_statistics(iterations, 10, arma::fill::zeros);
     arma::mat points_statistics_X(iterations, cell_types * cell_types, arma::fill::zeros);
     arma::mat points_statistics_Omega(iterations, cell_types * cell_types, arma::fill::zeros);
@@ -290,8 +289,7 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                                                coef_hinge_H,
                                                coef_hinge_W,
                                                coef_pos_D_h,
-                                               coef_pos_D_w,
-                                               coef_norm);
+                                               coef_pos_D_w);
 
         errors_statistics.row(itr_) = arma::rowvec{current_errors["deconv_error"],
                                                    current_errors["lambda_error"],

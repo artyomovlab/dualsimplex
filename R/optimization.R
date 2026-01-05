@@ -180,7 +180,6 @@ optimize_solution <- function(
   )
   optimization_result <- if (config$method == "positivity") {
     optimization_params$solution_balancing_threshold <- config$solution_balancing_threshold
-    optimization_params$coef_norm <-  config$coef_norm
     do.call(alternative_derivative_stage2, optimization_params)
   } else if (config$method == "basic") {
     do.call(derivative_stage2, optimization_params)

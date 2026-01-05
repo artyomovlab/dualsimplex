@@ -169,8 +169,8 @@ squared_hinge_C__ <- function(X) {
 #' @param coef_pos_D_h experimental coefficient for D_h. legacy. not tested.
 #' @param coef_pos_D_w experimental coefficient for D_w.legacy. not tested.
 #' @return list with error values
-calcErrors <- function(X, Omega, D_w, D_h, SVRt, R, S, coef_, coef_der_X, coef_der_Omega, coef_hinge_H, coef_hinge_W, coef_pos_D_h, coef_pos_D_w, coef_norm = 0) {
-    .Call('_DualSimplex_calcErrors', PACKAGE = 'DualSimplex', X, Omega, D_w, D_h, SVRt, R, S, coef_, coef_der_X, coef_der_Omega, coef_hinge_H, coef_hinge_W, coef_pos_D_h, coef_pos_D_w, coef_norm)
+calcErrors <- function(X, Omega, D_w, D_h, SVRt, R, S, coef_, coef_der_X, coef_der_Omega, coef_hinge_H, coef_hinge_W, coef_pos_D_h, coef_pos_D_w) {
+    .Call('_DualSimplex_calcErrors', PACKAGE = 'DualSimplex', X, Omega, D_w, D_h, SVRt, R, S, coef_, coef_der_X, coef_der_Omega, coef_hinge_H, coef_hinge_W, coef_pos_D_h, coef_pos_D_w)
 }
 
 #' Main function to calculate error terms
@@ -276,8 +276,8 @@ ensure_D_integrity <- function(X_dtilde, Omega_dtilde, sqrt_Sigma, N, M) {
 #' @param thresh experimental. not tested
 #' @param solution_balancing_threshold experimental. If solution is to far away we re-balance norms of the solution vectors between X and Omega
 #' @return new parameters
-alternative_derivative_stage2 <- function(X, Omega, D_w, SVRt, R, S, coef_der_X, coef_der_Omega, coef_hinge_H, coef_hinge_W, coef_pos_D_h, coef_pos_D_w, cell_types, N, M, iterations, mean_radius_X, mean_radius_Omega, r_const_X = 0, r_const_Omega = 0, thresh = 0.8, solution_balancing_threshold = 10, coef_norm = 0) {
-    .Call('_DualSimplex_alternative_derivative_stage2', PACKAGE = 'DualSimplex', X, Omega, D_w, SVRt, R, S, coef_der_X, coef_der_Omega, coef_hinge_H, coef_hinge_W, coef_pos_D_h, coef_pos_D_w, cell_types, N, M, iterations, mean_radius_X, mean_radius_Omega, r_const_X, r_const_Omega, thresh, solution_balancing_threshold, coef_norm)
+alternative_derivative_stage2 <- function(X, Omega, D_w, SVRt, R, S, coef_der_X, coef_der_Omega, coef_hinge_H, coef_hinge_W, coef_pos_D_h, coef_pos_D_w, cell_types, N, M, iterations, mean_radius_X, mean_radius_Omega, r_const_X = 0, r_const_Omega = 0, thresh = 0.8, solution_balancing_threshold = 10000) {
+    .Call('_DualSimplex_alternative_derivative_stage2', PACKAGE = 'DualSimplex', X, Omega, D_w, SVRt, R, S, coef_der_X, coef_der_Omega, coef_hinge_H, coef_hinge_W, coef_pos_D_h, coef_pos_D_w, cell_types, N, M, iterations, mean_radius_X, mean_radius_Omega, r_const_X, r_const_Omega, thresh, solution_balancing_threshold)
 }
 
 #' Main function to calculate error terms

@@ -87,8 +87,7 @@ Rcpp::List calcErrors(const arma::mat& X,
                       const double coef_hinge_H,
                       const double coef_hinge_W,
                       const double coef_pos_D_h,
-                      const double coef_pos_D_w,
-                      const double coef_norm=0);
+                      const double coef_pos_D_w);
 
 //' Main function to calculate error terms
 //'

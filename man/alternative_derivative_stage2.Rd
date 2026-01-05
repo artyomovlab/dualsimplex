@@ -26,8 +26,7 @@ alternative_derivative_stage2(
   r_const_X = 0,
   r_const_Omega = 0,
   thresh = 0.8,
-  solution_balancing_threshold = 10,
-  coef_norm = 0
+  solution_balancing_threshold = 10000
 )
 }
 \arguments{
