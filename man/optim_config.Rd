@@ -18,7 +18,6 @@ optim_config(
   omega_center = NULL,
   center_threshold = 0,
   solution_balancing_threshold = 10000,
-  coef_norm = 0,
   method = "basic"
 )
 }
