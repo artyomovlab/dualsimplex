@@ -229,7 +229,8 @@ optimize_solution <- function(
       "total_error",
       "neg_props_count",
       "neg_basis_count",
-      "sum_d_w"
+      "sum_d_w",
+      "average_norm"
     )
   return(solution_proj)
 }

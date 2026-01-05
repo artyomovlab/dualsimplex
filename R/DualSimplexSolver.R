@@ -11,8 +11,8 @@
 #' @importFrom R6 R6Class
 #' @useDynLib DualSimplex
 #' @export
-#' @return Object of \code{\link{R6Class}} -- an interface to work with data.
-#' @format \code{\link{R6Class}} object.
+#' @return Object of \code{\link[R6]{R6Class}} -- an interface to work with data.
+#' @format \code{\link[R6]{R6Class}} object.
 #'
 #' @name DualSimplexObject
 #' @import Rcpp

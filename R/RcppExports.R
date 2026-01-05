@@ -116,24 +116,40 @@ update_idx <- function(prev_X, new_X, thresh = 0.8) {
     .Call('_DualSimplex_update_idx', PACKAGE = 'DualSimplex', prev_X, new_X, thresh)
 }
 
+#' Squared Hinge loss derivative for proportion matrix (H)
+#'
+#' @param H result H matrix obtained from X
+#' @param R projection vectors R
+#' @return derivative for X
+squared_hinge_der_proportions_C__ <- function(H, R) {
+    .Call('_DualSimplex_squared_hinge_der_proportions_C__', PACKAGE = 'DualSimplex', H, R)
+}
+
 #' Hinge loss derivative for proportion matrix (H)
 #'
 #' @param H result H matrix obtained from X
 #' @param R projection vectors R
-#' @param precision_ precision to calculate value
 #' @return derivative for X
-hinge_der_proportions_C__ <- function(H, R, precision_ = 1e-10) {
-    .Call('_DualSimplex_hinge_der_proportions_C__', PACKAGE = 'DualSimplex', H, R, precision_)
+l1_hinge_der_proportions_C__ <- function(H, R) {
+    .Call('_DualSimplex_l1_hinge_der_proportions_C__', PACKAGE = 'DualSimplex', H, R)
+}
+
+#' Squared Hinge loss derivative for basis matrix (W)
+#'
+#' @param W result W matrix obtained from Omega
+#' @param S projection vectors S
+#' @return derivative for Omega
+squared_hinge_der_basis_C__ <- function(W, S) {
+    .Call('_DualSimplex_squared_hinge_der_basis_C__', PACKAGE = 'DualSimplex', W, S)
 }
 
 #' Hinge loss derivative for basis matrix (W)
 #'
 #' @param W result W matrix obtained from Omega
 #' @param S projection vectors S
-#' @param precision_ precision to calculate value
 #' @return derivative for Omega
-hinge_der_basis_C__ <- function(W, S, precision_ = 1e-10) {
-    .Call('_DualSimplex_hinge_der_basis_C__', PACKAGE = 'DualSimplex', W, S, precision_)
+l1_hinge_der_basis_C__ <- function(W, S) {
+    .Call('_DualSimplex_l1_hinge_der_basis_C__', PACKAGE = 'DualSimplex', W, S)
 }
 
 #' Hinge function value for input matrix X
@@ -142,6 +158,14 @@ hinge_der_basis_C__ <- function(W, S, precision_ = 1e-10) {
 #' @return hinge function value
 hinge_C__ <- function(X) {
     .Call('_DualSimplex_hinge_C__', PACKAGE = 'DualSimplex', X)
+}
+
+#' Squared hinge function value for input matrix X
+#'
+#' @param X input matrix
+#' @return hinge function value
+squared_hinge_C__ <- function(X) {
+    .Call('_DualSimplex_squared_hinge_C__', PACKAGE = 'DualSimplex', X)
 }
 
 #' Main function to calculate error terms
@@ -193,6 +217,20 @@ derivative_stage2 <- function(X, Omega, D_w, SVRt, R, S, coef_der_X, coef_der_Om
     .Call('_DualSimplex_derivative_stage2', PACKAGE = 'DualSimplex', X, Omega, D_w, SVRt, R, S, coef_der_X, coef_der_Omega, coef_hinge_H, coef_hinge_W, coef_pos_D_h, coef_pos_D_w, cell_types, N, M, iterations, mean_radius_X, mean_radius_Omega, r_const_X, r_const_Omega, thresh)
 }
 
+#' Transform X and Omega points enforcing the desired equality for first coordinates
+#' This is done by moving magnitude from  i-th point of X to respective i-th point of the Omega and vice versa.
+#'
+#' @param X_dtilde current X_tilde_tilde matrix
+#' @param Omega_dtilde current Omega_tilde_tilde matrix
+#' @param sqrt_Sigma current sqrt of Omega
+#' @param N current sqrt of Omega
+#' @param M current sqrt of Omega
+#' @return corrected params
+#' @export
+ensure_D_integrity <- function(X_dtilde, Omega_dtilde, sqrt_Sigma, N, M) {
+    .Call('_DualSimplex_ensure_D_integrity', PACKAGE = 'DualSimplex', X_dtilde, Omega_dtilde, sqrt_Sigma, N, M)
+}
+
 #' Main function to calculate error terms
 #'
 #' @param X current X
@@ -218,7 +256,7 @@ derivative_stage2 <- function(X, Omega, D_w, SVRt, R, S, coef_der_X, coef_der_Om
 #' @param thresh experimental. not tested
 #' @param solution_balancing_threshold experimental. If solution is to far away we re-balance norms of the solution vectors between X and Omega
 #' @return new parameters
-alternative_derivative_stage2 <- function(X, Omega, D_w, SVRt, R, S, coef_der_X, coef_der_Omega, coef_hinge_H, coef_hinge_W, coef_pos_D_h, coef_pos_D_w, cell_types, N, M, iterations, mean_radius_X, mean_radius_Omega, r_const_X = 0, r_const_Omega = 0, thresh = 0.8, solution_balancing_threshold = 10) {
+alternative_derivative_stage2 <- function(X, Omega, D_w, SVRt, R, S, coef_der_X, coef_der_Omega, coef_hinge_H, coef_hinge_W, coef_pos_D_h, coef_pos_D_w, cell_types, N, M, iterations, mean_radius_X, mean_radius_Omega, r_const_X = 0, r_const_Omega = 0, thresh = 0.8, solution_balancing_threshold = 10000) {
     .Call('_DualSimplex_alternative_derivative_stage2', PACKAGE = 'DualSimplex', X, Omega, D_w, SVRt, R, S, coef_der_X, coef_der_Omega, coef_hinge_H, coef_hinge_W, coef_pos_D_h, coef_pos_D_w, cell_types, N, M, iterations, mean_radius_X, mean_radius_Omega, r_const_X, r_const_Omega, thresh, solution_balancing_threshold)
 }
 

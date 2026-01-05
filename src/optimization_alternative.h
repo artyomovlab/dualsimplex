@@ -1,7 +1,33 @@
 // [[Rcpp::depends(RcppArmadillo)]]
 #include <RcppArmadillo.h>
 
-arma::mat alternative_hinge_der_basis_C__(const arma::mat& W, const arma::mat& S, double precision_ = 1e-10);
+
+std::tuple<arma::mat, arma::mat, arma::mat> ensure_D_integrity_c(const arma::mat& X_dtilde,
+                              const arma::mat& Omega_dtilde,
+                              const arma::vec sqrt_Sigma,
+                              const double N,
+                              const double M);
+
+//' Transform X and Omega points enforcing the desired equality for first coordinates
+//' This is done by moving magnitude from  i-th point of X to respective i-th point of the Omega and vice versa.
+//'
+//' @param X_dtilde current X_tilde_tilde matrix
+//' @param Omega_dtilde current Omega_tilde_tilde matrix
+//' @param sqrt_Sigma current sqrt of Omega
+//' @param N current sqrt of Omega
+//' @param M current sqrt of Omega
+//' @return corrected params
+//' @export
+// [[Rcpp::export]]
+Rcpp::List ensure_D_integrity(const arma::mat& X_dtilde,
+                              const arma::mat& Omega_dtilde,
+                              const arma::vec sqrt_Sigma,
+                              const double N,
+                              const double M);
+
+
+
+
 
 //' Main function to calculate error terms
 //'
@@ -50,4 +76,4 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                              const double r_const_X = 0,
                              const double r_const_Omega = 0,
                              const double thresh = 0.8,
-                             const double solution_balancing_threshold = 10);
+                             const double solution_balancing_threshold = 10000);

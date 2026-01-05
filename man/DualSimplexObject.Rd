@@ -6,10 +6,10 @@
 \alias{DualSimplexSolver}
 \title{DualSimplex Object.}
 \format{
-\code{\link{R6Class}} object.
+\code{\link[R6]{R6Class}} object.
 }
 \value{
-Object of \code{\link{R6Class}} -- an interface to work with data.
+Object of \code{\link[R6]{R6Class}} -- an interface to work with data.
 }
 \description{
 The DualSimplex Object Class.

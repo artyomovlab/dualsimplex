@@ -37,51 +37,52 @@ arma::uvec update_idx(const arma::mat& prev_X, const arma::mat& new_X, const dou
     return new_idx;
 }
 
-arma::mat hinge_der_proportions_C__(const arma::mat& H, const arma::mat& R, double precision_) {
-    int m = H.n_rows;
-    int n = H.n_cols;
 
-    arma::mat TMP(n, m * m, arma::fill::zeros);
-
-    for (int i = 0; i < m; i++) {
-        for (int j = 0; j < n; j++) {
-            if (H(i, j) < 0) {
-                for (int k = 1; k < m; k++) {
-                    TMP(j, k + i * m) = -R(k, j);
-                }
-            }
-        }
-    }
-
-    return reshape(arma::sum(TMP, 0), m, m).t();
-}
-
-arma::mat hinge_der_basis_C__(const arma::mat& W, const arma::mat& S, double precision_) {
-    int n = W.n_cols;
-
-    arma::mat res(n, n, arma::fill::zeros);
-
-    for (int j = 0; j < n; j++) {
-        arma::vec t = W.col(j);
-        res.col(j) = arma::sum(-S.cols(find(t < -precision_)), 1);
-    }
-    res.row(0).zeros();
-
+arma::mat squared_hinge_der_proportions_C__(const arma::mat& H,
+                                    const arma::mat& R) {
+    int k = H.n_rows;
+    arma::mat H_neg = -2 * H;
+    H_neg.elem(arma::find(H_neg < 0)).fill(0);
+    arma::mat res(k, k, arma::fill::zeros);
+    res = H_neg * R.t();
     return res;
 }
 
-double hinge_C__(const arma::mat& X) {
-    arma::mat X_(X.n_rows, X.n_cols, arma::fill::zeros);
-    double elem_ = 0;
+arma::mat l1_hinge_der_proportions_C__(const arma::mat& H, const arma::mat& R) {
+    int k = H.n_rows;
+    arma::mat H_neg = - H;
+    // H_neg.elem(arma::find(H_neg == 0)).fill(-0.1); we could add this to always have derivative
+    H_neg.elem(arma::find(H_neg < 0)).fill(0);
+    H_neg.elem(arma::find(H_neg > 0)).fill(-1);
 
-    for (unsigned int i = 0; i < X.n_rows; i++) {
-        for (unsigned int j = 0; j < X.n_cols; j++) {
-            elem_ = X(i, j);
-            if (elem_ < 0) {
-                X_(i, j) = -elem_;
-            }
-        }
-    }
+    arma::mat res(k, k, arma::fill::zeros);
+
+    res = H_neg * R.t();
+    return res;
+}
+
+arma::mat l1_hinge_der_basis_C__(const arma::mat& W, const arma::mat& S) {
+    // derivative should be the same as for X but W and Omega are transposed
+    arma::mat res = l1_hinge_der_proportions_C__(W.t(), S);
+    return res.t();
+}
+
+arma::mat squared_hinge_der_basis_C__(const arma::mat& W, const arma::mat& S) {
+    // derivative should be the same as for X but W is transposed
+    arma::mat res = squared_hinge_der_proportions_C__(W.t(), S);
+    return res.t();
+}
+
+double hinge_C__(const arma::mat& X) {
+    arma::mat X_ = -X;
+    X_.elem(arma::find(X_ < 0)).fill(0);
+    return accu(X_);
+}
+
+double squared_hinge_C__(const arma::mat& X) {
+    arma::mat X_ = -X;
+    X_.elem(arma::find(X_ < 0)).fill(0);
+    X_ %= X_;
     return accu(X_);
 }
 
@@ -100,24 +101,33 @@ Rcpp::List calcErrors(const arma::mat& X,
                       const double coef_pos_D_h,
                       const double coef_pos_D_w) {
     arma::mat D_w_diag = diagmat(D_w);
-
     double deconv_error = pow(norm(SVRt - Omega * D_w_diag * X, "fro"), 2.0);
     // don't calculate since it is time consuming, should deliver the same minimum as th new one
     // double orig_deconv_error = pow(norm(V_row - S.t() * Omega * D_w_diag * X * R, "fro"), 2);
     double lambda_error = coef_ * coef_hinge_H * hinge_C__(X * R);
     double beta_error = coef_ * coef_hinge_W * hinge_C__(S.t() * Omega);
+
+    double squared_lambda_error = coef_ * coef_hinge_H * squared_hinge_C__(X * R);
+    double squared_beta_error = coef_ * coef_hinge_W * squared_hinge_C__(S.t() * Omega);
+
     arma::mat A = arma::sum(R, 1);
     arma::mat B = arma::sum(S, 1);
     double D_h_error = coef_pos_D_h * pow(norm(X.t() * D_h - A, "fro"), 2);
     double D_w_error = coef_pos_D_w * pow(norm(Omega * D_w - B, "fro"), 2);
     double new_error = deconv_error + lambda_error + beta_error + D_h_error + D_w_error;
+    double average_norm_X = arma::mean(arma::vecnorm(X, 2, 1));
+    double average_norm_Omega = arma::sum(arma::vecnorm(Omega, 2, 0));
+    double norm_term = (average_norm_X + average_norm_Omega);
 
     return Rcpp::List::create(Rcpp::Named("deconv_error") = deconv_error,
                               Rcpp::Named("lambda_error") = lambda_error,
                               Rcpp::Named("beta_error") = beta_error,
                               Rcpp::Named("D_h_error") = D_h_error,
                               Rcpp::Named("D_w_error") = D_w_error,
-                              Rcpp::Named("total_error") = new_error);
+                              Rcpp::Named("total_error") = new_error,
+                              Rcpp::Named("average_norm") = norm_term,
+                              Rcpp::Named("squared_lambda_error")= squared_lambda_error,
+                              Rcpp::Named("squared_beta_error")= squared_beta_error);
 }
 
 Rcpp::List derivative_stage2(const arma::mat& X,
@@ -141,7 +151,7 @@ Rcpp::List derivative_stage2(const arma::mat& X,
                              const double r_const_X,
                              const double r_const_Omega,
                              const double thresh) {
-    arma::mat errors_statistics(iterations, 9, arma::fill::zeros);
+    arma::mat errors_statistics(iterations, 10, arma::fill::zeros);
     arma::mat points_statistics_X(iterations, cell_types * cell_types, arma::fill::zeros);
     arma::mat points_statistics_Omega(iterations, cell_types * cell_types, arma::fill::zeros);
 
@@ -163,7 +173,7 @@ Rcpp::List derivative_stage2(const arma::mat& X,
         // derivative X
         der_X =
             -2 * (diagmat(new_D_w) * new_Omega.t() * (SVRt - new_Omega * diagmat(new_D_w) * new_X));
-        der_X += coef_hinge_H * hinge_der_proportions_C__(new_X * R, R);
+        der_X += coef_hinge_H * l1_hinge_der_proportions_C__(new_X * R, R);
         der_X += coef_pos_D_h * 2 * new_D_h * (new_X.t() * new_D_h - sum_rows_R).t();
         der_X.col(0).zeros();
         der_X = correctByNorm(der_X) * mean_radius_X;
@@ -198,7 +208,7 @@ Rcpp::List derivative_stage2(const arma::mat& X,
         // derivative Omega
         der_Omega =
             -2 * (SVRt - new_Omega * diagmat(new_D_w) * new_X) * new_X.t() * diagmat(new_D_w);
-        der_Omega += coef_hinge_W * hinge_der_basis_C__(S.t() * new_Omega, S);
+        der_Omega += coef_hinge_W * l1_hinge_der_basis_C__(S.t() * new_Omega, S);
         der_Omega += coef_pos_D_w * 2 * (new_Omega * new_D_w - sum_rows_S) * new_D_w.t();
         der_Omega.row(0).zeros();
         der_Omega = correctByNorm(der_Omega) * mean_radius_Omega;
@@ -261,7 +271,9 @@ Rcpp::List derivative_stage2(const arma::mat& X,
                                                    current_errors["total_error"],
                                                    static_cast<double>(neg_props),
                                                    static_cast<double>(neg_basis),
-                                                   sum_};
+                                                   sum_,
+                                                   current_errors["average_norm"]
+                                                   };
         points_statistics_X.row(itr_) = new_X.as_row();
         points_statistics_Omega.row(itr_) = new_Omega.as_row();
     }
