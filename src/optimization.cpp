@@ -105,8 +105,7 @@ Rcpp::List calcErrors(const arma::mat& X,
                       const double coef_hinge_H,
                       const double coef_hinge_W,
                       const double coef_pos_D_h,
-                      const double coef_pos_D_w,
-                      const double coef_norm) {
+                      const double coef_pos_D_w) {
     arma::mat D_w_diag = diagmat(D_w);
     double deconv_error = pow(norm(SVRt - Omega * D_w_diag * X, "fro"), 2.0);
     // don't calculate since it is time consuming, should deliver the same minimum as th new one
@@ -127,11 +126,7 @@ Rcpp::List calcErrors(const arma::mat& X,
 
     double average_norm_Omega = arma::sum(arma::vecnorm(Omega, 2, 0));
     double average_norm_Omega_zero = arma::sum(arma::vecnorm(Omega, 1, 0));
-
-    Rcpp::Rcout << "Average norm l2 X: " << average_norm_X << "; l0:" << average_norm_X_zero << ".\n";
-    Rcpp::Rcout << "Average norm l2 Omega :" << average_norm_Omega << "; l0: " << average_norm_Omega_zero << ".\n";
-
-    double norm_term = coef_norm * (average_norm_X + average_norm_Omega);
+    double norm_term = (average_norm_X + average_norm_Omega);
 
     return Rcpp::List::create(Rcpp::Named("deconv_error") = deconv_error,
                               Rcpp::Named("lambda_error") = lambda_error,
