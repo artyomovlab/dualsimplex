@@ -298,7 +298,7 @@ Calculate svd projection for current data. Will perform SVD.
 \subsection{Method \code{plot_projection_diagnostics()}}{
 A set of plots to extimate the projection.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$plot_projection_diagnostics()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$plot_projection_diagnostics(use_dims = private$display_dims)}\if{html}{\out{</div>}}
 }
 
 }
