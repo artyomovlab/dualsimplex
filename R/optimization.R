@@ -91,7 +91,8 @@ optimize_solution <- function(
       blocks_statistics = data.frame(matrix(0, nrow = 0, ncol = 13)),
       errors_statistics = NULL,
       points_statistics_X = NULL,
-      points_statistics_Omega = NULL
+      points_statistics_Omega = NULL,
+      points_statistics_Dw = NULL
     )
   }
 
@@ -217,6 +218,10 @@ optimize_solution <- function(
   solution_proj$optim_history$points_statistics_Omega <- rbind(
     solution_proj$optim_history$points_statistics_Omega,
            optimization_result$points_statistics_Omega
+  )
+  solution_proj$optim_history$points_statistics_Dw <- rbind(
+  solution_proj$optim_history$points_statistics_Dw,
+           optimization_result$points_statistics_Dw
   )
 
   colnames(solution_proj$optim_history$errors_statistics) <-

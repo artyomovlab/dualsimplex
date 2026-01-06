@@ -34,6 +34,8 @@ Rcpp::List theta_derivative_stage2(const arma::mat& X,
     arma::mat errors_statistics(iterations, 9, arma::fill::zeros);
     arma::mat points_statistics_X(iterations, cell_types * cell_types, arma::fill::zeros);
     arma::mat points_statistics_Omega(iterations, cell_types * cell_types, arma::fill::zeros);
+    arma::mat points_statistics_Dw(iterations, cell_types, arma::fill::zeros);
+
 
     // start the same way as for usual optimization.
     arma::mat new_X = X;
@@ -211,6 +213,8 @@ Rcpp::List theta_derivative_stage2(const arma::mat& X,
             sum_};
         points_statistics_X.row(itr_) = new_X.as_row();
         points_statistics_Omega.row(itr_) = new_Omega.as_row();
+        points_statistics_Dw.row(itr_) = new_D_w.as_row();
+
     }
 
     return Rcpp::List::create(Rcpp::Named("new_X") = new_X,
@@ -219,5 +223,6 @@ Rcpp::List theta_derivative_stage2(const arma::mat& X,
     Rcpp::Named("new_D_h") = new_D_h,
     Rcpp::Named("errors_statistics") = errors_statistics,
     Rcpp::Named("points_statistics_X") = points_statistics_X,
-    Rcpp::Named("points_statistics_Omega") = points_statistics_Omega);
+    Rcpp::Named("points_statistics_Omega") = points_statistics_Omega,
+    Rcpp::Named("points_statistics_Dw") = points_statistics_Dw);
 }
