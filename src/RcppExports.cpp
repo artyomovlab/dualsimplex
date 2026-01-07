@@ -34,6 +34,18 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// get_relative_coordinates
+arma::mat get_relative_coordinates(const arma::mat& projected_points, const arma::mat& solution_points);
+RcppExport SEXP _DualSimplex_get_relative_coordinates(SEXP projected_pointsSEXP, SEXP solution_pointsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type projected_points(projected_pointsSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type solution_points(solution_pointsSEXP);
+    rcpp_result_gen = Rcpp::wrap(get_relative_coordinates(projected_points, solution_points));
+    return rcpp_result_gen;
+END_RCPP
+}
 // getNonnegativeLowRankApproximationWithSVD
 Rcpp::List getNonnegativeLowRankApproximationWithSVD(const arma::mat& X, const int rank, const int iterations, const double left, const double right);
 RcppExport SEXP _DualSimplex_getNonnegativeLowRankApproximationWithSVD(SEXP XSEXP, SEXP rankSEXP, SEXP iterationsSEXP, SEXP leftSEXP, SEXP rightSEXP) {
@@ -431,6 +443,7 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_DualSimplex_cosine_similarity", (DL_FUNC) &_DualSimplex_cosine_similarity, 2},
     {"_DualSimplex_cosine_between_rows", (DL_FUNC) &_DualSimplex_cosine_between_rows, 1},
+    {"_DualSimplex_get_relative_coordinates", (DL_FUNC) &_DualSimplex_get_relative_coordinates, 2},
     {"_DualSimplex_getNonnegativeLowRankApproximationWithSVD", (DL_FUNC) &_DualSimplex_getNonnegativeLowRankApproximationWithSVD, 5},
     {"_DualSimplex_getNonnegativeLowRankApproximationWithHMT", (DL_FUNC) &_DualSimplex_getNonnegativeLowRankApproximationWithHMT, 7},
     {"_DualSimplex_getNonnegativeLowRankApproximationWithGN", (DL_FUNC) &_DualSimplex_getNonnegativeLowRankApproximationWithGN, 6},

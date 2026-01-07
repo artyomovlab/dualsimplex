@@ -18,6 +18,16 @@ cosine_between_rows <- function(X) {
     .Call('_DualSimplex_cosine_between_rows', PACKAGE = 'DualSimplex', X)
 }
 
+#' Get relative coordinates with respect to vertices.
+#' This is calculated as a determinant rations of the respective simplexes.
+#'
+#' @param projected_points coordinates of rows/columns in svd space (number_of_poitns x K).
+#' @param solution_points solution points to calculate respective relative coordinates (K x K).
+#' @return arma::mat coordinates of the points with respect to simplex vertices (number_of_points x K).
+get_relative_coordinates <- function(projected_points, solution_points) {
+    .Call('_DualSimplex_get_relative_coordinates', PACKAGE = 'DualSimplex', projected_points, solution_points)
+}
+
 #' Get low rank approximation with SVD method.
 #'
 #' @param X inpit matrix.

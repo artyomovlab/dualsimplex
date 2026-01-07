@@ -38,6 +38,25 @@ arma::uword getNegative(arma::mat X) {
 double getSum(arma::mat X, arma::mat M) { return arma::accu(X) / M.n_rows; }
 
 
+arma::mat get_relative_coordinates(const arma::mat& projected_points,const arma::mat& solution_points) {
+    arma::mat coefficients(projected_points.n_rows, solution_points.n_rows, arma::fill::zeros);
+    double main_determinant = abs(arma::det(solution_points));
+    double target_determinant = 1;
+    arma::mat target_matrix;
+    for (unsigned int i = 0; i < projected_points.n_rows; i++) {
+        for (unsigned int vertex = 0; vertex < solution_points.n_rows; vertex++ ) {
+            target_matrix = solution_points;
+            target_matrix.row(vertex) = projected_points.row(i);
+            target_determinant = abs(arma::det(target_matrix));
+            coefficients(i, vertex) = target_determinant/main_determinant;
+        }
+    }
+    // now normalize row
+    coefficients.each_col() %=  (1 / arma::sum(coefficients, 1));
+    return coefficients;
+}
+
+
 Rcpp::List getNonnegativeLowRankApproximationWithSVD(const arma::mat& X,  
                                                      const int rank,
                                                      const int iterations,

@@ -24,6 +24,15 @@ arma::uword getNegative(arma::mat X);
 
 double getSum(arma::mat X, arma::mat M);
 
+//' Get relative coordinates with respect to vertices.
+//' This is calculated as a determinant rations of the respective simplexes.
+//'
+//' @param projected_points coordinates of rows/columns in svd space (number_of_poitns x K).
+//' @param solution_points solution points to calculate respective relative coordinates (K x K).
+//' @return arma::mat coordinates of the points with respect to simplex vertices (number_of_points x K).
+// [[Rcpp::export]]
+arma::mat get_relative_coordinates(const arma::mat& projected_points,const arma::mat& solution_points);
+
 
 //' Get low rank approximation with SVD method.
 //'
