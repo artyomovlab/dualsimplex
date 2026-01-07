@@ -50,7 +50,11 @@ arma::mat get_relative_coordinates(const arma::mat& projected_points,const arma:
             target_determinant = abs(arma::det(target_matrix));
             coefficients(i, vertex) = target_determinant/main_determinant;
         }
+        Rcpp::Rcout << "Row : " << i  << std::endl;
+        Rcpp::Rcout << coefficients.row(i)  << std::endl;
+
     }
+
     // now normalize row
     coefficients.each_col() %=  (1 / arma::sum(coefficients, 1));
     return coefficients;
