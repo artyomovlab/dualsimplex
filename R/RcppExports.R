@@ -24,6 +24,7 @@ cosine_between_rows <- function(X) {
 #' @param projected_points coordinates of rows/columns in svd space (number_of_poitns x K).
 #' @param solution_points solution points to calculate respective relative coordinates (K x K).
 #' @return arma::mat coordinates of the points with respect to simplex vertices (number_of_points x K).
+#' @export
 get_relative_coordinates <- function(projected_points, solution_points) {
     .Call('_DualSimplex_get_relative_coordinates', PACKAGE = 'DualSimplex', projected_points, solution_points)
 }
