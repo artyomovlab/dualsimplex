@@ -17,23 +17,31 @@ Rcpp::List clean_reverse_sinkhorn_c(const arma::mat& result_H_col,
 
 
     D_w = 1 / arma::sum(W_row, 0);
+    Rcpp::Rcout << "Size of D_w (" << D_w.n_rows << ", " D_w.n_cols << ").\n";
+
     // V_fs = W_ss * D_w * D_w_inv * H_ss * D_v_last
     H_row = arma::diagmat(1 / D_w) * H_col * arma::diagmat(1 / D_vs_col.col(iterations - 1)) ;
     // now we have W_ss * H_ss
+    Rcpp::Rcout << "Size of H_row (" << H_row.n_rows << ", " H_row.n_cols << ").\n";
 
     // start iteratively update them
     for (int i = iterations - 2; i >= 0; i--) {
         W_row = arma::diagmat(1 / D_vs_row.col(i+1)) * W_row;
         // matrix needed to column normalize W row will be used as intermediate multiplier to avoid overflow
         D_w = 1 / arma::sum(W_row, 0);
-        W_col = W_row * D_w;
-        H_col =  diagmat(1 / D_w) *  H_row;
+        Rcpp::Rcout << "Size of D_w (" << D_w.n_rows << ", " D_w.n_cols << ").\n";
+
+        W_col = W_row *  arma::diagmat(D_w);
+        H_col =  arma::diagmat(1 / D_w) *  H_row;
+        Rcpp::Rcout << "Size of H_col (" << H_col.n_rows << ", " H_col.n_cols << ").\n";
+
 
         // now deal with col norm matrices
         H_col = H_col * arma::diagmat(1 / D_vs_col.col(i));
         // matrix needed to row normalize H_col will be used as intermediate multiplier to avoid overflow
         D_h = 1 / arma::sum(H_col, 1);
-        H_row = D_h * H_col;
+        Rcpp::Rcout << "Size of D_h (" << D_h.n_rows << ", " D_h.n_cols << ").\n";
+        H_row =  arma::diagmat(D_h) * H_col;
         W_row = W_col * diagmat(1 / D_h);
     }
     // now we have W_row and H_row and 1 more normalization left
@@ -41,7 +49,7 @@ Rcpp::List clean_reverse_sinkhorn_c(const arma::mat& result_H_col,
 
     // matrix needed to column normalize W row will be used as intermediate multiplier to avoid overflow
     D_w = 1 / arma::sum(W_row, 0);
-    W_col = W_row * D_w;
+    W_col = W_row *  arma::diagmat(D_w);
     H_col =  diagmat(1 / D_w) *  H_row;
 
     return Rcpp::List::create(Rcpp::Named("W") = W_col,
