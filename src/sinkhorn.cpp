@@ -18,7 +18,7 @@ Rcpp::List clean_reverse_sinkhorn_c(const arma::mat& result_H_col,
 
     D_w = 1 / arma::sum(W_row, 0);
     // V_fs = W_ss * D_w * D_w_inv * H_ss * D_v_last
-    H_row = arma::diagmat(1 / D_vs_col.col(iterations - 1)) * H_col * arma::diagmat(1 / D_vs_col.col(iterations - 1)) ;
+    H_row = arma::diagmat(1 / D_w) * H_col * arma::diagmat(1 / D_vs_col.col(iterations - 1)) ;
     // now we have W_ss * H_ss
 
     // start iteratively update them
