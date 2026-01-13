@@ -25,14 +25,14 @@ Rcpp::List clean_reverse_sinkhorn_c(const arma::mat& result_H_col,
     for (int i = iterations - 2; i >= 0; i--) {
         W_row = arma::diagmat(1 / D_vs_row.col(i+1)) * W_row;
         // matrix needed to column normalize W row will be used as intermediate multiplier to avoid overflow
-        D_w = 1 / arma::sum(W_row, 1);
+        D_w = 1 / arma::sum(W_row, 0);
         W_col = W_row * D_w;
         H_col =  diagmat(1 / D_w) *  H_row;
 
         // now deal with col norm matrices
         H_col = H_col * arma::diagmat(1 / D_vs_col.col(i));
         // matrix needed to row normalize H_col will be used as intermediate multiplier to avoid overflow
-        D_h = 1 / arma::sum(H_col, 0);
+        D_h = 1 / arma::sum(H_col, 1);
         H_row = D_h * H_col;
         W_row = W_col * diagmat(1 / D_h);
     }
@@ -40,7 +40,7 @@ Rcpp::List clean_reverse_sinkhorn_c(const arma::mat& result_H_col,
     W_row = arma::diagmat(1 / D_vs_row.col(0)) * W_row; // this is not row norm anymore.
 
     // matrix needed to column normalize W row will be used as intermediate multiplier to avoid overflow
-    D_w = 1 / arma::sum(W_row, 1);
+    D_w = 1 / arma::sum(W_row, 0);
     W_col = W_row * D_w;
     H_col =  diagmat(1 / D_w) *  H_row;
 
