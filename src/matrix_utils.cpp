@@ -60,7 +60,7 @@ arma::mat get_relative_coordinates(const arma::mat& projected_points,const arma:
 
 arma::mat get_relative_coordinates_closest(const arma::mat& projected_points,const arma::mat& solution_points) {
     arma::mat coefficients(projected_points.n_rows, solution_points.n_rows, arma::fill::zeros);
-    double main_determinant = std::abs(arma::det(solution_points));
+    double main_determinant = arma::det(solution_points);
     double target_determinant = 1.0;
     arma::mat target_matrix;
     for (unsigned int i = 0; i < projected_points.n_rows; i++) {
@@ -72,7 +72,7 @@ arma::mat get_relative_coordinates_closest(const arma::mat& projected_points,con
         }
     }
     // negative elements set to 0
-    Rcpp::Rcout << coefficients << "\n";
+    //Rcpp::Rcout << coefficients << "\n";
 
     coefficients.elem(arma::find(coefficients < 0)).fill(0);
     // now normalize row
