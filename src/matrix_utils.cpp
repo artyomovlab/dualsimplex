@@ -52,7 +52,6 @@ arma::mat get_relative_coordinates(const arma::mat& projected_points,const arma:
         }
 
     }
-
     // now normalize row
     coefficients.each_col() %=  (1 / arma::sum(coefficients, 1));
     return coefficients;
@@ -69,14 +68,11 @@ arma::mat get_relative_coordinates_closest(const arma::mat& projected_points,con
             target_matrix = solution_points;
             target_matrix.row(vertex) = projected_points.row(i);
             target_determinant = arma::det(target_matrix);
-            if (target_determinant > 0) {
-                coefficients(i, vertex) = target_determinant/main_determinant;
-            } else {
-                coefficients(i, vertex) = 0;
-            }
+            coefficients(i, vertex) = target_determinant/main_determinant;
         }
-
     }
+    // negative elements set to 0
+    coefficients.elem(arma::find(coefficients < 0)).fill(0);
     // now normalize row
     coefficients.each_col() %=  (1 / arma::sum(coefficients, 1));
     return coefficients;
