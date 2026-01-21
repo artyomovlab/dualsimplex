@@ -15,11 +15,10 @@ Rcpp::List clean_reverse_sinkhorn_c(const arma::mat& result_H_col,
     arma::mat D_w , D_h; //intermediate matrices to move some magnitude between matrices
 
 
-
-    D_w = 1 / arma::sum(W_row, 0);
+    D_h = 1/arma::sum(H_col, 1);
 
     // V_fs = W_ss * D_w * D_w_inv * H_ss * D_v_last
-    H_row = arma::diagmat(1 / D_w) * H_col * arma::diagmat(1 / D_vs_col.col(iterations - 1)) ;
+    H_row = arma::diagmat(D_h) * H_col;
     // now we have W_ss * H_ss
     Rcpp::Rcout << "finished first step.\n";
 
