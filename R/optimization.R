@@ -92,7 +92,11 @@ optimize_solution <- function(
       errors_statistics = NULL,
       points_statistics_X = NULL,
       points_statistics_Omega = NULL,
-      points_statistics_Dw = NULL
+      points_statistics_Dw = NULL,
+      points_statistics_X_dtilda = NULL,
+      points_statistics_Omega_dtilda = NULL,
+      points_statistics_X_dtilda_uncorrected = NULL,
+      points_statistics_Omega_dtilda_uncorrected = NULL,
     )
   }
 
@@ -223,6 +227,26 @@ optimize_solution <- function(
   solution_proj$optim_history$points_statistics_Dw,
            optimization_result$points_statistics_Dw
   )
+  if (config$method == "positivity")  {
+    solution_proj$optim_history$points_statistics_X_dtilda <- rbind(
+      solution_proj$optim_history$points_statistics_X_dtilda,
+      optimization_result$points_statistics_X_dtilda
+  )
+    solution_proj$optim_history$points_statistics_X_dtilda_uncorrected <- rbind(
+      solution_proj$optim_history$points_statistics_X_dtilda_uncorrected,
+      optimization_result$points_statistics_X_dtilda_uncorrected
+  )
+    solution_proj$optim_history$points_statistics_Omega_dtilda <- rbind(
+      solution_proj$optim_history$points_statistics_Omega_dtilda,
+      optimization_result$points_statistics_Omega_dtilda
+  )
+    solution_proj$optim_history$points_statistics_Omega_dtilda_uncorrected <- rbind(
+      solution_proj$optim_history$points_statistics_Omega_dtilda_uncorrected,
+      optimization_result$points_statistics_Omega_dtilda_uncorrected
+  )
+
+  }
+
 
   colnames(solution_proj$optim_history$errors_statistics) <-
     c(

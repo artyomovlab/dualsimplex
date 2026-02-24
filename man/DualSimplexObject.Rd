@@ -301,6 +301,13 @@ A set of plots to extimate the projection.
 \if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$plot_projection_diagnostics(use_dims = private$display_dims)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{use_dims}}{which dimensions use for projeciton plots}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-DualSimplexSolver-plot_distances_distribution"></a>}}

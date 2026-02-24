@@ -69,6 +69,10 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
     arma::mat errors_statistics(iterations, 10, arma::fill::zeros);
     arma::mat points_statistics_X(iterations, cell_types * cell_types, arma::fill::zeros);
     arma::mat points_statistics_Omega(iterations, cell_types * cell_types, arma::fill::zeros);
+    arma::mat points_statistics_X_dtilda_uncorrected(iterations, cell_types * cell_types, arma::fill::zeros);
+    arma::mat points_statistics_Omega_dtilda_uncorrected(iterations, cell_types * cell_types, arma::fill::zeros);
+    arma::mat points_statistics_X_dtilda_corrected(iterations, cell_types * cell_types, arma::fill::zeros);
+    arma::mat points_statistics_Omega_dtilda_corrected(iterations, cell_types * cell_types, arma::fill::zeros);
     arma::mat points_statistics_Dw(iterations, cell_types, arma::fill::zeros);
 
     arma::mat new_X = X;
@@ -189,7 +193,8 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
             new_Omega = tmp_Omega;
             new_X = tmp_X;
         }
-
+       points_statistics_X_dtilda_uncorrected.row(itr_) = new_X.as_row();
+       points_statistics_Omega_dtilda_uncorrected.row(itr_) = new_Omega.as_row();
        std::tie(new_X, new_Omega, new_D_w_sqrt) = ensure_D_integrity_c(new_X, new_Omega, sqrt_Sigma, N, M);
        final_X = arma::diagmat(1/new_D_w_sqrt) * new_X * arma::diagmat(sqrt_Sigma);
        final_Omega = arma::diagmat(sqrt_Sigma)* new_Omega * arma::diagmat(1/new_D_w_sqrt);
@@ -258,7 +263,8 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                                                    sum_,
                                                    current_errors["average_norm"]};
 
-
+        points_statistics_X_dtilda_corrected.row(itr_) = new_X.as_row();
+        points_statistics_Omega_dtilda_corrected.row(itr_) = new_Omega.as_row();
         points_statistics_X.row(itr_) = final_X.as_row();
         points_statistics_Omega.row(itr_) = final_Omega.as_row();
         points_statistics_Dw.row(itr_) = new_D_w.as_row();
@@ -272,5 +278,10 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                               Rcpp::Named("errors_statistics") = errors_statistics,
                               Rcpp::Named("points_statistics_X") = points_statistics_X,
                               Rcpp::Named("points_statistics_Omega") = points_statistics_Omega,
-                              Rcpp::Named("points_statistics_Dw") = points_statistics_Dw);
+                              Rcpp::Named("points_statistics_Dw") = points_statistics_Dw,
+                              Rcpp::Named("points_statistics_Omega_dtilda_uncorrected") = points_statistics_Omega_dtilda_uncorrected,
+                              Rcpp::Named("points_statistics_Omega_dtilda") = points_statistics_Omega_dtilda_corrected,
+                              Rcpp::Named("points_statistics_X_dtilda_uncorrected") = points_statistics_X_dtilda_uncorrected,
+                              Rcpp::Named("points_statistics_X_dtilda") = points_statistics_X_dtilda_corrected
+                              );
 }
