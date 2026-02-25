@@ -96,7 +96,7 @@ optimize_solution <- function(
       points_statistics_X_dtilda = NULL,
       points_statistics_Omega_dtilda = NULL,
       points_statistics_X_dtilda_uncorrected = NULL,
-      points_statistics_Omega_dtilda_uncorrected = NULL,
+      points_statistics_Omega_dtilda_uncorrected = NULL
     )
   }
 
