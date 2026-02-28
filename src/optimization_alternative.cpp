@@ -122,6 +122,7 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
        if (any( tmp_X.col(0) <= 0)) {
             Rcpp::Rcout << "Couldn't find good initial inverse of Omega\n"  << std::endl;
             Rcpp::stop("!!Start with different initialization or ensure X and Omega are inverse!!");
+
     }
     else {
         new_X = tmp_X;
@@ -129,6 +130,7 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
     else {
         new_Omega = tmp_Omega;
     }
+
     Rcpp::Rcout << "X and Omega are acceptable now. Continue with optimization\n"  << std::endl;
 
     // here we assume X and Omega are inverse of each other and positive as needed

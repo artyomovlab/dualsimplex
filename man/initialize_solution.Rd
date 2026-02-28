@@ -9,7 +9,7 @@ initialize_solution(proj, strategy = "select_x", kwargs = NULL)
 \arguments{
 \item{proj}{dso$st$proj object containing containing all results of projection operation. (e.g. projected points and vectors)}
 
-\item{strategy}{strategy to use for initialization. valid values are "select_x", "select_omega", "random" and "marker_means"}
+\item{strategy}{strategy to use for initialization. valid values are "select_x", "select_omega", "random", "random_invertible" and "marker_means"}
 
 \item{kwargs}{put here marker gene names for each of the cell type if use  marker_means}
 }

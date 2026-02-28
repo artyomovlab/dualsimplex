@@ -3,7 +3,7 @@
 #' In general it can use provided markers, solution for one of the simplex or random values
 #'
 #' @param proj dso$st$proj object containing containing all results of projection operation. (e.g. projected points and vectors)
-#' @param strategy strategy to use for initialization. valid values are "select_x", "select_omega", "random" and "marker_means"
+#' @param strategy strategy to use for initialization. valid values are "select_x", "select_omega", "random", "random_invertible" and "marker_means"
 #' @param kwargs put here marker gene names for each of the cell type if use  marker_means
 #' @export
 initialize_solution <- function(proj, strategy = "select_x", kwargs = NULL) {
@@ -176,6 +176,44 @@ initializers <- list(
       D_w = Ds$D_w,
       D_h = Ds$D_h
     ))
+  },
+  random_invertible= function(proj, kwargs = NULL){
+    n_cell_types <- proj$meta$K
+    M <- proj$meta$M
+    N <- proj$meta$N
+    sigma_1 <-  sqrt(M/N)
+    # We want to ensure that X_dtilda and Omega_dtilda are inverse and have all positive first row/column respectively
+
+    # First we generate d candidates  generationg vector whos elements sum to M
+    d_elements <-  runif(n_cell_types, min = 1e-5, max = 1.0)
+    d_elements <- M* d_elements / sum(d_elements)
+
+    # r1 (row of omega) will be  sqrt(d) / sqrt(sigma_1) / sqrt(M)
+    r1 <- sqrt(d_elements) / (sqrt(sigma_1) * sqrt(M))
+    # c1 is predefined. its sqrt(d) / sqrt(sigma_1) / sqrt(N)
+    c1 <- sqrt(d_elements) / (sqrt(sigma_1) * sqrt(N))
+    if (!((sum(r1 * c1) - 1) < 1e-6)) {print("something broken in initalization and matrix will not inverted of each other")}
+    # construct the null space vectors of the
+    N_r <- MASS::Null(matrix(r1, ncol = 1))
+    # then X_d_tilda will be the  new c1 with this null space
+    X_dtilda <- cbind(c1, N_r)
+    # and omega should be the inverse of this matrix
+    Omega_dtilda <- MASS::ginv(X_dtilda)
+
+    # Now let's combine all of this to the new matrix X and Omega
+    # X should be   * 1/sqrt(D)  * X_d_tilda   * Sigma
+    X <- diag(1/sqrt(d_elements))%*%  X_dtilda %*% sqrt(proj$meta$Sigma)  ;
+    # Omega should be 1/sqrt(D) * X_d_tilda * Sigma
+    Omega <-  sqrt(proj$meta$Sigma) %*%  Omega_dtilda %*% diag(1/sqrt(d_elements));
+    Dw <- as.matrix(d_elements)
+    Dh <- Dw *(N / M);
+    return(list(
+      X = X,
+      Omega = t(Omega),
+      D_w = Dw,
+      D_h = Dh
+    ))
+
   },
     random_symmetric = function(proj, kwargs = NULL) {
     if (!is.null(kwargs) && "n" %in% kwargs) {

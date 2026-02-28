@@ -22,8 +22,8 @@ Rcpp::List reverse_sinkhorn_c(const arma::mat& result_H_row,
 
 //' Reverse Sinkhorn scaling method without any nnls usage.
 //'
-//' @param result_H_row H_ss returned by DualSimplex. (row normalized X*R).
-//' @param result_W_col W_gs returned by DualSimplex. (row normalized t(S)*Omega).
+//' @param result_H_col H_gs calculated geometrically from the solution
+//' @param result_W_row W_ss calculated geometrically from the solution.
 //' @param D_vs_row row normalizing matrices used for V in forward procedure.
 //' @param D_vs_col column normalizing matrices used for V in forward procedure.
 //' @param iterations how many iterations back
