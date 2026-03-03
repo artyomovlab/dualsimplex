@@ -73,11 +73,11 @@ Rcpp::List reverse_sinkhorn_c(const arma::mat& result_H_row,
     arma::vec D_w_inv_pred_vec(W_col.n_cols, arma::fill::zeros);
     arma::vec D_h_inv_pred_vec(H_row.n_rows, arma::fill::zeros);
 
-    D_w_inv_pred_vec = nnls_C__(W_col, ones_like_W);
+    D_w_inv_pred_vec = nnls_nonzero_C__(W_col, ones_like_W);
     W_row = W_col * diagmat(D_w_inv_pred_vec);
 
     for (int i = iterations - 1; i >= 0; i--) {
-        D_h_inv_pred_vec = nnls_C__(H_row.t(), ones_like_H);
+        D_h_inv_pred_vec = nnls_nonzero_C__(H_row.t(), ones_like_H);
 
         D_ws_col.col(i) = 1 / D_w_inv_pred_vec;
         D_hs_row.col(i) = 1 / D_h_inv_pred_vec;
@@ -85,7 +85,7 @@ Rcpp::List reverse_sinkhorn_c(const arma::mat& result_H_row,
         W_col = arma::diagmat(1 / D_vs_row.col(i)) * W_row * arma::diagmat(1 / D_h_inv_pred_vec);
 
         if (i != 0) {
-            D_w_inv_pred_vec = nnls_C__(W_col, ones_like_W);
+            D_w_inv_pred_vec = nnls_nonzero_C__(W_col, ones_like_W);
             W_row = W_col * diagmat(D_w_inv_pred_vec);
             H_row = diagmat(1 / D_w_inv_pred_vec) * H_col * arma::diagmat(1 / D_vs_col.col(i - 1));
         }
