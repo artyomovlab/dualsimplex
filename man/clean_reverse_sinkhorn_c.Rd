@@ -13,15 +13,15 @@ clean_reverse_sinkhorn_c(
 )
 }
 \arguments{
+\item{result_H_col}{H_gs calculated geometrically from the solution}
+
+\item{result_W_row}{W_ss calculated geometrically from the solution.}
+
 \item{D_vs_row}{row normalizing matrices used for V in forward procedure.}
 
 \item{D_vs_col}{column normalizing matrices used for V in forward procedure.}
 
 \item{iterations}{how many iterations back}
-
-\item{result_H_row}{H_ss returned by DualSimplex. (row normalized X*R).}
-
-\item{result_W_col}{W_gs returned by DualSimplex. (row normalized t(S)*Omega).}
 }
 \value{
 named list of W, H, Dv_inv_W_row, H_row, D_ws_col, D_hs_row.
