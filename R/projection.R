@@ -231,6 +231,28 @@ reverse_solution_projection <- function(solution_proj, proj) {
   return(solution_scaled)
 }
 
+#' Transform solution back from projected space to original space. Obtains paired matrices
+#' Remember result matrices are paired not the same as for reverse_solution_projection.
+#' @param solution_proj dso$st$solution_proj object containing solution and optimization history
+#' @param proj dso$st$proj object containing projected points and info about projection
+#' @return solution_scaled object containing two matrices (H_gs, W_ss)
+#' @import Rcpp
+#' @import RcppArmadillo
+#' @return list containing H_gs (col_norm) W_ss (row_norm)
+#' @export
+reverse_solution_projection_geometrical <- function(solution_proj, proj) {
+  W_ss <- get_relative_coordinates_closest(proj$X, solution_proj$X)
+  H_gs <-  t(get_relative_coordinates_closest(proj$Omega, solution_proj$Omega))
+  solution_scaled <-  list("H_col" = H_gs, "W_row" = W_ss)
+  if (is.null(rownames(solution_scaled$W_row)) && is.null(colnames(solution_scaled$H_col))) {
+    rownames(solution_scaled$H_row) <- paste0("cell_type_", 1:nrow(solution_scaled$H_row))
+    colnames(solution_scaled$W_row) <- rownames(solution_scaled$H_row)
+  }
+  return(solution_scaled)
+}
+
+
+
 #' Go from H_ss, W_gs to X and Omega coordinates. Used get coordinates for external W, H matrices.
 #'
 #' @param H_ss scaled proportion matrix (result of extended sinkhorn or optimization in sinkhorn space)
