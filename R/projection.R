@@ -245,8 +245,8 @@ reverse_solution_projection_geometrical <- function(solution_proj, proj) {
   H_gs <-  t(get_relative_coordinates_closest(proj$Omega, solution_proj$Omega))
   solution_scaled <-  list("H_col" = H_gs, "W_row" = W_ss)
   if (is.null(rownames(solution_scaled$W_row)) && is.null(colnames(solution_scaled$H_col))) {
-    rownames(solution_scaled$H_row) <- paste0("cell_type_", 1:nrow(solution_scaled$H_row))
-    colnames(solution_scaled$W_row) <- rownames(solution_scaled$H_row)
+    rownames(solution_scaled$H_col) <- paste0("cell_type_", 1:nrow(solution_scaled$H_col))
+    colnames(solution_scaled$W_row) <- rownames(solution_scaled$H_col)
   }
   return(solution_scaled)
 }
