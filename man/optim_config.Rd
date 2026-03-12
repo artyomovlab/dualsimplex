@@ -17,7 +17,9 @@ optim_config(
   x_center = NULL,
   omega_center = NULL,
   center_threshold = 0,
-  solution_balancing_threshold = 10000,
+  solution_balancing_threshold = 1e+06,
+  reg_X = 1,
+  reg_Omega = 1,
   method = "basic"
 )
 }
@@ -47,6 +49,10 @@ optim_config(
 \item{center_threshold}{constraint for the  step.}
 
 \item{solution_balancing_threshold}{EXPERIMENTAL: only for positivity so far. If optimization going to far from the points in one space, some value of this distance will be transferred to the second space/}
+
+\item{reg_X}{regularization coefficient for X}
+
+\item{reg_Omega}{regularization coefficient for Omega}
 
 \item{method}{method of optimization to use can be  basic/positivity.}
 }

@@ -62,10 +62,9 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                              const int iterations,
                              const double mean_radius_X,
                              const double mean_radius_Omega,
-                             const double r_const_X,
-                             const double r_const_Omega,
-                             const double thresh,
-                             const double solution_balancing_threshold) {
+                             const double solution_balancing_threshold,
+                             const double reg_X,
+                             const double reg_Omega) {
     arma::mat errors_statistics(iterations, 10, arma::fill::zeros);
     arma::mat points_statistics_X(iterations, cell_types * cell_types, arma::fill::zeros);
     arma::mat points_statistics_Omega(iterations, cell_types * cell_types, arma::fill::zeros);
@@ -83,7 +82,7 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
     arma::mat final_Omega = Omega;
     arma::mat new_D_w = D_w;
     arma::mat new_D_w_sqrt = arma::sqrt(new_D_w);
-    arma::mat temporary_new_D_w_sqrt =arma::sqrt(new_D_w);
+    arma::mat temporary_new_D_w_sqrt = arma::sqrt(new_D_w);
 
     arma::mat new_D_h = new_D_w * (N / M);
 
@@ -113,16 +112,15 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
 //    Rcpp::Rcout << new_Omega  << std::endl;
 
     // Start initial inverse search
-    Rcpp::Rcout << "Start initial inverse search"  << std::endl;
+    Rcpp::Rcout << "Check initial inverse matrix properties"  << std::endl;
     tmp_Omega = arma::pinv(new_X);
     if (any( tmp_Omega.row(0) <= 0)) {
-       Rcpp::Rcout << "Couldn't find good initial inverse of X \n"  << std::endl;
+       Rcpp::Rcout << "Couldn't find good initial inverse of X provided\n"  << std::endl;
        Rcpp::Rcout << "Try with Omega \n"  << std::endl;
        tmp_X = arma::pinv(new_Omega);
        if (any( tmp_X.col(0) <= 0)) {
-            Rcpp::Rcout << "Couldn't find good initial inverse of Omega\n"  << std::endl;
-            Rcpp::stop("!!Start with different initialization or ensure X and Omega are inverse!!");
-
+            Rcpp::Rcout << "Couldn't find good initial inverse of Omega provided\n"  << std::endl;
+            Rcpp::stop("!!Start with different initialization or ensure X and Omega are inverse!! (try `random_invertible`)");
     }
     else {
         new_X = tmp_X;
@@ -131,7 +129,7 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         new_Omega = tmp_Omega;
     }
 
-    Rcpp::Rcout << "X and Omega are acceptable now. Continue with optimization\n"  << std::endl;
+    Rcpp::Rcout << "X and Omega are acceptable. Continue with the optimization\n"  << std::endl;
 
     // here we assume X and Omega are inverse of each other and positive as needed
     for (int itr_ = 0; itr_ < iterations; itr_++) {
@@ -141,8 +139,8 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         der_X += coef_hinge_W * hinge_term_W;
 
         // Regularization here is advised but not mandatory since X and Omega regularize each other.
-        der_X += 2 * new_X; //regularization for X
-        der_X += (-new_Omega.t()) * 2 * new_Omega * (new_Omega.t()); //regularization for Omega
+        der_X += reg_X * 2 * new_X; //regularization for X
+        der_X += reg_Omega * (-new_Omega.t()) * 2 * new_Omega * (new_Omega.t()); //regularization for Omega
 
 
         mean_norm_solution_X = arma::mean(arma::vecnorm(new_X, 2, 1));

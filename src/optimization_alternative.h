@@ -49,9 +49,8 @@ Rcpp::List ensure_D_integrity(const arma::mat& X_dtilde,
 //' @param iterations number of iterations
 //' @param mean_radius_X data dependent restriction for updates
 //' @param mean_radius_Omega dependent restriction for updates
-//' @param r_const_X experimental. not tested
-//' @param r_const_Omega experimental. not tested
-//' @param thresh experimental. not tested
+//' @param reg_X regularization coefficient for X
+//' @param reg_Omega regularization coefficient for Omega.
 //' @param solution_balancing_threshold experimental. If solution is to far away we re-balance norms of the solution vectors between X and Omega
 //' @return new parameters
 // [[Rcpp::export]]
@@ -73,7 +72,6 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                              const int iterations,
                              const double mean_radius_X,
                              const double mean_radius_Omega,
-                             const double r_const_X = 0,
-                             const double r_const_Omega = 0,
-                             const double thresh = 0.8,
-                             const double solution_balancing_threshold = 10000);
+                             const double solution_balancing_threshold = 1000000,
+                             const double reg_X = 1,
+                             const double reg_Omega=1);

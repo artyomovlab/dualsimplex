@@ -16,6 +16,8 @@
 #' @param x_center X rays around which to perform search in theta search.
 #' @param omega_center Omega rays around which to perform search in theta search.
 #' @param center_threshold constraint for the  step.
+#' @param reg_X regularization coefficient for X
+#' @param reg_Omega regularization coefficient for Omega
 #' @param solution_balancing_threshold EXPERIMENTAL: only for positivity so far. If optimization going to far from the points in one space, some value of this distance will be transferred to the second space/
 #' @param method method of optimization to use can be  basic/positivity.
 #' @return ready to use list with algorithm configuration
@@ -33,7 +35,9 @@ optim_config <- function(
   x_center = NULL,
   omega_center = NULL,
   center_threshold = 0,
-  solution_balancing_threshold= 10000,
+  solution_balancing_threshold= 1000000,
+  reg_X = 1,
+  reg_Omega=1,
   method = "basic" # basic/positivity/theta
 ) {
   return(list(
@@ -50,6 +54,8 @@ optim_config <- function(
     omega_center = omega_center,
     center_threshold = center_threshold,
     solution_balancing_threshold=solution_balancing_threshold,
+    reg_X = reg_X,
+    reg_Omega = reg_Omega,
     method = method
   ))
 }
@@ -176,17 +182,22 @@ optimize_solution <- function(
     M = proj$meta$M,
     iterations = iterations,
     mean_radius_X = mean_radius_X,
-    mean_radius_Omega = mean_radius_Omega,
-    r_const_X = r_limits$R_limit_X,
-    r_const_Omega = r_limits$R_limit_Omega,
-    thresh = config$cosine_thresh
+    mean_radius_Omega = mean_radius_Omega
   )
   optimization_result <- if (config$method == "positivity") {
     optimization_params$solution_balancing_threshold <- config$solution_balancing_threshold
+    optimization_params$reg_X  <- config$reg_X
+    optimization_params$reg_Omega  <- config$reg_Omega
     do.call(alternative_derivative_stage2, optimization_params)
   } else if (config$method == "basic") {
+    optimization_params$r_const_X <-  r_limits$R_limit_X
+    optimization_params$r_const_Omega <-  r_limits$R_limit_Omega
+    optimization_params$thresh <- config$cosine_thresh
     do.call(derivative_stage2, optimization_params)
   } else if (config$method == "theta") {
+    optimization_params$r_const_X <-  r_limits$R_limit_X
+    optimization_params$r_const_Omega <-  r_limits$R_limit_Omega
+    optimization_params$thresh <- config$cosine_thresh
     # this optimization ensures that solution points are not going away to far from the predefined center points.
     # the distance is measured as cosine distance between rays originating from 0.
     optimization_params$X_center <- config$x_center # predefined center point for X space. could be NULL
