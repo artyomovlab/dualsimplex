@@ -175,8 +175,6 @@ optimize_solution <- function(
     coef_der_Omega = config$coef_der_Omega,
     coef_hinge_H = config$coef_hinge_H,
     coef_hinge_W = config$coef_hinge_W,
-    coef_pos_D_h = config$coef_pos_D_h,
-    coef_pos_D_w = config$coef_pos_D_w,
     cell_types = n_cell_types,
     N = proj$meta$N,
     M = proj$meta$M,
