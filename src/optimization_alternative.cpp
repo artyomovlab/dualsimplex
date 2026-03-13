@@ -119,6 +119,15 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         new_Omega = tmp_Omega;
     }
 
+    Rcpp::Rcout << "Initial X\n"  << std::endl;
+    Rcpp::Rcout << new_X << std::endl;
+    Rcpp::Rcout << "Initial Omega\n"  << std::endl;
+    Rcpp::Rcout << new_Omega << std::endl;
+    Rcpp::Rcout << "Initial D\n"  << std::endl;
+    Rcpp::Rcout << new_D_w << std::endl;
+    Rcpp::Rcout << "Initial sqrt D\n"  << std::endl;
+    Rcpp::Rcout << new_D_w_sqrt << std::endl;
+
     Rcpp::Rcout << "X and Omega are acceptable. Continue with the optimization\n"  << std::endl;
 
     // here we assume X and Omega are inverse of each other and positive as needed
@@ -176,6 +185,7 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                     new_X = tmp_X;
                     } else {
                         Rcpp::Rcout << "Couldn't find good inverse X, reject X for one of the steps\n"  << std::endl;
+                        Rcpp::Rcout << tmp_X << std::endl;
                     }
                 }
             }
