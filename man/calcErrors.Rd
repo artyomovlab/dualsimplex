@@ -12,13 +12,12 @@ calcErrors(
   SVRt,
   R,
   S,
-  coef_,
   coef_der_X,
   coef_der_Omega,
   coef_hinge_H,
   coef_hinge_W,
-  coef_pos_D_h,
-  coef_pos_D_w
+  coef_pos_D_h = 0,
+  coef_pos_D_w = 0
 )
 }
 \arguments{
@@ -35,8 +34,6 @@ calcErrors(
 \item{R}{current R}
 
 \item{S}{current S}
-
-\item{coef_}{# this argument is not used}
 
 \item{coef_der_X}{learning rate for X}
 

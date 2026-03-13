@@ -93,7 +93,6 @@ Rcpp::List calcErrors(const arma::mat& X,
                       const arma::mat& SVRt,
                       const arma::mat& R,
                       const arma::mat& S,
-                      const double coef_,
                       const double coef_der_X,
                       const double coef_der_Omega,
                       const double coef_hinge_H,
@@ -104,11 +103,11 @@ Rcpp::List calcErrors(const arma::mat& X,
     double deconv_error = pow(norm(SVRt - Omega * D_w_diag * X, "fro"), 2.0);
     // don't calculate since it is time consuming, should deliver the same minimum as th new one
     // double orig_deconv_error = pow(norm(V_row - S.t() * Omega * D_w_diag * X * R, "fro"), 2);
-    double lambda_error = coef_ * coef_hinge_H * hinge_C__(X * R);
-    double beta_error = coef_ * coef_hinge_W * hinge_C__(S.t() * Omega);
+    double lambda_error = coef_hinge_H * hinge_C__(X * R);
+    double beta_error = coef_hinge_W * hinge_C__(S.t() * Omega);
 
-    double squared_lambda_error = coef_ * coef_hinge_H * squared_hinge_C__(X * R);
-    double squared_beta_error = coef_ * coef_hinge_W * squared_hinge_C__(S.t() * Omega);
+    double squared_lambda_error = coef_hinge_H * squared_hinge_C__(X * R);
+    double squared_beta_error = coef_hinge_W * squared_hinge_C__(S.t() * Omega);
 
     arma::mat A = arma::sum(R, 1);
     arma::mat B = arma::sum(S, 1);
@@ -257,7 +256,6 @@ Rcpp::List derivative_stage2(const arma::mat& X,
                                                SVRt,
                                                R,
                                                S,
-                                               1,
                                                coef_der_X,
                                                coef_der_Omega,
                                                coef_hinge_H,

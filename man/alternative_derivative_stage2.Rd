@@ -15,8 +15,6 @@ alternative_derivative_stage2(
   coef_der_Omega,
   coef_hinge_H,
   coef_hinge_W,
-  coef_pos_D_h,
-  coef_pos_D_w,
   cell_types,
   N,
   M,
@@ -48,10 +46,6 @@ alternative_derivative_stage2(
 \item{coef_hinge_H}{lambda}
 
 \item{coef_hinge_W}{beta}
-
-\item{coef_pos_D_h}{experimental coefficient for D. legacy not tested.}
-
-\item{coef_pos_D_w}{experimental coefficient for D. legacy not tested.}
 
 \item{cell_types}{number of components (K)}
 

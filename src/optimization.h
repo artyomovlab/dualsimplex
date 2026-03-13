@@ -80,7 +80,6 @@ double squared_hinge_C__(const arma::mat& X);
 //' @param SVRt current SVRt (Sigma matrix)
 //' @param R current R
 //' @param S current S
-//' @param coef_  # this argument is not used
 //' @param coef_der_X learning rate for X
 //' @param coef_der_Omega learning rate for Omega
 //' @param coef_hinge_H lambda
@@ -96,13 +95,12 @@ Rcpp::List calcErrors(const arma::mat& X,
                       const arma::mat& SVRt,
                       const arma::mat& R,
                       const arma::mat& S,
-                      const double coef_,
                       const double coef_der_X,
                       const double coef_der_Omega,
                       const double coef_hinge_H,
                       const double coef_hinge_W,
-                      const double coef_pos_D_h,
-                      const double coef_pos_D_w);
+                      const double coef_pos_D_h = 0,
+                      const double coef_pos_D_w = 0);
 
 //' Main function to calculate error terms
 //'

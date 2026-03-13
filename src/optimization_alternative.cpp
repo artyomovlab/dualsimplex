@@ -54,8 +54,6 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                              const double coef_der_Omega,
                              const double coef_hinge_H,
                              const double coef_hinge_W,
-                             const double coef_pos_D_h,
-                             const double coef_pos_D_w,
                              const int cell_types,
                              const double N,
                              const double M,
@@ -92,14 +90,6 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
 
     new_X =  arma::diagmat(new_D_w_sqrt) * new_X * arma::diagmat(1 / sqrt_Sigma);
     new_Omega =  arma::diagmat(1 / sqrt_Sigma) *  new_Omega  * arma::diagmat(new_D_w_sqrt);
-    arma::mat jump_X, jump_Omega;
-
-    arma::vec vectorised_SVRt = arma::vectorise(SVRt);
-    arma::colvec sum_rows_R = arma::sum(R, 1);
-    arma::colvec sum_rows_S = arma::sum(S, 1);
-
-    arma::mat B = join_cols(vectorised_SVRt, coef_pos_D_w * sum_rows_S);
-    arma::mat C = join_cols(vectorised_SVRt, coef_pos_D_h * sum_rows_R);
     arma::mat der_X, der_Omega;
     arma::mat hinge_term_H, hinge_term_W;
     arma::mat tmp_X, tmp_Omega;
@@ -244,13 +234,10 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                                                SVRt,
                                                R,
                                                S,
-                                               1,
                                                coef_der_X,
                                                coef_der_Omega,
                                                coef_hinge_H,
-                                               coef_hinge_W,
-                                               coef_pos_D_h,
-                                               coef_pos_D_w);
+                                               coef_hinge_W);
 
         errors_statistics.row(itr_) = arma::rowvec{current_errors["deconv_error"],
                                                    current_errors["lambda_error"],
