@@ -218,12 +218,14 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                     new_Omega = tmp_Omega;
                     new_X = tmp_X;
                     } else {
+                        Rcpp::Rcout << "Iteration \n"<<  itr_ << "\n" << std::endl;
                         Rcpp::Rcout << "Couldn't find good inverse X, reject X for one of the steps\n"  << std::endl;
                         error_occured = 1;
                         Rcpp::Rcout << "Temp X \n"  << std::endl;
                         Rcpp::Rcout << tmp_X << std::endl;
                         Rcpp::Rcout << "Temp Omega \n"  << std::endl;
                         Rcpp::Rcout << tmp_Omega << std::endl;
+                        break;
                     }
                 }
             }
