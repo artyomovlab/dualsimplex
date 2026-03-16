@@ -179,7 +179,7 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         }
 
         // Check if first column of X is all-positive
-        if (any( tmp_X.col(0) <= 0)) {
+        if (any(tmp_X.col(0) <= 0)) {
             for (int c=0; c < cell_types; c++) {
                 double matrix_value =  tmp_X(c,0);
                  if (matrix_value <= 0) {
@@ -217,20 +217,23 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                    }
                 if (shrink_iteration != shrink_limit) {
                     // if we were able to find the solution. accept these new X and Omega
-                    new_Omega = tmp_Omega;
-                    new_X = tmp_X;
+                    // Do nothing its ok
                     } else {
                         Rcpp::Rcout << "Iteration \n"<<  itr_ << "\n" << std::endl;
-                        Rcpp::Rcout << "Couldn't find good inverse X, reject X for one of the steps\n"  << std::endl;
+                        Rcpp::Rcout << "Couldn't find good inverse X for the row " <<  c << ", reject X update for this row \n"  << std::endl;
+                        arma::rowvec only_good_row  = der_X.row(c);
+                        der_X.fill(0);
+                        der_X.row(c) = only_good_row;
                         error_occured = 1;
                         Rcpp::Rcout << "Temp X \n"  << std::endl;
                         Rcpp::Rcout << tmp_X << std::endl;
                         Rcpp::Rcout << "Temp Omega \n"  << std::endl;
                         Rcpp::Rcout << tmp_Omega << std::endl;
-                        break;
                     }
                 }
             }
+            new_Omega = tmp_Omega;
+            new_X = tmp_X;
         } else {
             new_Omega = tmp_Omega;
             new_X = tmp_X;
