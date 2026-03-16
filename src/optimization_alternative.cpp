@@ -133,7 +133,9 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
 
     // here we assume X and Omega are inverse of each other and positive as needed
     for (int itr_ = 0; itr_ < iterations; itr_++) {
-
+        if (itr_ == 1818) {
+            error_occured = 1;
+        }
         if (error_occured == 1) {
             Rcpp::Rcout << "Input X\n"  << std::endl;
             Rcpp::Rcout << new_X << std::endl;
