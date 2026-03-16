@@ -95,6 +95,7 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
     arma::mat tmp_X, tmp_Omega;
     double shrink_limit = 500;
     double mean_norm_solution_X;
+    int error_occured = 0;
 
 //    Rcpp::Rcout << "Start X"  << std::endl;
 //    Rcpp::Rcout << new_X  << std::endl;
@@ -132,20 +133,49 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
 
     // here we assume X and Omega are inverse of each other and positive as needed
     for (int itr_ = 0; itr_ < iterations; itr_++) {
+
+        if (error_occured == 1) {
+            Rcpp::Rcout << "Input X\n"  << std::endl;
+            Rcpp::Rcout << new_X << std::endl;
+            Rcpp::Rcout << "Input Omega\n"  << std::endl;
+            Rcpp::Rcout << new_Omega << std::endl;
+        }
         hinge_term_H = l1_hinge_der_proportions_C__(new_X  * arma::diagmat(sqrt_Sigma)  * R, R) * arma::diagmat(sqrt_Sigma);
         hinge_term_W = (-new_Omega.t())  * arma::diagmat(sqrt_Sigma) * l1_hinge_der_basis_C__(S.t() * arma::diagmat(sqrt_Sigma) * new_Omega, S) * (new_Omega.t());
         der_X =  coef_hinge_H * hinge_term_H;
         der_X += coef_hinge_W * hinge_term_W;
 
+        if (error_occured == 1) {
+            Rcpp::Rcout << "Initial derrivative H\n"  << std::endl;
+            Rcpp::Rcout << hinge_term_H << std::endl;
+            Rcpp::Rcout << "Initial derrivative W \n"  << std::endl;
+            Rcpp::Rcout << hinge_term_W << std::endl;
+            Rcpp::Rcout << "Total derrivative\n"  << std::endl;
+            Rcpp::Rcout << der_X << std::endl;
+        }
+
         // Regularization here is advised but not mandatory since X and Omega regularize each other.
         der_X += reg_X * 2 * new_X; //regularization for X
         der_X += reg_Omega * (-new_Omega.t()) * 2 * new_Omega * (new_Omega.t()); //regularization for Omega
+        if (error_occured == 1) {
+            Rcpp::Rcout << "Total derrivative with regularization\n"  << std::endl;
+            Rcpp::Rcout << der_X << std::endl;
+        }
 
 
         mean_norm_solution_X = arma::mean(arma::vecnorm(new_X, 2, 1));
         der_X = correctByNorm(der_X) * mean_norm_solution_X; // arma::diagmat(new_D_w_sqrt)  * arma::diagmat(1 / sqrt_Sigma)  * mean_radius_X;
+        if (error_occured == 1) {
+            Rcpp::Rcout << "Total derrivative corrected by mean norm " << mean_norm_solution_X <<   " \n"  << std::endl;
+            Rcpp::Rcout << der_X << std::endl;
+        }
 
         tmp_X = (new_X - coef_der_X * der_X); // estimate new X given derivative
+        if (error_occured == 1) {
+            Rcpp::Rcout << "Temp X \n"  << std::endl;
+            Rcpp::Rcout << tmp_X << std::endl;
+        }
+
         // Check if first column of X is all-positive
         if (any( tmp_X.col(0) <= 0)) {
             for (int c=0; c < cell_types; c++) {
@@ -165,6 +195,10 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
             }
         }
        tmp_Omega = arma::pinv(tmp_X);
+       if (error_occured == 1) {
+            Rcpp::Rcout << "Temp Omega \n"  << std::endl;
+            Rcpp::Rcout << tmp_Omega << std::endl;
+        }
        // Check if first row of Omega is all positive
         if (any( tmp_Omega.row(0) <= 0)) {
             for (int c=0; c < cell_types; c++) {
@@ -185,7 +219,11 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                     new_X = tmp_X;
                     } else {
                         Rcpp::Rcout << "Couldn't find good inverse X, reject X for one of the steps\n"  << std::endl;
+                        error_occured = 1;
+                        Rcpp::Rcout << "Temp X \n"  << std::endl;
                         Rcpp::Rcout << tmp_X << std::endl;
+                        Rcpp::Rcout << "Temp Omega \n"  << std::endl;
+                        Rcpp::Rcout << tmp_Omega << std::endl;
                     }
                 }
             }
