@@ -1029,7 +1029,7 @@ DualSimplexSolver <- R6Class(
     #' get number optimization iterations performed
     get_n_iters = function() {
       private$optimize_first()
-      return(nrow(dso$st$solution_proj$optim_history$errors_statistics))
+      return(nrow(self$st$solution_proj$optim_history$errors_statistics))
     },
     #' @description
     #' get proportionality of negative elements for H and W
@@ -1107,9 +1107,9 @@ DualSimplexSolver <- R6Class(
     get_coordinates_from_external_matrices = function(W, H) {
       private$project_first()
       extended_scaling_result <- extended_sinkhorn_scale(V = Biobase::exprs(self$st$data),
-                                                         W=W[rownames(dso$st$data),],
-                                                         H=H[, colnames(dso$st$data)],
-                                                         n_iter = dso$st$scaling$iterations)
+                                                         W=W[rownames(self$st$data),],
+                                                         H=H[, colnames(self$st$data)],
+                                                         n_iter = self$st$scaling$iterations)
       H_ss <-  extended_scaling_result$H_row
       W_gs <-  extended_scaling_result$W_col
       res <- get_coordinates_from_scaled_matrices(H_ss = H_ss, W_gs=W_gs, proj=self$st$proj)
