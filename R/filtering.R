@@ -203,7 +203,7 @@ mahalanobis_n_sigma_filter <- function(eset, features, n_sigma = 3, genes = T, k
   if (keep_lower) {
     anno_flt <- anno[distance_values < n_sigma,]
   } else {
-    anno_flt <- anno[distance_values < n_sigma,]
+    anno_flt <- anno[distance_values >= n_sigma,]
   }
   return(set_anno(anno_flt, eset, genes))
 }
