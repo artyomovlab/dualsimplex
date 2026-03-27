@@ -76,8 +76,42 @@ guess_order <- function(predicted_matrix, true_matrix) {
     return(new_order)
   }
 
-
 #' Get table containing best combination of metric values.
+#' By best we mean maximum summary correlation between predicted component and true component
+#'
+#'@param estimated_matrix matrix to test
+#'@param true_matrix true matrix to compare to
+#'@param metric which metric to use
+#'@param per_row wether to calculate metric per row or per column
+#'@param normalize wether to sum-to-one normalize rows for metric calculation
+#'@param sd_fix_value deviation of small random value to add in order to avoid NA for correlations
+#'@return result similarity matrix. Rows from the first matrix, columns from the second matrix.
+#'@export
+get_metric_values <- function(estimated_matrix, true_matrix, metric, per_row=TRUE, normalize=TRUE,  sd_fix_value = 1e-4) {
+  separate_results <- list()
+  if (!per_row)  {
+    true_matrix <-  t(true_matrix)
+  }
+  if (!per_row) {
+    estimated_matrix <- t(estimated_matrix)
+  }
+  estimated_matrix <-  estimated_matrix[, colnames(true_matrix)]
+  new_row_order <-  guess_order(estimated_matrix, true_matrix)
+  reordered_matrix <-  estimated_matrix[unlist(new_row_order), ]
+  if (normalize) {
+    reordered_matrix <- t(t(reordered_matrix)/colSums(reordered_matrix))
+    true_matrix <- t(t(true_matrix)/colSums(true_matrix))
+  }
+  # Here we already assuming that matrices are in the correct order, so we need only diagonal elements of the matrix
+  metric_matrix <- get_metric_matrix_for_rows(reordered_matrix, true_matrix, metric = metric,  sd_fix_value = 1e-4)
+  target_values <-  diag(metric_matrix)
+  result_distance_table <- data.frame(target_values)
+  colnames(result_distance_table) <-  c("metric_value")
+  result_distance_table$cell_type <-rownames(true_matrix)
+  return(result_distance_table)
+}
+
+#' Get table containing best combination of metric values. for a list
 #' By best we mean maximum summary correlation between predicted component and true component
 #'
 #'@param named_multiple_results named list of matrices to test
@@ -88,32 +122,15 @@ guess_order <- function(predicted_matrix, true_matrix) {
 #'@param sd_fix_value deviation of small random value to add in order to avoid NA for correlations
 #'@return result similarity matrix. Rows from the first matrix, columns from the second matrix.
 #'@export
-get_metric_values <- function(named_multiple_results, true_matrix, metric, per_row=TRUE, normalize=TRUE,  sd_fix_value = 1e-4) {
+get_metric_values_for_list <- function(named_multiple_results, true_matrix, metric, per_row=TRUE, normalize=TRUE,  sd_fix_value = 1e-4) {
   separate_results <- list()
   if (!per_row)  {
     true_matrix <-  t(true_matrix)
   }
   for (current_result_name in names(named_multiple_results)) {
-    estimated_matrix <- named_multiple_results[[current_result_name]]
-    if (!per_row) {
-      estimated_matrix <- t(estimated_matrix)
-    }
-    estimated_matrix <-  estimated_matrix[, colnames(true_matrix)]
-    new_row_order <-  guess_order(estimated_matrix, true_matrix)
-    reordered_matrix <-  estimated_matrix[unlist(new_row_order), ]
-    if (normalize) {
-      reordered_matrix <- t(t(reordered_matrix)/colSums(reordered_matrix))
-      true_matrix <- t(t(true_matrix)/colSums(true_matrix))
-    }
-    # Here we already assuming that matrices are in the correct order, so we need only diagonal elements of the matrix
-    metric_matrix <- get_metric_matrix_for_rows(reordered_matrix, true_matrix, metric = metric,  sd_fix_value = 1e-4)
-    target_values <-  diag(metric_matrix)
-    result_distance_table <- data.frame(target_values)
-    colnames(result_distance_table) <-  c("metric_value")
-    result_distance_table$cell_type <-rownames(true_matrix)
-    result_distance_table$method <- current_result_name
-    separate_results[[current_result_name]] <- result_distance_table
-  }
+    separate_results[[current_result_name]] <- get_metric_values(named_multiple_results[[current_result_name]], true_matrix, metric, per_row=TRUE, normalize=TRUE,  sd_fix_value = 1e-4)
+    separate_results[[current_result_name]]$method <- current_result_name
+}
   total_results_for_method <- do.call(rbind, separate_results)
   return(total_results_for_method)
 }
