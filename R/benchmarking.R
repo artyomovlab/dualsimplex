@@ -84,11 +84,11 @@ guess_order <- function(predicted_matrix, true_matrix) {
 #'@param metric which metric to use
 #'@param per_row wether to calculate metric per row or per column
 #'@param normalize wether to sum-to-one normalize rows for metric calculation
+#'@param reorder wether to try to guess the order of rows/columns or use same sorting.
 #'@param sd_fix_value deviation of small random value to add in order to avoid NA for correlations
 #'@return result similarity matrix. Rows from the first matrix, columns from the second matrix.
 #'@export
-get_metric_values <- function(estimated_matrix, true_matrix, metric, per_row=TRUE, normalize=TRUE,  sd_fix_value = 1e-4) {
-  separate_results <- list()
+get_metric_values <- function(estimated_matrix, true_matrix, metric, per_row=TRUE, normalize=TRUE, reorder=TRUE, sd_fix_value = 1e-4) {
   if (!per_row)  {
     true_matrix <-  t(true_matrix)
   }
@@ -96,8 +96,13 @@ get_metric_values <- function(estimated_matrix, true_matrix, metric, per_row=TRU
     estimated_matrix <- t(estimated_matrix)
   }
   estimated_matrix <-  estimated_matrix[, colnames(true_matrix)]
-  new_row_order <-  guess_order(estimated_matrix, true_matrix)
-  reordered_matrix <-  estimated_matrix[unlist(new_row_order), ]
+  if (reorder) {
+    new_row_order <-  guess_order(estimated_matrix, true_matrix)
+    reordered_matrix <-  estimated_matrix[unlist(new_row_order), ]
+  }
+  else {
+    reordered_matrix <-  estimated_matrix
+  }
   if (normalize) {
     reordered_matrix <- t(t(reordered_matrix)/colSums(reordered_matrix))
     true_matrix <- t(t(true_matrix)/colSums(true_matrix))
@@ -130,12 +135,10 @@ get_metric_values_for_list <- function(named_multiple_results, true_matrix, metr
   for (current_result_name in names(named_multiple_results)) {
     separate_results[[current_result_name]] <- get_metric_values(named_multiple_results[[current_result_name]], true_matrix, metric, per_row=TRUE, normalize=TRUE,  sd_fix_value = 1e-4)
     separate_results[[current_result_name]]$method <- current_result_name
-}
+  }
   total_results_for_method <- do.call(rbind, separate_results)
   return(total_results_for_method)
 }
-
-
 
 
 #' Generate (prediction,true) pairs for each basis vector
@@ -171,8 +174,6 @@ coerce_pred_true_props <- function(pred_props, true_props) {
 }
 
 
-
-
 toMatrix <- function(x) {
     if (is.data.frame(x)) {
         # Convert data frame (or tibble) to a plain matrix
@@ -184,8 +185,6 @@ toMatrix <- function(x) {
     }
     stop("Invalid type for plotting: ", paste(class(x), collapse = ", "))
 }
-
-
 
 
 ############ PLOTTING ############

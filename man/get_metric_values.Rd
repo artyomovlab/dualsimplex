@@ -11,6 +11,7 @@ get_metric_values(
   metric,
   per_row = TRUE,
   normalize = TRUE,
+  reorder = TRUE,
   sd_fix_value = 1e-04
 )
 }
@@ -24,6 +25,8 @@ get_metric_values(
 \item{per_row}{wether to calculate metric per row or per column}
 
 \item{normalize}{wether to sum-to-one normalize rows for metric calculation}
+
+\item{reorder}{wether to try to guess the order of rows/columns or use same sorting.}
 
 \item{sd_fix_value}{deviation of small random value to add in order to avoid NA for correlations}
 }
