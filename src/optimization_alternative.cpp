@@ -102,7 +102,7 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
 //    Rcpp::Rcout << new_Omega  << std::endl;
 
     // Start initial inverse search
-    Rcpp::Rcout << "Check initial inverse matrix properties"  << std::endl;
+  //  Rcpp::Rcout << "Check initial inverse matrix properties"  << std::endl;
     tmp_Omega = arma::pinv(new_X);
     if (any( tmp_Omega.row(0) <= 0)) {
        Rcpp::Rcout << "Couldn't find good initial inverse of X provided\n"  << std::endl;
@@ -120,16 +120,16 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         new_Omega = tmp_Omega;
     }
 
-    Rcpp::Rcout << "Initial X\n"  << std::endl;
-    Rcpp::Rcout << new_X << std::endl;
-    Rcpp::Rcout << "Initial Omega\n"  << std::endl;
-    Rcpp::Rcout << new_Omega << std::endl;
-    Rcpp::Rcout << "Initial D\n"  << std::endl;
-    Rcpp::Rcout << new_D_w << std::endl;
-    Rcpp::Rcout << "Initial sqrt D\n"  << std::endl;
-    Rcpp::Rcout << new_D_w_sqrt << std::endl;
-
-    Rcpp::Rcout << "X and Omega are acceptable. Continue with the optimization\n"  << std::endl;
+//    Rcpp::Rcout << "Initial X\n"  << std::endl;
+//    Rcpp::Rcout << new_X << std::endl;
+//    Rcpp::Rcout << "Initial Omega\n"  << std::endl;
+//    Rcpp::Rcout << new_Omega << std::endl;
+//    Rcpp::Rcout << "Initial D\n"  << std::endl;
+//    Rcpp::Rcout << new_D_w << std::endl;
+//    Rcpp::Rcout << "Initial sqrt D\n"  << std::endl;
+//    Rcpp::Rcout << new_D_w_sqrt << std::endl;
+//
+//    Rcpp::Rcout << "X and Omega are acceptable. Continue with the optimization\n"  << std::endl;
 
     // here we assume X and Omega are inverse of each other and positive as needed
     for (int itr_ = 0; itr_ < iterations; itr_++) {
