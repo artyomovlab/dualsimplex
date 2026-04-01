@@ -48,6 +48,47 @@ get_metric_matrix_for_rows <- function(matrix_a, matrix_b, metric="rmse", sd_fix
   return(metric_matrix)
 }
 
+#' Get matrix with metric values for two matrices using specified metric and comparing rows.
+#' Calculations only done for matching rows
+#' If row has sd 0 it will add some random value to the row avoiding NaNs
+#'
+#'@param matrix_a first matrix
+#'@param matrix_b second matrix
+#'@param metric which metric to use
+#'@param sd_fix_value standard deviation of the random values to add to the row in case it has sd of 0
+#'@return result similarity matrix. Rows from the first matrix, columns from the second matrix.
+#'@export
+get_metric_matrix_for_matching_rows <- function(matrix_a, matrix_b, metric="rmse", sd_fix_value = 1e-4) {
+  num_rows_a <-  dim(matrix_a)[[1]]
+  metric_values <-  lapply(1:num_rows_a, function(index_a){
+    vector_of_a <- matrix_a[index_a,]
+    vector_of_b <- matrix_b[index_a,]
+    if (metric %in% c('pearson', 'spearman', 'abs_pearson', 'pearson_loss', 'spearman_loss', 'rmse_loss')) {
+        random_vector <-  abs(stats::rnorm(matrix_b[index_a,],0, sd=sd_fix_value))
+        if (stats::sd(vector_of_a) == 0) {
+          vector_of_a <- vector_of_a + random_vector
+        }
+        if (stats::sd(vector_of_b) == 0) {
+          vector_of_b <- vector_of_b + random_vector
+        }
+      }
+      result <- switch(metric,
+                       "rmse" = normalized_rmse_loss_function(vector_of_a, vector_of_b),
+                       "pearson" = pearson_correlation_function(vector_of_a, vector_of_b),
+                       "abs_pearson" = abs(pearson_correlation_function(vector_of_a, vector_of_b)),
+                       "spearman" = spearman_correlation_function(vector_of_a, vector_of_b),
+                       "cosine" = cosine_similarity_function(vector_of_a, vector_of_b),
+                       "rmse_loss" = normalized_rmse_loss_function(vector_of_a, vector_of_b),
+                       "pearson_loss" = pearson_loss_function(vector_of_a, vector_of_b),
+                       "spearman_loss" = spearman_loss_function(vector_of_a, vector_of_b),
+                       "cosine_loss" = cosine_loss_function(vector_of_a, vector_of_b)
+                       )
+      return(result)
+    })
+  names(metric_values) <-  rownames(matrix_b)
+  return(metric_values)
+}
+
 
 #' Function to gess order of rows for the predicted markers to have the highest sum correlation with true matrix.
 #' If the number of true matrix rows is smaller, will mark some rows as "extra rows" to keep predicted rows.
@@ -108,11 +149,9 @@ get_metric_values <- function(estimated_matrix, true_matrix, metric, per_row=TRU
     true_matrix <- t(t(true_matrix)/colSums(true_matrix))
   }
   # Here we already assuming that matrices are in the correct order, so we need only diagonal elements of the matrix
-  metric_matrix <- get_metric_matrix_for_rows(reordered_matrix, true_matrix, metric = metric,  sd_fix_value = 1e-4)
-  target_values <-  diag(metric_matrix)
-  result_distance_table <- data.frame(target_values)
-  colnames(result_distance_table) <-  c("metric_value")
-  result_distance_table$cell_type <-rownames(true_matrix)
+  target_values <- get_metric_matrix_for_matching_rows(reordered_matrix, true_matrix, metric = metric,  sd_fix_value = 1e-4)
+  result_distance_table <- data.frame(metric_value= unlist(target_values))
+  result_distance_table$cell_type <-names(target_values)
   return(result_distance_table)
 }
 
