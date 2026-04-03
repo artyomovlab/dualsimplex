@@ -270,6 +270,14 @@ DualSimplexSolver <- R6Class(
         k_neighbors = k_neighbors
       )
     },
+    #' @description
+    #' Updata annotation. Will overwrite existing columns for matching names
+    #'
+    #' @param anno_to_add annotation to add to the object.
+    #' @param genes gene annotations or sample annotations.
+    updata_annotation = function(anno_to_add,  genes = T) {
+      self$st$data <- update_annotation (eset, anno_to_add, genes = T)
+    },
 
     #' @description
     #' Add additional density annotation to points.

@@ -123,6 +123,22 @@ add_data_stats_anno <- function(eset, genes = T) {
   return(eset)
 }
 
+#' Annotate the data with statistics for rows and columns
+#'
+#' Will add (log_mean, log_median, log_sd, log_mad) for both rows and columns.
+#'
+#'@param eset Expression set
+#'@param anno_to_add Annotation dataframe to add to exsiting one
+#'@param genes if TRUE apply to rows, otherwise columns
+#'@return  annotated Expression set
+update_annotation <- function(eset, anno_to_add, genes = T) {
+  old_anno <- get_anno(eset, genes)
+  new_anno <- old_anno
+  new_anno[rownames(anno_to_add), colnames(anno_to_add)] <- anno_to_add
+  eset <- set_anno(new_anno, eset, genes)
+  return(eset)
+}
+
 
 #' Distances annotation
 #' 

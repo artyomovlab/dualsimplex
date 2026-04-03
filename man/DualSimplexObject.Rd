@@ -45,6 +45,7 @@ dso$plot_projected("zero_distance",
 \item \href{#method-DualSimplexSolver-plot_mad}{\code{DualSimplexSolver$plot_mad()}}
 \item \href{#method-DualSimplexSolver-basic_filter}{\code{DualSimplexSolver$basic_filter()}}
 \item \href{#method-DualSimplexSolver-add_knn_distances_anno}{\code{DualSimplexSolver$add_knn_distances_anno()}}
+\item \href{#method-DualSimplexSolver-updata_annotation}{\code{DualSimplexSolver$updata_annotation()}}
 \item \href{#method-DualSimplexSolver-add_density_anno}{\code{DualSimplexSolver$add_density_anno()}}
 \item \href{#method-DualSimplexSolver-plot_svd}{\code{DualSimplexSolver$plot_svd()}}
 \item \href{#method-DualSimplexSolver-plot_svd_history}{\code{DualSimplexSolver$plot_svd_history()}}
@@ -201,6 +202,25 @@ Add additional distance annotation based on KNN distances to selected annotation
 \item{\code{genes}}{calculate for gene annotations or sample annotations.}
 
 \item{\code{k_neighbors}}{a number of neighbors to calculate the distance on for the annotation}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-DualSimplexSolver-updata_annotation"></a>}}
+\if{latex}{\out{\hypertarget{method-DualSimplexSolver-updata_annotation}{}}}
+\subsection{Method \code{updata_annotation()}}{
+Updata annotation. Will overwrite existing columns for matching names
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$updata_annotation(anno_to_add, genes = T)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{anno_to_add}}{annotation to add to the object.}
+
+\item{\code{genes}}{gene annotations or sample annotations.}
 }
 \if{html}{\out{</div>}}
 }
