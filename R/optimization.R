@@ -58,7 +58,7 @@ optim_config <- function(
     reg_X = reg_X,
     reg_Omega = reg_Omega,
     convergence_tol= convergence_tol,
-    method = method,
+    method = method
   ))
 }
 
