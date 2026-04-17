@@ -108,11 +108,11 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
     // Start initial inverse search
   //  Rcpp::Rcout << "Check initial inverse matrix properties"  << std::endl;
     tmp_Omega = arma::pinv(new_X);
-    if (any( tmp_Omega.row(0) <= 0)) {
+    if (arma::any( tmp_Omega.row(0) <= 0)) {
        Rcpp::Rcout << "Couldn't find good initial inverse of X provided\n"  << std::endl;
        Rcpp::Rcout << "Try with Omega \n"  << std::endl;
        tmp_X = arma::pinv(new_Omega);
-       if (any( tmp_X.col(0) <= 0)) {
+       if (arma::any( tmp_X.col(0) <= 0)) {
             Rcpp::Rcout << "Couldn't find good initial inverse of Omega provided\n"  << std::endl;
             Rcpp::stop("!!Start with different initialization or ensure X and Omega are inverse!! (try `random_invertible`)");
         }
@@ -154,7 +154,7 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
 
         
         // Check if first column of X is all-positive
-        if (any(tmp_X.col(0) <= 0)) {
+        if (arma::any(tmp_X.col(0) <= 0)) {
             for (int c=0; c < cell_types; c++) {
                 double matrix_value =  tmp_X(c,0);
                  if (matrix_value <= 0) {
@@ -167,14 +167,14 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                    }
                  }
             }
-            if  (any( tmp_X.col(0) <= 0)) {
+            if  (arma::any( tmp_X.col(0) <= 0)) {
                 Rcpp::Rcout << "Any gradient step gives bad X, probably X was bad before\n"  << std::endl;
             }
         }
 
         tmp_Omega = arma::pinv(tmp_X);
         // Check if first row of Omega is all positive
-        if (any( tmp_Omega.row(0) <= 0)) {
+        if (arma::any( tmp_Omega.row(0) <= 0)) {
             for (int c=0; c < cell_types; c++) {
                 double matrix_value =  tmp_Omega(0,c);
                 if (matrix_value <= 0) {

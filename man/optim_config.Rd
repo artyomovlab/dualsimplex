@@ -20,6 +20,7 @@ optim_config(
   solution_balancing_threshold = 1e+06,
   reg_X = 1,
   reg_Omega = 1,
+  convergence_tol = 0.001,
   method = "basic"
 )
 }

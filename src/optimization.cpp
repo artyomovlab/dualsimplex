@@ -58,13 +58,13 @@ arma::mat l1_hinge_der_proportions_C__(const arma::mat& H, const arma::mat& R) {
     arma::mat res(k, k, arma::fill::zeros);
 
     res = H_neg * R.t();
-    return res;
+    return res / R.n_cols;
 }
 
 arma::mat l1_hinge_der_basis_C__(const arma::mat& W, const arma::mat& S) {
     // derivative should be the same as for X but W and Omega are transposed
     arma::mat res = l1_hinge_der_proportions_C__(W.t(), S);
-    return res.t();
+    return res.t() / S.n_cols;
 }
 
 arma::mat squared_hinge_der_basis_C__(const arma::mat& W, const arma::mat& S) {
@@ -101,8 +101,8 @@ Rcpp::List calcErrors(const arma::mat& X,
     double deconv_error = pow(norm(SVRt - Omega * D_w_diag * X, "fro"), 2.0);
     // don't calculate since it is time consuming, should deliver the same minimum as th new one
     // double orig_deconv_error = pow(norm(V_row - S.t() * Omega * D_w_diag * X * R, "fro"), 2);
-    double lambda_error = coef_hinge_H * hinge_C__(X * R);
-    double beta_error = coef_hinge_W * hinge_C__(S.t() * Omega);
+    double lambda_error = coef_hinge_H * hinge_C__(X * R) / R.n_cols;
+    double beta_error = coef_hinge_W * hinge_C__(S.t() * Omega) / S.n_cols;
 
     double squared_lambda_error = coef_hinge_H * squared_hinge_C__(X * R);
     double squared_beta_error = coef_hinge_W * squared_hinge_C__(S.t() * Omega);
