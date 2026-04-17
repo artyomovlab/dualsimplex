@@ -38,6 +38,7 @@ optim_config <- function(
   solution_balancing_threshold= 1000000,
   reg_X = 1,
   reg_Omega=1,
+  convergence_tol = 0.001
   method = "basic" # basic/positivity/theta
 ) {
   return(list(
@@ -56,7 +57,8 @@ optim_config <- function(
     solution_balancing_threshold=solution_balancing_threshold,
     reg_X = reg_X,
     reg_Omega = reg_Omega,
-    method = method
+    convergence_tol= convergence_tol,
+    method = method,
   ))
 }
 
@@ -185,6 +187,7 @@ optimize_solution <- function(
     optimization_params$solution_balancing_threshold <- config$solution_balancing_threshold
     optimization_params$reg_X  <- config$reg_X
     optimization_params$reg_Omega  <- config$reg_Omega
+    optimization_params$convergence_tol <- config$convergence_tol
     do.call(alternative_derivative_stage2, optimization_params)
   } else if (config$method == "basic") {
     optimization_params$r_const_X <-  r_limits$R_limit_X
