@@ -12,7 +12,6 @@ alternative_derivative_stage2(
   R,
   S,
   coef_der_X,
-  coef_der_Omega,
   coef_hinge_H,
   coef_hinge_W,
   cell_types,
@@ -23,7 +22,8 @@ alternative_derivative_stage2(
   mean_radius_Omega,
   solution_balancing_threshold = 1e+06,
   reg_X = 1,
-  reg_Omega = 1
+  reg_Omega = 1,
+  convergence_tol = 1e-12
 )
 }
 \arguments{
@@ -40,8 +40,6 @@ alternative_derivative_stage2(
 \item{S}{current S}
 
 \item{coef_der_X}{learning rate X}
-
-\item{coef_der_Omega}{learning rate Omega}
 
 \item{coef_hinge_H}{lambda}
 

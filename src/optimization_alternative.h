@@ -38,7 +38,6 @@ Rcpp::List ensure_D_integrity(const arma::mat& X_dtilde,
 //' @param R current R
 //' @param S current S
 //' @param coef_der_X learning rate X
-//' @param coef_der_Omega learning rate Omega
 //' @param coef_hinge_H lambda
 //' @param coef_hinge_W beta
 //' @param cell_types number of components (K)
@@ -59,7 +58,6 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                              const arma::mat& R,
                              const arma::mat& S,
                              const double coef_der_X,
-                             const double coef_der_Omega,
                              const double coef_hinge_H,
                              const double coef_hinge_W,
                              const int cell_types,
@@ -70,4 +68,5 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                              const double mean_radius_Omega,
                              const double solution_balancing_threshold = 1000000,
                              const double reg_X = 1,
-                             const double reg_Omega=1);
+                             const double reg_Omega=1,
+                             const double convergence_tol=1e-12);

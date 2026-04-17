@@ -172,7 +172,6 @@ optimize_solution <- function(
     R = proj$meta$R,
     S = proj$meta$S,
     coef_der_X = config$coef_der_X,
-    coef_der_Omega = config$coef_der_Omega,
     coef_hinge_H = config$coef_hinge_H,
     coef_hinge_W = config$coef_hinge_W,
     cell_types = n_cell_types,
@@ -193,6 +192,8 @@ optimize_solution <- function(
     optimization_params$thresh <- config$cosine_thresh
     optimization_params$coef_pos_D_h <-  config$coef_pos_D_h
     optimization_params$coef_pos_D_w <-  config$coef_pos_D_w
+    optimization_params$coef_der_Omega <- config$coef_der_Omega
+
     do.call(derivative_stage2, optimization_params)
   } else if (config$method == "theta") {
     optimization_params$r_const_X <-  r_limits$R_limit_X
@@ -200,6 +201,8 @@ optimize_solution <- function(
     optimization_params$thresh <- config$cosine_thresh
     optimization_params$coef_pos_D_h <-  config$coef_pos_D_h
     optimization_params$coef_pos_D_w <-  config$coef_pos_D_w
+    optimization_params$coef_der_Omega <- config$coef_der_Omega
+
     # this optimization ensures that solution points are not going away to far from the predefined center points.
     # the distance is measured as cosine distance between rays originating from 0.
     optimization_params$X_center <- config$x_center # predefined center point for X space. could be NULL
@@ -212,7 +215,14 @@ optimize_solution <- function(
     do.call(theta_derivative_stage2, optimization_params)
   } else {
     print("Unknown optimization method. Will do the basic one")
+    optimization_params$r_const_X <-  r_limits$R_limit_X
+    optimization_params$r_const_Omega <-  r_limits$R_limit_Omega
+    optimization_params$thresh <- config$cosine_thresh
+    optimization_params$coef_pos_D_h <-  config$coef_pos_D_h
+    optimization_params$coef_pos_D_w <-  config$coef_pos_D_w
+    optimization_params$coef_der_Omega <- config$coef_der_Omega
     do.call(derivative_stage2, optimization_params)
+
   }
 
   solution_proj$X <- optimization_result$new_X
@@ -241,22 +251,22 @@ optimize_solution <- function(
            optimization_result$points_statistics_Dw
   )
   if (config$method == "positivity")  {
-    solution_proj$optim_history$points_statistics_X_dtilda <- rbind(
-      solution_proj$optim_history$points_statistics_X_dtilda,
-      optimization_result$points_statistics_X_dtilda
-  )
-    solution_proj$optim_history$points_statistics_X_dtilda_uncorrected <- rbind(
-      solution_proj$optim_history$points_statistics_X_dtilda_uncorrected,
-      optimization_result$points_statistics_X_dtilda_uncorrected
-  )
-    solution_proj$optim_history$points_statistics_Omega_dtilda <- rbind(
-      solution_proj$optim_history$points_statistics_Omega_dtilda,
-      optimization_result$points_statistics_Omega_dtilda
-  )
-    solution_proj$optim_history$points_statistics_Omega_dtilda_uncorrected <- rbind(
-      solution_proj$optim_history$points_statistics_Omega_dtilda_uncorrected,
-      optimization_result$points_statistics_Omega_dtilda_uncorrected
-  )
+  #   solution_proj$optim_history$points_statistics_X_dtilda <- rbind(
+  #     solution_proj$optim_history$points_statistics_X_dtilda,
+  #     optimization_result$points_statistics_X_dtilda
+  # )
+  #   solution_proj$optim_history$points_statistics_X_dtilda_uncorrected <- rbind(
+  #     solution_proj$optim_history$points_statistics_X_dtilda_uncorrected,
+  #     optimization_result$points_statistics_X_dtilda_uncorrected
+  # )
+  #   solution_proj$optim_history$points_statistics_Omega_dtilda <- rbind(
+  #     solution_proj$optim_history$points_statistics_Omega_dtilda,
+  #     optimization_result$points_statistics_Omega_dtilda
+  # )
+  #   solution_proj$optim_history$points_statistics_Omega_dtilda_uncorrected <- rbind(
+  #     solution_proj$optim_history$points_statistics_Omega_dtilda_uncorrected,
+  #     optimization_result$points_statistics_Omega_dtilda_uncorrected
+  # )
 
   }
 
