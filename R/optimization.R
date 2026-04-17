@@ -38,7 +38,7 @@ optim_config <- function(
   solution_balancing_threshold= 1000000,
   reg_X = 1,
   reg_Omega=1,
-  convergence_tol = 0.001
+  convergence_tol = 0.001,
   method = "basic" # basic/positivity/theta
 ) {
   return(list(
