@@ -264,6 +264,8 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         if (error_difference < convergence_tol) {
             current_learning_rate = current_learning_rate / 2;
         }
+        Rcpp::Rcout << "Error difference: "<< error_difference << std::endl;
+        previous_error_value = current_error_value;
                                                
         errors_statistics.row(itr_) = arma::rowvec{current_errors["deconv_error"],
                                                    current_errors["lambda_error"],
