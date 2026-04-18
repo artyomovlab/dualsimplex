@@ -262,7 +262,9 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                                                coef_hinge_H,
                                                coef_hinge_W);
         double current_error_value = current_errors["total_error"];
+        if (itr_ > 0) {
         error_difference = std::abs(previous_error_value - current_error_value);
+        }
         current_learning_rate = current_learning_rate - learning_rate_step;
         Rcpp::Rcout << "Error difference: "<< error_difference << std::endl;
         previous_error_value = current_error_value;
