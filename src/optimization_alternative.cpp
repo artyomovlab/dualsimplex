@@ -99,7 +99,7 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
     double learning_rate_step = (current_learning_rate - limit_for_learning_rate) / iterations;
     double mean_norm_solution_X;
     double previous_error_value;
-    double error_difference;
+    double error_difference = 1;
 
 
 //    Rcpp::Rcout << "Start X"  << std::endl;
