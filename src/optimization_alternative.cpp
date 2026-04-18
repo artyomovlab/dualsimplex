@@ -96,11 +96,9 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
     double shrink_limit = 500;
     double limit_for_learning_rate = 1e-15;
     double current_learning_rate = coef_der_X;
-    double learning_rate_step = (current_learning_rate - limit_for_learning_rate) / iterations;
     double mean_norm_solution_X;
     double previous_error_value;
-    double error_difference = 1;
-
+    double error_difference;
 
 //    Rcpp::Rcout << "Start X"  << std::endl;
 //    Rcpp::Rcout << new_X  << std::endl;
@@ -139,7 +137,7 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
 
     // here we assume X and Omega are inverse of each other and positive as needed
     int itr_ = 0;
-    while ((itr_ < iterations) & (error_difference > convergence_tol)) {
+    while ((itr_ < iterations) & (current_learning_rate > limit_for_learning_rate)) {
         mean_norm_solution_X = arma::mean(arma::vecnorm(new_X, 2, 1));
 
         hinge_term_H = l1_hinge_der_proportions_C__(new_X  * arma::diagmat(sqrt_Sigma)  * R, R) * arma::diagmat(sqrt_Sigma);
@@ -151,7 +149,7 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         der_X += reg_X * 2 * new_X; //regularization for X
         der_X += reg_Omega * (-new_Omega.t()) * 2 * new_Omega * (new_Omega.t()); //regularization for Omega
         
-        der_X = correctByNorm(der_X) * mean_norm_solution_X; // arma::diagmat(new_D_w_sqrt)  * arma::diagmat(1 / sqrt_Sigma)  * mean_radius_X;
+      //  der_X = correctByNorm(der_X) * mean_norm_solution_X; // arma::diagmat(new_D_w_sqrt)  * arma::diagmat(1 / sqrt_Sigma)  * mean_radius_X;
         tmp_X = (new_X - current_learning_rate * der_X); // estimate new X given derivative
 
         
@@ -176,7 +174,7 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
 
         tmp_Omega = arma::pinv(tmp_X);
         // Check if first row of Omega is all positive
-        if (arma::any(tmp_Omega.row(0) <= 0)) {
+        if (arma::any( tmp_Omega.row(0) <= 0)) {
             for (int c=0; c < cell_types; c++) {
                 double matrix_value =  tmp_Omega(0,c);
                 if (matrix_value <= 0) {
@@ -262,10 +260,10 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                                                coef_hinge_H,
                                                coef_hinge_W);
         double current_error_value = current_errors["total_error"];
-        if (itr_ > 0) {
         error_difference = std::abs(previous_error_value - current_error_value);
+        if (error_difference < convergence_tol) {
+            current_learning_rate = current_learning_rate / 2;
         }
-        current_learning_rate = current_learning_rate - learning_rate_step;
         Rcpp::Rcout << "Error difference: "<< error_difference << std::endl;
         previous_error_value = current_error_value;
                                                
