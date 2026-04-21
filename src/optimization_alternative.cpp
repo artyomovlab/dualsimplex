@@ -86,7 +86,7 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
 
     arma::vec Sigma = arma::diagvec(SVRt);
     arma::vec sqrt_Sigma = arma::sqrt(Sigma);
-    double mean_rmse_X  = arma::accu(arma::pow(Sigma, 2)) / N;
+    double mean_rmse_X  = arma::accu(arma::pow(Sigma, 2)) / M;
 
     new_X =  arma::diagmat(new_D_w_sqrt) * new_X * arma::diagmat(1 / sqrt_Sigma);
     new_Omega =  arma::diagmat(1 / sqrt_Sigma) *  new_Omega  * arma::diagmat(new_D_w_sqrt);
@@ -153,7 +153,10 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         der_X += reg_X * 2 * new_X; //regularization for X
         der_X += reg_Omega * (-new_Omega.t()) * 2 * new_Omega * (new_Omega.t()); //regularization for Omega
         
-        der_X = correctByNorm(der_X) * mean_rmse_X; // arma::diagmat(new_D_w_sqrt)  * arma::diagmat(1 / sqrt_Sigma)  * mean_radius_X;
+        der_X = correctByNorm(der_X)  * mean_rmse_X; // arma::diagmat(new_D_w_sqrt)  * arma::diagmat(1 / sqrt_Sigma)  * mean_radius_X;
+        der_X.each_row() %= new_D_w_sqrt;
+        der_X.each_col() /= sqrt_Sigma;
+
         tmp_X = (new_X - current_learning_rate * der_X); // estimate new X given derivative
 
         
