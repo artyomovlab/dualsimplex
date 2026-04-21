@@ -144,8 +144,8 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
     while ((itr_ < iterations) & (current_learning_rate > limit_for_learning_rate)) {
         //mean_norm_solution_X = arma::mean(arma::vecnorm(new_X, 2, 1));
 
-        hinge_term_H = l1_hinge_der_proportions_C__(new_X  * arma::diagmat(sqrt_Sigma)  * R, R);
-        hinge_term_W = (-new_Omega.t())  * l1_hinge_der_basis_C__(S.t() * arma::diagmat(sqrt_Sigma) * new_Omega, S) * (new_Omega.t());
+        hinge_term_H = l1_hinge_der_proportions_C__(new_X  * arma::diagmat(sqrt_Sigma)  * R, R) * arma::diagmat(sqrt_Sigma);
+        hinge_term_W = (-new_Omega.t())  * arma::diagmat(sqrt_Sigma) * l1_hinge_der_basis_C__(S.t() * arma::diagmat(sqrt_Sigma) * new_Omega, S) * (new_Omega.t());
         der_X =  coef_hinge_H * hinge_term_H;
         der_X += coef_hinge_W * hinge_term_W;
         
