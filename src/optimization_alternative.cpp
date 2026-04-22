@@ -90,7 +90,7 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
 
     new_X =  arma::diagmat(new_D_w_sqrt) * new_X * arma::diagmat(1 / sqrt_Sigma);
     new_Omega =  arma::diagmat(1 / sqrt_Sigma) *  new_Omega  * arma::diagmat(new_D_w_sqrt);
-    arma::mat der_X, der_Omega;
+    arma::mat der_X, der_reg;
     arma::mat hinge_term_H, hinge_term_W;
     arma::mat tmp_X, tmp_Omega;
     double shrink_limit = 500;
@@ -146,15 +146,17 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
 
         hinge_term_H = l1_hinge_der_proportions_C__(new_X  * arma::diagmat(sqrt_Sigma)  * R, R) * arma::diagmat(sqrt_Sigma);
         hinge_term_W = (-new_Omega.t())  * arma::diagmat(sqrt_Sigma) * l1_hinge_der_basis_C__(S.t() * arma::diagmat(sqrt_Sigma) * new_Omega, S) * (new_Omega.t());
+      
         der_X =  coef_hinge_H * hinge_term_H;
         der_X += coef_hinge_W * hinge_term_W;
-        
+        der_reg = reg_X * 2 * new_X; //regularization for X
         // Regularization here is advised but not mandatory since X and Omega regularize each other.
-        der_X += reg_X * 2 * new_X; //regularization for X
-        der_X += reg_Omega * (-new_Omega.t()) * 2 * new_Omega * (new_Omega.t()); //regularization for Omega
-        
-        der_X = correctByNorm(der_X)  * mean_radius_X; // arma::diagmat(new_D_w_sqrt)  * arma::diagmat(1 / sqrt_Sigma)  * mean_radius_X;
-        der_X.each_row() %= new_D_w_sqrt.t();
+        der_reg +=  reg_Omega * (-new_Omega.t()) * 2 * new_Omega * (new_Omega.t()); //regularization for Omega
+        der_X = correctByNorm(der_X); 
+        der_reg = correctByNorm(der_reg); 
+        der_X = der_X + der_reg;
+        //der_X = correctByNorm(der_X)  * mean_radius_X; // arma::diagmat(new_D_w_sqrt)  * arma::diagmat(1 / sqrt_Sigma)  * mean_radius_X;
+        der_X.each_row() %= new_D_w_sqrt.t() * mean_radius_X;
         der_X.each_col() /= sqrt_Sigma;
 
         tmp_X = (new_X - current_learning_rate * der_X); // estimate new X given derivative
