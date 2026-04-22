@@ -67,6 +67,7 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                              const double mean_radius_X,
                              const double mean_radius_Omega,
                              const double solution_balancing_threshold = 1000000,
+                             const double total_regularization_weight = 1,
                              const double reg_X = 1,
                              const double reg_Omega=1,
                              const double convergence_tol=1e-12);

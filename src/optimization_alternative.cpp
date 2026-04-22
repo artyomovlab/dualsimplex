@@ -60,10 +60,11 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                              const double mean_radius_X,
                              const double mean_radius_Omega,
                              const double solution_balancing_threshold,
+                             const double total_regularization_weight,
                              const double reg_X,
                              const double reg_Omega,
                              const double convergence_tol) {
-    arma::mat errors_statistics(iterations, 10, arma::fill::zeros);
+    arma::mat errors_statistics(iterations, 11, arma::fill::zeros);
     arma::mat points_statistics_X(iterations, cell_types * cell_types, arma::fill::zeros);
     arma::mat points_statistics_Omega(iterations, cell_types * cell_types, arma::fill::zeros);
     // arma::mat points_statistics_X_dtilda_uncorrected(iterations, cell_types * cell_types, arma::fill::zeros);
@@ -86,7 +87,6 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
 
     arma::vec Sigma = arma::diagvec(SVRt);
     arma::vec sqrt_Sigma = arma::sqrt(Sigma);
-    double mean_rmse_X  =  std::sqrt(arma::accu(arma::pow(Sigma, 2))) / M;
 
     new_X =  arma::diagmat(new_D_w_sqrt) * new_X * arma::diagmat(1 / sqrt_Sigma);
     new_Omega =  arma::diagmat(1 / sqrt_Sigma) *  new_Omega  * arma::diagmat(new_D_w_sqrt);
@@ -99,10 +99,6 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
     //double mean_norm_solution_X;
     double previous_error_value;
     double error_difference;
-
-
-
-    
 
 //    Rcpp::Rcout << "Start X"  << std::endl;
 //    Rcpp::Rcout << new_X  << std::endl;
@@ -146,7 +142,6 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
 
         hinge_term_H = l1_hinge_der_proportions_C__(new_X  * arma::diagmat(sqrt_Sigma)  * R, R) * arma::diagmat(sqrt_Sigma);
         hinge_term_W = (-new_Omega.t())  * arma::diagmat(sqrt_Sigma) * l1_hinge_der_basis_C__(S.t() * arma::diagmat(sqrt_Sigma) * new_Omega, S) * (new_Omega.t());
-      
         der_X =  coef_hinge_H * hinge_term_H;
         der_X += coef_hinge_W * hinge_term_W;
         der_reg = reg_X * 2 * new_X; //regularization for X
@@ -154,14 +149,13 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         der_reg +=  reg_Omega * (-new_Omega.t()) * 2 * new_Omega * (new_Omega.t()); //regularization for Omega
         der_X = correctByNorm(der_X); 
         der_reg = correctByNorm(der_reg); 
-        der_X = der_X + der_reg;
+        der_X = der_X + total_regularization_weight * der_reg;
         //der_X = correctByNorm(der_X)  * mean_radius_X; // arma::diagmat(new_D_w_sqrt)  * arma::diagmat(1 / sqrt_Sigma)  * mean_radius_X;
         der_X.each_row() %= new_D_w_sqrt.t() * mean_radius_X;
         der_X.each_col() /= sqrt_Sigma;
 
         tmp_X = (new_X - current_learning_rate * der_X); // estimate new X given derivative
 
-        
         // Check if first column of X is all-positive
         if (arma::any(tmp_X.col(0) <= 0)) {
             for (int c=0; c < cell_types; c++) {
@@ -285,7 +279,8 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                                                    static_cast<double>(neg_props),
                                                    static_cast<double>(neg_basis),
                                                    sum_,
-                                                   current_errors["average_norm"]};
+                                                   current_errors["average_norm"],
+                                                   current_learning_rate};
         
         //points_statistics_X_dtilda_corrected.row(itr_) = new_X.as_row();
         //points_statistics_Omega_dtilda_corrected.row(itr_) = new_Omega.as_row();

@@ -21,6 +21,7 @@ alternative_derivative_stage2(
   mean_radius_X,
   mean_radius_Omega,
   solution_balancing_threshold = 1e+06,
+  total_regularization_weight = 1,
   reg_X = 1,
   reg_Omega = 1,
   convergence_tol = 1e-12

@@ -36,6 +36,7 @@ optim_config <- function(
   omega_center = NULL,
   center_threshold = 0,
   solution_balancing_threshold= 1000000,
+  total_regularization_weight = 1,
   reg_X = 1,
   reg_Omega=1,
   convergence_tol = 0.001,
@@ -55,6 +56,7 @@ optim_config <- function(
     omega_center = omega_center,
     center_threshold = center_threshold,
     solution_balancing_threshold=solution_balancing_threshold,
+    total_regularization_weight = total_regularization_weight,
     reg_X = reg_X,
     reg_Omega = reg_Omega,
     convergence_tol= convergence_tol,
@@ -185,6 +187,7 @@ optimize_solution <- function(
   )
   optimization_result <- if (config$method == "positivity") {
     optimization_params$solution_balancing_threshold <- config$solution_balancing_threshold
+    optimization_params$total_regularization_weight <- config$total_regularization_weight
     optimization_params$reg_X  <- config$reg_X
     optimization_params$reg_Omega  <- config$reg_Omega
     optimization_params$convergence_tol <- config$convergence_tol
@@ -285,7 +288,8 @@ optimize_solution <- function(
       "neg_props_count",
       "neg_basis_count",
       "sum_d_w",
-      "average_norm"
+      "average_norm",
+      "learning_rate"
     )
   return(solution_proj)
 }

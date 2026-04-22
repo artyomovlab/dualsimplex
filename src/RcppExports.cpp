@@ -312,8 +312,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // alternative_derivative_stage2
-Rcpp::List alternative_derivative_stage2(const arma::mat& X, const arma::mat& Omega, const arma::mat& D_w, const arma::mat& SVRt, const arma::mat& R, const arma::mat& S, const double coef_der_X, const double coef_hinge_H, const double coef_hinge_W, const int cell_types, const double N, const double M, const int iterations, const double mean_radius_X, const double mean_radius_Omega, const double solution_balancing_threshold, const double reg_X, const double reg_Omega, const double convergence_tol);
-RcppExport SEXP _DualSimplex_alternative_derivative_stage2(SEXP XSEXP, SEXP OmegaSEXP, SEXP D_wSEXP, SEXP SVRtSEXP, SEXP RSEXP, SEXP SSEXP, SEXP coef_der_XSEXP, SEXP coef_hinge_HSEXP, SEXP coef_hinge_WSEXP, SEXP cell_typesSEXP, SEXP NSEXP, SEXP MSEXP, SEXP iterationsSEXP, SEXP mean_radius_XSEXP, SEXP mean_radius_OmegaSEXP, SEXP solution_balancing_thresholdSEXP, SEXP reg_XSEXP, SEXP reg_OmegaSEXP, SEXP convergence_tolSEXP) {
+Rcpp::List alternative_derivative_stage2(const arma::mat& X, const arma::mat& Omega, const arma::mat& D_w, const arma::mat& SVRt, const arma::mat& R, const arma::mat& S, const double coef_der_X, const double coef_hinge_H, const double coef_hinge_W, const int cell_types, const double N, const double M, const int iterations, const double mean_radius_X, const double mean_radius_Omega, const double solution_balancing_threshold, const double total_regularization_weight, const double reg_X, const double reg_Omega, const double convergence_tol);
+RcppExport SEXP _DualSimplex_alternative_derivative_stage2(SEXP XSEXP, SEXP OmegaSEXP, SEXP D_wSEXP, SEXP SVRtSEXP, SEXP RSEXP, SEXP SSEXP, SEXP coef_der_XSEXP, SEXP coef_hinge_HSEXP, SEXP coef_hinge_WSEXP, SEXP cell_typesSEXP, SEXP NSEXP, SEXP MSEXP, SEXP iterationsSEXP, SEXP mean_radius_XSEXP, SEXP mean_radius_OmegaSEXP, SEXP solution_balancing_thresholdSEXP, SEXP total_regularization_weightSEXP, SEXP reg_XSEXP, SEXP reg_OmegaSEXP, SEXP convergence_tolSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -333,10 +333,11 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const double >::type mean_radius_X(mean_radius_XSEXP);
     Rcpp::traits::input_parameter< const double >::type mean_radius_Omega(mean_radius_OmegaSEXP);
     Rcpp::traits::input_parameter< const double >::type solution_balancing_threshold(solution_balancing_thresholdSEXP);
+    Rcpp::traits::input_parameter< const double >::type total_regularization_weight(total_regularization_weightSEXP);
     Rcpp::traits::input_parameter< const double >::type reg_X(reg_XSEXP);
     Rcpp::traits::input_parameter< const double >::type reg_Omega(reg_OmegaSEXP);
     Rcpp::traits::input_parameter< const double >::type convergence_tol(convergence_tolSEXP);
-    rcpp_result_gen = Rcpp::wrap(alternative_derivative_stage2(X, Omega, D_w, SVRt, R, S, coef_der_X, coef_hinge_H, coef_hinge_W, cell_types, N, M, iterations, mean_radius_X, mean_radius_Omega, solution_balancing_threshold, reg_X, reg_Omega, convergence_tol));
+    rcpp_result_gen = Rcpp::wrap(alternative_derivative_stage2(X, Omega, D_w, SVRt, R, S, coef_der_X, coef_hinge_H, coef_hinge_W, cell_types, N, M, iterations, mean_radius_X, mean_radius_Omega, solution_balancing_threshold, total_regularization_weight, reg_X, reg_Omega, convergence_tol));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -483,7 +484,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_DualSimplex_calcErrors", (DL_FUNC) &_DualSimplex_calcErrors, 11},
     {"_DualSimplex_derivative_stage2", (DL_FUNC) &_DualSimplex_derivative_stage2, 21},
     {"_DualSimplex_ensure_D_integrity", (DL_FUNC) &_DualSimplex_ensure_D_integrity, 5},
-    {"_DualSimplex_alternative_derivative_stage2", (DL_FUNC) &_DualSimplex_alternative_derivative_stage2, 19},
+    {"_DualSimplex_alternative_derivative_stage2", (DL_FUNC) &_DualSimplex_alternative_derivative_stage2, 20},
     {"_DualSimplex_theta_derivative_stage2", (DL_FUNC) &_DualSimplex_theta_derivative_stage2, 24},
     {"_DualSimplex_reverse_sinkhorn_c", (DL_FUNC) &_DualSimplex_reverse_sinkhorn_c, 5},
     {"_DualSimplex_clean_reverse_sinkhorn_c", (DL_FUNC) &_DualSimplex_clean_reverse_sinkhorn_c, 5},

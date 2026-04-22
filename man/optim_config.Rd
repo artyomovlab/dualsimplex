@@ -18,6 +18,7 @@ optim_config(
   omega_center = NULL,
   center_threshold = 0,
   solution_balancing_threshold = 1e+06,
+  total_regularization_weight = 1,
   reg_X = 1,
   reg_Omega = 1,
   convergence_tol = 0.001,

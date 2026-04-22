@@ -271,8 +271,8 @@ ensure_D_integrity <- function(X_dtilde, Omega_dtilde, sqrt_Sigma, N, M) {
 #' @param reg_Omega regularization coefficient for Omega.
 #' @param solution_balancing_threshold experimental. If solution is to far away we re-balance norms of the solution vectors between X and Omega
 #' @return new parameters
-alternative_derivative_stage2 <- function(X, Omega, D_w, SVRt, R, S, coef_der_X, coef_hinge_H, coef_hinge_W, cell_types, N, M, iterations, mean_radius_X, mean_radius_Omega, solution_balancing_threshold = 1000000, reg_X = 1, reg_Omega = 1, convergence_tol = 1e-12) {
-    .Call('_DualSimplex_alternative_derivative_stage2', PACKAGE = 'DualSimplex', X, Omega, D_w, SVRt, R, S, coef_der_X, coef_hinge_H, coef_hinge_W, cell_types, N, M, iterations, mean_radius_X, mean_radius_Omega, solution_balancing_threshold, reg_X, reg_Omega, convergence_tol)
+alternative_derivative_stage2 <- function(X, Omega, D_w, SVRt, R, S, coef_der_X, coef_hinge_H, coef_hinge_W, cell_types, N, M, iterations, mean_radius_X, mean_radius_Omega, solution_balancing_threshold = 1000000, total_regularization_weight = 1, reg_X = 1, reg_Omega = 1, convergence_tol = 1e-12) {
+    .Call('_DualSimplex_alternative_derivative_stage2', PACKAGE = 'DualSimplex', X, Omega, D_w, SVRt, R, S, coef_der_X, coef_hinge_H, coef_hinge_W, cell_types, N, M, iterations, mean_radius_X, mean_radius_Omega, solution_balancing_threshold, total_regularization_weight, reg_X, reg_Omega, convergence_tol)
 }
 
 #' Main function to calculate error terms
