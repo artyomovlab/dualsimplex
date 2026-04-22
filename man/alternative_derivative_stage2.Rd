@@ -60,8 +60,6 @@ alternative_derivative_stage2(
 \item{reg_X}{regularization coefficient for X}
 
 \item{reg_Omega}{regularization coefficient for Omega.}
-
-\item{solution_balancing_threshold}{experimental. If solution is to far away we re-balance norms of the solution vectors between X and Omega}
 }
 \value{
 new parameters
