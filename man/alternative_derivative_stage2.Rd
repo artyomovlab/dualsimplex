@@ -20,7 +20,6 @@ alternative_derivative_stage2(
   iterations,
   mean_radius_X,
   mean_radius_Omega,
-  solution_balancing_threshold = 1e+06,
   total_regularization_weight = 1,
   reg_X = 1,
   reg_Omega = 1,
@@ -58,11 +57,11 @@ alternative_derivative_stage2(
 
 \item{mean_radius_Omega}{dependent restriction for updates}
 
-\item{solution_balancing_threshold}{experimental. If solution is to far away we re-balance norms of the solution vectors between X and Omega}
-
 \item{reg_X}{regularization coefficient for X}
 
 \item{reg_Omega}{regularization coefficient for Omega.}
+
+\item{solution_balancing_threshold}{experimental. If solution is to far away we re-balance norms of the solution vectors between X and Omega}
 }
 \value{
 new parameters

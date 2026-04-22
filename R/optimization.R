@@ -18,7 +18,6 @@
 #' @param center_threshold constraint for the  step.
 #' @param reg_X regularization coefficient for X
 #' @param reg_Omega regularization coefficient for Omega
-#' @param solution_balancing_threshold EXPERIMENTAL: only for positivity so far. If optimization going to far from the points in one space, some value of this distance will be transferred to the second space/
 #' @param method method of optimization to use can be  basic/positivity.
 #' @return ready to use list with algorithm configuration
 #' @export
@@ -35,8 +34,7 @@ optim_config <- function(
   x_center = NULL,
   omega_center = NULL,
   center_threshold = 0,
-  solution_balancing_threshold= 1000000,
-  total_regularization_weight = 1,
+  total_regularization_weight = 0,
   reg_X = 1,
   reg_Omega=1,
   convergence_tol = 0.001,
@@ -55,7 +53,6 @@ optim_config <- function(
     x_center = x_center,
     omega_center = omega_center,
     center_threshold = center_threshold,
-    solution_balancing_threshold=solution_balancing_threshold,
     total_regularization_weight = total_regularization_weight,
     reg_X = reg_X,
     reg_Omega = reg_Omega,
@@ -186,7 +183,6 @@ optimize_solution <- function(
     mean_radius_Omega = mean_radius_Omega
   )
   optimization_result <- if (config$method == "positivity") {
-    optimization_params$solution_balancing_threshold <- config$solution_balancing_threshold
     optimization_params$total_regularization_weight <- config$total_regularization_weight
     optimization_params$reg_X  <- config$reg_X
     optimization_params$reg_Omega  <- config$reg_Omega

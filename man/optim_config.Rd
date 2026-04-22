@@ -17,8 +17,7 @@ optim_config(
   x_center = NULL,
   omega_center = NULL,
   center_threshold = 0,
-  solution_balancing_threshold = 1e+06,
-  total_regularization_weight = 1,
+  total_regularization_weight = 0,
   reg_X = 1,
   reg_Omega = 1,
   convergence_tol = 0.001,
@@ -49,8 +48,6 @@ optim_config(
 \item{omega_center}{Omega rays around which to perform search in theta search.}
 
 \item{center_threshold}{constraint for the  step.}
-
-\item{solution_balancing_threshold}{EXPERIMENTAL: only for positivity so far. If optimization going to far from the points in one space, some value of this distance will be transferred to the second space/}
 
 \item{reg_X}{regularization coefficient for X}
 

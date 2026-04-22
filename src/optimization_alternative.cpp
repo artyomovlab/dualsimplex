@@ -59,7 +59,6 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                              const int iterations,
                              const double mean_radius_X,
                              const double mean_radius_Omega,
-                             const double solution_balancing_threshold,
                              const double total_regularization_weight,
                              const double reg_X,
                              const double reg_Omega,
@@ -75,8 +74,8 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
 
     arma::mat new_X = X;
     arma::mat new_Omega = Omega;
-    arma::mat temporary_new_X = X;
-    arma::mat temporary_new_Omega = Omega;
+    arma::mat previous_X = X;
+    arma::mat previous_Omega = Omega;
     arma::mat final_X = X;
     arma::mat final_Omega = Omega;
     arma::mat new_D_w = D_w;
@@ -97,7 +96,7 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
     double limit_for_learning_rate = 1e-15;
     double current_learning_rate = coef_der_X;
     //double mean_norm_solution_X;
-    double previous_error_value;
+    //double previous_error_value;
     double error_difference;
 
 //    Rcpp::Rcout << "Start X"  << std::endl;
@@ -205,6 +204,7 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
             new_Omega = tmp_Omega;
             new_X = tmp_X;
         } else {
+
             new_Omega = tmp_Omega;
             new_X = tmp_X;
         }
@@ -213,8 +213,15 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         // points_statistics_Omega_dtilda_uncorrected.row(itr_) = new_Omega.as_row();
 
         std::tie(new_X, new_Omega, new_D_w_sqrt) = ensure_D_integrity_c(new_X, new_Omega, sqrt_Sigma, N, M);
+
+
+
         final_X = arma::diagmat(1/new_D_w_sqrt) * new_X * arma::diagmat(sqrt_Sigma);
         final_Omega = arma::diagmat(sqrt_Sigma)* new_Omega * arma::diagmat(1/new_D_w_sqrt);
+        error_difference = std::abs(arma::mean(arma::vecnorm(previous_X - final_X, 2, 1)))   + 
+        std::abs(arma::sum(arma::vecnorm(previous_Omega - final_Omega, 2, 0)));
+        previous_X = final_X;
+        previous_Omega = final_Omega;
 
         //// Theoretically this should not happen. But we keep this code for now to ensure everything is good.
     //    for (int c=0; c < cell_types; c++) {
@@ -262,13 +269,13 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                                                S,
                                                coef_hinge_H,
                                                coef_hinge_W);
-        double current_error_value = current_errors["total_error"];
-        error_difference = std::abs(previous_error_value - current_error_value);
+        //double current_error_value = current_errors["total_error"];
+        //error_difference = std::abs(previous_error_value - current_error_value);
         if (error_difference < convergence_tol) {
             current_learning_rate = current_learning_rate / 2;
         }
         Rcpp::Rcout << "Error difference: "<< error_difference << std::endl;
-        previous_error_value = current_error_value;
+        //previous_error_value = current_error_value;
                                                
         errors_statistics.row(itr_) = arma::rowvec{current_errors["deconv_error"],
                                                    current_errors["lambda_error"],
