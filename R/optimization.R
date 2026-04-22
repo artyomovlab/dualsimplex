@@ -285,7 +285,12 @@ optimize_solution <- function(
       "neg_basis_count",
       "sum_d_w",
       "average_norm",
-      "learning_rate"
+      "learning_rate",
+      "gradient_norm",
+      "scaled_gradient_norm",
+      "window_gradient",
+      "scaled_window_gradient",
+      "window_error"
     )
   return(solution_proj)
 }

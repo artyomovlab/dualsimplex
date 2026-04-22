@@ -63,7 +63,12 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                              const double reg_X,
                              const double reg_Omega,
                              const double convergence_tol) {
-    arma::mat errors_statistics(iterations, 11, arma::fill::zeros);
+    arma::mat errors_statistics(iterations, 16, arma::fill::zeros);
+    int index_of_total_error = 5;
+    int index_of_gradient_norm = 11;
+    int index_of_normalized_gradient_norm = 12;
+
+
     arma::mat points_statistics_X(iterations, cell_types * cell_types, arma::fill::zeros);
     arma::mat points_statistics_Omega(iterations, cell_types * cell_types, arma::fill::zeros);
     // arma::mat points_statistics_X_dtilda_uncorrected(iterations, cell_types * cell_types, arma::fill::zeros);
@@ -95,6 +100,18 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
     //double mean_norm_solution_X;
     double previous_error_value;
     double error_difference;
+
+    double average_gradient_norm;
+    double average_scaled_gradient_norm;
+    double window_gradient_norm;
+    double window_scaled_gradient_norm;
+    double window_error;
+
+
+                                
+    int window_size = 20;
+
+    
 
 //    Rcpp::Rcout << "Start X"  << std::endl;
 //    Rcpp::Rcout << new_X  << std::endl;
@@ -132,6 +149,7 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
 //    Rcpp::Rcout << "X and Omega are acceptable. Continue with the optimization\n"  << std::endl;
 
     // here we assume X and Omega are inverse of each other and positive as needed
+    int window_head = 0;
     int itr_ = 0;
     while ((itr_ < iterations) & (current_learning_rate > limit_for_learning_rate)) {
         //mean_norm_solution_X = arma::mean(arma::vecnorm(new_X, 2, 1));
@@ -140,15 +158,36 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         hinge_term_W = (-new_Omega.t())  * arma::diagmat(sqrt_Sigma) * l1_hinge_der_basis_C__(S.t() * arma::diagmat(sqrt_Sigma) * new_Omega, S) * (new_Omega.t());
         der_X =  coef_hinge_H * hinge_term_H;
         der_X += coef_hinge_W * hinge_term_W;
+        average_gradient_norm = arma::mean(arma::vecnorm(der_X, 2, 1));
+        
+        if (itr_ == 0) {
+            window_gradient_norm =  average_gradient_norm;
+        } else if (itr_ < window_size) {
+            window_gradient_norm  = (arma::accu(errors_statistics.col(index_of_gradient_norm).head(itr_)) + average_gradient_norm)/(itr_+1);
+        } else {
+            window_gradient_norm  = (arma::accu(errors_statistics.col(index_of_gradient_norm).subvec(window_head,itr_)) + average_gradient_norm)/window_size;
+        }
         der_reg = reg_X * 2 * new_X; //regularization for X
         // Regularization here is advised but not mandatory since X and Omega regularize each other.
         der_reg +=  reg_Omega * (-new_Omega.t()) * 2 * new_Omega * (new_Omega.t()); //regularization for Omega
+
+
         der_X = correctByNorm(der_X); 
         der_reg = correctByNorm(der_reg); 
         der_X = der_X + total_regularization_weight * der_reg;
         //der_X = correctByNorm(der_X)  * mean_radius_X; // arma::diagmat(new_D_w_sqrt)  * arma::diagmat(1 / sqrt_Sigma)  * mean_radius_X;
         der_X.each_row() %= new_D_w_sqrt.t() * mean_radius_X;
         der_X.each_col() /= sqrt_Sigma;
+
+        average_scaled_gradient_norm = arma::mean(arma::vecnorm(der_X, 2, 1));
+        if (itr_ == 0) {
+            window_scaled_gradient_norm =  average_scaled_gradient_norm;
+        } else if (itr_ < window_size) {
+            window_scaled_gradient_norm  = (arma::accu(errors_statistics.col(index_of_normalized_gradient_norm).head(itr_)) + average_scaled_gradient_norm)/(itr_+1);
+        } else {
+            window_scaled_gradient_norm  = (arma::accu(errors_statistics.col(index_of_normalized_gradient_norm).subvec(window_head,itr_)) + average_gradient_norm)/window_size;
+        }
+        
 
         tmp_X = (new_X - current_learning_rate * der_X); // estimate new X given derivative
 
@@ -266,6 +305,17 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         }
         Rcpp::Rcout << "Error difference: "<< error_difference << std::endl;
         previous_error_value = current_error_value;
+
+        if (itr_ == 0) {
+            window_error =  current_error_value;
+        } else if (itr_ < window_size) {
+            window_error  = (arma::accu(errors_statistics.col(index_of_total_error).head(itr_)) + current_error_value)/(itr_+1);
+        } else {
+            window_error  = (arma::accu(errors_statistics.col(index_of_total_error).subvec(window_head,itr_)) + current_error_value)/window_size;
+            window_head += 1;
+        }
+
+
                                                
         errors_statistics.row(itr_) = arma::rowvec{current_errors["deconv_error"],
                                                    current_errors["lambda_error"],
@@ -277,7 +327,13 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                                                    static_cast<double>(neg_basis),
                                                    sum_,
                                                    current_errors["average_norm"],
-                                                   current_learning_rate};
+                                                   current_learning_rate,
+                                                   average_gradient_norm,
+                                                   average_scaled_gradient_norm,
+                                                   window_gradient_norm,
+                                                   window_scaled_gradient_norm,
+                                                   window_error
+                                                };
         
         //points_statistics_X_dtilda_corrected.row(itr_) = new_X.as_row();
         //points_statistics_Omega_dtilda_corrected.row(itr_) = new_Omega.as_row();
