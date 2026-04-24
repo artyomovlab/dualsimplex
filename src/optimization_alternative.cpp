@@ -179,12 +179,12 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         average_hinge_reg_Omega_gradient_norm = arma::mean(arma::vecnorm(reg_Omega_term, 2, 1));
         average_hinge_reg_gradient_norm = arma::mean(arma::vecnorm(der_reg, 2, 1));
 
-        der_X = correctByNorm(der_X); 
-        der_reg = correctByNorm(der_reg); 
+        //der_X = correctByNorm(der_X); 
+        //der_reg = correctByNorm(der_reg); 
         der_X = der_X + total_regularization_weight * der_reg;
         //der_X = correctByNorm(der_X)  * mean_radius_X; // arma::diagmat(new_D_w_sqrt)  * arma::diagmat(1 / sqrt_Sigma)  * mean_radius_X;
-        der_X.each_row() %= new_D_w_sqrt.t() * mean_radius_X;
-        der_X.each_col() /= sqrt_Sigma;
+        //der_X.each_row() %= new_D_w_sqrt.t() * mean_radius_X;
+       // der_X.each_col() /= sqrt_Sigma;
 
         average_scaled_gradient_norm = arma::mean(arma::vecnorm(der_X, 2, 1));
         if (itr_ == 0) {
@@ -192,7 +192,7 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         } else if (itr_ < window_size) {
             window_scaled_gradient_norm  = (arma::accu(errors_statistics.col(index_of_normalized_gradient_norm).head(itr_)) + average_scaled_gradient_norm)/(itr_+1);
         } else {
-            window_scaled_gradient_norm  = (arma::accu(errors_statistics.col(index_of_normalized_gradient_norm).subvec(window_head,itr_)) + average_gradient_norm)/window_size;
+            window_scaled_gradient_norm  = (arma::accu(errors_statistics.col(index_of_normalized_gradient_norm).subvec(window_head,itr_)) + average_scaled_gradient_norm)/window_size;
         }
         
 
