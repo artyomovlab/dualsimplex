@@ -58,13 +58,13 @@ arma::mat l1_hinge_der_proportions_C__(const arma::mat& H, const arma::mat& R) {
     arma::mat res(k, k, arma::fill::zeros);
 
     res = H_neg * R.t();
-    return res / R.n_cols;
+    return res;
 }
 
 arma::mat l1_hinge_der_basis_C__(const arma::mat& W, const arma::mat& S) {
     // derivative should be the same as for X but W and Omega are transposed
     arma::mat res = l1_hinge_der_proportions_C__(W.t(), S);
-    return res.t() / S.n_cols;
+    return res.t();
 }
 
 arma::mat squared_hinge_der_basis_C__(const arma::mat& W, const arma::mat& S) {
