@@ -290,7 +290,12 @@ optimize_solution <- function(
       "scaled_gradient_norm",
       "window_gradient",
       "scaled_window_gradient",
-      "window_error"
+      "window_error",
+      "average_hinge_H_gradient_norm",
+      "average_hinge_W_gradient_norm",
+      "average_hinge_reg_X_gradient_norm",
+      "average_hinge_reg_Omega_gradient_norm",
+      "average_hinge_reg_gradient_norm"
     )
   return(solution_proj)
 }

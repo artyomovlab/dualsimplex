@@ -63,11 +63,10 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                              const double reg_X,
                              const double reg_Omega,
                              const double convergence_tol) {
-    arma::mat errors_statistics(iterations, 16, arma::fill::zeros);
+    arma::mat errors_statistics(iterations, 21, arma::fill::zeros);
     int index_of_total_error = 5;
     int index_of_gradient_norm = 11;
     int index_of_normalized_gradient_norm = 12;
-
 
     arma::mat points_statistics_X(iterations, cell_types * cell_types, arma::fill::zeros);
     arma::mat points_statistics_Omega(iterations, cell_types * cell_types, arma::fill::zeros);
@@ -83,7 +82,6 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
     arma::mat final_Omega = Omega;
     arma::mat new_D_w = D_w;
     arma::mat new_D_w_sqrt = arma::sqrt(new_D_w);
-
     arma::mat new_D_h = new_D_w * (N / M);
 
     arma::vec Sigma = arma::diagvec(SVRt);
@@ -92,7 +90,7 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
     new_X =  arma::diagmat(new_D_w_sqrt) * new_X * arma::diagmat(1 / sqrt_Sigma);
     new_Omega =  arma::diagmat(1 / sqrt_Sigma) *  new_Omega  * arma::diagmat(new_D_w_sqrt);
     arma::mat der_X, der_reg;
-    arma::mat hinge_term_H, hinge_term_W;
+    arma::mat hinge_term_H, hinge_term_W, reg_X_term, reg_Omega_term;
     arma::mat tmp_X, tmp_Omega;
     double shrink_limit = 500;
     double limit_for_learning_rate = 1e-15;
@@ -102,6 +100,11 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
     double error_difference;
 
     double average_gradient_norm;
+    double average_hinge_H_gradient_norm;
+    double average_hinge_W_gradient_norm;
+    double average_hinge_reg_gradient_norm;
+    double average_hinge_reg_X_gradient_norm;
+    double average_hinge_reg_Omega_gradient_norm;
     double average_scaled_gradient_norm;
     double window_gradient_norm;
     double window_scaled_gradient_norm;
@@ -159,7 +162,8 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         der_X =  coef_hinge_H * hinge_term_H;
         der_X += coef_hinge_W * hinge_term_W;
         average_gradient_norm = arma::mean(arma::vecnorm(der_X, 2, 1));
-        
+        average_hinge_H_gradient_norm = arma::mean(arma::vecnorm(hinge_term_H, 2, 1));
+        average_hinge_W_gradient_norm = arma::mean(arma::vecnorm(hinge_term_W, 2, 1));
         if (itr_ == 0) {
             window_gradient_norm =  average_gradient_norm;
         } else if (itr_ < window_size) {
@@ -167,10 +171,13 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         } else {
             window_gradient_norm  = (arma::accu(errors_statistics.col(index_of_gradient_norm).subvec(window_head,itr_)) + average_gradient_norm)/window_size;
         }
-        der_reg = reg_X * 2 * new_X; //regularization for X
+        reg_X_term = 2 * new_X;
+        reg_Omega_term = (-new_Omega.t()) * 2 * new_Omega * (new_Omega.t());
+        der_reg = reg_X * reg_X_term +  reg_Omega * reg_Omega_term ; //regularization for X
         // Regularization here is advised but not mandatory since X and Omega regularize each other.
-        der_reg +=  reg_Omega * (-new_Omega.t()) * 2 * new_Omega * (new_Omega.t()); //regularization for Omega
-
+        average_hinge_reg_X_gradient_norm = arma::mean(arma::vecnorm(reg_X_term, 2, 1));
+        average_hinge_reg_Omega_gradient_norm = arma::mean(arma::vecnorm(reg_Omega_term, 2, 1));
+        average_hinge_reg_gradient_norm = arma::mean(arma::vecnorm(der_reg, 2, 1));
 
         der_X = correctByNorm(der_X); 
         der_reg = correctByNorm(der_reg); 
@@ -332,7 +339,12 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                                                    average_scaled_gradient_norm,
                                                    window_gradient_norm,
                                                    window_scaled_gradient_norm,
-                                                   window_error
+                                                   window_error,
+                                                   average_hinge_H_gradient_norm,
+                                                   average_hinge_W_gradient_norm,
+                                                   average_hinge_reg_X_gradient_norm,
+                                                   average_hinge_reg_Omega_gradient_norm,
+                                                   average_hinge_reg_gradient_norm
                                                 };
         
         //points_statistics_X_dtilda_corrected.row(itr_) = new_X.as_row();
