@@ -56,8 +56,9 @@ optim_config <- function(
     total_regularization_weight = total_regularization_weight,
     reg_X = reg_X,
     reg_Omega = reg_Omega,
-    convergence_tol= convergence_tol,
-    method = method
+    convergence_tol = convergence_tol,
+    method = method,
+    debug_stats = FALSE
   ))
 }
 
@@ -185,6 +186,7 @@ optimize_solution <- function(
     optimization_params$reg_X  <- config$reg_X
     optimization_params$reg_Omega  <- config$reg_Omega
     optimization_params$convergence_tol <- config$convergence_tol
+    optimization_params$debug_stats <- config$debug_stats
     do.call(alternative_derivative_stage2, optimization_params)
   } else if (config$method == "basic") {
     optimization_params$r_const_X <-  r_limits$R_limit_X
