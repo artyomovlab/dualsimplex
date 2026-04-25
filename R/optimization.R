@@ -178,9 +178,7 @@ optimize_solution <- function(
     cell_types = n_cell_types,
     N = proj$meta$N,
     M = proj$meta$M,
-    iterations = iterations,
-    mean_radius_X = mean_radius_X,
-    mean_radius_Omega = mean_radius_Omega
+    iterations = iterations
   )
   optimization_result <- if (config$method == "positivity") {
     optimization_params$total_regularization_weight <- config$total_regularization_weight
@@ -195,7 +193,8 @@ optimize_solution <- function(
     optimization_params$coef_pos_D_h <-  config$coef_pos_D_h
     optimization_params$coef_pos_D_w <-  config$coef_pos_D_w
     optimization_params$coef_der_Omega <- config$coef_der_Omega
-
+    optimization_params$mean_radius_X <-  mean_radius_X
+    optimization_params$mean_radius_Omega  <- mean_radius_Omega
     do.call(derivative_stage2, optimization_params)
   } else if (config$method == "theta") {
     optimization_params$r_const_X <-  r_limits$R_limit_X
@@ -204,6 +203,8 @@ optimize_solution <- function(
     optimization_params$coef_pos_D_h <-  config$coef_pos_D_h
     optimization_params$coef_pos_D_w <-  config$coef_pos_D_w
     optimization_params$coef_der_Omega <- config$coef_der_Omega
+    optimization_params$mean_radius_X <-  mean_radius_X
+    optimization_params$mean_radius_Omega  <- mean_radius_Omega
 
     # this optimization ensures that solution points are not going away to far from the predefined center points.
     # the distance is measured as cosine distance between rays originating from 0.
@@ -276,7 +277,7 @@ optimize_solution <- function(
   colnames(solution_proj$optim_history$errors_statistics) <-
     c(
       "deconv_error",
-      "lamdba_error",
+      "lambda_error",
       "beta_error",
       "D_h_error",
       "D_w_error",
@@ -287,10 +288,6 @@ optimize_solution <- function(
       "average_norm",
       "learning_rate",
       "gradient_norm",
-      "scaled_gradient_norm",
-      "window_gradient",
-      "scaled_window_gradient",
-      "window_error",
       "average_hinge_H_gradient_norm",
       "average_hinge_W_gradient_norm",
       "average_hinge_reg_X_gradient_norm",
@@ -299,7 +296,6 @@ optimize_solution <- function(
     )
   return(solution_proj)
 }
-
 
 calc_r_limits <- function(
   data_proj,

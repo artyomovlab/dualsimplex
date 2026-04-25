@@ -57,16 +57,12 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                              const double N,
                              const double M,
                              const int iterations,
-                             const double mean_radius_X,
-                             const double mean_radius_Omega,
                              const double total_regularization_weight,
                              const double reg_X,
                              const double reg_Omega,
-                             const double convergence_tol) {
-    arma::mat errors_statistics(iterations, 21, arma::fill::zeros);
-    int index_of_total_error = 5;
-    int index_of_gradient_norm = 11;
-    int index_of_normalized_gradient_norm = 12;
+                             const double convergence_tol,
+                             const bool debug_stats) {
+    arma::mat errors_statistics(iterations, 17, arma::fill::zeros);
 
     arma::mat points_statistics_X(iterations, cell_types * cell_types, arma::fill::zeros);
     arma::mat points_statistics_Omega(iterations, cell_types * cell_types, arma::fill::zeros);
@@ -92,30 +88,27 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
     arma::mat der_X, der_reg;
     arma::mat hinge_term_H, hinge_term_W, reg_X_term, reg_Omega_term;
     arma::mat tmp_X, tmp_Omega;
+    arma::mat best_solution_X;
+    arma::mat best_solution_Omega;
+    arma::mat best_solution_D_w;
+
+
     double shrink_limit = 500;
-    double limit_for_learning_rate = 1e-15;
+   // double limit_for_learning_rate = 1e-15;
     double current_learning_rate = coef_der_X;
     //double mean_norm_solution_X;
-    double previous_error_value;
-    double error_difference;
+    //double previous_error_value;
+    double best_error_value = 10000;
+    int best_error_iteration = 0;
+    //double error_difference;
 
-    double average_gradient_norm;
-    double average_hinge_H_gradient_norm;
-    double average_hinge_W_gradient_norm;
-    double average_hinge_reg_gradient_norm;
-    double average_hinge_reg_X_gradient_norm;
-    double average_hinge_reg_Omega_gradient_norm;
-    double average_scaled_gradient_norm;
-    double window_gradient_norm;
-    double window_scaled_gradient_norm;
-    double window_error;
-
-
-                                
-    int window_size = 20;
-
-    
-
+    double average_gradient_norm = 0;
+    double average_hinge_H_gradient_norm = 0;
+    double average_hinge_W_gradient_norm = 0;
+    double average_hinge_reg_gradient_norm = 0;
+    double average_hinge_reg_X_gradient_norm = 0;
+    double average_hinge_reg_Omega_gradient_norm = 0;
+              
 //    Rcpp::Rcout << "Start X"  << std::endl;
 //    Rcpp::Rcout << new_X  << std::endl;
 //    Rcpp::Rcout << "Start Omega"  << std::endl;
@@ -140,65 +133,31 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         new_Omega = tmp_Omega;
     }
 
-//    Rcpp::Rcout << "Initial X\n"  << std::endl;
-//    Rcpp::Rcout << new_X << std::endl;
-//    Rcpp::Rcout << "Initial Omega\n"  << std::endl;
-//    Rcpp::Rcout << new_Omega << std::endl;
-//    Rcpp::Rcout << "Initial D\n"  << std::endl;
-//    Rcpp::Rcout << new_D_w << std::endl;
-//    Rcpp::Rcout << "Initial sqrt D\n"  << std::endl;
-//    Rcpp::Rcout << new_D_w_sqrt << std::endl;
-//
-//    Rcpp::Rcout << "X and Omega are acceptable. Continue with the optimization\n"  << std::endl;
-
     // here we assume X and Omega are inverse of each other and positive as needed
-    int window_head = 0;
     int itr_ = 0;
-    while ((itr_ < iterations) & (current_learning_rate > limit_for_learning_rate)) {
-        //mean_norm_solution_X = arma::mean(arma::vecnorm(new_X, 2, 1));
-
+    while ((itr_ < iterations) & (current_learning_rate > convergence_tol)) {
         hinge_term_H = l1_hinge_der_proportions_C__(new_X  * arma::diagmat(sqrt_Sigma)  * R, R) * arma::diagmat(sqrt_Sigma);
         hinge_term_W = (-new_Omega.t())  * arma::diagmat(sqrt_Sigma) * l1_hinge_der_basis_C__(S.t() * arma::diagmat(sqrt_Sigma) * new_Omega, S) * (new_Omega.t());
         der_X =  coef_hinge_H * hinge_term_H;
         der_X += coef_hinge_W * hinge_term_W;
-        average_gradient_norm = arma::mean(arma::vecnorm(der_X, 2, 1));
-        average_hinge_H_gradient_norm = arma::mean(arma::vecnorm(hinge_term_H, 2, 1));
-        average_hinge_W_gradient_norm = arma::mean(arma::vecnorm(hinge_term_W, 2, 1));
-        if (itr_ == 0) {
-            window_gradient_norm =  average_gradient_norm;
-        } else if (itr_ < window_size) {
-            window_gradient_norm  = (arma::accu(errors_statistics.col(index_of_gradient_norm).head(itr_)) + average_gradient_norm)/(itr_+1);
-        } else {
-            window_gradient_norm  = (arma::accu(errors_statistics.col(index_of_gradient_norm).subvec(window_head,itr_)) + average_gradient_norm)/window_size;
-        }
+
+
         reg_X_term = 2 * new_X;
         reg_Omega_term = (-new_Omega.t()) * 2 * new_Omega * (new_Omega.t());
         der_reg = reg_X * reg_X_term +  reg_Omega * reg_Omega_term ; //regularization for X
-        // Regularization here is advised but not mandatory since X and Omega regularize each other.
-        average_hinge_reg_X_gradient_norm = arma::mean(arma::vecnorm(reg_X_term, 2, 1));
-        average_hinge_reg_Omega_gradient_norm = arma::mean(arma::vecnorm(reg_Omega_term, 2, 1));
-        average_hinge_reg_gradient_norm = arma::mean(arma::vecnorm(der_reg, 2, 1));
-
-        //der_X = correctByNorm(der_X); 
-        //der_reg = correctByNorm(der_reg); 
-        der_X = der_X + total_regularization_weight * der_reg;
-        //der_X = correctByNorm(der_X)  * mean_radius_X; // arma::diagmat(new_D_w_sqrt)  * arma::diagmat(1 / sqrt_Sigma)  * mean_radius_X;
-        //der_X.each_row() %= new_D_w_sqrt.t() * mean_radius_X;
-       // der_X.each_col() /= sqrt_Sigma;
-
-        average_scaled_gradient_norm = arma::mean(arma::vecnorm(der_X, 2, 1));
-        if (itr_ == 0) {
-            window_scaled_gradient_norm =  average_scaled_gradient_norm;
-        } else if (itr_ < window_size) {
-            window_scaled_gradient_norm  = (arma::accu(errors_statistics.col(index_of_normalized_gradient_norm).head(itr_)) + average_scaled_gradient_norm)/(itr_+1);
-        } else {
-            window_scaled_gradient_norm  = (arma::accu(errors_statistics.col(index_of_normalized_gradient_norm).subvec(window_head,itr_)) + average_scaled_gradient_norm)/window_size;
-        }
         
-
+        // Regularization here is advised but not mandatory since X and Omega regularize each other.
+        der_X = der_X + total_regularization_weight * der_reg;
+        if (debug_stats) {
+            average_gradient_norm = arma::mean(arma::vecnorm(der_X, 2, 1));
+            average_hinge_H_gradient_norm = arma::mean(arma::vecnorm(hinge_term_H, 2, 1));
+            average_hinge_W_gradient_norm = arma::mean(arma::vecnorm(hinge_term_W, 2, 1));
+            average_hinge_reg_X_gradient_norm = arma::mean(arma::vecnorm(reg_X_term, 2, 1));
+            average_hinge_reg_Omega_gradient_norm = arma::mean(arma::vecnorm(reg_Omega_term, 2, 1));
+            average_hinge_reg_gradient_norm = arma::mean(arma::vecnorm(der_reg, 2, 1));
+        }
         tmp_X = (new_X - current_learning_rate * der_X); // estimate new X given derivative
 
-        
         // Check if first column of X is all-positive
         if (arma::any(tmp_X.col(0) <= 0)) {
             for (int c=0; c < cell_types; c++) {
@@ -259,37 +218,6 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         final_X = arma::diagmat(1/new_D_w_sqrt) * new_X * arma::diagmat(sqrt_Sigma);
         final_Omega = arma::diagmat(sqrt_Sigma)* new_Omega * arma::diagmat(1/new_D_w_sqrt);
 
-        //// Theoretically this should not happen. But we keep this code for now to ensure everything is good.
-    //    for (int c=0; c < cell_types; c++) {
-    //        double col_omega_norm = arma::norm(final_Omega.col(c).subvec(1, cell_types - 1), 2);
-    //        double row_x_norm = arma::norm(final_X.row(c).subvec(1, cell_types - 1), 2);
-    //        if (col_omega_norm > solution_balancing_threshold * mean_radius_Omega) {
-    //            Rcpp::Rcout << "Looks like Omega points are way far away after inverse of X. \n"  << std::endl;
-    //            Rcpp::Rcout << "We will balance solution by moving some magnitude from Omega to X. \n"  << std::endl;
-    //            double ratio_x = row_x_norm / mean_radius_X;
-    //            double ratio_omega = col_omega_norm / mean_radius_Omega;
-    //            // stretch the space for all elements
-    //            double multiplier_x = sqrt(ratio_omega)/sqrt(ratio_x);
-    //            double multiplier_omega =  sqrt(ratio_x)/sqrt(ratio_omega);
-    //            Rcpp::Rcout << " X cols multiplied by " << multiplier_x << std::endl;
-    //            Rcpp::Rcout << " Omega cols multiplied by " << multiplier_omega << std::endl;
-
-    //             for (int column=1; column < cell_types; column++) {
-    //                 std::tie(temporary_new_X, temporary_new_Omega, temporary_new_D_w_sqrt) = ensure_D_integrity_c(new_X, new_Omega, sqrt_Sigma, N, M);
-    //                 final_X = arma::diagmat(1/new_D_w_sqrt) * new_X * arma::diagmat(sqrt_Sigma);
-    //                 final_Omega = arma::diagmat(sqrt_Sigma)* new_Omega * arma::diagmat(1/new_D_w_sqrt);
-    //                 new_X.col(column) *= multiplier_x;
-    //                 new_Omega.row(column) *= multiplier_omega;
-    //             }
-    //             Rcpp::Rcout << "Finish norm correction. \n"  << std::endl;
-    //         }
-
-    //     }
-    //     // Correct X and Omega to have corresponding first row/column and calculate D
-    //     std::tie(new_X, new_Omega, new_D_w_sqrt) = ensure_D_integrity_c(new_X, new_Omega, sqrt_Sigma, N, M);
-           // result X and omega
-    //     final_X = arma::diagmat(1/new_D_w_sqrt) * new_X * arma::diagmat(sqrt_Sigma);
-    //     final_Omega = arma::diagmat(sqrt_Sigma)* new_Omega * arma::diagmat(1/new_D_w_sqrt);
         new_D_w = arma::pow(new_D_w_sqrt, 2);
         new_D_h = new_D_w * (N / M);
         double sum_ = accu(new_D_w) / M;
@@ -306,45 +234,48 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                                                coef_hinge_H,
                                                coef_hinge_W);
         double current_error_value = current_errors["total_error"];
-        error_difference = std::abs(previous_error_value - current_error_value);
-        if (error_difference < convergence_tol) {
+        if (current_error_value < best_error_value) {
+            best_error_iteration = itr_;
+            best_error_value = current_error_value;
+            //best_solution_X = final_X;
+            //best_solution_Omega = final_Omega;
+            //best_solution_D_w = new_D_w;
+        }
+        if (itr_ - best_error_iteration > 100) {
+            // looks like best solution was not updated for 100 iterations. reducing step size.
             current_learning_rate = current_learning_rate / 2;
-        }
-        Rcpp::Rcout << "Error difference: "<< error_difference << std::endl;
-        previous_error_value = current_error_value;
-
-        if (itr_ == 0) {
-            window_error =  current_error_value;
-        } else if (itr_ < window_size) {
-            window_error  = (arma::accu(errors_statistics.col(index_of_total_error).head(itr_)) + current_error_value)/(itr_+1);
-        } else {
-            window_error  = (arma::accu(errors_statistics.col(index_of_total_error).subvec(window_head,itr_)) + current_error_value)/window_size;
-            window_head += 1;
+            best_error_iteration = best_error_iteration + 20; // just give 20 more iterations to try converge further
         }
 
+
+
+
+
+        // error_difference = std::abs(previous_error_value - current_error_value);
+        // // if (error_difference < convergence_tol) {
+        // //     current_learning_rate = current_learning_rate / 2;
+        // // }
+        // Rcpp::Rcout << "Error difference: "<< error_difference << std::endl;
+        // previous_error_value = current_error_value;
 
                                                
-        errors_statistics.row(itr_) = arma::rowvec{current_errors["deconv_error"],
-                                                   current_errors["lambda_error"],
-                                                   current_errors["beta_error"],
-                                                   current_errors["D_h_error"],
-                                                   current_errors["D_w_error"],
-                                                   current_errors["total_error"],
-                                                   static_cast<double>(neg_props),
-                                                   static_cast<double>(neg_basis),
-                                                   sum_,
-                                                   current_errors["average_norm"],
-                                                   current_learning_rate,
-                                                   average_gradient_norm,
-                                                   average_scaled_gradient_norm,
-                                                   window_gradient_norm,
-                                                   window_scaled_gradient_norm,
-                                                   window_error,
-                                                   average_hinge_H_gradient_norm,
-                                                   average_hinge_W_gradient_norm,
-                                                   average_hinge_reg_X_gradient_norm,
-                                                   average_hinge_reg_Omega_gradient_norm,
-                                                   average_hinge_reg_gradient_norm
+        errors_statistics.row(itr_) = arma::rowvec{current_errors["deconv_error"],            //1
+                                                   current_errors["lambda_error"], //2
+                                                   current_errors["beta_error"], //3
+                                                   current_errors["D_h_error"], //4
+                                                   current_errors["D_w_error"], //5
+                                                   current_errors["total_error"], //6
+                                                   static_cast<double>(neg_props), //7
+                                                   static_cast<double>(neg_basis), //8
+                                                   sum_, //9
+                                                   current_errors["average_norm"], //10
+                                                   current_learning_rate, //11
+                                                   average_gradient_norm, //12
+                                                   average_hinge_H_gradient_norm, //13
+                                                   average_hinge_W_gradient_norm, //14
+                                                   average_hinge_reg_X_gradient_norm, //15
+                                                   average_hinge_reg_Omega_gradient_norm, //16
+                                                   average_hinge_reg_gradient_norm //17
                                                 };
         
         //points_statistics_X_dtilda_corrected.row(itr_) = new_X.as_row();

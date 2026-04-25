@@ -18,12 +18,11 @@ alternative_derivative_stage2(
   N,
   M,
   iterations,
-  mean_radius_X,
-  mean_radius_Omega,
   total_regularization_weight = 1,
   reg_X = 1,
   reg_Omega = 1,
-  convergence_tol = 1e-12
+  convergence_tol = 1e-12,
+  debug_stats = TRUE
 )
 }
 \arguments{
@@ -53,13 +52,13 @@ alternative_derivative_stage2(
 
 \item{iterations}{number of iterations}
 
-\item{mean_radius_X}{data dependent restriction for updates}
-
-\item{mean_radius_Omega}{dependent restriction for updates}
-
 \item{reg_X}{regularization coefficient for X}
 
 \item{reg_Omega}{regularization coefficient for Omega.}
+
+\item{convergence_tol}{tolerance for convergence.}
+
+\item{debug_stats}{wether to save grad norm values.}
 }
 \value{
 new parameters

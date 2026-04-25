@@ -44,10 +44,10 @@ Rcpp::List ensure_D_integrity(const arma::mat& X_dtilde,
 //' @param N current N
 //' @param M current M
 //' @param iterations number of iterations
-//' @param mean_radius_X data dependent restriction for updates
-//' @param mean_radius_Omega dependent restriction for updates
 //' @param reg_X regularization coefficient for X
 //' @param reg_Omega regularization coefficient for Omega.
+//' @param convergence_tol tolerance for convergence.
+//' @param debug_stats wether to save grad norm values.
 //' @return new parameters
 // [[Rcpp::export]]
 Rcpp::List alternative_derivative_stage2(const arma::mat& X,
@@ -63,9 +63,8 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                              const double N,
                              const double M,
                              const int iterations,
-                             const double mean_radius_X,
-                             const double mean_radius_Omega,
                              const double total_regularization_weight = 1,
                              const double reg_X = 1,
                              const double reg_Omega=1,
-                             const double convergence_tol=1e-12);
+                             const double convergence_tol=1e-12,
+                             const bool debug_stats=true);
