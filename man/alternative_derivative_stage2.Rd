@@ -22,7 +22,8 @@ alternative_derivative_stage2(
   reg_X = 1,
   reg_Omega = 1,
   convergence_tol = 1e-12,
-  debug_stats = TRUE
+  debug_stats = TRUE,
+  use_scaled_stop_criteria = TRUE
 )
 }
 \arguments{

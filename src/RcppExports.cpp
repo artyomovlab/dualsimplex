@@ -312,8 +312,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // alternative_derivative_stage2
-Rcpp::List alternative_derivative_stage2(const arma::mat& X, const arma::mat& Omega, const arma::mat& D_w, const arma::mat& SVRt, const arma::mat& R, const arma::mat& S, const double coef_der_X, const double coef_hinge_H, const double coef_hinge_W, const int cell_types, const double N, const double M, const int iterations, const double total_regularization_weight, const double reg_X, const double reg_Omega, const double convergence_tol, const bool debug_stats);
-RcppExport SEXP _DualSimplex_alternative_derivative_stage2(SEXP XSEXP, SEXP OmegaSEXP, SEXP D_wSEXP, SEXP SVRtSEXP, SEXP RSEXP, SEXP SSEXP, SEXP coef_der_XSEXP, SEXP coef_hinge_HSEXP, SEXP coef_hinge_WSEXP, SEXP cell_typesSEXP, SEXP NSEXP, SEXP MSEXP, SEXP iterationsSEXP, SEXP total_regularization_weightSEXP, SEXP reg_XSEXP, SEXP reg_OmegaSEXP, SEXP convergence_tolSEXP, SEXP debug_statsSEXP) {
+Rcpp::List alternative_derivative_stage2(const arma::mat& X, const arma::mat& Omega, const arma::mat& D_w, const arma::mat& SVRt, const arma::mat& R, const arma::mat& S, const double coef_der_X, const double coef_hinge_H, const double coef_hinge_W, const int cell_types, const double N, const double M, const int iterations, const double total_regularization_weight, const double reg_X, const double reg_Omega, const double convergence_tol, const bool debug_stats, const bool use_scaled_stop_criteria);
+RcppExport SEXP _DualSimplex_alternative_derivative_stage2(SEXP XSEXP, SEXP OmegaSEXP, SEXP D_wSEXP, SEXP SVRtSEXP, SEXP RSEXP, SEXP SSEXP, SEXP coef_der_XSEXP, SEXP coef_hinge_HSEXP, SEXP coef_hinge_WSEXP, SEXP cell_typesSEXP, SEXP NSEXP, SEXP MSEXP, SEXP iterationsSEXP, SEXP total_regularization_weightSEXP, SEXP reg_XSEXP, SEXP reg_OmegaSEXP, SEXP convergence_tolSEXP, SEXP debug_statsSEXP, SEXP use_scaled_stop_criteriaSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -335,7 +335,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const double >::type reg_Omega(reg_OmegaSEXP);
     Rcpp::traits::input_parameter< const double >::type convergence_tol(convergence_tolSEXP);
     Rcpp::traits::input_parameter< const bool >::type debug_stats(debug_statsSEXP);
-    rcpp_result_gen = Rcpp::wrap(alternative_derivative_stage2(X, Omega, D_w, SVRt, R, S, coef_der_X, coef_hinge_H, coef_hinge_W, cell_types, N, M, iterations, total_regularization_weight, reg_X, reg_Omega, convergence_tol, debug_stats));
+    Rcpp::traits::input_parameter< const bool >::type use_scaled_stop_criteria(use_scaled_stop_criteriaSEXP);
+    rcpp_result_gen = Rcpp::wrap(alternative_derivative_stage2(X, Omega, D_w, SVRt, R, S, coef_der_X, coef_hinge_H, coef_hinge_W, cell_types, N, M, iterations, total_regularization_weight, reg_X, reg_Omega, convergence_tol, debug_stats, use_scaled_stop_criteria));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -482,7 +483,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_DualSimplex_calcErrors", (DL_FUNC) &_DualSimplex_calcErrors, 11},
     {"_DualSimplex_derivative_stage2", (DL_FUNC) &_DualSimplex_derivative_stage2, 21},
     {"_DualSimplex_ensure_D_integrity", (DL_FUNC) &_DualSimplex_ensure_D_integrity, 5},
-    {"_DualSimplex_alternative_derivative_stage2", (DL_FUNC) &_DualSimplex_alternative_derivative_stage2, 18},
+    {"_DualSimplex_alternative_derivative_stage2", (DL_FUNC) &_DualSimplex_alternative_derivative_stage2, 19},
     {"_DualSimplex_theta_derivative_stage2", (DL_FUNC) &_DualSimplex_theta_derivative_stage2, 24},
     {"_DualSimplex_reverse_sinkhorn_c", (DL_FUNC) &_DualSimplex_reverse_sinkhorn_c, 5},
     {"_DualSimplex_clean_reverse_sinkhorn_c", (DL_FUNC) &_DualSimplex_clean_reverse_sinkhorn_c, 5},

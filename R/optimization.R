@@ -36,9 +36,10 @@ optim_config <- function(
   center_threshold = 0,
   total_regularization_weight = 0,
   reg_X = 1,
-  reg_Omega=1,
-  debug_stats = F,
+  reg_Omega = 1,
+  debug_stats = FALSE,
   convergence_tol = 0.001,
+  stop_criteria = "total_error", # scaled_error
   method = "basic" # basic/positivity/theta
 ) {
   return(list(
@@ -59,7 +60,8 @@ optim_config <- function(
     reg_Omega = reg_Omega,
     convergence_tol = convergence_tol,
     method = method,
-    debug_stats = debug_stats
+    debug_stats = debug_stats,
+    stop_criteria = stop_criteria
   ))
 }
 
@@ -188,6 +190,7 @@ optimize_solution <- function(
     optimization_params$reg_Omega  <- config$reg_Omega
     optimization_params$convergence_tol <- config$convergence_tol
     optimization_params$debug_stats <- config$debug_stats
+    optimization_params$use_scaled_stop_criteria <- (config$stop_criteria == "scaled_error")
     do.call(alternative_derivative_stage2, optimization_params)
   } else if (config$method == "basic") {
     optimization_params$r_const_X <-  r_limits$R_limit_X
@@ -285,7 +288,7 @@ optimize_solution <- function(
       "D_h_error",
       "D_w_error",
       "total_error",
-      "weighted_total_error",
+      "scaled_total_error",
       "neg_props_count",
       "neg_basis_count",
       "sum_d_w",
@@ -298,7 +301,9 @@ optimize_solution <- function(
       "average_hinge_reg_Omega_gradient_norm",
       "average_hinge_reg_gradient_norm",
       "best_error_value",
-      "best_error_iteration"
+      "best_error_iteration",
+      "scaled_lambda_error",
+      "scaled_beta_error"
     )
   return(solution_proj)
 }

@@ -270,8 +270,8 @@ ensure_D_integrity <- function(X_dtilde, Omega_dtilde, sqrt_Sigma, N, M) {
 #' @param convergence_tol tolerance for convergence.
 #' @param debug_stats wether to save grad norm values.
 #' @return new parameters
-alternative_derivative_stage2 <- function(X, Omega, D_w, SVRt, R, S, coef_der_X, coef_hinge_H, coef_hinge_W, cell_types, N, M, iterations, total_regularization_weight = 1, reg_X = 1, reg_Omega = 1, convergence_tol = 1e-12, debug_stats = TRUE) {
-    .Call('_DualSimplex_alternative_derivative_stage2', PACKAGE = 'DualSimplex', X, Omega, D_w, SVRt, R, S, coef_der_X, coef_hinge_H, coef_hinge_W, cell_types, N, M, iterations, total_regularization_weight, reg_X, reg_Omega, convergence_tol, debug_stats)
+alternative_derivative_stage2 <- function(X, Omega, D_w, SVRt, R, S, coef_der_X, coef_hinge_H, coef_hinge_W, cell_types, N, M, iterations, total_regularization_weight = 1, reg_X = 1, reg_Omega = 1, convergence_tol = 1e-12, debug_stats = TRUE, use_scaled_stop_criteria = TRUE) {
+    .Call('_DualSimplex_alternative_derivative_stage2', PACKAGE = 'DualSimplex', X, Omega, D_w, SVRt, R, S, coef_der_X, coef_hinge_H, coef_hinge_W, cell_types, N, M, iterations, total_regularization_weight, reg_X, reg_Omega, convergence_tol, debug_stats, use_scaled_stop_criteria)
 }
 
 #' Main function to calculate error terms

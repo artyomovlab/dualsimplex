@@ -67,4 +67,5 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                              const double reg_X = 1,
                              const double reg_Omega=1,
                              const double convergence_tol=1e-12,
-                             const bool debug_stats=true);
+                             const bool debug_stats=true,
+                             const bool use_scaled_stop_criteria=true);

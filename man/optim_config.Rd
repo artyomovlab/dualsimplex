@@ -20,8 +20,9 @@ optim_config(
   total_regularization_weight = 0,
   reg_X = 1,
   reg_Omega = 1,
-  debug_stats = F,
+  debug_stats = FALSE,
   convergence_tol = 0.001,
+  stop_criteria = "total_error",
   method = "basic"
 )
 }

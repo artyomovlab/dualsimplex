@@ -61,8 +61,9 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                              const double reg_X,
                              const double reg_Omega,
                              const double convergence_tol,
-                             const bool debug_stats) {
-    arma::mat errors_statistics(iterations, 20, arma::fill::zeros);
+                             const bool debug_stats,
+                             const bool use_scaled_stop_criteria) {
+    arma::mat errors_statistics(iterations, 22, arma::fill::zeros);
 
     arma::mat points_statistics_X(iterations, cell_types * cell_types, arma::fill::zeros);
     arma::mat points_statistics_Omega(iterations, cell_types * cell_types, arma::fill::zeros);
@@ -101,7 +102,7 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
     double best_error_value = 10000;
     int best_error_iteration = 0;
     double error_difference;
-
+    double current_error_value;
     double average_gradient_norm = 0;
     double average_hinge_H_gradient_norm = 0;
     double average_hinge_W_gradient_norm = 0;
@@ -233,7 +234,15 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                                                S,
                                                coef_hinge_H,
                                                coef_hinge_W);
-        double current_error_value = current_errors["weighted_total_error"];
+        if (use_scaled_stop_criteria) {
+            current_error_value = current_errors["scaled_total_error"];
+        }
+        else {
+            current_error_value = current_errors["total_error"];
+
+        }
+
+       
         if (current_error_value < best_error_value) {
             best_error_iteration = itr_;
             best_error_value = current_error_value;
@@ -265,7 +274,7 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                                                    current_errors["D_h_error"], //4
                                                    current_errors["D_w_error"], //5
                                                    current_errors["total_error"], //6
-                                                   current_errors["weighted_total_error"], //7
+                                                   current_errors["scaled_total_error"], //7
                                                    static_cast<double>(neg_props), //8
                                                    static_cast<double>(neg_basis), //9
                                                    sum_, //10
@@ -278,7 +287,9 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                                                    average_hinge_reg_Omega_gradient_norm, //17
                                                    average_hinge_reg_gradient_norm, //18
                                                    best_error_value, //19
-                                                   static_cast<double>(best_error_iteration) //20
+                                                   static_cast<double>(best_error_iteration), //20,
+                                                   current_errors["scaled_lambda_error"],            //21
+                                                   current_errors["scaled_beta_error"] //22
                                                 };
         
         //points_statistics_X_dtilda_corrected.row(itr_) = new_X.as_row();
