@@ -125,7 +125,7 @@ Rcpp::List calcErrors(const arma::mat& X,
                               Rcpp::Named("D_h_error") = D_h_error,
                               Rcpp::Named("D_w_error") = D_w_error,
                               Rcpp::Named("total_error") = total_error,
-                              Rcpp::Named("weighted_total_error") = scaled_total_error,
+                              Rcpp::Named("scaled_total_error") = scaled_total_error,
                               Rcpp::Named("average_norm") = norm_term
                             );
 }
