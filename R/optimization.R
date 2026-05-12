@@ -285,6 +285,7 @@ optimize_solution <- function(
       "D_h_error",
       "D_w_error",
       "total_error",
+      "weighted_total_error",
       "neg_props_count",
       "neg_basis_count",
       "sum_d_w",

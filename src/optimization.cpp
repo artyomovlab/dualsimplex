@@ -101,17 +101,15 @@ Rcpp::List calcErrors(const arma::mat& X,
     double deconv_error = pow(norm(SVRt - Omega * D_w_diag * X, "fro"), 2.0);
     // don't calculate since it is time consuming, should deliver the same minimum as th new one
     // double orig_deconv_error = pow(norm(V_row - S.t() * Omega * D_w_diag * X * R, "fro"), 2);
-    double lambda_error = coef_hinge_H * hinge_C__(X * R); // R.n_cols;
-    double beta_error = coef_hinge_W * hinge_C__(S.t() * Omega); // S.n_cols;
-
-    double squared_lambda_error = coef_hinge_H * squared_hinge_C__(X * R);
-    double squared_beta_error = coef_hinge_W * squared_hinge_C__(S.t() * Omega);
+    double lambda_error = coef_hinge_H * hinge_C__(X * R) / R.n_cols; // average negative element value per matrix
+    double beta_error = coef_hinge_W * hinge_C__(S.t() * Omega) / S.n_cols; // average negative element value per matrix
 
     arma::mat A = arma::sum(R, 1);
     arma::mat B = arma::sum(S, 1);
     double D_h_error = coef_pos_D_h * pow(norm(X.t() * D_h - A, "fro"), 2);
     double D_w_error = coef_pos_D_w * pow(norm(Omega * D_w - B, "fro"), 2);
-    double new_error = deconv_error + lambda_error + beta_error + D_h_error + D_w_error;
+    double weighted_total_error = deconv_error + lambda_error + beta_error + D_h_error + D_w_error;
+    double total_error = deconv_error + (lambda_error * R.n_cols) + (beta_error * S.n_cols) + D_h_error + D_w_error;
     double average_norm_X = arma::mean(arma::vecnorm(X, 2, 1));
     double average_norm_Omega = arma::sum(arma::vecnorm(Omega, 2, 0));
     double norm_term = (average_norm_X + average_norm_Omega);
@@ -121,10 +119,10 @@ Rcpp::List calcErrors(const arma::mat& X,
                               Rcpp::Named("beta_error") = beta_error,
                               Rcpp::Named("D_h_error") = D_h_error,
                               Rcpp::Named("D_w_error") = D_w_error,
-                              Rcpp::Named("total_error") = new_error,
-                              Rcpp::Named("average_norm") = norm_term,
-                              Rcpp::Named("squared_lambda_error")= squared_lambda_error,
-                              Rcpp::Named("squared_beta_error")= squared_beta_error);
+                              Rcpp::Named("total_error") = total_error,
+                              Rcpp::Named("weighted_total_error") = weighted_total_error,
+                              Rcpp::Named("average_norm") = norm_term
+                            );
 }
 
 Rcpp::List derivative_stage2(const arma::mat& X,

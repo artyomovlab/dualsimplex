@@ -62,7 +62,7 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                              const double reg_Omega,
                              const double convergence_tol,
                              const bool debug_stats) {
-    arma::mat errors_statistics(iterations, 19, arma::fill::zeros);
+    arma::mat errors_statistics(iterations, 20, arma::fill::zeros);
 
     arma::mat points_statistics_X(iterations, cell_types * cell_types, arma::fill::zeros);
     arma::mat points_statistics_Omega(iterations, cell_types * cell_types, arma::fill::zeros);
@@ -265,20 +265,20 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                                                    current_errors["D_h_error"], //4
                                                    current_errors["D_w_error"], //5
                                                    current_errors["total_error"], //6
-                                                   static_cast<double>(neg_props), //7
-                                                   static_cast<double>(neg_basis), //8
-                                                   sum_, //9
-                                                   current_errors["average_norm"], //10
-                                                   current_learning_rate, //11
-                                                   average_gradient_norm, //12
-                                                   average_hinge_H_gradient_norm, //13
-                                                   average_hinge_W_gradient_norm, //14
-                                                   average_hinge_reg_X_gradient_norm, //15
-                                                   average_hinge_reg_Omega_gradient_norm, //16
-                                                   average_hinge_reg_gradient_norm, //17
-                                                   best_error_value, //18
-                                                   static_cast<double>(best_error_iteration) //19
-
+                                                   current_errors["weighted_total_error"], //7
+                                                   static_cast<double>(neg_props), //8
+                                                   static_cast<double>(neg_basis), //9
+                                                   sum_, //10
+                                                   current_errors["average_norm"], //11
+                                                   current_learning_rate, //12
+                                                   average_gradient_norm, //13
+                                                   average_hinge_H_gradient_norm, //14
+                                                   average_hinge_W_gradient_norm, //15
+                                                   average_hinge_reg_X_gradient_norm, //16
+                                                   average_hinge_reg_Omega_gradient_norm, //17
+                                                   average_hinge_reg_gradient_norm, //18
+                                                   best_error_value, //19
+                                                   static_cast<double>(best_error_iteration) //20
                                                 };
         
         //points_statistics_X_dtilda_corrected.row(itr_) = new_X.as_row();
