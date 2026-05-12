@@ -62,7 +62,7 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                              const double reg_Omega,
                              const double convergence_tol,
                              const bool debug_stats) {
-    arma::mat errors_statistics(iterations, 17, arma::fill::zeros);
+    arma::mat errors_statistics(iterations, 19, arma::fill::zeros);
 
     arma::mat points_statistics_X(iterations, cell_types * cell_types, arma::fill::zeros);
     arma::mat points_statistics_Omega(iterations, cell_types * cell_types, arma::fill::zeros);
@@ -275,7 +275,10 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                                                    average_hinge_W_gradient_norm, //14
                                                    average_hinge_reg_X_gradient_norm, //15
                                                    average_hinge_reg_Omega_gradient_norm, //16
-                                                   average_hinge_reg_gradient_norm //17
+                                                   average_hinge_reg_gradient_norm, //17
+                                                   best_error_value, //18
+                                                   static_cast<double>(best_error_iteration) //19
+
                                                 };
         
         //points_statistics_X_dtilda_corrected.row(itr_) = new_X.as_row();

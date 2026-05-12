@@ -295,7 +295,9 @@ optimize_solution <- function(
       "average_hinge_W_gradient_norm",
       "average_hinge_reg_X_gradient_norm",
       "average_hinge_reg_Omega_gradient_norm",
-      "average_hinge_reg_gradient_norm"
+      "average_hinge_reg_gradient_norm",
+      "best_error_value",
+      "best_error_iteration"
     )
   return(solution_proj)
 }
