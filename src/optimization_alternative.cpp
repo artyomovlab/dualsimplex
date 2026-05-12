@@ -233,7 +233,7 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                                                S,
                                                coef_hinge_H,
                                                coef_hinge_W);
-        double current_error_value = current_errors["total_error"];
+        double current_error_value = current_errors["weighted_total_error"];
         if (current_error_value < best_error_value) {
             best_error_iteration = itr_;
             best_error_value = current_error_value;
