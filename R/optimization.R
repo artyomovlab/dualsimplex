@@ -59,7 +59,7 @@ optim_config <- function(
     reg_Omega = reg_Omega,
     convergence_tol = convergence_tol,
     method = method,
-    debug_stats = FALSE
+    debug_stats = debug_stats
   ))
 }
 
