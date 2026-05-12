@@ -97,10 +97,10 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
    // double limit_for_learning_rate = 1e-15;
     double current_learning_rate = coef_der_X;
     //double mean_norm_solution_X;
-    //double previous_error_value;
+    double previous_error_value;
     double best_error_value = 10000;
     int best_error_iteration = 0;
-    //double error_difference;
+    double error_difference;
 
     double average_gradient_norm = 0;
     double average_hinge_H_gradient_norm = 0;
