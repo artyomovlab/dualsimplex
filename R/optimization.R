@@ -3,65 +3,73 @@
 #' Make optimization config object for the training method
 #'
 #' Just to have centralized object to change
-#'
+#' @param method method of optimization to use can be  basic/positivity.
+#' @param debug_stats keep track on gradient norms
 #' @param coef_der_X learning rate for X space
 #' @param coef_der_Omega learning rate for Omega space
 #' @param coef_hinge_H positiviy penalty for X space (lambda)
 #' @param coef_hinge_W positiviy penalty for Omega space (beta)
+#' @param total_regularization_weight regularization weight for optimization
+#' @param reg_X regularization weight for X
+#' @param reg_Omega regularization weight for Omega
+#' @param convergence_tol the limit for the learnig rate decrasing
+#' @param stop_criteria_window learning rate will be decreased if total error did not change within this window
+#' @param x_center X rays around which to perform search in theta search.
+#' @param omega_center Omega rays around which to perform search in theta search.
+#' @param center_threshold constraint for the  step.
 #' @param coef_pos_D_h EXPERIMENTAL: penalty for D_h value (how far X^TxDh if from A(R))). should be 0 since not tested.
 #' @param coef_pos_D_w EXPERIMENTAL: penalty for D_w value (how far OmegaxDw if from B(S))). should be 0 since not tested.
 #' @param limit_X EXPERIMENTAL: if you want to restrict X from changing to much. should be 0 since not tested.
 #' @param limit_Omega EXPERIMENTAL: if you want to restrict Omega from changing to much. should be 0 since not tested.
 #' @param cosine_thresh  EXPERIMENTAL: if you want to restrict derivative from changing to much. should be 0 since not tested.
-#' @param x_center X rays around which to perform search in theta search.
-#' @param omega_center Omega rays around which to perform search in theta search.
-#' @param center_threshold constraint for the  step.
-#' @param reg_X regularization coefficient for X
-#' @param reg_Omega regularization coefficient for Omega
-#' @param method method of optimization to use can be  basic/positivity.
 #' @return ready to use list with algorithm configuration
 #' @export
 optim_config <- function(
+  method = "basic", # basic/positivity/theta
+  debug_stats = FALSE,
   coef_der_X = 0.1,
   coef_der_Omega = 0.1,
   coef_hinge_H = 1,
   coef_hinge_W = 1,
-  coef_pos_D_h = 0,
-  coef_pos_D_w = 0,
-  limit_X = 0,
-  limit_Omega = 0,
-  cosine_thresh = 0,
-  x_center = NULL,
-  omega_center = NULL,
-  center_threshold = 0,
+  # Positivity method with fair gradients and stopping criteria
   total_regularization_weight = 0,
   reg_X = 1,
   reg_Omega = 1,
-  debug_stats = FALSE,
+  stop_criteria_window = 100,
   convergence_tol = 0.001,
-  stop_criteria = "total_error", # scaled_error
-  method = "basic" # basic/positivity/theta
+  # Theta optimization within angle
+  x_center = NULL,
+  omega_center = NULL,
+  center_threshold = 0,
+  # Experimental params
+  limit_X = 0,
+  limit_Omega = 0,
+  cosine_thresh = 0,
+  coef_pos_D_h = 0,
+  coef_pos_D_w = 0
 ) {
   return(list(
+    method = method,
+    debug_stats = debug_stats,
     coef_der_X = coef_der_X,
     coef_der_Omega = coef_der_Omega,
     coef_hinge_H = coef_hinge_H,
     coef_hinge_W = coef_hinge_W,
-    coef_pos_D_h = coef_pos_D_h,
-    coef_pos_D_w = coef_pos_D_w,
-    limit_X = limit_X,
-    limit_Omega = limit_Omega,
-    cosine_thresh = cosine_thresh,
-    x_center = x_center,
-    omega_center = omega_center,
-    center_threshold = center_threshold,
+
     total_regularization_weight = total_regularization_weight,
     reg_X = reg_X,
     reg_Omega = reg_Omega,
     convergence_tol = convergence_tol,
-    method = method,
-    debug_stats = debug_stats,
-    stop_criteria = stop_criteria
+    stop_criteria_window = stop_criteria_window,
+
+    x_center = x_center,
+    omega_center = omega_center,
+    center_threshold = center_threshold,
+    coef_pos_D_h = coef_pos_D_h,
+    coef_pos_D_w = coef_pos_D_w,
+    limit_X = limit_X,
+    limit_Omega = limit_Omega,
+    cosine_thresh = cosine_thresh
   ))
 }
 
@@ -190,7 +198,8 @@ optimize_solution <- function(
     optimization_params$reg_Omega  <- config$reg_Omega
     optimization_params$convergence_tol <- config$convergence_tol
     optimization_params$debug_stats <- config$debug_stats
-    optimization_params$use_scaled_stop_criteria <- (config$stop_criteria == "scaled_error")
+    optimization_params$stop_criteria_window  <- config$stop_criteria_window
+
     do.call(alternative_derivative_stage2, optimization_params)
   } else if (config$method == "basic") {
     optimization_params$r_const_X <-  r_limits$R_limit_X

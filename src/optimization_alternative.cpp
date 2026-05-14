@@ -61,8 +61,9 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                              const double reg_X,
                              const double reg_Omega,
                              const double convergence_tol,
-                             const bool debug_stats,
-                             const bool use_scaled_stop_criteria) {
+                             const int stop_criteria_window,
+                             const bool debug_stats
+                             ) {
     arma::mat errors_statistics(iterations, 22, arma::fill::zeros);
 
     arma::mat points_statistics_X(iterations, cell_types * cell_types, arma::fill::zeros);
@@ -89,19 +90,13 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
     arma::mat der_X, der_reg;
     arma::mat hinge_term_H, hinge_term_W, reg_X_term, reg_Omega_term;
     arma::mat tmp_X, tmp_Omega;
-    arma::mat best_solution_X;
-    arma::mat best_solution_Omega;
-    arma::mat best_solution_D_w;
-
 
     double shrink_limit = 500;
    // double limit_for_learning_rate = 1e-15;
     double current_learning_rate = coef_der_X;
     //double mean_norm_solution_X;
-    double previous_error_value;
     double best_error_value = 10000;
     int best_error_iteration = 0;
-    double error_difference;
     double current_error_value;
     double average_gradient_norm = 0;
     double average_hinge_H_gradient_norm = 0;
@@ -234,38 +229,17 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                                                S,
                                                coef_hinge_H,
                                                coef_hinge_W);
-        if (use_scaled_stop_criteria) {
-            current_error_value = current_errors["scaled_total_error"];
-        }
-        else {
-            current_error_value = current_errors["total_error"];
 
-        }
-
-       
+        current_error_value = current_errors["total_error"];
         if (current_error_value < best_error_value) {
             best_error_iteration = itr_;
             best_error_value = current_error_value;
-            //best_solution_X = final_X;
-            //best_solution_Omega = final_Omega;
-            //best_solution_D_w = new_D_w;
         }
-        if (itr_ - best_error_iteration > 100) {
+        if (itr_ - best_error_iteration > stop_criteria_window) {
             // looks like best solution was not updated for 100 iterations. reducing step size.
             current_learning_rate = current_learning_rate / 2;
             best_error_iteration = best_error_iteration + 20; // just give 20 more iterations to try converge further
         }
-
-
-
-
-
-        // error_difference = std::abs(previous_error_value - current_error_value);
-        // // if (error_difference < convergence_tol) {
-        // //     current_learning_rate = current_learning_rate / 2;
-        // // }
-        // Rcpp::Rcout << "Error difference: "<< error_difference << std::endl;
-        // previous_error_value = current_error_value;
 
                                                
         errors_statistics.row(itr_) = arma::rowvec{current_errors["deconv_error"],            //1
