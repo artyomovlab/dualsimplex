@@ -44,9 +44,11 @@ Rcpp::List ensure_D_integrity(const arma::mat& X_dtilde,
 //' @param N current N
 //' @param M current M
 //' @param iterations number of iterations
-//' @param reg_X regularization coefficient for X
-//' @param reg_Omega regularization coefficient for Omega.
+//' @param total_regularization_weight total weight for the regularization terms
+//' @param reg_X proportion / regularization coefficient for X
+//' @param reg_Omega proportion / regularization coefficient for Omega.
 //' @param convergence_tol tolerance for convergence.
+//' @param stop_criteria_window how long error should be on plateu to decrease the learning rate
 //' @param debug_stats wether to save grad norm values.
 //' @return new parameters
 // [[Rcpp::export]]

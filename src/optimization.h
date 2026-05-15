@@ -121,6 +121,9 @@ Rcpp::List calcErrors(const arma::mat& X,
 //' @param r_const_X experimental. not tested
 //' @param r_const_Omega experimental. not tested
 //' @param thresh experimental. not tested
+//' @param convergence_tol tolerance for convergence.
+//' @param stop_criteria_window how long error should be on plateu to decrease the learning rate
+//' @param debug_stats wether to save grad norm values.
 //' @return new parameters
 // [[Rcpp::export]]
 Rcpp::List derivative_stage2(const arma::mat& X,
@@ -143,4 +146,7 @@ Rcpp::List derivative_stage2(const arma::mat& X,
                              const double mean_radius_Omega,
                              const double r_const_X = 0,
                              const double r_const_Omega = 0,
-                             const double thresh = 0.8);
+                             const double thresh = 0.8,
+                             const double convergence_tol=1e-12,
+                             const int stop_criteria_window = 1e+5, 
+                             const bool debug_stats=false);

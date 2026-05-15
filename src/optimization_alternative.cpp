@@ -64,7 +64,7 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                              const int stop_criteria_window,
                              const bool debug_stats
                              ) {
-    arma::mat errors_statistics(iterations, 22, arma::fill::zeros);
+    arma::mat errors_statistics(iterations, 21, arma::fill::zeros);
 
     arma::mat points_statistics_X(iterations, cell_types * cell_types, arma::fill::zeros);
     arma::mat points_statistics_Omega(iterations, cell_types * cell_types, arma::fill::zeros);
@@ -92,16 +92,13 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
     arma::mat tmp_X, tmp_Omega;
 
     double shrink_limit = 500;
-   // double limit_for_learning_rate = 1e-15;
     double current_learning_rate = coef_der_X;
-    //double mean_norm_solution_X;
     double best_error_value = 10000;
     int best_error_iteration = 0;
     double current_error_value;
     double average_gradient_norm = 0;
     double average_hinge_H_gradient_norm = 0;
     double average_hinge_W_gradient_norm = 0;
-    double average_hinge_reg_gradient_norm = 0;
     double average_hinge_reg_X_gradient_norm = 0;
     double average_hinge_reg_Omega_gradient_norm = 0;
               
@@ -150,11 +147,10 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
             average_hinge_W_gradient_norm = arma::mean(arma::vecnorm(hinge_term_W, 2, 1));
             average_hinge_reg_X_gradient_norm = arma::mean(arma::vecnorm(reg_X_term, 2, 1));
             average_hinge_reg_Omega_gradient_norm = arma::mean(arma::vecnorm(reg_Omega_term, 2, 1));
-            average_hinge_reg_gradient_norm = arma::mean(arma::vecnorm(der_reg, 2, 1));
         }
         tmp_X = (new_X - current_learning_rate * der_X); // estimate new X given derivative
 
-        // Check if first column of X is all-positive
+        // Ensure if first column of X is all-positive
         if (arma::any(tmp_X.col(0) <= 0)) {
             for (int c=0; c < cell_types; c++) {
                 double matrix_value =  tmp_X(c,0);
@@ -174,7 +170,7 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
         }
 
         tmp_Omega = arma::pinv(tmp_X);
-        // Check if first row of Omega is all positive
+        // Ensure if first row of Omega is all positive
         if (arma::any( tmp_Omega.row(0) <= 0)) {
             for (int c=0; c < cell_types; c++) {
                 double matrix_value =  tmp_Omega(0,c);
@@ -236,11 +232,10 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
             best_error_value = current_error_value;
         }
         if (itr_ - best_error_iteration > stop_criteria_window) {
-            // looks like best solution was not updated for 100 iterations. reducing step size.
+            // looks like best solution was not updated for stop_criteria_window iterations. reducing step size.
             current_learning_rate = current_learning_rate / 2;
-            best_error_iteration = best_error_iteration + 20; // just give 20 more iterations to try converge further
+            best_error_iteration = itr_; // reset iteration counter
         }
-
                                                
         errors_statistics.row(itr_) = arma::rowvec{current_errors["deconv_error"],            //1
                                                    current_errors["lambda_error"], //2
@@ -259,11 +254,10 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                                                    average_hinge_W_gradient_norm, //15
                                                    average_hinge_reg_X_gradient_norm, //16
                                                    average_hinge_reg_Omega_gradient_norm, //17
-                                                   average_hinge_reg_gradient_norm, //18
-                                                   best_error_value, //19
-                                                   static_cast<double>(best_error_iteration), //20,
-                                                   current_errors["scaled_lambda_error"],            //21
-                                                   current_errors["scaled_beta_error"] //22
+                                                   best_error_value, //18
+                                                   static_cast<double>(best_error_iteration), //19,
+                                                   current_errors["scaled_lambda_error"],            //20
+                                                   current_errors["scaled_beta_error"] //21
                                                 };
         
         //points_statistics_X_dtilda_corrected.row(itr_) = new_X.as_row();

@@ -266,8 +266,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // derivative_stage2
-Rcpp::List derivative_stage2(const arma::mat& X, const arma::mat& Omega, const arma::mat& D_w, const arma::mat& SVRt, const arma::mat& R, const arma::mat& S, const double coef_der_X, const double coef_der_Omega, const double coef_hinge_H, const double coef_hinge_W, const double coef_pos_D_h, const double coef_pos_D_w, const int cell_types, const double N, const double M, const int iterations, const double mean_radius_X, const double mean_radius_Omega, const double r_const_X, const double r_const_Omega, const double thresh);
-RcppExport SEXP _DualSimplex_derivative_stage2(SEXP XSEXP, SEXP OmegaSEXP, SEXP D_wSEXP, SEXP SVRtSEXP, SEXP RSEXP, SEXP SSEXP, SEXP coef_der_XSEXP, SEXP coef_der_OmegaSEXP, SEXP coef_hinge_HSEXP, SEXP coef_hinge_WSEXP, SEXP coef_pos_D_hSEXP, SEXP coef_pos_D_wSEXP, SEXP cell_typesSEXP, SEXP NSEXP, SEXP MSEXP, SEXP iterationsSEXP, SEXP mean_radius_XSEXP, SEXP mean_radius_OmegaSEXP, SEXP r_const_XSEXP, SEXP r_const_OmegaSEXP, SEXP threshSEXP) {
+Rcpp::List derivative_stage2(const arma::mat& X, const arma::mat& Omega, const arma::mat& D_w, const arma::mat& SVRt, const arma::mat& R, const arma::mat& S, const double coef_der_X, const double coef_der_Omega, const double coef_hinge_H, const double coef_hinge_W, const double coef_pos_D_h, const double coef_pos_D_w, const int cell_types, const double N, const double M, const int iterations, const double mean_radius_X, const double mean_radius_Omega, const double r_const_X, const double r_const_Omega, const double thresh, const double convergence_tol, const int stop_criteria_window, const bool debug_stats);
+RcppExport SEXP _DualSimplex_derivative_stage2(SEXP XSEXP, SEXP OmegaSEXP, SEXP D_wSEXP, SEXP SVRtSEXP, SEXP RSEXP, SEXP SSEXP, SEXP coef_der_XSEXP, SEXP coef_der_OmegaSEXP, SEXP coef_hinge_HSEXP, SEXP coef_hinge_WSEXP, SEXP coef_pos_D_hSEXP, SEXP coef_pos_D_wSEXP, SEXP cell_typesSEXP, SEXP NSEXP, SEXP MSEXP, SEXP iterationsSEXP, SEXP mean_radius_XSEXP, SEXP mean_radius_OmegaSEXP, SEXP r_const_XSEXP, SEXP r_const_OmegaSEXP, SEXP threshSEXP, SEXP convergence_tolSEXP, SEXP stop_criteria_windowSEXP, SEXP debug_statsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -292,7 +292,10 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const double >::type r_const_X(r_const_XSEXP);
     Rcpp::traits::input_parameter< const double >::type r_const_Omega(r_const_OmegaSEXP);
     Rcpp::traits::input_parameter< const double >::type thresh(threshSEXP);
-    rcpp_result_gen = Rcpp::wrap(derivative_stage2(X, Omega, D_w, SVRt, R, S, coef_der_X, coef_der_Omega, coef_hinge_H, coef_hinge_W, coef_pos_D_h, coef_pos_D_w, cell_types, N, M, iterations, mean_radius_X, mean_radius_Omega, r_const_X, r_const_Omega, thresh));
+    Rcpp::traits::input_parameter< const double >::type convergence_tol(convergence_tolSEXP);
+    Rcpp::traits::input_parameter< const int >::type stop_criteria_window(stop_criteria_windowSEXP);
+    Rcpp::traits::input_parameter< const bool >::type debug_stats(debug_statsSEXP);
+    rcpp_result_gen = Rcpp::wrap(derivative_stage2(X, Omega, D_w, SVRt, R, S, coef_der_X, coef_der_Omega, coef_hinge_H, coef_hinge_W, coef_pos_D_h, coef_pos_D_w, cell_types, N, M, iterations, mean_radius_X, mean_radius_Omega, r_const_X, r_const_Omega, thresh, convergence_tol, stop_criteria_window, debug_stats));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -481,7 +484,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_DualSimplex_hinge_C__", (DL_FUNC) &_DualSimplex_hinge_C__, 1},
     {"_DualSimplex_squared_hinge_C__", (DL_FUNC) &_DualSimplex_squared_hinge_C__, 1},
     {"_DualSimplex_calcErrors", (DL_FUNC) &_DualSimplex_calcErrors, 11},
-    {"_DualSimplex_derivative_stage2", (DL_FUNC) &_DualSimplex_derivative_stage2, 21},
+    {"_DualSimplex_derivative_stage2", (DL_FUNC) &_DualSimplex_derivative_stage2, 24},
     {"_DualSimplex_ensure_D_integrity", (DL_FUNC) &_DualSimplex_ensure_D_integrity, 5},
     {"_DualSimplex_alternative_derivative_stage2", (DL_FUNC) &_DualSimplex_alternative_derivative_stage2, 19},
     {"_DualSimplex_theta_derivative_stage2", (DL_FUNC) &_DualSimplex_theta_derivative_stage2, 24},

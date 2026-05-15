@@ -150,8 +150,11 @@ Rcpp::List derivative_stage2(const arma::mat& X,
                              const double mean_radius_Omega,
                              const double r_const_X,
                              const double r_const_Omega,
-                             const double thresh) {
-    arma::mat errors_statistics(iterations, 10, arma::fill::zeros);
+                             const double thresh,
+                             const double convergence_tol,
+                             const int stop_criteria_window,
+                             const bool debug_stats) {
+    arma::mat errors_statistics(iterations, 21, arma::fill::zeros);
     arma::mat points_statistics_X(iterations, cell_types * cell_types, arma::fill::zeros);
     arma::mat points_statistics_Omega(iterations, cell_types * cell_types, arma::fill::zeros);
     arma::mat points_statistics_Dw(iterations, cell_types, arma::fill::zeros);
@@ -170,12 +173,27 @@ Rcpp::List derivative_stage2(const arma::mat& X,
     arma::mat B = arma::join_cols(vectorised_SVRt, coef_pos_D_w * sum_rows_S);
     arma::mat C = arma::join_cols(vectorised_SVRt, coef_pos_D_h * sum_rows_R);
     arma::mat der_X, der_Omega;
+    double current_learning_rate_X = coef_der_X;
+    double current_learning_rate_Omega = coef_der_Omega;
+    double best_error_value = 10000;
+    int best_error_iteration = 0;
+    double current_error_value;
+    double average_gradient_norm = 0;
+    double average_hinge_H_gradient_norm = 0;
+    double average_hinge_W_gradient_norm = 0;
+    double average_reg_X_gradient_norm = 0;
+    double average_reg_Omega_gradient_norm = 0;
 
-    for (int itr_ = 0; itr_ < iterations; itr_++) {
+    arma::mat hinge_term_H, hinge_term_W, der_term_deconv_X, der_term_deconv_Omega;
+
+                        
+    int itr_ = 0;
+
+    while ((itr_ < iterations) & (current_learning_rate_X > convergence_tol) & (current_learning_rate_Omega > convergence_tol)) {
         // derivative X
-        der_X =
-            -2 * (diagmat(new_D_w) * new_Omega.t() * (SVRt - new_Omega * diagmat(new_D_w) * new_X));
-        der_X += coef_hinge_H * l1_hinge_der_proportions_C__(new_X * R, R);
+        der_term_deconv_X =  -2 * (diagmat(new_D_w) * new_Omega.t() * (SVRt - new_Omega * diagmat(new_D_w) * new_X));
+        hinge_term_H = l1_hinge_der_proportions_C__(new_X * R, R);
+        der_X = der_term_deconv_X + coef_hinge_H * hinge_term_H;
         der_X += coef_pos_D_h * 2 * new_D_h * (new_X.t() * new_D_h - sum_rows_R).t();
         der_X.col(0).zeros();
         der_X = correctByNorm(der_X) * mean_radius_X;
@@ -191,7 +209,7 @@ Rcpp::List derivative_stage2(const arma::mat& X,
             }
         }
         // Update X
-        new_X = new_X - coef_der_X * der_X;
+        new_X = new_X - current_learning_rate_X * der_X;
         // threshold for length of the new X
         if (r_const_X > 0) {
             jump_X = jump_norm(new_X, r_const_X);
@@ -208,9 +226,9 @@ Rcpp::List derivative_stage2(const arma::mat& X,
         new_D_w = new_D_h * (M / N);
 
         // derivative Omega
-        der_Omega =
-            -2 * (SVRt - new_Omega * diagmat(new_D_w) * new_X) * new_X.t() * diagmat(new_D_w);
-        der_Omega += coef_hinge_W * l1_hinge_der_basis_C__(S.t() * new_Omega, S);
+        der_term_deconv_Omega =  -2 * (SVRt - new_Omega * diagmat(new_D_w) * new_X) * new_X.t() * diagmat(new_D_w);
+        hinge_term_W = l1_hinge_der_basis_C__(S.t() * new_Omega, S);
+        der_Omega = der_term_deconv_Omega + coef_hinge_W * hinge_term_W;
         der_Omega += coef_pos_D_w * 2 * (new_Omega * new_D_w - sum_rows_S) * new_D_w.t();
         der_Omega.row(0).zeros();
         der_Omega = correctByNorm(der_Omega) * mean_radius_Omega;
@@ -224,8 +242,8 @@ Rcpp::List derivative_stage2(const arma::mat& X,
             }
         }
 
-        new_Omega = new_Omega - coef_der_Omega * der_Omega;
-
+        // Update Omega
+        new_Omega = new_Omega - current_learning_rate_Omega * der_Omega;
         if (r_const_Omega > 0) {
             arma::mat t_Omega = new_Omega.t();
             jump_Omega = jump_norm(t_Omega, r_const_Omega);
@@ -250,6 +268,14 @@ Rcpp::List derivative_stage2(const arma::mat& X,
         arma::uword neg_basis = getNegative(S.t() * new_Omega);
         double sum_ = accu(new_D_w) / M;
 
+        if (debug_stats) {
+            average_gradient_norm = arma::mean(arma::vecnorm((der_X + der_Omega) / 2, 2, 1));
+            average_hinge_H_gradient_norm = arma::mean(arma::vecnorm(hinge_term_H, 2, 1));
+            average_hinge_W_gradient_norm = arma::mean(arma::vecnorm(hinge_term_W, 2, 1));
+            average_reg_X_gradient_norm = arma::mean(arma::vecnorm(der_term_deconv_X, 2, 1));
+            average_reg_Omega_gradient_norm = arma::mean(arma::vecnorm(der_term_deconv_Omega, 2, 1));
+        }
+
         Rcpp::List current_errors = calcErrors(new_X,
                                                new_Omega,
                                                new_D_w,
@@ -262,6 +288,19 @@ Rcpp::List derivative_stage2(const arma::mat& X,
                                                coef_pos_D_h,
                                                coef_pos_D_w);
 
+        current_error_value = current_errors["total_error"];
+        if (current_error_value < best_error_value) {
+            best_error_iteration = itr_;
+            best_error_value = current_error_value;
+        }
+        if (itr_ - best_error_iteration > stop_criteria_window) {
+            // looks like best solution was not updated for stop_criteria_window iterations. reducing step size.
+            if (current_learning_rate_X > convergence_tol) current_learning_rate_X = current_learning_rate_X / 2;
+            if (current_learning_rate_Omega > convergence_tol) current_learning_rate_Omega = current_learning_rate_Omega / 2;
+            best_error_iteration = itr_; // reset iteration counter
+        }
+
+
         errors_statistics.row(itr_) = arma::rowvec{current_errors["deconv_error"],
                                                    current_errors["lambda_error"],
                                                    current_errors["beta_error"],
@@ -271,12 +310,30 @@ Rcpp::List derivative_stage2(const arma::mat& X,
                                                    static_cast<double>(neg_props),
                                                    static_cast<double>(neg_basis),
                                                    sum_,
-                                                   current_errors["average_norm"]
+                                                   current_errors["average_norm"],
+                                                   (current_learning_rate_X + current_learning_rate_Omega) / 2 , //12
+                                                   average_gradient_norm, //13
+                                                   average_hinge_H_gradient_norm, //14
+                                                   average_hinge_W_gradient_norm, //15
+                                                   average_reg_X_gradient_norm, //16
+                                                   average_reg_Omega_gradient_norm, //17
+                                                   best_error_value, //19
+                                                   static_cast<double>(best_error_iteration), //20,
+                                                   current_errors["scaled_lambda_error"],            //21
+                                                   current_errors["scaled_beta_error"] //22
                                                    };
         points_statistics_X.row(itr_) = new_X.as_row();
         points_statistics_Omega.row(itr_) = new_Omega.as_row();
         points_statistics_Dw.row(itr_) = new_D_w.as_row();
+        itr_++;
 
+    }
+
+    if (itr_ < iterations) {
+        points_statistics_X.resize(itr_, points_statistics_X.n_cols);
+        points_statistics_Omega.resize(itr_, points_statistics_Omega.n_cols);
+        points_statistics_Dw.resize(itr_, points_statistics_Dw.n_cols);
+        errors_statistics.resize(itr_, errors_statistics.n_cols);
     }
 
     return Rcpp::List::create(Rcpp::Named("new_X") = new_X,

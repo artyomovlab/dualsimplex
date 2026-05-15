@@ -22,8 +22,8 @@ alternative_derivative_stage2(
   reg_X = 1,
   reg_Omega = 1,
   convergence_tol = 1e-12,
-  debug_stats = TRUE,
-  use_scaled_stop_criteria = TRUE
+  stop_criteria_window = 100000L,
+  debug_stats = FALSE
 )
 }
 \arguments{
@@ -53,11 +53,15 @@ alternative_derivative_stage2(
 
 \item{iterations}{number of iterations}
 
-\item{reg_X}{regularization coefficient for X}
+\item{total_regularization_weight}{total weight for the regularization terms}
 
-\item{reg_Omega}{regularization coefficient for Omega.}
+\item{reg_X}{proportion / regularization coefficient for X}
+
+\item{reg_Omega}{proportion / regularization coefficient for Omega.}
 
 \item{convergence_tol}{tolerance for convergence.}
+
+\item{stop_criteria_window}{how long error should be on plateu to decrease the learning rate}
 
 \item{debug_stats}{wether to save grad norm values.}
 }

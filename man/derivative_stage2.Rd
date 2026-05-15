@@ -25,7 +25,10 @@ derivative_stage2(
   mean_radius_Omega,
   r_const_X = 0,
   r_const_Omega = 0,
-  thresh = 0.8
+  thresh = 0.8,
+  convergence_tol = 1e-12,
+  stop_criteria_window = 100000L,
+  debug_stats = FALSE
 )
 }
 \arguments{
@@ -70,6 +73,12 @@ derivative_stage2(
 \item{r_const_Omega}{experimental. not tested}
 
 \item{thresh}{experimental. not tested}
+
+\item{convergence_tol}{tolerance for convergence.}
+
+\item{stop_criteria_window}{how long error should be on plateu to decrease the learning rate}
+
+\item{debug_stats}{wether to save grad norm values.}
 }
 \value{
 new parameters

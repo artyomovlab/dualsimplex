@@ -210,6 +210,9 @@ optimize_solution <- function(
     optimization_params$coef_der_Omega <- config$coef_der_Omega
     optimization_params$mean_radius_X <-  mean_radius_X
     optimization_params$mean_radius_Omega  <- mean_radius_Omega
+    optimization_params$convergence_tol <- config$convergence_tol
+    optimization_params$debug_stats <- config$debug_stats
+    optimization_params$stop_criteria_window  <- config$stop_criteria_window
     do.call(derivative_stage2, optimization_params)
   } else if (config$method == "theta") {
     optimization_params$r_const_X <-  r_limits$R_limit_X
@@ -239,6 +242,9 @@ optimize_solution <- function(
     optimization_params$coef_pos_D_h <-  config$coef_pos_D_h
     optimization_params$coef_pos_D_w <-  config$coef_pos_D_w
     optimization_params$coef_der_Omega <- config$coef_der_Omega
+    optimization_params$convergence_tol <- config$convergence_tol
+    optimization_params$debug_stats <- config$debug_stats
+    optimization_params$stop_criteria_window  <- config$stop_criteria_window
     do.call(derivative_stage2, optimization_params)
 
   }
@@ -288,7 +294,6 @@ optimize_solution <- function(
 
   }
 
-
   colnames(solution_proj$optim_history$errors_statistics) <-
     c(
       "deconv_error",
@@ -306,9 +311,8 @@ optimize_solution <- function(
       "gradient_norm",
       "average_hinge_H_gradient_norm",
       "average_hinge_W_gradient_norm",
-      "average_hinge_reg_X_gradient_norm",
-      "average_hinge_reg_Omega_gradient_norm",
-      "average_hinge_reg_gradient_norm",
+      "average_reg_X_gradient_norm",
+      "average_reg_Omega_gradient_norm",
       "best_error_value",
       "best_error_iteration",
       "scaled_lambda_error",

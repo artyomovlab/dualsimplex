@@ -231,9 +231,12 @@ calcErrors <- function(X, Omega, D_w, D_h, SVRt, R, S, coef_hinge_H, coef_hinge_
 #' @param r_const_X experimental. not tested
 #' @param r_const_Omega experimental. not tested
 #' @param thresh experimental. not tested
+#' @param convergence_tol tolerance for convergence.
+#' @param stop_criteria_window how long error should be on plateu to decrease the learning rate
+#' @param debug_stats wether to save grad norm values.
 #' @return new parameters
-derivative_stage2 <- function(X, Omega, D_w, SVRt, R, S, coef_der_X, coef_der_Omega, coef_hinge_H, coef_hinge_W, coef_pos_D_h, coef_pos_D_w, cell_types, N, M, iterations, mean_radius_X, mean_radius_Omega, r_const_X = 0, r_const_Omega = 0, thresh = 0.8) {
-    .Call('_DualSimplex_derivative_stage2', PACKAGE = 'DualSimplex', X, Omega, D_w, SVRt, R, S, coef_der_X, coef_der_Omega, coef_hinge_H, coef_hinge_W, coef_pos_D_h, coef_pos_D_w, cell_types, N, M, iterations, mean_radius_X, mean_radius_Omega, r_const_X, r_const_Omega, thresh)
+derivative_stage2 <- function(X, Omega, D_w, SVRt, R, S, coef_der_X, coef_der_Omega, coef_hinge_H, coef_hinge_W, coef_pos_D_h, coef_pos_D_w, cell_types, N, M, iterations, mean_radius_X, mean_radius_Omega, r_const_X = 0, r_const_Omega = 0, thresh = 0.8, convergence_tol = 1e-12, stop_criteria_window = 1e+5L, debug_stats = FALSE) {
+    .Call('_DualSimplex_derivative_stage2', PACKAGE = 'DualSimplex', X, Omega, D_w, SVRt, R, S, coef_der_X, coef_der_Omega, coef_hinge_H, coef_hinge_W, coef_pos_D_h, coef_pos_D_w, cell_types, N, M, iterations, mean_radius_X, mean_radius_Omega, r_const_X, r_const_Omega, thresh, convergence_tol, stop_criteria_window, debug_stats)
 }
 
 #' Transform X and Omega points enforcing the desired equality for first coordinates
@@ -265,9 +268,11 @@ ensure_D_integrity <- function(X_dtilde, Omega_dtilde, sqrt_Sigma, N, M) {
 #' @param N current N
 #' @param M current M
 #' @param iterations number of iterations
-#' @param reg_X regularization coefficient for X
-#' @param reg_Omega regularization coefficient for Omega.
+#' @param total_regularization_weight total weight for the regularization terms
+#' @param reg_X proportion / regularization coefficient for X
+#' @param reg_Omega proportion / regularization coefficient for Omega.
 #' @param convergence_tol tolerance for convergence.
+#' @param stop_criteria_window how long error should be on plateu to decrease the learning rate
 #' @param debug_stats wether to save grad norm values.
 #' @return new parameters
 alternative_derivative_stage2 <- function(X, Omega, D_w, SVRt, R, S, coef_der_X, coef_hinge_H, coef_hinge_W, cell_types, N, M, iterations, total_regularization_weight = 1, reg_X = 1, reg_Omega = 1, convergence_tol = 1e-12, stop_criteria_window = 1e+5L, debug_stats = FALSE) {
