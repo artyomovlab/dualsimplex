@@ -364,7 +364,7 @@ plot_errors <- function(
   solution_proj,
   variables = c(
     "deconv_error",
-    "lamdba_error",
+    "lambda_error",
     "beta_error",
     "D_h_error",
     "D_w_error",
