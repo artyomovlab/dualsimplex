@@ -276,7 +276,7 @@ DualSimplexSolver <- R6Class(
     #' @param anno_to_add annotation to add to the object.
     #' @param genes gene annotations or sample annotations.
     updata_annotation = function(anno_to_add,  genes = T) {
-      self$st$data <- update_annotation (dso$st$data, anno_to_add, genes = genes)
+      self$st$data <- update_annotation (self$st$data, anno_to_add, genes = genes)
     },
 
     #' @description
