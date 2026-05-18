@@ -301,26 +301,28 @@ Rcpp::List derivative_stage2(const arma::mat& X,
         }
 
 
-        errors_statistics.row(itr_) = arma::rowvec{current_errors["deconv_error"],
-                                                   current_errors["lambda_error"],
-                                                   current_errors["beta_error"],
-                                                   current_errors["D_h_error"],
-                                                   current_errors["D_w_error"],
-                                                   current_errors["total_error"],
-                                                   static_cast<double>(neg_props),
-                                                   static_cast<double>(neg_basis),
-                                                   sum_,
-                                                   current_errors["average_norm"],
+        errors_statistics.row(itr_) = arma::rowvec{current_errors["deconv_error"], //1
+                                                   current_errors["lambda_error"], //2
+                                                   current_errors["beta_error"],   //3
+                                                   current_errors["D_h_error"],    //4
+                                                   current_errors["D_w_error"],    //5
+                                                   current_errors["total_error"],  //6
+                                                   current_errors["scaled_total_error"], //7
+
+                                                   static_cast<double>(neg_props), //8
+                                                   static_cast<double>(neg_basis), //9
+                                                   sum_,  //10
+                                                   current_errors["average_norm"], //11
                                                    (current_learning_rate_X + current_learning_rate_Omega) / 2 , //12
                                                    average_gradient_norm, //13
                                                    average_hinge_H_gradient_norm, //14
                                                    average_hinge_W_gradient_norm, //15
                                                    average_reg_X_gradient_norm, //16
                                                    average_reg_Omega_gradient_norm, //17
-                                                   best_error_value, //19
-                                                   static_cast<double>(best_error_iteration), //20,
-                                                   current_errors["scaled_lambda_error"],            //21
-                                                   current_errors["scaled_beta_error"] //22
+                                                   best_error_value, //18
+                                                   static_cast<double>(best_error_iteration), //19,
+                                                   current_errors["scaled_lambda_error"],            //20
+                                                   current_errors["scaled_beta_error"] //21
                                                    };
         points_statistics_X.row(itr_) = new_X.as_row();
         points_statistics_Omega.row(itr_) = new_Omega.as_row();
