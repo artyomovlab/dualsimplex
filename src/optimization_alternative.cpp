@@ -193,6 +193,7 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                         arma::rowvec only_good_row  = der_X.row(c);
                         der_X.fill(0);
                         der_X.row(c) = only_good_row;
+                        tmp_X = (new_X - current_learning_rate * der_X);
                     }
                 }
             }
