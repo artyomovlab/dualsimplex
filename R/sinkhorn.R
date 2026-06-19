@@ -119,6 +119,22 @@ clean_reverse_solution_sinkhorn<- function(solution_scaled, scaling) {
   ))
 }
 
+#' Wrapper to call geometrical sinkhorn on dso object
+#'
+#' @param solution_scaled contain solution matrices $H_row and $W_col
+#' @param scaling dso$scaling object containing normalization matrices
+#' @return unscaled object
+#' @import Rcpp
+#' @import RcppArmadillo
+#' @export
+geometrical_reverse_solution_sinkhorn<- function(solution_scaled, scaling) {
+  return(geometrical_reverse_sinkhorn(
+    solution_scaled$H_col,
+    solution_scaled$W_row,
+    scaling
+  ))
+}
+
 
 #' Extended sinkhorn scaling to track all the matrices produced.
 #' This is extremely usefull if you want to track back the results and find "true" coordinates of W and H in sinkhorned space.

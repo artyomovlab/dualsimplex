@@ -29,14 +29,14 @@ optim_config <- function(
   debug_stats = FALSE,
   coef_der_X = 0.1,
   coef_der_Omega = 0.1,
-  coef_hinge_H = 1,
-  coef_hinge_W = 1,
+  coef_hinge_H = 0.5,
+  coef_hinge_W = 0.5,
   # Positivity method with fair gradients and stopping criteria
   total_regularization_weight = 0,
   reg_X = 1,
   reg_Omega = 1,
-  stop_criteria_window = 100,
-  convergence_tol = 0.001,
+  stop_criteria_window = 200,
+  convergence_tol = 1e-5,
   # Theta optimization within angle
   x_center = NULL,
   omega_center = NULL,

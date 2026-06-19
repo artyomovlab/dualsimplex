@@ -20,24 +20,14 @@ cosine_between_rows <- function(X) {
 
 #' Get relative coordinates with respect to vertices.
 #' This is calculated as a determinant rations of the respective simplexes.
+#' Negative values will be set to zero.
 #'
 #' @param projected_points coordinates of rows/columns in svd space (number_of_poitns x K).
 #' @param solution_points solution points to calculate respective relative coordinates (K x K).
 #' @return arma::mat coordinates of the points with respect to simplex vertices (number_of_points x K).
 #' @export
-get_relative_coordinates <- function(projected_points, solution_points) {
-    .Call('_DualSimplex_get_relative_coordinates', PACKAGE = 'DualSimplex', projected_points, solution_points)
-}
-
-#' Get relative coordinates with respect to vertices.
-#' This is calculated as a determinant rations of the respective simplexes.
-#'
-#' @param projected_points coordinates of rows/columns in svd space (number_of_poitns x K).
-#' @param solution_points solution points to calculate respective relative coordinates (K x K).
-#' @return arma::mat coordinates of the points with respect to simplex vertices (number_of_points x K).
-#' @export
-get_relative_coordinates_closest <- function(projected_points, solution_points) {
-    .Call('_DualSimplex_get_relative_coordinates_closest', PACKAGE = 'DualSimplex', projected_points, solution_points)
+get_relative_coordinates_closest <- function(projected_points, solution_points, min_value = 0) {
+    .Call('_DualSimplex_get_relative_coordinates_closest', PACKAGE = 'DualSimplex', projected_points, solution_points, min_value)
 }
 
 #' Get low rank approximation with SVD method.
@@ -275,7 +265,7 @@ ensure_D_integrity <- function(X_dtilde, Omega_dtilde, sqrt_Sigma, N, M) {
 #' @param stop_criteria_window how long error should be on plateu to decrease the learning rate
 #' @param debug_stats wether to save grad norm values.
 #' @return new parameters
-alternative_derivative_stage2 <- function(X, Omega, D_w, SVRt, R, S, coef_der_X, coef_hinge_H, coef_hinge_W, cell_types, N, M, iterations, total_regularization_weight = 1, reg_X = 1, reg_Omega = 1, convergence_tol = 1e-12, stop_criteria_window = 1e+5L, debug_stats = FALSE) {
+alternative_derivative_stage2 <- function(X, Omega, D_w, SVRt, R, S, coef_der_X, coef_hinge_H, coef_hinge_W, cell_types, N, M, iterations, total_regularization_weight = 0, reg_X = 1, reg_Omega = 1, convergence_tol = 1e-12, stop_criteria_window = 1e+5L, debug_stats = FALSE) {
     .Call('_DualSimplex_alternative_derivative_stage2', PACKAGE = 'DualSimplex', X, Omega, D_w, SVRt, R, S, coef_der_X, coef_hinge_H, coef_hinge_W, cell_types, N, M, iterations, total_regularization_weight, reg_X, reg_Omega, convergence_tol, stop_criteria_window, debug_stats)
 }
 
@@ -334,6 +324,19 @@ reverse_sinkhorn_c <- function(result_H_row, result_W_col, D_vs_row, D_vs_col, i
 #' @export
 clean_reverse_sinkhorn_c <- function(result_H_col, result_W_row, D_vs_row, D_vs_col, iterations) {
     .Call('_DualSimplex_clean_reverse_sinkhorn_c', PACKAGE = 'DualSimplex', result_H_col, result_W_row, D_vs_row, D_vs_col, iterations)
+}
+
+#' Reverse Sinkhorn scaling method without any nnls usage.
+#'
+#' @param result_H_col H_gs calculated geometrically from the solution
+#' @param result_W_row W_ss calculated geometrically from the solution.
+#' @param D_vs_row row normalizing matrices used for V in forward procedure.
+#' @param D_vs_col column normalizing matrices used for V in forward procedure.
+#' @param iterations how many iterations back
+#' @return named list of W, H, Dv_inv_W_row, H_row, D_ws_col, D_hs_row.
+#' @export
+geometrical_reverse_sinkhorn_c <- function(result_H_col, result_W_row, D_vs_row, D_vs_col, iterations) {
+    .Call('_DualSimplex_geometrical_reverse_sinkhorn_c', PACKAGE = 'DualSimplex', result_H_col, result_W_row, D_vs_row, D_vs_col, iterations)
 }
 
 #' Forward Sinkhorn scaling method

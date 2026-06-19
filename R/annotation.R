@@ -134,6 +134,7 @@ add_data_stats_anno <- function(eset, genes = T) {
 update_annotation <- function(eset, anno_to_add, genes = T) {
   old_anno <- get_anno(eset, genes)
   new_anno <- old_anno
+  new_anno[rownames(anno_to_add) , colnames(row_anno)] <-  NULL # set old values to null
   new_anno[rownames(anno_to_add), colnames(anno_to_add)] <- anno_to_add
   eset <- set_anno(new_anno, eset, genes)
   return(eset)

@@ -34,7 +34,7 @@ double getSum(arma::mat X, arma::mat M);
 //' @return arma::mat coordinates of the points with respect to simplex vertices (number_of_points x K).
 //' @export
 // [[Rcpp::export]]
-arma::mat get_relative_coordinates_closest(const arma::mat& projected_points,const arma::mat& solution_points,  const double min_value = 0);
+arma::mat get_relative_coordinates_closest(const arma::mat& projected_points,const arma::mat& solution_points,  const double min_value = 0.0);
 
 
 
