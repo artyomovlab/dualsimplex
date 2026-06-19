@@ -87,6 +87,34 @@ clean_reverse_sinkhorn <- function(H_col, W_row, scaling) {
   return(unscaled)
 }
 
+
+#' reverse Sinkhorn transform scaled matrix
+#'
+#' Calculate all normalizing matrices and restore "unscaled" W and H
+#' columns of D_ws_col and D_hs_row will contain history of D_w and D_h matrices
+#' W_column, H_column will contain "unscaled" W and H
+#'
+#' @param H_col solution matrix H_ss produced by optimization algorithm (X*R)
+#' @param W_row solution matrix W_gs produced by optimization algorithm (t(S)*Omega)
+#' @param scaling dso$scaling object containing normalization matrices
+#' @return unscaled object
+#' @import Rcpp
+#' @import RcppArmadillo
+#' @export
+geometrical_reverse_sinkhorn <- function(H_col, W_row, scaling) {
+  unscaled <- geometrical_reverse_sinkhorn_c(H_col,
+                                 W_row,
+                                 scaling$D_vs_row,
+                                 scaling$D_vs_col,
+                                 scaling$iterations)
+
+  dimnames(unscaled$H) <- dimnames(H_col)
+  dimnames(unscaled$W) <- dimnames(W_row)
+  dimnames(unscaled$H_row) <- dimnames(H_col)
+  dimnames(unscaled$Dv_inv_W_row) <- dimnames(W_row)
+  return(unscaled)
+}
+
 #' Wrapper to call reverse sinkhorn on dso object
 #'
 #' @param solution_scaled contain solution matrices $H_row and $W_col
