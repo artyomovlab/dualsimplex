@@ -47,7 +47,7 @@ Rcpp::List geometrical_reverse_sinkhorn_c(
         // Transformation for V
         current_V = arma::diagmat(1 / D_vs_row.col(i+1)) * current_V;
         // V should be column normalized -- transform it accordingly
-        current_V = current_V * (1 / arma::sum(current_V, 0));
+        current_V = current_V * arma::diagmat(1 / arma::sum(current_V, 0));
 
         // Now time consuming part. Calculate svd of new V to get H col 
         Rcpp::Rcout << "SVD for row -> col" << ".\n";
