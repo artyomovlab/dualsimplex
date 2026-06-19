@@ -51,13 +51,13 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                              const arma::mat& R,
                              const arma::mat& S,
                              const double coef_der_X,
-                             const double coef_hinge_H,
-                             const double coef_hinge_W,
+                             double coef_hinge_H,
+                             double coef_hinge_W,
                              const int cell_types,
                              const double N,
                              const double M,
                              const int iterations,
-                             const double total_regularization_weight,
+                             double total_regularization_weight,
                              const double reg_X,
                              const double reg_Omega,
                              const double convergence_tol,
@@ -90,7 +90,11 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
     arma::mat der_X, der_reg;
     arma::mat hinge_term_H, hinge_term_W, reg_X_term, reg_Omega_term;
     arma::mat tmp_X, tmp_Omega;
-
+    // make all coefficients sum to 1 for simplicity
+    double coef_sum = coef_hinge_H + coef_hinge_W + total_regularization_weight;
+    coef_hinge_H = coef_hinge_H / coef_sum;
+    coef_hinge_W = coef_hinge_W / coef_sum;
+    total_regularization_weight = total_regularization_weight / coef_sum; 
     double shrink_limit = 500;
     double current_learning_rate = coef_der_X;
     double best_error_value = 10000;

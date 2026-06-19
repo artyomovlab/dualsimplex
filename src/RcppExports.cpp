@@ -34,27 +34,16 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// get_relative_coordinates
-arma::mat get_relative_coordinates(const arma::mat& projected_points, const arma::mat& solution_points);
-RcppExport SEXP _DualSimplex_get_relative_coordinates(SEXP projected_pointsSEXP, SEXP solution_pointsSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::mat& >::type projected_points(projected_pointsSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type solution_points(solution_pointsSEXP);
-    rcpp_result_gen = Rcpp::wrap(get_relative_coordinates(projected_points, solution_points));
-    return rcpp_result_gen;
-END_RCPP
-}
 // get_relative_coordinates_closest
-arma::mat get_relative_coordinates_closest(const arma::mat& projected_points, const arma::mat& solution_points);
-RcppExport SEXP _DualSimplex_get_relative_coordinates_closest(SEXP projected_pointsSEXP, SEXP solution_pointsSEXP) {
+arma::mat get_relative_coordinates_closest(const arma::mat& projected_points, const arma::mat& solution_points, const double min_value);
+RcppExport SEXP _DualSimplex_get_relative_coordinates_closest(SEXP projected_pointsSEXP, SEXP solution_pointsSEXP, SEXP min_valueSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::mat& >::type projected_points(projected_pointsSEXP);
     Rcpp::traits::input_parameter< const arma::mat& >::type solution_points(solution_pointsSEXP);
-    rcpp_result_gen = Rcpp::wrap(get_relative_coordinates_closest(projected_points, solution_points));
+    Rcpp::traits::input_parameter< const double >::type min_value(min_valueSEXP);
+    rcpp_result_gen = Rcpp::wrap(get_relative_coordinates_closest(projected_points, solution_points, min_value));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -315,7 +304,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // alternative_derivative_stage2
-Rcpp::List alternative_derivative_stage2(const arma::mat& X, const arma::mat& Omega, const arma::mat& D_w, const arma::mat& SVRt, const arma::mat& R, const arma::mat& S, const double coef_der_X, const double coef_hinge_H, const double coef_hinge_W, const int cell_types, const double N, const double M, const int iterations, const double total_regularization_weight, const double reg_X, const double reg_Omega, const double convergence_tol, const int stop_criteria_window, const bool debug_stats);
+Rcpp::List alternative_derivative_stage2(const arma::mat& X, const arma::mat& Omega, const arma::mat& D_w, const arma::mat& SVRt, const arma::mat& R, const arma::mat& S, const double coef_der_X, double coef_hinge_H, double coef_hinge_W, const int cell_types, const double N, const double M, const int iterations, double total_regularization_weight, const double reg_X, const double reg_Omega, const double convergence_tol, const int stop_criteria_window, const bool debug_stats);
 RcppExport SEXP _DualSimplex_alternative_derivative_stage2(SEXP XSEXP, SEXP OmegaSEXP, SEXP D_wSEXP, SEXP SVRtSEXP, SEXP RSEXP, SEXP SSEXP, SEXP coef_der_XSEXP, SEXP coef_hinge_HSEXP, SEXP coef_hinge_WSEXP, SEXP cell_typesSEXP, SEXP NSEXP, SEXP MSEXP, SEXP iterationsSEXP, SEXP total_regularization_weightSEXP, SEXP reg_XSEXP, SEXP reg_OmegaSEXP, SEXP convergence_tolSEXP, SEXP stop_criteria_windowSEXP, SEXP debug_statsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -327,13 +316,13 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::mat& >::type R(RSEXP);
     Rcpp::traits::input_parameter< const arma::mat& >::type S(SSEXP);
     Rcpp::traits::input_parameter< const double >::type coef_der_X(coef_der_XSEXP);
-    Rcpp::traits::input_parameter< const double >::type coef_hinge_H(coef_hinge_HSEXP);
-    Rcpp::traits::input_parameter< const double >::type coef_hinge_W(coef_hinge_WSEXP);
+    Rcpp::traits::input_parameter< double >::type coef_hinge_H(coef_hinge_HSEXP);
+    Rcpp::traits::input_parameter< double >::type coef_hinge_W(coef_hinge_WSEXP);
     Rcpp::traits::input_parameter< const int >::type cell_types(cell_typesSEXP);
     Rcpp::traits::input_parameter< const double >::type N(NSEXP);
     Rcpp::traits::input_parameter< const double >::type M(MSEXP);
     Rcpp::traits::input_parameter< const int >::type iterations(iterationsSEXP);
-    Rcpp::traits::input_parameter< const double >::type total_regularization_weight(total_regularization_weightSEXP);
+    Rcpp::traits::input_parameter< double >::type total_regularization_weight(total_regularization_weightSEXP);
     Rcpp::traits::input_parameter< const double >::type reg_X(reg_XSEXP);
     Rcpp::traits::input_parameter< const double >::type reg_Omega(reg_OmegaSEXP);
     Rcpp::traits::input_parameter< const double >::type convergence_tol(convergence_tolSEXP);
@@ -407,6 +396,21 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// geometrical_reverse_sinkhorn_c
+Rcpp::List geometrical_reverse_sinkhorn_c(const arma::mat& result_H_col, const arma::mat& result_W_row, const arma::mat& D_vs_row, const arma::mat& D_vs_col, int iterations);
+RcppExport SEXP _DualSimplex_geometrical_reverse_sinkhorn_c(SEXP result_H_colSEXP, SEXP result_W_rowSEXP, SEXP D_vs_rowSEXP, SEXP D_vs_colSEXP, SEXP iterationsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type result_H_col(result_H_colSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type result_W_row(result_W_rowSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type D_vs_row(D_vs_rowSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type D_vs_col(D_vs_colSEXP);
+    Rcpp::traits::input_parameter< int >::type iterations(iterationsSEXP);
+    rcpp_result_gen = Rcpp::wrap(geometrical_reverse_sinkhorn_c(result_H_col, result_W_row, D_vs_row, D_vs_col, iterations));
+    return rcpp_result_gen;
+END_RCPP
+}
 // sinkhorn_scale_c
 Rcpp::List sinkhorn_scale_c(const arma::mat& V, int iterations);
 RcppExport SEXP _DualSimplex_sinkhorn_scale_c(SEXP VSEXP, SEXP iterationsSEXP) {
@@ -467,8 +471,7 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_DualSimplex_cosine_similarity", (DL_FUNC) &_DualSimplex_cosine_similarity, 2},
     {"_DualSimplex_cosine_between_rows", (DL_FUNC) &_DualSimplex_cosine_between_rows, 1},
-    {"_DualSimplex_get_relative_coordinates", (DL_FUNC) &_DualSimplex_get_relative_coordinates, 2},
-    {"_DualSimplex_get_relative_coordinates_closest", (DL_FUNC) &_DualSimplex_get_relative_coordinates_closest, 2},
+    {"_DualSimplex_get_relative_coordinates_closest", (DL_FUNC) &_DualSimplex_get_relative_coordinates_closest, 3},
     {"_DualSimplex_getNonnegativeLowRankApproximationWithSVD", (DL_FUNC) &_DualSimplex_getNonnegativeLowRankApproximationWithSVD, 5},
     {"_DualSimplex_getNonnegativeLowRankApproximationWithHMT", (DL_FUNC) &_DualSimplex_getNonnegativeLowRankApproximationWithHMT, 7},
     {"_DualSimplex_getNonnegativeLowRankApproximationWithGN", (DL_FUNC) &_DualSimplex_getNonnegativeLowRankApproximationWithGN, 6},
@@ -490,6 +493,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_DualSimplex_theta_derivative_stage2", (DL_FUNC) &_DualSimplex_theta_derivative_stage2, 24},
     {"_DualSimplex_reverse_sinkhorn_c", (DL_FUNC) &_DualSimplex_reverse_sinkhorn_c, 5},
     {"_DualSimplex_clean_reverse_sinkhorn_c", (DL_FUNC) &_DualSimplex_clean_reverse_sinkhorn_c, 5},
+    {"_DualSimplex_geometrical_reverse_sinkhorn_c", (DL_FUNC) &_DualSimplex_geometrical_reverse_sinkhorn_c, 5},
     {"_DualSimplex_sinkhorn_scale_c", (DL_FUNC) &_DualSimplex_sinkhorn_scale_c, 2},
     {"_DualSimplex_efficient_sinkhorn", (DL_FUNC) &_DualSimplex_efficient_sinkhorn, 5},
     {"_DualSimplex_extended_sinkhorn", (DL_FUNC) &_DualSimplex_extended_sinkhorn, 4},

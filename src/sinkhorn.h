@@ -37,6 +37,26 @@ Rcpp::List clean_reverse_sinkhorn_c(const arma::mat& result_H_col,
                               int iterations);
 
 
+
+//' Reverse Sinkhorn scaling method without any nnls usage.
+//'
+//' @param result_H_col H_gs calculated geometrically from the solution
+//' @param result_W_row W_ss calculated geometrically from the solution.
+//' @param D_vs_row row normalizing matrices used for V in forward procedure.
+//' @param D_vs_col column normalizing matrices used for V in forward procedure.
+//' @param iterations how many iterations back
+//' @return named list of W, H, Dv_inv_W_row, H_row, D_ws_col, D_hs_row.
+//' @export
+// [[Rcpp::export]]
+Rcpp::List geometrical_reverse_sinkhorn_c(
+                              const arma::mat& result_H_col,
+                              const arma::mat& result_W_row,
+                              const arma::mat& D_vs_row,
+                              const arma::mat& D_vs_col,
+                              int iterations);
+
+
+
 //' Forward Sinkhorn scaling method
 //'
 //' @param V matrix to scale

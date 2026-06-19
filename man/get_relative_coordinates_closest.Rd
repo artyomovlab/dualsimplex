@@ -3,9 +3,14 @@
 \name{get_relative_coordinates_closest}
 \alias{get_relative_coordinates_closest}
 \title{Get relative coordinates with respect to vertices.
-This is calculated as a determinant rations of the respective simplexes.}
+This is calculated as a determinant rations of the respective simplexes.
+Negative values will be set to zero.}
 \usage{
-get_relative_coordinates_closest(projected_points, solution_points)
+get_relative_coordinates_closest(
+  projected_points,
+  solution_points,
+  min_value = 0
+)
 }
 \arguments{
 \item{projected_points}{coordinates of rows/columns in svd space (number_of_poitns x K).}
@@ -18,4 +23,5 @@ arma::mat coordinates of the points with respect to simplex vertices (number_of_
 \description{
 Get relative coordinates with respect to vertices.
 This is calculated as a determinant rations of the respective simplexes.
+Negative values will be set to zero.
 }

@@ -18,7 +18,7 @@ alternative_derivative_stage2(
   N,
   M,
   iterations,
-  total_regularization_weight = 1,
+  total_regularization_weight = 0,
   reg_X = 1,
   reg_Omega = 1,
   convergence_tol = 1e-12,
