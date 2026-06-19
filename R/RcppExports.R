@@ -26,7 +26,7 @@ cosine_between_rows <- function(X) {
 #' @param solution_points solution points to calculate respective relative coordinates (K x K).
 #' @return arma::mat coordinates of the points with respect to simplex vertices (number_of_points x K).
 #' @export
-get_relative_coordinates_closest <- function(projected_points, solution_points, min_value = 0) {
+get_relative_coordinates_closest <- function(projected_points, solution_points, min_value = 0.0) {
     .Call('_DualSimplex_get_relative_coordinates_closest', PACKAGE = 'DualSimplex', projected_points, solution_points, min_value)
 }
 
