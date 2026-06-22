@@ -60,8 +60,9 @@ Rcpp::List geometrical_reverse_sinkhorn_c(
         projected_points = current_V.t() * S_t;
         // project current W_col col into S_t
         current_solution = W_col.t() *  S_t;
+        Rcpp::Rcout << " --- Solution Coordinates are " << ".\n";
+        Rcpp::Rcout << current_solution << ".\n";
         Rcpp::Rcout << "Get relative coordinates for col " << ".\n";
-
         H_col = get_relative_coordinates_closest(projected_points, current_solution);
         H_col = H_col.t();
         // Now we have W_col H_col
@@ -86,6 +87,8 @@ Rcpp::List geometrical_reverse_sinkhorn_c(
         projected_points = current_V * R_t;
         // project current H_row col into S_t
         current_solution = H_row *  R_t;
+        Rcpp::Rcout << " --- Solution Coordinates are " << ".\n";
+        Rcpp::Rcout << current_solution << ".\n";
         Rcpp::Rcout << "Get relative coordinates for row " << ".\n";
 
         W_row = get_relative_coordinates_closest(projected_points, current_solution);
