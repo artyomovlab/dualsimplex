@@ -53,8 +53,8 @@ Rcpp::List geometrical_reverse_sinkhorn_c(
         Rcpp::Rcout << "SVD for row -> col" << ".\n";
 
         arma::svd(S_t,Sigma, R_t, current_V);
-        S_t = S_t.head_cols(K).t(); // m*r -> r*m
-        R_t = R_t.head_cols(K).t(); // n*r  -> r*n
+        S_t = S_t.head_cols(K); // m*r -> r*m
+        R_t = R_t.head_cols(K); // n*r  -> r*n
         Sigma = Sigma.head(K); // r
         // project current_V into S_t
         projected_points = current_V.t() * S_t;
@@ -80,8 +80,8 @@ Rcpp::List geometrical_reverse_sinkhorn_c(
 
         // Time consuming part. again svd ...
         arma::svd(S_t,Sigma, R_t, current_V);
-        S_t = S_t.head_cols(K).t(); // m*r -> r*m
-        R_t = R_t.head_cols(K).t(); // n*r  -> r*n
+        S_t = S_t.head_cols(K); // m*r -> r*m
+        R_t = R_t.head_cols(K); // n*r  -> r*n
         Sigma = Sigma.head(K); // r
          // project current_V into R_t
         projected_points = current_V * R_t;
