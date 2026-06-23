@@ -40,7 +40,7 @@ Rcpp::List geometrical_reverse_sinkhorn_c(
 
         // Transformation for W
         W_row = arma::diagmat(1 / D_vs_row.col(i+1)) * W_row;
-        // matrix needed to column normalize W row will be used as intermediate multiplier to avoid overflow
+        // column normalize  W_row -- is it valid ?
         D_w = 1 / arma::sum(W_row, 0);
         W_col = W_row *  arma::diagmat(D_w);
 
@@ -65,11 +65,11 @@ Rcpp::List geometrical_reverse_sinkhorn_c(
         Rcpp::Rcout << "Get relative coordinates for col " << ".\n";
         H_col = get_relative_coordinates_closest(projected_points, current_solution);
         H_col = H_col.t();
-        // Now we have W_col H_col
 
+        // Now we have W_col H_col
         // tansform H
         H_col = H_col * arma::diagmat(1 / D_vs_col.col(i));
-        // matrix needed to row normalize H_col will be used as intermediate multiplier to avoid overflow
+        // row normalize H_col -- is it valid ?
         D_h = 1 / arma::sum(H_col, 1);
         H_row =  arma::diagmat(D_h) * H_col;
 
@@ -80,8 +80,8 @@ Rcpp::List geometrical_reverse_sinkhorn_c(
 
         // Time consuming part. again svd ...
         arma::svd(S_t,Sigma, R_t, current_V);
-        S_t = S_t.head_cols(K); // m*r -> r*m
-        R_t = R_t.head_cols(K); // n*r  -> r*n
+        S_t = S_t.head_cols(K); // m*r 
+        R_t = R_t.head_cols(K); // n*r
         Sigma = Sigma.head(K); // r
          // project current_V into R_t
         projected_points = current_V * R_t;
@@ -96,20 +96,46 @@ Rcpp::List geometrical_reverse_sinkhorn_c(
     Rcpp::Rcout << "Loop is done " << ".\n";
 
     // now we have W_row and H_row and 1 more normalization left
-    W_row = arma::diagmat(1 / D_vs_row.col(0)) * W_row; // this is not row norm anymore.
-
     // matrix needed to column normalize W row will be used as intermediate multiplier to avoid overflow
-    D_w = 1 / arma::sum(W_row, 0);
-    W_col = W_row *  arma::diagmat(D_w);
-    H_col =  diagmat(1 / D_w) *  H_row;
-    return Rcpp::List::create(Rcpp::Named("W") = W_col,
-                              Rcpp::Named("H") = H_col,
-                              Rcpp::Named("Dv_inv_W_row") = W_row,
-                              Rcpp::Named("H_row") = H_row);
 
+    // In case V is column normalized we expect points to form a simplex with H being column normalized
+    // For this we just repeat col norm H matrix search once more time
+    // Transformation for W
+    W_row = arma::diagmat(1 / D_vs_row.col(0)) * W_row; // this is not row norm anymore.
+    // We omit column normalization
+    W_col = W_row ;
+    // Transformation for V
+    current_V = arma::diagmat(1 / D_vs_row.col(0)) * current_V;
+    // V should be column normalized -- transform it accordingly
+    current_V = current_V * arma::diagmat(1 / arma::sum(current_V, 0));
+    Rcpp::Rcout << "Final SVD for row -> col" << ".\n";
+    arma::svd(S_t,Sigma, R_t, current_V);
+    S_t = S_t.head_cols(K); // m*r -> r*m
+    R_t = R_t.head_cols(K); // n*r  -> r*n
+    Sigma = Sigma.head(K); // r
+    // project current_V into S_t
+    projected_points = current_V.t() * S_t;
+        // project current W_col col into S_t
+    current_solution = W_col.t() *  S_t;
+    Rcpp::Rcout << " --- Solution Coordinates are " << ".\n";
+    Rcpp::Rcout << current_solution << ".\n";
+    Rcpp::Rcout << "Get relative coordinates for col " << ".\n";
+    H_col = get_relative_coordinates_closest(projected_points, current_solution);
+    H_col = H_col.t();
+    // Get row normalizing matrix for H_col
+    D_h = 1 / arma::sum(H_col, 1);
+    // This matrix goes to W_row
+    W_col = W_row  * arma::diagmat(D_h) ;
+    // Now H_col is column normalized coordinates of points between W_col
+    return Rcpp::List::create( 
+                            // W_row and H_row represent true general matrix factorization
+                            Rcpp::Named("W") = W_row,
+                            Rcpp::Named("H") = H_row,
+                            // H_col represent closest column normalized coefficients for points
+                            Rcpp::Named("H_col") = H_col,
+                            Rcpp::Named("W_corrected") = W_col
+    );
 }
-
-
 
 
 Rcpp::List clean_reverse_sinkhorn_c(const arma::mat& result_H_col,
