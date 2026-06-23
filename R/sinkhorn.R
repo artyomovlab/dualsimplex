@@ -108,10 +108,11 @@ geometrical_reverse_sinkhorn <- function(H_col, W_row, scaling) {
                                  scaling$D_vs_col,
                                  scaling$iterations)
 
+
   dimnames(unscaled$H) <- dimnames(H_col)
   dimnames(unscaled$W) <- dimnames(W_row)
-  dimnames(unscaled$H_row) <- dimnames(H_col)
-  dimnames(unscaled$Dv_inv_W_row) <- dimnames(W_row)
+  dimnames(unscaled$H_col) <- dimnames(H_col)
+  dimnames(unscaled$W_corrected) <- dimnames(W_row)
   return(unscaled)
 }
 
