@@ -65,6 +65,8 @@ dso$plot_projected("zero_distance",
 \item \href{#method-DualSimplexSolver-plot_error_history}{\code{DualSimplexSolver$plot_error_history()}}
 \item \href{#method-DualSimplexSolver-finalize_solution}{\code{DualSimplexSolver$finalize_solution()}}
 \item \href{#method-DualSimplexSolver-finalize_solution_clean}{\code{DualSimplexSolver$finalize_solution_clean()}}
+\item \href{#method-DualSimplexSolver-finalize_solution_geometrical}{\code{DualSimplexSolver$finalize_solution_geometrical()}}
+\item \href{#method-DualSimplexSolver-finalize_solution_geometrical_with_proportions}{\code{DualSimplexSolver$finalize_solution_geometrical_with_proportions()}}
 \item \href{#method-DualSimplexSolver-plot_negative_basis_change}{\code{DualSimplexSolver$plot_negative_basis_change()}}
 \item \href{#method-DualSimplexSolver-plot_negative_proportions_change}{\code{DualSimplexSolver$plot_negative_proportions_change()}}
 \item \href{#method-DualSimplexSolver-plot_solution_distribution}{\code{DualSimplexSolver$plot_solution_distribution()}}
@@ -650,6 +652,30 @@ Geometrically correct way to perform reverse sinkhorn solution optimization
 Perform reverse sinkhorn to get original matrices W and H
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$finalize_solution_clean()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-DualSimplexSolver-finalize_solution_geometrical"></a>}}
+\if{latex}{\out{\hypertarget{method-DualSimplexSolver-finalize_solution_geometrical}{}}}
+\subsection{Method \code{finalize_solution_geometrical()}}{
+Finalize solution clean.
+Geometrically correct way to perform reverse sinkhorn solution optimization
+Perform reverse sinkhorn to get original matrices W and H
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$finalize_solution_geometrical()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-DualSimplexSolver-finalize_solution_geometrical_with_proportions"></a>}}
+\if{latex}{\out{\hypertarget{method-DualSimplexSolver-finalize_solution_geometrical_with_proportions}{}}}
+\subsection{Method \code{finalize_solution_geometrical_with_proportions()}}{
+Finalize solution clean.
+Geometrically correct way to perform reverse sinkhorn solution optimization
+Perform reverse sinkhorn to get original matrices W and H
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$finalize_solution_geometrical_with_proportions()}\if{html}{\out{</div>}}
 }
 
 }

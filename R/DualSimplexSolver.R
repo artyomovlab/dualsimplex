@@ -852,6 +852,36 @@ DualSimplexSolver <- R6Class(
       return(self$st$solution)
     },
     #' @description
+    #' Finalize solution clean.
+    #' Geometrically correct way to perform reverse sinkhorn solution optimization
+    #' Perform reverse sinkhorn to get original matrices W and H
+    finalize_solution_geometrical = function() {
+      private$initialize_first()
+      solution_scaled <-  reverse_solution_projection_geometrical(self$st$solution_proj, self$st$proj)
+      self$st$solution_no_corr <- geometrical_reverse_solution_sinkhorn(solution_scaled, self$st$scaling)
+      self$st$solution <- list(
+        W = self$st$solution_no_corr$W,
+        H = self$st$solution_no_corr$H
+      )
+      self$st$marker_genes <- get_signature_markers(self$st$solution$W)
+      return(self$st$solution)
+    },
+        #' @description
+    #' Finalize solution clean.
+    #' Geometrically correct way to perform reverse sinkhorn solution optimization
+    #' Perform reverse sinkhorn to get original matrices W and H
+    finalize_solution_geometrical_with_proportions = function() {
+      private$initialize_first()
+      solution_scaled <-  reverse_solution_projection_geometrical(self$st$solution_proj, self$st$proj)
+      self$st$solution_no_corr <- geometrical_reverse_solution_sinkhorn(solution_scaled, self$st$scaling)
+      self$st$solution <- list(
+        W = self$st$solution_no_corr$W_corrected,
+        H = self$st$solution_no_corr$H_col
+      )
+      self$st$marker_genes <- get_signature_markers(self$st$solution$W)
+      return(self$st$solution)
+    },
+    #' @description
     #' Interface to plot negativity changes in basis (Matrix W)
     plot_negative_basis_change = function() {
       private$optimize_first()
