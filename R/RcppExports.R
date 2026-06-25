@@ -335,8 +335,8 @@ clean_reverse_sinkhorn_c <- function(result_H_col, result_W_row, D_vs_row, D_vs_
 #' @param iterations how many iterations back
 #' @return named list of W, H, Dv_inv_W_row, H_row, D_ws_col, D_hs_row.
 #' @export
-geometrical_reverse_sinkhorn_c <- function(result_H_col, result_W_row, D_vs_row, D_vs_col, iterations) {
-    .Call('_DualSimplex_geometrical_reverse_sinkhorn_c', PACKAGE = 'DualSimplex', result_H_col, result_W_row, D_vs_row, D_vs_col, iterations)
+geometrical_reverse_sinkhorn_c <- function(result_H_col, result_W_row, D_vs_row, D_vs_col, V_inf_row, iterations) {
+    .Call('_DualSimplex_geometrical_reverse_sinkhorn_c', PACKAGE = 'DualSimplex', result_H_col, result_W_row, D_vs_row, D_vs_col, V_inf_row, iterations)
 }
 
 #' Forward Sinkhorn scaling method

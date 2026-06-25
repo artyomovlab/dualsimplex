@@ -4,7 +4,7 @@
 \alias{geometrical_reverse_sinkhorn}
 \title{reverse Sinkhorn transform scaled matrix}
 \usage{
-geometrical_reverse_sinkhorn(H_col, W_row, scaling)
+geometrical_reverse_sinkhorn(H_col, W_row, scaling, V_inf_row)
 }
 \arguments{
 \item{H_col}{solution matrix H_ss produced by optimization algorithm (X*R)}

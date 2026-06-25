@@ -52,7 +52,8 @@ Rcpp::List geometrical_reverse_sinkhorn_c(
                               const arma::mat& result_H_col,
                               const arma::mat& result_W_row,
                               const arma::mat& D_vs_row,
-                              const arma::mat& D_vs_col,               
+                              const arma::mat& D_vs_col,
+                              const arma::mat V_inf_row,               
                               int iterations);
 
 

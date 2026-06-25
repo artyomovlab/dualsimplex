@@ -101,11 +101,12 @@ clean_reverse_sinkhorn <- function(H_col, W_row, scaling) {
 #' @import Rcpp
 #' @import RcppArmadillo
 #' @export
-geometrical_reverse_sinkhorn <- function(H_col, W_row, scaling) {
+geometrical_reverse_sinkhorn <- function(H_col, W_row, scaling, V_inf_row) {
   unscaled <- geometrical_reverse_sinkhorn_c(H_col,
                                  W_row,
                                  scaling$D_vs_row,
                                  scaling$D_vs_col,
+                                 V_inf_row,
                                  scaling$iterations)
 
 
@@ -156,11 +157,12 @@ clean_reverse_solution_sinkhorn<- function(solution_scaled, scaling) {
 #' @import Rcpp
 #' @import RcppArmadillo
 #' @export
-geometrical_reverse_solution_sinkhorn<- function(solution_scaled, scaling) {
+geometrical_reverse_solution_sinkhorn<- function(solution_scaled, scaling, V_inf_row) {
   return(geometrical_reverse_sinkhorn(
     solution_scaled$H_col,
     solution_scaled$W_row,
-    scaling
+    scaling,
+    V_inf_row
   ))
 }
 

@@ -397,8 +397,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // geometrical_reverse_sinkhorn_c
-Rcpp::List geometrical_reverse_sinkhorn_c(const arma::mat& result_H_col, const arma::mat& result_W_row, const arma::mat& D_vs_row, const arma::mat& D_vs_col, int iterations);
-RcppExport SEXP _DualSimplex_geometrical_reverse_sinkhorn_c(SEXP result_H_colSEXP, SEXP result_W_rowSEXP, SEXP D_vs_rowSEXP, SEXP D_vs_colSEXP, SEXP iterationsSEXP) {
+Rcpp::List geometrical_reverse_sinkhorn_c(const arma::mat& result_H_col, const arma::mat& result_W_row, const arma::mat& D_vs_row, const arma::mat& D_vs_col, const arma::mat V_inf_row, int iterations);
+RcppExport SEXP _DualSimplex_geometrical_reverse_sinkhorn_c(SEXP result_H_colSEXP, SEXP result_W_rowSEXP, SEXP D_vs_rowSEXP, SEXP D_vs_colSEXP, SEXP V_inf_rowSEXP, SEXP iterationsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -406,8 +406,9 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::mat& >::type result_W_row(result_W_rowSEXP);
     Rcpp::traits::input_parameter< const arma::mat& >::type D_vs_row(D_vs_rowSEXP);
     Rcpp::traits::input_parameter< const arma::mat& >::type D_vs_col(D_vs_colSEXP);
+    Rcpp::traits::input_parameter< const arma::mat >::type V_inf_row(V_inf_rowSEXP);
     Rcpp::traits::input_parameter< int >::type iterations(iterationsSEXP);
-    rcpp_result_gen = Rcpp::wrap(geometrical_reverse_sinkhorn_c(result_H_col, result_W_row, D_vs_row, D_vs_col, iterations));
+    rcpp_result_gen = Rcpp::wrap(geometrical_reverse_sinkhorn_c(result_H_col, result_W_row, D_vs_row, D_vs_col, V_inf_row, iterations));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -493,7 +494,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_DualSimplex_theta_derivative_stage2", (DL_FUNC) &_DualSimplex_theta_derivative_stage2, 24},
     {"_DualSimplex_reverse_sinkhorn_c", (DL_FUNC) &_DualSimplex_reverse_sinkhorn_c, 5},
     {"_DualSimplex_clean_reverse_sinkhorn_c", (DL_FUNC) &_DualSimplex_clean_reverse_sinkhorn_c, 5},
-    {"_DualSimplex_geometrical_reverse_sinkhorn_c", (DL_FUNC) &_DualSimplex_geometrical_reverse_sinkhorn_c, 5},
+    {"_DualSimplex_geometrical_reverse_sinkhorn_c", (DL_FUNC) &_DualSimplex_geometrical_reverse_sinkhorn_c, 6},
     {"_DualSimplex_sinkhorn_scale_c", (DL_FUNC) &_DualSimplex_sinkhorn_scale_c, 2},
     {"_DualSimplex_efficient_sinkhorn", (DL_FUNC) &_DualSimplex_efficient_sinkhorn, 5},
     {"_DualSimplex_extended_sinkhorn", (DL_FUNC) &_DualSimplex_extended_sinkhorn, 4},

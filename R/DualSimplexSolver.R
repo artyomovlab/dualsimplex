@@ -858,7 +858,8 @@ DualSimplexSolver <- R6Class(
     finalize_solution_geometrical = function() {
       private$initialize_first()
       solution_scaled <-  reverse_solution_projection_geometrical(self$st$solution_proj, self$st$proj)
-      self$st$solution_no_corr <- geometrical_reverse_solution_sinkhorn(solution_scaled, self$st$scaling)
+      V_inf <- self$get_V_row()
+      self$st$solution_no_corr <- geometrical_reverse_solution_sinkhorn(solution_scaled, self$st$scaling, V_inf)
       self$st$solution <- list(
         W = self$st$solution_no_corr$W,
         H = self$st$solution_no_corr$H
@@ -873,7 +874,8 @@ DualSimplexSolver <- R6Class(
     finalize_solution_geometrical_with_proportions = function() {
       private$initialize_first()
       solution_scaled <-  reverse_solution_projection_geometrical(self$st$solution_proj, self$st$proj)
-      self$st$solution_no_corr <- geometrical_reverse_solution_sinkhorn(solution_scaled, self$st$scaling)
+      V_inf <- self$get_V_row()
+      self$st$solution_no_corr <- geometrical_reverse_solution_sinkhorn(solution_scaled, self$st$scaling, V_inf)
       self$st$solution <- list(
         W = self$st$solution_no_corr$W_corrected,
         H = self$st$solution_no_corr$H_col

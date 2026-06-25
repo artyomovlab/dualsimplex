@@ -4,7 +4,7 @@
 \alias{geometrical_reverse_solution_sinkhorn}
 \title{Wrapper to call geometrical sinkhorn on dso object}
 \usage{
-geometrical_reverse_solution_sinkhorn(solution_scaled, scaling)
+geometrical_reverse_solution_sinkhorn(solution_scaled, scaling, V_inf_row)
 }
 \arguments{
 \item{solution_scaled}{contain solution matrices $H_row and $W_col}

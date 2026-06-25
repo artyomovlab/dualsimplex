@@ -15,6 +15,7 @@ Rcpp::List geometrical_reverse_sinkhorn_c(
                               const arma::mat& result_W_row,
                               const arma::mat& D_vs_row,
                               const arma::mat& D_vs_col,
+                              arma::mat V_inf_row,    
                               int iterations) {
     Rcpp::Rcout << "Method enter " << ".\n";
     arma::mat H_col = result_H_col;
@@ -27,7 +28,7 @@ Rcpp::List geometrical_reverse_sinkhorn_c(
     // V_fs = W_ss * D_w * D_w_inv * H_ss * D_v_last
     H_row = arma::diagmat(D_h) * H_col;
 
-    arma::mat current_V = W_row * H_row;
+    arma::mat current_V = V_inf_row;
     arma::mat S_t, R_t;
     arma::vec Sigma;
     arma::mat projected_points;

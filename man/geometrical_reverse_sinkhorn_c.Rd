@@ -9,6 +9,7 @@ geometrical_reverse_sinkhorn_c(
   result_W_row,
   D_vs_row,
   D_vs_col,
+  V_inf_row,
   iterations
 )
 }
