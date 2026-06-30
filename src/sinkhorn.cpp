@@ -143,7 +143,7 @@ Rcpp::List clean_reverse_sinkhorn_c(const arma::mat& result_H_col,
                               const arma::mat& result_W_row,
                               const arma::mat& D_vs_row,
                               const arma::mat& D_vs_col,
-                              int iterations) {
+                              int iterations, int enforce_sum_to_one_H, int enforce_sum_to_one_V) {
 
     arma::mat H_col = result_H_col;
     arma::mat W_row = result_W_row;
@@ -177,15 +177,42 @@ Rcpp::List clean_reverse_sinkhorn_c(const arma::mat& result_H_col,
     }
     // now we have W_row and H_row and 1 more normalization left
     W_row = arma::diagmat(1 / D_vs_row.col(0)) * W_row; // this is not row norm anymore.
-
-    // matrix needed to column normalize W row will be used as intermediate multiplier to avoid overflow
+    // Current W_row H_row already are good non-negative factorization of the matrix
     D_w = 1 / arma::sum(W_row, 0);
     W_col = W_row *  arma::diagmat(D_w);
-    H_col =  diagmat(1 / D_w) *  H_row;
-    return Rcpp::List::create(Rcpp::Named("W") = W_col,
-                              Rcpp::Named("H") = H_col,
-                              Rcpp::Named("Dv_inv_W_row") = W_row,
-                              Rcpp::Named("H_row") = H_row);
+    H_col =  diagmat(1 / D_w) *  H_row; // teoretically gives column normalized H  if V is column normalized
+
+    
+    // correct H_col to be strictly sum-to-one
+    if (enforce_sum_to_one_H == 1) {
+        arma::mat ones_like_H(H_col.n_cols, 1, arma::fill::ones);  // N*1
+        arma::vec D_h_inv_pred_vec = nnls_nonzero_C__(H_col.t(), ones_like_H);
+        H_col = arma::diagmat(D_h_inv_pred_vec) * H_col;
+        H_col.elem(arma::find(H_col < 0)).fill(0);
+        H_col.each_col() %=  (1 / arma::sum(H_col, 1));
+        W_col = W_col * arma::diagmat(1 / D_h_inv_pred_vec);
+    }
+
+    if (enforce_sum_to_one_V == 1) {
+        arma::mat current_V = W_col * H_col;
+        arma::vec D_v_col_sum_current(current_V.n_cols);
+        D_v_col_sum_current = 1 / arma::sum(current_V, 0).t();
+        current_V.each_row() %= D_v_col_sum_current.t();
+        H_col.each_row() %= D_v_col_sum_current.t();
+        // now H_coll has to be sum-to-one we take it as a sum-to-one solution
+        // Given the fact that V ~ V_col  => W_col H_col ~ W H_row ~ W D_h H_col
+        // Get row normalizing matrix for H_col
+        D_h = 1 / arma::sum(H_col, 1);
+        // This matrix goes to W_row
+        W_col = W_row  * arma::diagmat(D_h);
+    }
+
+    // matrix needed to column normalize W row will be used as intermediate multiplier to avoid overflow
+
+    return Rcpp::List::create(Rcpp::Named("W") = W_row,
+                              Rcpp::Named("H") = H_row,
+                              Rcpp::Named("W_2") = W_col,
+                              Rcpp::Named("H_2") = H_col);
 }
 
 

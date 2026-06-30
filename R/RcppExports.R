@@ -322,8 +322,8 @@ reverse_sinkhorn_c <- function(result_H_row, result_W_col, D_vs_row, D_vs_col, i
 #' @param iterations how many iterations back
 #' @return named list of W, H, Dv_inv_W_row, H_row, D_ws_col, D_hs_row.
 #' @export
-clean_reverse_sinkhorn_c <- function(result_H_col, result_W_row, D_vs_row, D_vs_col, iterations) {
-    .Call('_DualSimplex_clean_reverse_sinkhorn_c', PACKAGE = 'DualSimplex', result_H_col, result_W_row, D_vs_row, D_vs_col, iterations)
+clean_reverse_sinkhorn_c <- function(result_H_col, result_W_row, D_vs_row, D_vs_col, iterations, enforce_sum_to_one_H, enforce_sum_to_one_V) {
+    .Call('_DualSimplex_clean_reverse_sinkhorn_c', PACKAGE = 'DualSimplex', result_H_col, result_W_row, D_vs_row, D_vs_col, iterations, enforce_sum_to_one_H, enforce_sum_to_one_V)
 }
 
 #' Reverse Sinkhorn scaling method without any nnls usage.

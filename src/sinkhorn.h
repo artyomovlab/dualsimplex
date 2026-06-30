@@ -34,7 +34,7 @@ Rcpp::List clean_reverse_sinkhorn_c(const arma::mat& result_H_col,
                               const arma::mat& result_W_row,
                               const arma::mat& D_vs_row,
                               const arma::mat& D_vs_col,
-                              int iterations);
+                              int iterations, int enforce_sum_to_one_H, int enforce_sum_to_one_V);
 
 
 

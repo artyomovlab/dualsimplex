@@ -73,17 +73,22 @@ reverse_sinkhorn <- function(H_row, W_col, scaling) {
 #' @import Rcpp
 #' @import RcppArmadillo
 #' @export
-clean_reverse_sinkhorn <- function(H_col, W_row, scaling) {
-  unscaled <- clean_reverse_sinkhorn_c(H_col,
-                                 W_row,
-                                 scaling$D_vs_row,
-                                 scaling$D_vs_col,
-                                 scaling$iterations)
+clean_reverse_sinkhorn <- function(H_col, W_row, scaling, enforce_sum_to_one_H = 0, enforce_sum_to_one_V = 0) {
+  unscaled <- clean_reverse_sinkhorn_c(
+    H_col,
+    W_row,
+    scaling$D_vs_row,
+    scaling$D_vs_col,
+    scaling$iterations,
+    enforce_sum_to_one_H = enforce_sum_to_one_H,
+    enforce_sum_to_one_V = enforce_sum_to_one_V
+    )
 
-  dimnames(unscaled$H) <- dimnames(H_col)
-  dimnames(unscaled$W) <- dimnames(W_row)
-  dimnames(unscaled$H_row) <- dimnames(H_col)
-  dimnames(unscaled$Dv_inv_W_row) <- dimnames(W_row)
+  dimnames(unscaled$W) <- dimnames(H_col)
+  dimnames(unscaled$H) <- dimnames(W_row)
+  # Alternative solution - W could be col-norm or H col-norm
+  dimnames(unscaled$H_2) <- dimnames(H_col)
+  dimnames(unscaled$W_2) <- dimnames(W_row)
   return(unscaled)
 }
 
@@ -141,11 +146,11 @@ reverse_solution_sinkhorn <- function(solution_scaled, scaling) {
 #' @import Rcpp
 #' @import RcppArmadillo
 #' @export
-clean_reverse_solution_sinkhorn<- function(solution_scaled, scaling) {
+clean_reverse_solution_sinkhorn<- function(solution_scaled, scaling, ...) {
   return(clean_reverse_sinkhorn(
     solution_scaled$H_col,
     solution_scaled$W_row,
-    scaling
+    scaling, ...
   ))
 }
 

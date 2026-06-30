@@ -9,7 +9,9 @@ clean_reverse_sinkhorn_c(
   result_W_row,
   D_vs_row,
   D_vs_col,
-  iterations
+  iterations,
+  enforce_sum_to_one_H,
+  enforce_sum_to_one_V
 )
 }
 \arguments{

@@ -4,7 +4,13 @@
 \alias{clean_reverse_sinkhorn}
 \title{reverse Sinkhorn transform scaled matrix}
 \usage{
-clean_reverse_sinkhorn(H_col, W_row, scaling)
+clean_reverse_sinkhorn(
+  H_col,
+  W_row,
+  scaling,
+  enforce_sum_to_one_H = 0,
+  enforce_sum_to_one_V = 0
+)
 }
 \arguments{
 \item{H_col}{solution matrix H_ss produced by optimization algorithm (X*R)}

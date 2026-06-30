@@ -4,7 +4,7 @@
 \alias{clean_reverse_solution_sinkhorn}
 \title{Wrapper to call reverse sinkhorn on dso object}
 \usage{
-clean_reverse_solution_sinkhorn(solution_scaled, scaling)
+clean_reverse_solution_sinkhorn(solution_scaled, scaling, ...)
 }
 \arguments{
 \item{solution_scaled}{contain solution matrices $H_row and $W_col}
