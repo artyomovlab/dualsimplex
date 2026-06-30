@@ -189,7 +189,7 @@ Rcpp::List clean_reverse_sinkhorn_c(const arma::mat& result_H_col,
         arma::vec D_h_inv_pred_vec = nnls_nonzero_C__(H_col.t(), ones_like_H);
         H_col = arma::diagmat(D_h_inv_pred_vec) * H_col;
         H_col.elem(arma::find(H_col < 0)).fill(0);
-        H_col.each_col() %=  (1 / arma::sum(H_col, 1));
+        H_col.each_row() %=  (1 / arma::sum(H_col, 0));
         W_col = W_col * arma::diagmat(1 / D_h_inv_pred_vec);
     }
 
