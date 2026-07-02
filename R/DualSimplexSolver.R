@@ -190,7 +190,7 @@ DualSimplexSolver <- R6Class(
     ) {
       # Sanity checks
       if (any(sapply(dimnames(data), is.null))) {
-        warning("All Rows and Columns should be named. Setting artificial names")
+        spdl::warn("All Rows and Columns should be named. Setting artificial names")
         if (is.null(colnames(data))) {
           colnames(data) <- paste("feature", seq_len(nrow(dso$st$data)))
         }
@@ -199,7 +199,7 @@ DualSimplexSolver <- R6Class(
         }
       }
       if (any(sapply(dimnames(data), anyDuplicated))) {
-        warning("Duplicates in Rows/Column names are not alowed. Replacing duplicates")
+        spdl::warn("Duplicates in Rows/Column names are not alowed. Replacing duplicates")
         colnames(data) <- make.unique(colnames(data))
         rownames(data) <- make.unique(rownames(data))
       }
@@ -208,7 +208,7 @@ DualSimplexSolver <- R6Class(
       self$st$max_sinkhorn_iterations <- max_sinkhorn_iterations
       self$st$max_dim <- max_dim
       if (self$st$max_dim > min(dim(data))) {
-        warning("Provided `max_dim` is bigger than smallest dimention of `data`. Setting `max_dim` to ", self$st$max_dim, ".")
+        spdl::warn("Provided `max_dim` is bigger than smallest dimention of `data`. Setting `max_dim` to ", self$st$max_dim, ".")
         self$st$max_dim <- min(dim(data))
       }
       self$st$sinkhorn_tol <- sinkhorn_tol

@@ -335,9 +335,9 @@ Rcpp::List efficient_sinkhorn(const arma::mat& V,
     }
 
     if (converged) {
-        Rcpp::Rcout << "Sinkhorn transformation converge at iteration: " << i << ".\n";
+        spdl::info("Sinkhorn transformation converge at iteration: {}", i);
     } else {
-        Rcpp::warning("Sinkhorn transformation does not converge at iteration %i", i);
+        spdl::info("Sinkhorn transformation does not converge at iteration {}", i);
     }
 
     // will return all 1 columns for D_vs_row and D_vs_col if no normalizations performed

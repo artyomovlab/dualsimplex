@@ -1,5 +1,7 @@
 // [[Rcpp::depends(RcppArmadillo)]]
 #include <RcppArmadillo.h>
+// [[Rcpp::depends(spdl)]]
+#include <spdl.h>
 #include <Rcpp.h>
 
 //' Reverse Sinkhorn scaling method
