@@ -31,6 +31,7 @@ biocViews:
 Imports:
     Rcpp,
     RcppArmadillo,
+    spdl,
     rlang,
     irlba,
     limma,
@@ -59,5 +60,5 @@ Suggests:
     ggrastr,
     Hmisc,
     scales
-LinkingTo: Rcpp, RcppArmadillo
+LinkingTo: Rcpp, RcppArmadillo, RcppSpdlog, spdl
 RoxygenNote: 7.3.3

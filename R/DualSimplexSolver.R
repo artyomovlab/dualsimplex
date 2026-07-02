@@ -189,17 +189,27 @@ DualSimplexSolver <- R6Class(
       ...
     ) {
       # Sanity checks
-      if (any(sapply(dimnames(data), is.null)))
-        stop("Genes and samples should be named")
-      if (any(sapply(dimnames(data), anyDuplicated)))
-        stop("Gene and sample names should not contain duplicates")
+      if (any(sapply(dimnames(data), is.null))) {
+        warning("All Rows and Columns should be named. Setting artificial names")
+        if (is.null(colnames(data))) {
+          colnames(data) <- paste("feature", seq_len(nrow(dso$st$data)))
+        }
+        if (is.null(rownames(data))) {
+          colnames(data) <- paste("mixture", seq_len(ncol(dso$st$data)))
+        }
+      }
+      if (any(sapply(dimnames(data), anyDuplicated))) {
+        warning("Duplicates in Rows/Column names are not alowed. Replacing duplicates")
+        colnames(data) <- make.unique(colnames(data))
+        rownames(data) <- make.unique(rownames(data))
+      }
 
       private$reset_since("data")
       self$st$max_sinkhorn_iterations <- max_sinkhorn_iterations
       self$st$max_dim <- max_dim
       if (self$st$max_dim > min(dim(data))) {
-        self$st$max_dim <- min(dim(data))
         warning("Provided `max_dim` is bigger than smallest dimention of `data`. Setting `max_dim` to ", self$st$max_dim, ".")
+        self$st$max_dim <- min(dim(data))
       }
       self$st$sinkhorn_tol <- sinkhorn_tol
       self$st$svd_method <- svd_method
@@ -628,8 +638,6 @@ DualSimplexSolver <- R6Class(
     },
 
 
-
-
     #' @description
     #' Do UMAP transformation for current projected data in both spaces.
     #'
@@ -817,94 +825,80 @@ DualSimplexSolver <- R6Class(
 
     #' @description
     #' Finalize solution.
-    #' Return from projection to sinkhorn transformed matrices
-    #' Perform reverse sinkhorn to get original matrices W and H
-    finalize_solution = function() {
+    #' Get result W and H matrices by going back from projection space and performing reverse sinkhorn 
+    #' Return from projection to sinkhorn transformed matrice.
+    #' @param reverse_sinkhorn_type type of reverse sinkhorn to run  - clean/clean_H_norm/clean_V_norm/nnls/nnls_H_norm/geometric.
+    finalize_solution = function(reverse_sinkhorn_type = "clean") {
       private$initialize_first()
-      solution_scaled <- reverse_solution_projection(self$st$solution_proj, self$st$proj)
-      self$st$solution_no_corr <- reverse_solution_sinkhorn(solution_scaled, self$st$scaling)
-      self$st$solution <- list(
-        W = self$st$solution_no_corr$W,
-        H = self$st$solution_no_corr$H
-      )
+      if (reverse_sinkhorn_type == "clean") {
+        # Starts with H_fs, W_ss
+        # Basic version with clean matrix multiplications. Will return column normalized W. 
+        solution_scaled <-  reverse_solution_projection_geometrical(self$st$solution_proj, self$st$proj)
+        self$st$solution_no_corr <- clean_reverse_solution_sinkhorn(solution_scaled, self$st$scaling)
+        self$st$solution <- list(
+          W = self$st$solution_no_corr$W,
+          H = self$st$solution_no_corr$H
+        )
+      } else if (reverse_sinkhorn_type == "clean_H_norm") {
+        # Starts with H_fs, W_ss
+        # Once basic clean version performed will do NNLS to guess column normalized H. Will return H close to column normalized H. 
+        solution_scaled <-  reverse_solution_projection_geometrical(self$st$solution_proj, self$st$proj)
+        self$st$solution_no_corr <- clean_reverse_solution_sinkhorn(solution_scaled, self$st$scaling, enforce_sum_to_one_H=1) # nolint: line_length_linter.
+        self$st$solution <- list(
+          W = self$st$solution_no_corr$W_2,
+          H = self$st$solution_no_corr$H_2
+        )
+      } else if (reverse_sinkhorn_type == "clean_V_norm") {
+        # Starts with H_fs, W_ss
+        # Once basic clean version performed will column normalize V=WH ensuring H is column normalized.
+        solution_scaled <-  reverse_solution_projection_geometrical(self$st$solution_proj, self$st$proj)
+        self$st$solution_no_corr <- clean_reverse_solution_sinkhorn(solution_scaled, self$st$scaling, enforce_sum_to_one_V=1)
+        self$st$solution <- list(
+          W = self$st$solution_no_corr$W_2,
+          H = self$st$solution_no_corr$H_2
+        )
+      } else if (reverse_sinkhorn_type == "nnls") {
+        # Starts with H_ss, W_fs
+        # Historical version  D_h and D_w normalizing matrices are guessed every step using NNLS
+        # Will return row normalized H
+        # Can return negative elements in W and H
+        solution_scaled <- reverse_solution_projection(self$st$solution_proj, self$st$proj)
+        self$st$solution_no_corr <- reverse_solution_sinkhorn(solution_scaled, self$st$scaling)
+        self$st$solution <- list(
+          W = self$st$solution_no_corr$Dv_inv_W_row,
+          H = self$st$solution_no_corr$H_row
+        )
+      } else if (reverse_sinkhorn_type == "nnls_H_norm") {
+        # Starts with H_ss, W_fs
+        # Historical version  D_h and D_w normalizing matrices are guessed every step using NNLS
+        # Will return col normalized H which is guessed using NNLS
+        # Can return negative elements in W and H
+        solution_scaled <- reverse_solution_projection(self$st$solution_proj, self$st$proj)
+        self$st$solution_no_corr <- reverse_solution_sinkhorn(solution_scaled, self$st$scaling)
+        self$st$solution <- list(
+          W = self$st$solution_no_corr$W,
+          H = self$st$solution_no_corr$H
+        )
+      } else if (reverse_sinkhorn_type == "geometric") {
+        # Starts with H_fs, W_ss
+        # The paired matrix for each step is claculated geometrically from respective V matrix projection.
+        # Time consuming. Did not give any precision improvements
+        solution_scaled <-  reverse_solution_projection_geometrical(self$st$solution_proj, self$st$proj)
+        V_inf <- self$get_V_row()
+        self$st$solution_no_corr <- geometrical_reverse_solution_sinkhorn(solution_scaled, self$st$scaling, V_inf)
+        self$st$solution <- list(
+          W = self$st$solution_no_corr$W,
+          H = self$st$solution_no_corr$H
+        )
+      } else {
+        stop("Set valid reverse siknhorn type")
+      }
       self$st$solution$W[self$st$solution$W < 0] <- 0
       self$st$solution$H[self$st$solution$H < 0] <- 0
-
-      self$st$marker_genes <- get_signature_markers(self$st$solution$W)
-      return(self$st$solution)
-    },
-    #' @description
-    #' Finalize solution clean.
-    #' Geometrically correct way to perform reverse sinkhorn solution optimization
-    #' Perform reverse sinkhorn to get original matrices W and H
-    finalize_solution_clean = function() {
-      private$initialize_first()
-      solution_scaled <-  reverse_solution_projection_geometrical(self$st$solution_proj, self$st$proj)
-      self$st$solution_no_corr <- clean_reverse_solution_sinkhorn(solution_scaled, self$st$scaling)
-      self$st$solution <- list(
-        W = self$st$solution_no_corr$W,
-        H = self$st$solution_no_corr$H
-      )
-      self$st$solution$W[self$st$solution$W < 0] <- 0 # not needed actually
-      self$st$solution$H[self$st$solution$H < 0] <- 0  # not needed actually
-
       self$st$marker_genes <- get_signature_markers(self$st$solution$W)
       return(self$st$solution)
     },
 
-    #' @description
-    #' Finalize solution clean.
-    #' Geometrically correct way to perform reverse sinkhorn solution optimization
-    #' Perform reverse sinkhorn to get original matrices W and H
-    #' @param ... params passed to clean_reverse_solution_sinkhorn function
-    finalize_solution_clean_proportions = function(...) {
-      private$initialize_first()
-      solution_scaled <-  reverse_solution_projection_geometrical(self$st$solution_proj, self$st$proj)
-      self$st$solution_no_corr <- clean_reverse_solution_sinkhorn(solution_scaled, self$st$scaling, ...)
-      self$st$solution <- list(
-        W = self$st$solution_no_corr$W_2,
-        H = self$st$solution_no_corr$H_2
-      )
-      self$st$solution$W[self$st$solution$W < 0] <- 0 # not needed actually
-      self$st$solution$H[self$st$solution$H < 0] <- 0  # not needed actually
-
-      self$st$marker_genes <- get_signature_markers(self$st$solution$W)
-      return(self$st$solution)
-    },
-
-    #' @description
-    #' Finalize solution clean.
-    #' Geometrically correct way to perform reverse sinkhorn solution optimization
-    #' Perform reverse sinkhorn to get original matrices W and H
-    finalize_solution_geometrical = function() {
-      private$initialize_first()
-      solution_scaled <-  reverse_solution_projection_geometrical(self$st$solution_proj, self$st$proj)
-      V_inf <- self$get_V_row()
-      self$st$solution_no_corr <- geometrical_reverse_solution_sinkhorn(solution_scaled, self$st$scaling, V_inf)
-      self$st$solution <- list(
-        W = self$st$solution_no_corr$W,
-        H = self$st$solution_no_corr$H
-      )
-      self$st$marker_genes <- get_signature_markers(self$st$solution$W)
-      return(self$st$solution)
-    },
-
-    #' @description
-    #' Finalize solution clean.
-    #' Geometrically correct way to perform reverse sinkhorn solution optimization
-    #' Perform reverse sinkhorn to get original matrices W and H
-    finalize_solution_geometrical_with_proportions = function() {
-      private$initialize_first()
-      solution_scaled <-  reverse_solution_projection_geometrical(self$st$solution_proj, self$st$proj)
-      V_inf <- self$get_V_row()
-      self$st$solution_no_corr <- geometrical_reverse_solution_sinkhorn(solution_scaled, self$st$scaling, V_inf)
-      self$st$solution <- list(
-        W = self$st$solution_no_corr$W_corrected,
-        H = self$st$solution_no_corr$H_col
-      )
-      self$st$marker_genes <- get_signature_markers(self$st$solution$W)
-      return(self$st$solution)
-    },
     #' @description
     #' Interface to plot negativity changes in basis (Matrix W)
     plot_negative_basis_change = function() {

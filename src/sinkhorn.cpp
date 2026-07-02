@@ -138,7 +138,6 @@ Rcpp::List geometrical_reverse_sinkhorn_c(
     );
 }
 
-
 Rcpp::List clean_reverse_sinkhorn_c(const arma::mat& result_H_col,
                               const arma::mat& result_W_row,
                               const arma::mat& D_vs_row,
