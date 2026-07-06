@@ -65,7 +65,7 @@ N <- 100 # number of samples (e.g. mixtures)
 M <- 10000 # number of features (e.g. genes)
 K <- 3 # Number of pure components
 
-sim <- create_simulation(n_genes = M,
+sim <- simulation_gene_expression(n_genes = M,
                          n_samples = N,
                          n_cell_types = K,
                          with_marker_genes = FALSE)
@@ -73,7 +73,7 @@ sim <- sim %>% add_noise(noise_deviation = 3.5)
 
 data_raw <- sim$data
 true_W <- sim$basis
-true_H <- sim$proportions
+true_H <- sim$coefs
 ```
 
 ### Create a Solver object

@@ -22,7 +22,11 @@ optimization of simplex corners (NMF solution).
 M <-  8000 # number of genes (rows)
 N <-  200 # number of samples (columns)
 K <-  3 # number of main components
-sim <- create_simulation(n_genes = M, n_samples = N, n_cell_types = K, with_marker_genes = FALSE)
+sim <- simulation_gene_expression(n_genes = M,
+                                  n_samples = N,
+                                  n_cell_types = K,
+                                  with_marker_genes = FALSE
+                                  )
 dso <- DualSimplexSolver$new()
 dso$set_data(sim$data) # run Sinkhorn procedure
 dso$project(K) # project to SVD space
@@ -565,7 +569,7 @@ Important note: ggplot only allows to either draw history or color all the point
 \subsection{Method \code{init_solution()}}{
 Initialize current solution
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$init_solution(strategy = "select_x", ...)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$init_solution(strategy = "random_invertible", ...)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{

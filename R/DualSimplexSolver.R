@@ -29,7 +29,11 @@
 #' M <-  8000 # number of genes (rows)
 #' N <-  200 # number of samples (columns)
 #' K <-  3 # number of main components
-#' sim <- create_simulation(n_genes = M, n_samples = N, n_cell_types = K, with_marker_genes = FALSE)
+#' sim <- simulation_gene_expression(n_genes = M,
+#'                                   n_samples = N,
+#'                                   n_cell_types = K,
+#'                                   with_marker_genes = FALSE
+#'                                   )
 #' dso <- DualSimplexSolver$new()
 #' dso$set_data(sim$data) # run Sinkhorn procedure
 #' dso$project(K) # project to SVD space
@@ -793,16 +797,6 @@ DualSimplexSolver <- R6Class(
         iterations,
         config
       )
-    },
-
-
-    #' @description 
-    #' Perform matrix decomposition into K components. 
-    #' This is the main example of how to run the method.
-    #' 
-    #' @param K number of steps to perform
-    deconvolve = function(K) {
-
     },
 
     #' @description
