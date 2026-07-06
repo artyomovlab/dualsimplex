@@ -266,11 +266,12 @@ plot_feature <- function(eset, feature, genes = T, col_by = NULL, bins = 100) {
   anno <- get_anno(eset, genes)
   fill <- if (is.null(col_by)) "grey40" else "white"
   plt <- if (is.numeric(anno[, feature])) {
-    ggplot(anno, aes_string(x = feature, color = col_by)) +
+    ggplot(anno, aes( x=.data[[feature]], color = .data[[col_by]])) +
       geom_histogram(bins = bins, fill = fill) +
       theme_minimal() +
       ggtitle(paste0(nrow(anno), if (genes) " genes" else " samples"))
   } else {
+    spdl::error("Non-numeric features are not supported")
     stop("Non-numeric features are not supported")
   }
   return(plt)
@@ -299,7 +300,7 @@ plot_feature_pair <- function(
   anno <- get_anno(eset, genes)
   fill <- if (is.null(col_by)) "grey40" else "white"
   plt <- if (is.numeric(anno[, feature_1]) && is.numeric(anno[, feature_2])) {
-    ggplot(anno, aes_string(x = feature_1, y = feature_2, color = col_by)) +
+    ggplot(anno, aes(x = .data[[feature_1]], y = .data[[feature_2]], color = .data[[col_by]])) +
       geom_point(...) +
       theme_minimal() +
       ggtitle(paste0(nrow(anno), if (genes) " genes" else " samples"))

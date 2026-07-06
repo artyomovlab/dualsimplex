@@ -239,7 +239,7 @@ add_solution <- function(
   y_col <- colnames(points_2d)[[2]]
   plt <- plt + geom_point(
     data = points_2d,
-    aes_string(x_col, y_col, fill = "point"),
+    aes(x= .data[[x_col]], y = .data[[y_col]], fill = point),
     color = "black",
     pch = 21,
     size = pt_size
@@ -295,14 +295,14 @@ add_solution_history <- function(
   if (colored) {
     plt <- plt + geom(
       data = points_2d,
-      aes_string(x_col, y_col, col = "point"),
+      aes(x= .data[[x_col]], y = .data[[y_col]], fill = point),
       size = pt_size,
       alpha = pt_opacity
     ) + theme(legend.position = "none")
   } else {
     plt <- plt + geom(
       data = points_2d,
-      aes_string(x_col, y_col, group = "point"),
+      aes(x= .data[[x_col]], y = .data[[y_col]], fill = point),
       color = "black",
       size = pt_size,
       alpha = pt_opacity
@@ -379,8 +379,8 @@ plot_points_2d_clean <- function(
   pt_size = 1,
   ...
 ) {
-  plt <- ggplot(to_plot, aes_string(x = x_col, y = y_col, color = color_col))
-
+  plt <- ggplot(to_plot, 
+   aes(x= .data[[x_col]], y = .data[[y_col]], fill =  .data[[color_col]]))
 
   if (color_scheme == "default" || color_scheme == "highlight" || color_scheme == "direct_single_color" ) {
     plt <- plt + rasterize_if_needed(geom_point(size = pt_size, color = base_color, alpha = pt_opacity))
