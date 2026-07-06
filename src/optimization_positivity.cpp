@@ -1,10 +1,8 @@
-#include "optimization_alternative.h"
-
+#include "optimization_utils.h"
 #include "matrix_utils.h"
 #include "nnls.h"
-#include "optimization.h"
 #include <tuple>
-
+#include "optimization_positivity.h"
 
 std::tuple<arma::mat, arma::mat, arma::mat> ensure_D_integrity_c(
                               const arma::mat& X_dtilde,
@@ -44,7 +42,7 @@ Rcpp::List ensure_D_integrity(const arma::mat& X_dtilde,
                               Rcpp::Named("new_D_w_sqrt") = new_D_w_sqrt);
 }
 
-Rcpp::List alternative_derivative_stage2(const arma::mat& X,
+Rcpp::List optimize_positivity(const arma::mat& X,
                              const arma::mat& Omega,
                              const arma::mat& D_w,
                              const arma::mat& SVRt,
@@ -115,11 +113,10 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
   //  Rcpp::Rcout << "Check initial inverse matrix properties"  << std::endl;
     tmp_Omega = arma::pinv(new_X);
     if (arma::any( tmp_Omega.row(0) <= 0)) {
-       Rcpp::Rcout << "Couldn't find good initial inverse of X provided\n"  << std::endl;
-       Rcpp::Rcout << "Try with Omega \n"  << std::endl;
+       spdl::warn("Couldn't find good initial inverse of X provided. Will try with Omega");
        tmp_X = arma::pinv(new_Omega);
        if (arma::any( tmp_X.col(0) <= 0)) {
-            Rcpp::Rcout << "Couldn't find good initial inverse of Omega provided\n"  << std::endl;
+            spdl::warn("Couldn't find good initial inverse of Omega provided");
             Rcpp::stop("!!Start with different initialization or ensure X and Omega are inverse!! (try `random_invertible`)");
         }
         else {
@@ -169,7 +166,7 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                  }
             }
             if  (arma::any( tmp_X.col(0) <= 0)) {
-                Rcpp::Rcout << "Any gradient step gives bad X, probably X was bad before\n"  << std::endl;
+                spdl::warn("Any gradient step gives bad X, probably X was bad before");
             }
         }
 
@@ -192,8 +189,7 @@ Rcpp::List alternative_derivative_stage2(const arma::mat& X,
                     // if we were able to find the solution. accept these new X and Omega
                     // Do nothing its ok
                     } else {
-                        Rcpp::Rcout << "Iteration \n"<<  itr_ << "\n" << std::endl;
-                        Rcpp::Rcout << "Couldn't find good inverse X for the row " <<  c << ", reject X update for this row \n"  << std::endl;
+                        spdl::warn("Iteration {} Couldn't find good inverse X for the row {}, reject X update for this row", itr_, c);
                         arma::rowvec only_good_row  = der_X.row(c);
                         der_X.fill(0);
                         der_X.row(c) = only_good_row;

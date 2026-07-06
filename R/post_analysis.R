@@ -138,8 +138,10 @@ get_fold_change <- function(signature, stat = "mean_fc", colnorm = T) {
       function(gene_row) {
         gene_row[ct_col_i] / min(gene_row[-ct_col_i] + 1)
       }
-    else
+    else {
+      spdl::error("Unknown stat: {}", stat)
       stop(paste0("Unknown stat: ", stat))
+    }
     cell_types_stats[, ct_col_i] <- apply(signature, 1, stat_fun)
   }
   cell_types_stats

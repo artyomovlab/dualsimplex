@@ -10,6 +10,8 @@ geometrical_reverse_solution_sinkhorn(solution_scaled, scaling, V_inf_row)
 \item{solution_scaled}{contain solution matrices $H_row and $W_col}
 
 \item{scaling}{dso$scaling object containing normalization matrices}
+
+\item{V_inf_row}{V_ss matrix obtained during forward scaling (can get with `get_V_row()` function)}
 }
 \value{
 unscaled object

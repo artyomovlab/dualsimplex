@@ -16,6 +16,8 @@ get_relative_coordinates_closest(
 \item{projected_points}{coordinates of rows/columns in svd space (number_of_poitns x K).}
 
 \item{solution_points}{solution points to calculate respective relative coordinates (K x K).}
+
+\item{min_value}{value to replace negative elements.}
 }
 \value{
 arma::mat coordinates of the points with respect to simplex vertices (number_of_points x K).

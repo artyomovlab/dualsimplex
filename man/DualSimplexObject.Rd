@@ -432,7 +432,7 @@ aplication of  n_sigma_filter <- function(eset, feature, n_sigma = 3, genes = T)
   threshold = 0,
   max_filtering_iterations = 500,
   density_radius = NULL,
-  genes = T
+  genes = TRUE
 )}\if{html}{\out{</div>}}
 }
 
@@ -725,7 +725,7 @@ get current save directory for the model
 \if{html}{\out{<a id="method-DualSimplexSolver-getset_save_dir"></a>}}
 \if{latex}{\out{\hypertarget{method-DualSimplexSolver-getset_save_dir}{}}}
 \subsection{Method \code{getset_save_dir()}}{
-set and remember direvtory to save model state. returns directory name.
+set and remember directory to save model state. returns directory name.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$getset_save_dir(new_dir_path = NULL)}\if{html}{\out{</div>}}
 }

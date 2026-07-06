@@ -24,6 +24,7 @@ cosine_between_rows <- function(X) {
 #'
 #' @param projected_points coordinates of rows/columns in svd space (number_of_poitns x K).
 #' @param solution_points solution points to calculate respective relative coordinates (K x K).
+#' @param min_value value to replace negative elements.
 #' @return arma::mat coordinates of the points with respect to simplex vertices (number_of_points x K).
 #' @export
 get_relative_coordinates_closest <- function(projected_points, solution_points, min_value = 0.0) {
@@ -107,6 +108,112 @@ nnls_C__ <- function(A, b, max_iter = 500L, tol = 1e-6) {
 #' @export
 nnls_nonzero_C__ <- function(A, b, max_iter = 500L, tol = 1e-6) {
     .Call('_DualSimplex_nnls_nonzero_C__', PACKAGE = 'DualSimplex', A, b, max_iter, tol)
+}
+
+#' Main training loop with all gradient steps. This is naive algorithm from version 1.0.
+#' It optimizes 3 terms (5 in experimental version). 
+#' Gradient steps performed in X and Omega spaces separatelly with NNLS used to merge them together into deconvolution term.
+#'
+#' @param X current X
+#' @param Omega current Omega
+#' @param D_w current D_w
+#' @param SVRt current SVRt (sigma)
+#' @param R current R
+#' @param S current S
+#' @param coef_der_X learning rate X
+#' @param coef_der_Omega learning rate Omega
+#' @param coef_hinge_H lambda
+#' @param coef_hinge_W beta
+#' @param coef_pos_D_h experimental coefficient for D. legacy not tested.
+#' @param coef_pos_D_w experimental coefficient for D. legacy not tested.
+#' @param cell_types number of components (K)
+#' @param N current N
+#' @param M current M
+#' @param iterations number of iterations
+#' @param mean_radius_X data dependent restriction for updates
+#' @param mean_radius_Omega dependent restriction for updates
+#' @param r_const_X experimental. not tested
+#' @param r_const_Omega experimental. not tested
+#' @param thresh experimental. not tested
+#' @param convergence_tol tolerance for convergence.
+#' @param stop_criteria_window how long error should be on plateu to decrease the learning rate
+#' @param debug_stats wether to save grad norm values.
+#' @return new parameters
+optimize_coordinate_descent <- function(X, Omega, D_w, SVRt, R, S, coef_der_X, coef_der_Omega, coef_hinge_H, coef_hinge_W, coef_pos_D_h, coef_pos_D_w, cell_types, N, M, iterations, mean_radius_X, mean_radius_Omega, r_const_X = 0, r_const_Omega = 0, thresh = 0.8, convergence_tol = 1e-12, stop_criteria_window = 1e+5L, debug_stats = FALSE) {
+    .Call('_DualSimplex_optimize_coordinate_descent', PACKAGE = 'DualSimplex', X, Omega, D_w, SVRt, R, S, coef_der_X, coef_der_Omega, coef_hinge_H, coef_hinge_W, coef_pos_D_h, coef_pos_D_w, cell_types, N, M, iterations, mean_radius_X, mean_radius_Omega, r_const_X, r_const_Omega, thresh, convergence_tol, stop_criteria_window, debug_stats)
+}
+
+#' Transform X and Omega points enforcing the desired equality for first coordinates
+#' This is done by moving magnitude from  i-th point of X to respective i-th point of the Omega and vice versa.
+#'
+#' @param X_dtilde current X_tilde_tilde matrix
+#' @param Omega_dtilde current Omega_tilde_tilde matrix
+#' @param sqrt_Sigma current sqrt of Omega
+#' @param N current sqrt of Omega
+#' @param M current sqrt of Omega
+#' @return corrected params
+#' @export
+ensure_D_integrity <- function(X_dtilde, Omega_dtilde, sqrt_Sigma, N, M) {
+    .Call('_DualSimplex_ensure_D_integrity', PACKAGE = 'DualSimplex', X_dtilde, Omega_dtilde, sqrt_Sigma, N, M)
+}
+
+#' Main training loop with all gradient steps. This is the main algorithm for now. 
+#' It optimizes two positivity terms ensuring invertability of both X and Omega. 
+#' Gradient steps performed in X space.
+#'
+#' @param X current X
+#' @param Omega current Omega
+#' @param D_w current D_w
+#' @param SVRt current SVRt (sigma)
+#' @param R current R
+#' @param S current S
+#' @param coef_der_X learning rate X
+#' @param coef_hinge_H lambda
+#' @param coef_hinge_W beta
+#' @param cell_types number of components (K)
+#' @param N current N
+#' @param M current M
+#' @param iterations number of iterations
+#' @param total_regularization_weight total weight for the regularization terms
+#' @param reg_X proportion / regularization coefficient for X
+#' @param reg_Omega proportion / regularization coefficient for Omega.
+#' @param convergence_tol tolerance for convergence.
+#' @param stop_criteria_window how long error should be on plateu to decrease the learning rate
+#' @param debug_stats wether to save grad norm values.
+#' @return new parameters
+optimize_positivity <- function(X, Omega, D_w, SVRt, R, S, coef_der_X, coef_hinge_H, coef_hinge_W, cell_types, N, M, iterations, total_regularization_weight = 0, reg_X = 1, reg_Omega = 1, convergence_tol = 1e-12, stop_criteria_window = 1e+5L, debug_stats = FALSE) {
+    .Call('_DualSimplex_optimize_positivity', PACKAGE = 'DualSimplex', X, Omega, D_w, SVRt, R, S, coef_der_X, coef_hinge_H, coef_hinge_W, cell_types, N, M, iterations, total_regularization_weight, reg_X, reg_Omega, convergence_tol, stop_criteria_window, debug_stats)
+}
+
+#' Main training loop with all gradient steps. This implementation tries to move points within the specified angle theta only.
+#'
+#' @param X current X
+#' @param Omega current Omega
+#' @param D_w current D_w
+#' @param SVRt current SVRt (sigma)
+#' @param R current R
+#' @param S current S
+#' @param coef_der_X learning rate X
+#' @param coef_der_Omega learning rate Omega
+#' @param coef_hinge_H lambda
+#' @param coef_hinge_W beta
+#' @param coef_pos_D_h experimental coefficient for D. legacy not tested.
+#' @param coef_pos_D_w experimental coefficient for D. legacy not tested.
+#' @param cell_types number of components (K)
+#' @param N current N
+#' @param M current M
+#' @param iterations number of iterations
+#' @param mean_radius_X data dependent restriction for updates
+#' @param mean_radius_Omega dependent restriction for updates
+#' @param r_const_X experimental. not tested
+#' @param r_const_Omega experimental. not tested
+#' @param thresh experimental. not tested
+#' @param X_center optimization restriction directions for X.
+#' @param Omega_center optimization restriction direcitons of Omega.
+#' @param theta_threshold angle to restrict optimization/
+#' @return new parameters
+optimize_theta <- function(X, Omega, D_w, SVRt, R, S, X_center, Omega_center, coef_der_X, coef_der_Omega, coef_hinge_H, coef_hinge_W, coef_pos_D_h, coef_pos_D_w, cell_types, N, M, iterations, mean_radius_X, mean_radius_Omega, r_const_X = 0, r_const_Omega = 0, thresh = 0.8, theta_threshold = 0) {
+    .Call('_DualSimplex_optimize_theta', PACKAGE = 'DualSimplex', X, Omega, D_w, SVRt, R, S, X_center, Omega_center, coef_der_X, coef_der_Omega, coef_hinge_H, coef_hinge_W, coef_pos_D_h, coef_pos_D_w, cell_types, N, M, iterations, mean_radius_X, mean_radius_Omega, r_const_X, r_const_Omega, thresh, theta_threshold)
 }
 
 #' Experimental jump norm calculation. legacy
@@ -198,108 +305,6 @@ calcErrors <- function(X, Omega, D_w, D_h, SVRt, R, S, coef_hinge_H, coef_hinge_
     .Call('_DualSimplex_calcErrors', PACKAGE = 'DualSimplex', X, Omega, D_w, D_h, SVRt, R, S, coef_hinge_H, coef_hinge_W, coef_pos_D_h, coef_pos_D_w)
 }
 
-#' Main function to calculate error terms
-#'
-#' @param X current X
-#' @param Omega current Omega
-#' @param D_w current D_w
-#' @param SVRt current SVRt (sigma)
-#' @param R current R
-#' @param S current S
-#' @param coef_der_X learning rate X
-#' @param coef_der_Omega learning rate Omega
-#' @param coef_hinge_H lambda
-#' @param coef_hinge_W beta
-#' @param coef_pos_D_h experimental coefficient for D. legacy not tested.
-#' @param coef_pos_D_w experimental coefficient for D. legacy not tested.
-#' @param cell_types number of components (K)
-#' @param N current N
-#' @param M current M
-#' @param iterations number of iterations
-#' @param mean_radius_X data dependent restriction for updates
-#' @param mean_radius_Omega dependent restriction for updates
-#' @param r_const_X experimental. not tested
-#' @param r_const_Omega experimental. not tested
-#' @param thresh experimental. not tested
-#' @param convergence_tol tolerance for convergence.
-#' @param stop_criteria_window how long error should be on plateu to decrease the learning rate
-#' @param debug_stats wether to save grad norm values.
-#' @return new parameters
-derivative_stage2 <- function(X, Omega, D_w, SVRt, R, S, coef_der_X, coef_der_Omega, coef_hinge_H, coef_hinge_W, coef_pos_D_h, coef_pos_D_w, cell_types, N, M, iterations, mean_radius_X, mean_radius_Omega, r_const_X = 0, r_const_Omega = 0, thresh = 0.8, convergence_tol = 1e-12, stop_criteria_window = 1e+5L, debug_stats = FALSE) {
-    .Call('_DualSimplex_derivative_stage2', PACKAGE = 'DualSimplex', X, Omega, D_w, SVRt, R, S, coef_der_X, coef_der_Omega, coef_hinge_H, coef_hinge_W, coef_pos_D_h, coef_pos_D_w, cell_types, N, M, iterations, mean_radius_X, mean_radius_Omega, r_const_X, r_const_Omega, thresh, convergence_tol, stop_criteria_window, debug_stats)
-}
-
-#' Transform X and Omega points enforcing the desired equality for first coordinates
-#' This is done by moving magnitude from  i-th point of X to respective i-th point of the Omega and vice versa.
-#'
-#' @param X_dtilde current X_tilde_tilde matrix
-#' @param Omega_dtilde current Omega_tilde_tilde matrix
-#' @param sqrt_Sigma current sqrt of Omega
-#' @param N current sqrt of Omega
-#' @param M current sqrt of Omega
-#' @return corrected params
-#' @export
-ensure_D_integrity <- function(X_dtilde, Omega_dtilde, sqrt_Sigma, N, M) {
-    .Call('_DualSimplex_ensure_D_integrity', PACKAGE = 'DualSimplex', X_dtilde, Omega_dtilde, sqrt_Sigma, N, M)
-}
-
-#' Main function to calculate error terms
-#'
-#' @param X current X
-#' @param Omega current Omega
-#' @param D_w current D_w
-#' @param SVRt current SVRt (sigma)
-#' @param R current R
-#' @param S current S
-#' @param coef_der_X learning rate X
-#' @param coef_hinge_H lambda
-#' @param coef_hinge_W beta
-#' @param cell_types number of components (K)
-#' @param N current N
-#' @param M current M
-#' @param iterations number of iterations
-#' @param total_regularization_weight total weight for the regularization terms
-#' @param reg_X proportion / regularization coefficient for X
-#' @param reg_Omega proportion / regularization coefficient for Omega.
-#' @param convergence_tol tolerance for convergence.
-#' @param stop_criteria_window how long error should be on plateu to decrease the learning rate
-#' @param debug_stats wether to save grad norm values.
-#' @return new parameters
-alternative_derivative_stage2 <- function(X, Omega, D_w, SVRt, R, S, coef_der_X, coef_hinge_H, coef_hinge_W, cell_types, N, M, iterations, total_regularization_weight = 0, reg_X = 1, reg_Omega = 1, convergence_tol = 1e-12, stop_criteria_window = 1e+5L, debug_stats = FALSE) {
-    .Call('_DualSimplex_alternative_derivative_stage2', PACKAGE = 'DualSimplex', X, Omega, D_w, SVRt, R, S, coef_der_X, coef_hinge_H, coef_hinge_W, cell_types, N, M, iterations, total_regularization_weight, reg_X, reg_Omega, convergence_tol, stop_criteria_window, debug_stats)
-}
-
-#' Main function to calculate error terms
-#'
-#' @param X current X
-#' @param Omega current Omega
-#' @param D_w current D_w
-#' @param SVRt current SVRt (sigma)
-#' @param R current R
-#' @param S current S
-#' @param coef_der_X learning rate X
-#' @param coef_der_Omega learning rate Omega
-#' @param coef_hinge_H lambda
-#' @param coef_hinge_W beta
-#' @param coef_pos_D_h experimental coefficient for D. legacy not tested.
-#' @param coef_pos_D_w experimental coefficient for D. legacy not tested.
-#' @param cell_types number of components (K)
-#' @param N current N
-#' @param M current M
-#' @param iterations number of iterations
-#' @param mean_radius_X data dependent restriction for updates
-#' @param mean_radius_Omega dependent restriction for updates
-#' @param r_const_X experimental. not tested
-#' @param r_const_Omega experimental. not tested
-#' @param thresh experimental. not tested
-#' @param X_center optimization restriction directions for X.
-#' @param Omega_center optimization restriction direcitons of Omega.
-#' @param theta_threshold angle to restrict optimization/
-#' @return new parameters
-theta_derivative_stage2 <- function(X, Omega, D_w, SVRt, R, S, X_center, Omega_center, coef_der_X, coef_der_Omega, coef_hinge_H, coef_hinge_W, coef_pos_D_h, coef_pos_D_w, cell_types, N, M, iterations, mean_radius_X, mean_radius_Omega, r_const_X = 0, r_const_Omega = 0, thresh = 0.8, theta_threshold = 0) {
-    .Call('_DualSimplex_theta_derivative_stage2', PACKAGE = 'DualSimplex', X, Omega, D_w, SVRt, R, S, X_center, Omega_center, coef_der_X, coef_der_Omega, coef_hinge_H, coef_hinge_W, coef_pos_D_h, coef_pos_D_w, cell_types, N, M, iterations, mean_radius_X, mean_radius_Omega, r_const_X, r_const_Omega, thresh, theta_threshold)
-}
-
 #' Reverse Sinkhorn scaling method
 #'
 #' @param result_H_row H_ss returned by DualSimplex. (row normalized X*R).
@@ -320,6 +325,8 @@ reverse_sinkhorn_c <- function(result_H_row, result_W_col, D_vs_row, D_vs_col, i
 #' @param D_vs_row row normalizing matrices used for V in forward procedure.
 #' @param D_vs_col column normalizing matrices used for V in forward procedure.
 #' @param iterations how many iterations back
+#' @param enforce_sum_to_one_H algorithm will use NNLS to find H as close to column normalized as possible.
+#' @param enforce_sum_to_one_V algorithm will ensure result V is column normalized (leading to H column normalizing).
 #' @return named list of W, H, Dv_inv_W_row, H_row, D_ws_col, D_hs_row.
 #' @export
 clean_reverse_sinkhorn_c <- function(result_H_col, result_W_row, D_vs_row, D_vs_col, iterations, enforce_sum_to_one_H, enforce_sum_to_one_V) {
@@ -332,6 +339,7 @@ clean_reverse_sinkhorn_c <- function(result_H_col, result_W_row, D_vs_row, D_vs_
 #' @param result_W_row W_ss calculated geometrically from the solution.
 #' @param D_vs_row row normalizing matrices used for V in forward procedure.
 #' @param D_vs_col column normalizing matrices used for V in forward procedure.
+#' @param V_inf_row result V_ss matrix obtained after scaling. (can get it with `get_V_row()` funciton)
 #' @param iterations how many iterations back
 #' @return named list of W, H, Dv_inv_W_row, H_row, D_ws_col, D_hs_row.
 #' @export

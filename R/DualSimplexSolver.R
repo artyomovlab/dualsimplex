@@ -49,31 +49,37 @@ DualSimplexSolver <- R6Class(
     },
     check_step_name = function(step) {
       if (!step %in% names(self$st)) {
+        spdl::error("Internal error, steps misconfigured: {}", step)
         stop(paste("Internal error, steps misconfigured:", step))
       }
     },
     set_data_first = function() {
       if (is.null(self$st$data)) {
+        spdl::error("Call set_data first")
         stop("Call set_data first")
       }
     },
     project_first = function() {
       if (is.null(self$st$n_cell_types)) {
+        spdl::error("Call project first (see plot_svd for n_cell_types argument)")
         stop("Call project first (see plot_svd for n_cell_types argument)")
       }
     },
     initialize_first = function() {
       if (is.null(self$st$solution_proj)) {
+        spdl::error("Call init_solution first")
         stop("Call init_solution first")
       }
     },
     optimize_first = function() {
       if (is.null(self$st$solution_proj$optim_history)) {
+        spdl::error("Call optim_solution first")
         stop("Call optim_solution first")
       }
     },
     finalize_first = function() {
       if (is.null(self$st$solution)) {
+        spdl::error("Call finalize_solution first")
         stop("Call finalize_solution first")
       }
     },
@@ -132,15 +138,22 @@ DualSimplexSolver <- R6Class(
     },
     check_max_dim = function(dims) {
       private$set_data_first()
-      if (max(dims) > self$st$proj_ops$max_dim) stop("Not enough dimension in ops. Run `calc_svd_ops` with larger max_dim parameter")
+      if (max(dims) > self$st$proj_ops$max_dim) {
+        spdl::error("Not enough dimension in ops. Run `set_data` or `project` with larger max_dim parameter")
+        stop("Not enough dimension in ops. Run `calc_svd_ops` with larger max_dim parameter")
+      } 
     },
 
     update_variables = function(data,gene_anno_lists = NULL, sample_anno_lists = NULL, ...) {
       if (!inherits(data, "ExpressionSet")) data <- create_eset(data)
-      if (any(rowSums(Biobase::exprs(data)) == 0))
+      if (any(rowSums(Biobase::exprs(data)) == 0)) {
+        spdl::error("The data matrix should not contain all zero rows. Use remove_zero_rows() method")
         stop("The data matrix should not contain all zero rows. Use remove_zero_rows() method")
-      if (any(colSums(Biobase::exprs(data)) == 0))
-        stop("The data matrix should not contain all zero columns. Use remove_zero_cols() method")
+      }
+      if (any(colSums(Biobase::exprs(data)) == 0)) {
+        spdl::error("The data matrix should not contain all zero rows. Use remove_zero_rows() method")
+        stop("The data matrix should not contain all zero rows. Use remove_zero_rows() method")
+      }
       self$st$data <- add_default_anno(data, gene_anno_lists, sample_anno_lists)
       self$st$scaling <- sinkhorn_scale(Biobase::exprs(self$st$data), max_iter = self$st$max_sinkhorn_iterations, epsilon=self$st$sinkhorn_tol)
       self$st$proj_ops <- calc_svd_ops(self$get_V_row(), max_dim = self$st$max_dim, self$st$svd_method, ...)
@@ -405,6 +418,7 @@ DualSimplexSolver <- R6Class(
     ) {
       private$project_first()
       if (is.null(plane_d_lt) && is.null(zero_d_lt)) {
+        spdl::error("Choose at least one distance to filter b")
         stop("Choose at least one distance to filter by")
       }
       new_data <- self$get_data()
@@ -452,6 +466,7 @@ DualSimplexSolver <- R6Class(
     ) {
       private$project_first()
       if (is.null(plane_quantile) && is.null(zero_quantile)) {
+        spdl::error("Choose at least one distance to filter by")
         stop("Choose at least one distance to filter by")
       }
       new_data <- self$get_data()
@@ -502,6 +517,7 @@ DualSimplexSolver <- R6Class(
     ) {
       private$project_first()
       if (is.null(features)) {
+        spdl::error("Choose feature names from fData and pData columns to filter by")
         stop("Choose feature names from fData and pData columns to filter by")
       }
       new_data <- self$get_data()
@@ -517,20 +533,19 @@ DualSimplexSolver <- R6Class(
           # Filter all features by selected sigma
           cell_types <-  self$st$n_cell_types
           for (current_feature in features) {
-              print(paste("Feature:", current_feature))
+              spdl::info("Feature: {}", current_feature)
               new_data <- n_sigma_filter(eset = new_data, feature = current_feature,  n_sigma = n_sigma, genes = genes)
               new_data <- remove_zero_cols(new_data)
               new_data <- remove_zero_rows(new_data)
               new_count <-  if(genes) dim(new_data)[[1]] else  dim(new_data)[[2]]
-              print(paste("removed", intermediate_count - new_count, "points"))
+              spdl::info("Removed {} points", intermediate_count - new_count)
           }
           new_count <-  if(genes) dim(new_data)[[1]] else  dim(new_data)[[2]]
           private$update_variables(new_data)
           self$project(cell_types)
           new_data <- self$get_data()
           filtering_iteration <-  filtering_iteration + 1
-          print(paste("Total removed", previous_count - new_count, "points"))
-
+          spdl::info("Total removed {} points", previous_count - new_count)
         }
       private$add_filtering_log_step(
         "n_sigma_filter",
@@ -556,11 +571,11 @@ DualSimplexSolver <- R6Class(
       threshold = 0,
       max_filtering_iterations = 500,
       density_radius = NULL,
-      genes = T
+      genes = TRUE
     ) {
       private$project_first()
       new_data <- self$get_data()
-      feature <- 'density'
+      feature <- "density"
       filtering_iteration <-  1
       previous_count <-  if(genes) dim(new_data)[[1]] else  dim(new_data)[[2]]
       new_count <- -1
@@ -576,7 +591,7 @@ DualSimplexSolver <- R6Class(
         self$add_density_anno(radius=density_radius, genes=genes)
         new_data <- self$get_data()
         filtering_iteration <-  filtering_iteration + 1
-        print(paste("removed", previous_count - new_count, "points"))
+        spdl::info("Removed {} points", previous_count - new_count)
       }
       private$add_filtering_log_step(
         "iterative_density_filter",
@@ -604,6 +619,7 @@ DualSimplexSolver <- R6Class(
     ) {
       private$project_first()
       if (is.null(features)) {
+        spdl::error("Choose feature names from fData and pData columns to filter by")
         stop("Choose feature names from fData and pData columns to filter by")
       }
       new_data <- self$get_data()
@@ -623,7 +639,7 @@ DualSimplexSolver <- R6Class(
         self$project(cell_types)
         new_data <- self$get_data()
         filtering_iteration <-  filtering_iteration + 1
-        print(paste("removed", previous_count - new_count, "points"))
+        spdl::info("Removed {} points", previous_count - new_count)
       }
       private$add_filtering_log_step(
         "mahalanobis_filter",
@@ -891,6 +907,7 @@ DualSimplexSolver <- R6Class(
           H = self$st$solution_no_corr$H
         )
       } else {
+        spdl::error("Set valid reverse siknhorn type")
         stop("Set valid reverse siknhorn type")
       }
       self$st$solution$W[self$st$solution$W < 0] <- 0
@@ -962,14 +979,19 @@ DualSimplexSolver <- R6Class(
     },
 
     #' @description
-    #' set and remember direvtory to save model state. returns directory name.
+    #' set and remember directory to save model state. returns directory name.
     #'
     #' @param new_dir_path  path to save model
     getset_save_dir = function(new_dir_path = NULL) {
       if (is.null(private$save_dir)) {
-        if (is.null(new_dir_path)) stop("Specify save_dir or call set_save_dir")
+        if (is.null(new_dir_path))  {
+          spdl::error("Specify save_dir or call set_save_dir")
+          stop("Specify save_dir or call set_save_dir")
+
+        }
         self$set_save_dir(new_dir_path)
       } else if (!is.null(new_dir_path) && !private$save_dir == new_dir_path) {
+        spdl::error("save_dir is not NULL and can only be changed via set_save_dir")
         stop("save_dir is not NULL and can only be changed via set_save_dir")
       }
       return(private$save_dir)
@@ -1019,6 +1041,7 @@ DualSimplexSolver <- R6Class(
         if (!is.null(private$save_dir)) {
           input_dir <- private$save_dir
         } else {
+          spdl::error("Current save_dir is null, specify input_dir or set_save_dir")
           stop("Current save_dir is null, specify input_dir or set_save_dir")
         }
       }

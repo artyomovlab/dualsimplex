@@ -24,6 +24,10 @@ clean_reverse_sinkhorn_c(
 \item{D_vs_col}{column normalizing matrices used for V in forward procedure.}
 
 \item{iterations}{how many iterations back}
+
+\item{enforce_sum_to_one_H}{algorithm will use NNLS to find H as close to column normalized as possible.}
+
+\item{enforce_sum_to_one_V}{algorithm will ensure result V is column normalized (leading to H column normalizing).}
 }
 \value{
 named list of W, H, Dv_inv_W_row, H_row, D_ws_col, D_hs_row.

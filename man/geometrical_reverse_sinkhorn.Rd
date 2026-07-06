@@ -4,14 +4,16 @@
 \alias{geometrical_reverse_sinkhorn}
 \title{reverse Sinkhorn transform scaled matrix}
 \usage{
-geometrical_reverse_sinkhorn(H_col, W_row, scaling, V_inf_row)
+geometrical_reverse_sinkhorn(h_col, w_row, scaling, v_inf_row)
 }
 \arguments{
-\item{H_col}{solution matrix H_ss produced by optimization algorithm (X*R)}
+\item{h_col}{solution matrix H_ss produced by optimization algorithm (X*R)}
 
-\item{W_row}{solution matrix W_gs produced by optimization algorithm (t(S)*Omega)}
+\item{w_row}{solution matrix W_gs produced by optimization algorithm (t(S)*Omega)}
 
 \item{scaling}{dso$scaling object containing normalization matrices}
+
+\item{v_inf_row}{result V_ss matrix (you can get it with `get_V_row` function)}
 }
 \value{
 unscaled object

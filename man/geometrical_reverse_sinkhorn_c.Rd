@@ -22,6 +22,8 @@ geometrical_reverse_sinkhorn_c(
 
 \item{D_vs_col}{column normalizing matrices used for V in forward procedure.}
 
+\item{V_inf_row}{result V_ss matrix obtained after scaling. (can get it with `get_V_row()` funciton)}
+
 \item{iterations}{how many iterations back}
 }
 \value{

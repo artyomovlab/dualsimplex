@@ -1,6 +1,9 @@
+#pragma once
+
 // [[Rcpp::depends(RcppArmadillo)]]
 #include <RcppArmadillo.h>
-
+// [[Rcpp::depends(spdl)]]
+#include <spdl.h>
 
 std::tuple<arma::mat, arma::mat, arma::mat> ensure_D_integrity_c(const arma::mat& X_dtilde,
                               const arma::mat& Omega_dtilde,
@@ -29,7 +32,9 @@ Rcpp::List ensure_D_integrity(const arma::mat& X_dtilde,
 
 
 
-//' Main function to calculate error terms
+//' Main training loop with all gradient steps. This is the main algorithm for now. 
+//' It optimizes two positivity terms ensuring invertability of both X and Omega. 
+//' Gradient steps performed in X space.
 //'
 //' @param X current X
 //' @param Omega current Omega
@@ -52,7 +57,7 @@ Rcpp::List ensure_D_integrity(const arma::mat& X_dtilde,
 //' @param debug_stats wether to save grad norm values.
 //' @return new parameters
 // [[Rcpp::export]]
-Rcpp::List alternative_derivative_stage2(const arma::mat& X,
+Rcpp::List optimize_positivity(const arma::mat& X,
                              const arma::mat& Omega,
                              const arma::mat& D_w,
                              const arma::mat& SVRt,

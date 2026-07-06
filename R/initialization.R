@@ -16,21 +16,24 @@ initialize_solution <- function(proj, strategy = "select_x", kwargs = NULL) {
 initializers <- list(
   marker_means = function(proj, kwargs) {
     if (!"marker_list" %in% names(kwargs)) {
-      stop("Put marker_list in kwargs for marker_means init.")
+      spdl::error("Specify marker_list in kwargs for marker_means init.")
+      stop("Specify marker_list in kwargs for marker_means init.")
     }
     mm <- lapply(kwargs$marker_list, function(ct_markers) {
       sel <- ct_markers[ct_markers %in% rownames(proj$X)]
-      if (length(sel) == 0) stop("One or more cell types has zero markers present")
-      colMeans(proj$X[sel, ])
+      if (length(sel) == 0) {
+        spdl::error("One or more cell types has zero markers present")
+        stop("One or more cell types has zero markers present")
+      }
     })
     K <- proj$meta$K
     X <- matrix(unlist(mm), ncol = K, byrow = T)
 
-    rownames(X) <-  paste0("marker_derived", 1:nrow(X))
+    rownames(X) <-  paste0("marker_derived", seq_len(nrow(X)))
     # Check if we have enough markers
 
     if (length(kwargs$marker_list) < K) {
-        print("Not enough markers were provided for the current K. Will set other vertices randomly with the highest center property after n attempts")
+        spdl::warn("Not enough markers were provided for the current K. Will set other vertices randomly with the highest center property after n attempts")
         if (!is.null(kwargs) && "n" %in% kwargs) {
             n <- kwargs$n
         } else {
@@ -192,7 +195,9 @@ initializers <- list(
     r1 <- sqrt(d_elements) / (sqrt(sigma_1) * sqrt(M))
     # c1 is predefined. its sqrt(d) / sqrt(sigma_1) / sqrt(N)
     c1 <- sqrt(d_elements) / (sqrt(sigma_1) * sqrt(N))
-    if (!((sum(r1 * c1) - 1) < 1e-6)) {print("something broken in initalization and matrix will not inverted of each other")}
+    if (!((sum(r1 * c1) - 1) < 1e-6)) {
+      spdl::error("Something is broken initalization and matrix will not inverted of each other")
+    }
     # construct the null space vectors of the
     N_r <- MASS::Null(matrix(r1, ncol = 1))
     # then X_d_tilda will be the  new c1 with this null space
@@ -258,11 +263,14 @@ initializers <- list(
     # Having center points provided we want to initialize in some
     # random point within theta angle
     if (!"init_centers" %in% names(kwargs)) {
-      stop("Put init_centers with X and optionaly Omega in kwargs to set
+      spdl::error("Specify init_centers with X and optionaly Omega in kwargs to set
+      some starting point for this initialization.")
+      stop("Specify init_centers with X and optionaly Omega in kwargs to set
       some starting point for this initialization.")
     }
     if (!"theta" %in% names(kwargs)) {
-      stop("Put theta in kwargs to set some constraint on theta.")
+      spdl::error("Specify theta in kwargs to set some constraint on theta.")
+      stop("Specify theta in kwargs to set some constraint on theta.")
     }
     max_length <- 1.5
     n_cell_types <- proj$meta$K

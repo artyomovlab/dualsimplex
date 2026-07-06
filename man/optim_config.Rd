@@ -5,7 +5,7 @@
 \title{Make optimization config object for the training method}
 \usage{
 optim_config(
-  method = "basic",
+  method = "positivity",
   debug_stats = FALSE,
   coef_der_X = 0.1,
   coef_der_Omega = 0.1,

@@ -222,6 +222,7 @@ toMatrix <- function(x) {
         # Return if already a matrix
         return(x)
     }
+    spdl::error("Invalid type for plotting, {}", class(x))
     stop("Invalid type for plotting: ", paste(class(x), collapse = ", "))
 }
 
@@ -245,7 +246,7 @@ toMatrix <- function(x) {
 #' @import ggplot2
 #' @import reshape2
 #' @export
-plotProportions <- function(..., pnames = NULL, point_size=2, line_size=1) {
+plotProportions <- function(..., pnames = NULL, point_size = 2, line_size = 1) {
     proportions <- list(...)
     proportions <- lapply(proportions, toMatrix)
 

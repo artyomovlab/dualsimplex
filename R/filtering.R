@@ -179,7 +179,6 @@ n_sigma_filter <- function(eset, feature, n_sigma = 3, genes = T) {
   sigma <-  stats::sd(feature_col)
   lower_bound <- mean(feature_col) - n_sigma * sigma
   upper_bound <- mean(feature_col) + n_sigma * sigma
-  print(paste("Sigma:", sigma))
   return(range_filter(eset, feature, threshold_lower = lower_bound,  threshold_upper = upper_bound, genes, keep_within = T))
 }
 

@@ -7,9 +7,11 @@
 clean_reverse_solution_sinkhorn(solution_scaled, scaling, ...)
 }
 \arguments{
-\item{solution_scaled}{contain solution matrices $H_row and $W_col}
+\item{solution_scaled}{contain solution matrices $H_row and $W_col.}
 
-\item{scaling}{dso$scaling object containing normalization matrices}
+\item{scaling}{dso$scaling object containing normalization matrices.}
+
+\item{...}{everything which can be passed to `clean_reverse_sinkhorn_c` function.}
 }
 \value{
 unscaled object

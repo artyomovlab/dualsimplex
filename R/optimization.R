@@ -25,7 +25,7 @@
 #' @return ready to use list with algorithm configuration
 #' @export
 optim_config <- function(
-  method = "basic", # basic/positivity/theta
+  method = "positivity", # positivity/coordinate_descent/theta
   debug_stats = FALSE,
   coef_der_X = 0.1,
   coef_der_Omega = 0.1,
@@ -99,6 +99,7 @@ optimize_solution <- function(
 ) {
   # Cleaning inputs
   if (!("X" %in% names(solution_proj)) && ("Omega" %in% names(solution_proj))) {
+    spdl::error("Both X and Omega must be initialized first in solution_proj")
     stop("Both X and Omega must be initialized first in solution_proj")
   }
 
@@ -200,8 +201,8 @@ optimize_solution <- function(
     optimization_params$debug_stats <- config$debug_stats
     optimization_params$stop_criteria_window  <- config$stop_criteria_window
 
-    do.call(alternative_derivative_stage2, optimization_params)
-  } else if (config$method == "basic") {
+    do.call(optimize_positivity, optimization_params)
+  } else if (config$method == "coordinate_descent") {
     optimization_params$r_const_X <-  r_limits$R_limit_X
     optimization_params$r_const_Omega <-  r_limits$R_limit_Omega
     optimization_params$thresh <- config$cosine_thresh
@@ -213,7 +214,7 @@ optimize_solution <- function(
     optimization_params$convergence_tol <- config$convergence_tol
     optimization_params$debug_stats <- config$debug_stats
     optimization_params$stop_criteria_window  <- config$stop_criteria_window
-    do.call(derivative_stage2, optimization_params)
+    do.call(optimize_coordinate_descent, optimization_params)
   } else if (config$method == "theta") {
     optimization_params$r_const_X <-  r_limits$R_limit_X
     optimization_params$r_const_Omega <-  r_limits$R_limit_Omega
@@ -233,9 +234,9 @@ optimize_solution <- function(
         optimization_params$Omega_center  <- config$omega_center
     }
     optimization_params$theta_threshold <- config$center_threshold # threshold for the angle
-    do.call(theta_derivative_stage2, optimization_params)
+    do.call(optimize_theta, optimization_params)
   } else {
-    print("Unknown optimization method. Will do the basic one")
+    spdl::warn("Unknown optimization method. Will do the basic one")
     optimization_params$r_const_X <-  r_limits$R_limit_X
     optimization_params$r_const_Omega <-  r_limits$R_limit_Omega
     optimization_params$thresh <- config$cosine_thresh
@@ -245,7 +246,7 @@ optimize_solution <- function(
     optimization_params$convergence_tol <- config$convergence_tol
     optimization_params$debug_stats <- config$debug_stats
     optimization_params$stop_criteria_window  <- config$stop_criteria_window
-    do.call(derivative_stage2, optimization_params)
+    do.call(optimize_coordinate_descent, optimization_params)
 
   }
 

@@ -8,6 +8,7 @@
 //' @param result_W_row W_ss calculated geometrically from the solution.
 //' @param D_vs_row row normalizing matrices used for V in forward procedure.
 //' @param D_vs_col column normalizing matrices used for V in forward procedure.
+//' @param V_inf_row V_ss matrix obtained during forward scaling. (can get with `get_V_row()` function)
 //' @param iterations how many iterations back
 //' @return named list of W, H, Dv_inv_W_row, H_row, D_ws_col, D_hs_row.
 Rcpp::List geometrical_reverse_sinkhorn_c(
@@ -17,7 +18,6 @@ Rcpp::List geometrical_reverse_sinkhorn_c(
                               const arma::mat& D_vs_col,
                               arma::mat V_inf_row,    
                               int iterations) {
-    Rcpp::Rcout << "Method enter " << ".\n";
     arma::mat H_col = result_H_col;
     arma::mat W_row = result_W_row;
     arma::mat H_row;
@@ -34,11 +34,8 @@ Rcpp::List geometrical_reverse_sinkhorn_c(
     arma::mat projected_points;
     arma::mat current_solution;
     int K = H_row.n_rows;
-    Rcpp::Rcout << "Loop starting " << ".\n";
     // start iteratively update them
     for (int i = iterations - 2; i >= 0; i--) {
-        Rcpp::Rcout << "Iter " << i << ".\n";
-
         // Transformation for W
         W_row = arma::diagmat(1 / D_vs_row.col(i+1)) * W_row;
         // column normalize  W_row -- is it valid ?
@@ -51,8 +48,6 @@ Rcpp::List geometrical_reverse_sinkhorn_c(
         current_V = current_V * arma::diagmat(1 / arma::sum(current_V, 0));
 
         // Now time consuming part. Calculate svd of new V to get H col 
-        Rcpp::Rcout << "SVD for row -> col" << ".\n";
-
         arma::svd(S_t,Sigma, R_t, current_V);
         S_t = S_t.head_cols(K); // m*r -> r*m
         R_t = R_t.head_cols(K); // n*r  -> r*n
@@ -61,9 +56,6 @@ Rcpp::List geometrical_reverse_sinkhorn_c(
         projected_points = current_V.t() * S_t;
         // project current W_col col into S_t
         current_solution = W_col.t() *  S_t;
-        Rcpp::Rcout << " --- Solution Coordinates are " << ".\n";
-        Rcpp::Rcout << current_solution << ".\n";
-        Rcpp::Rcout << "Get relative coordinates for col " << ".\n";
         H_col = get_relative_coordinates_closest(projected_points, current_solution);
         H_col = H_col.t();
 
@@ -77,7 +69,6 @@ Rcpp::List geometrical_reverse_sinkhorn_c(
         // transform V
         current_V = current_V *  arma::diagmat(1 / D_vs_col.col(i));
         current_V = arma::diagmat( 1 / arma::sum(current_V, 1)) * current_V;
-        Rcpp::Rcout << "SVD for col -> row" << ".\n";
 
         // Time consuming part. again svd ...
         arma::svd(S_t,Sigma, R_t, current_V);
@@ -88,13 +79,9 @@ Rcpp::List geometrical_reverse_sinkhorn_c(
         projected_points = current_V * R_t;
         // project current H_row col into S_t
         current_solution = H_row *  R_t;
-        Rcpp::Rcout << " --- Solution Coordinates are " << ".\n";
-        Rcpp::Rcout << current_solution << ".\n";
-        Rcpp::Rcout << "Get relative coordinates for row " << ".\n";
 
         W_row = get_relative_coordinates_closest(projected_points, current_solution);
     }
-    Rcpp::Rcout << "Loop is done " << ".\n";
 
     // now we have W_row and H_row and 1 more normalization left
     // matrix needed to column normalize W row will be used as intermediate multiplier to avoid overflow
@@ -109,7 +96,6 @@ Rcpp::List geometrical_reverse_sinkhorn_c(
     current_V = arma::diagmat(1 / D_vs_row.col(0)) * current_V;
     // V should be column normalized -- transform it accordingly
     current_V = current_V * arma::diagmat(1 / arma::sum(current_V, 0));
-    Rcpp::Rcout << "Final SVD for row -> col" << ".\n";
     arma::svd(S_t,Sigma, R_t, current_V);
     S_t = S_t.head_cols(K); // m*r -> r*m
     R_t = R_t.head_cols(K); // n*r  -> r*n
@@ -118,9 +104,6 @@ Rcpp::List geometrical_reverse_sinkhorn_c(
     projected_points = current_V.t() * S_t;
         // project current W_col col into S_t
     current_solution = W_col.t() *  S_t;
-    Rcpp::Rcout << " --- Solution Coordinates are " << ".\n";
-    Rcpp::Rcout << current_solution << ".\n";
-    Rcpp::Rcout << "Get relative coordinates for col " << ".\n";
     H_col = get_relative_coordinates_closest(projected_points, current_solution);
     H_col = H_col.t();
     // Get row normalizing matrix for H_col

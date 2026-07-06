@@ -29,6 +29,8 @@ Rcpp::List reverse_sinkhorn_c(const arma::mat& result_H_row,
 //' @param D_vs_row row normalizing matrices used for V in forward procedure.
 //' @param D_vs_col column normalizing matrices used for V in forward procedure.
 //' @param iterations how many iterations back
+//' @param enforce_sum_to_one_H algorithm will use NNLS to find H as close to column normalized as possible.
+//' @param enforce_sum_to_one_V algorithm will ensure result V is column normalized (leading to H column normalizing).
 //' @return named list of W, H, Dv_inv_W_row, H_row, D_ws_col, D_hs_row.
 //' @export
 // [[Rcpp::export]]
@@ -46,6 +48,7 @@ Rcpp::List clean_reverse_sinkhorn_c(const arma::mat& result_H_col,
 //' @param result_W_row W_ss calculated geometrically from the solution.
 //' @param D_vs_row row normalizing matrices used for V in forward procedure.
 //' @param D_vs_col column normalizing matrices used for V in forward procedure.
+//' @param V_inf_row result V_ss matrix obtained after scaling. (can get it with `get_V_row()` funciton)
 //' @param iterations how many iterations back
 //' @return named list of W, H, Dv_inv_W_row, H_row, D_ws_col, D_hs_row.
 //' @export

@@ -31,7 +31,8 @@ get_2d_subset <- function(proj, use_dims, extra_points_proj = NULL) {
       }
     } else {
       if (proj$meta$K > 3) {
-        stop("Specify use_dims (e.g. 2:3) or calculate umap")
+        spdl::error("Specify use_dims (e.g. use_dims = c(2:3)) or calculate umap")
+        stop("Specify use_dims (e.g. use_dims = c(2:3)) or calculate umap")
       } else {
         use_dims <- 2:3
       }
@@ -86,7 +87,7 @@ get_solution_history <- function(solution_proj, step, from_iter = 1, to_iter = N
     to_iter <- nit
   }
   # TODO: correct order initially
-  correct_order <- order((1:ncol(stats$Omega) - 1) %% nct)
+  correct_order <- order((seq_len(ncol(stats$Omega) - 1)) %% nct)
   stats$Omega <- stats$Omega[, correct_order]
 
   solution_history <- lapply(stats, function(mat) {
@@ -226,7 +227,7 @@ add_solution <- function(
   points_2d <- get_2d_subset(proj, use_dims, solution_proj)[spaces]
   points_2d <- lapply(
     points_2d,
-    function(pts) cbind(pts, point = 1:nrow(pts))
+    function(pts) cbind(pts, point = seq_len(nrow(pts)))
   )
   if (length(spaces) > 1) {
     points_2d <- concat_data(points_2d, "space")
@@ -408,6 +409,7 @@ plot_points_2d_clean <- function(
         ...
       ))
   } else {
+    spdl::error("Invalid color_scheme")
     stop("Invalid color_scheme")
   }
 

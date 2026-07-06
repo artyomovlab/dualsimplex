@@ -1,11 +1,11 @@
+#include "optimization_utils.h"
 #include "optimization_theta.h"
-
 #include "matrix_utils.h"
 #include "nnls.h"
-#include "optimization.h"
 
 
-Rcpp::List theta_derivative_stage2(const arma::mat& X,
+
+Rcpp::List optimize_theta(const arma::mat& X,
                              const arma::mat& Omega,
                              const arma::mat& D_w,
                              const arma::mat& SVRt,
@@ -30,7 +30,6 @@ Rcpp::List theta_derivative_stage2(const arma::mat& X,
                              const double thresh,
                              const double theta_threshold
                             ) {
-    Rcpp::Rcout << "sucessfull init training" << "\n";
     arma::mat errors_statistics(iterations, 9, arma::fill::zeros);
     arma::mat points_statistics_X(iterations, cell_types * cell_types, arma::fill::zeros);
     arma::mat points_statistics_Omega(iterations, cell_types * cell_types, arma::fill::zeros);

@@ -60,5 +60,5 @@ Suggests:
     ggrastr,
     Hmisc,
     scales
-LinkingTo: Rcpp, RcppArmadillo, RcppSpdlog, spdl
+LinkingTo: Rcpp, RcppArmadillo, RcppSpdlog
 RoxygenNote: 7.3.3

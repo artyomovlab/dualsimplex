@@ -13,11 +13,15 @@ clean_reverse_sinkhorn(
 )
 }
 \arguments{
-\item{H_col}{solution matrix H_ss produced by optimization algorithm (X*R)}
+\item{H_col}{solution matrix H_ss produced by optimization algorithm (X*R).}
 
-\item{W_row}{solution matrix W_gs produced by optimization algorithm (t(S)*Omega)}
+\item{W_row}{solution matrix W_gs produced by optimization algorithm (t(S)*Omega).}
 
-\item{scaling}{dso$scaling object containing normalization matrices}
+\item{scaling}{dso$scaling object containing normalization matrices.}
+
+\item{enforce_sum_to_one_H}{algorithm will use NNLS to find H as close to column normalized as possible.}
+
+\item{enforce_sum_to_one_V}{algorithm will ensure result V is column normalized (leading to H column normalizing).}
 }
 \value{
 unscaled object

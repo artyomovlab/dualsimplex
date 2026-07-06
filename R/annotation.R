@@ -134,7 +134,6 @@ add_data_stats_anno <- function(eset, genes = T) {
 update_annotation <- function(eset, anno_to_add, genes = T) {
   old_anno <- get_anno(eset, genes)
   new_anno <- old_anno
-  new_anno[rownames(anno_to_add) , colnames(row_anno)] <-  NULL # set old values to null
   new_anno[rownames(anno_to_add), colnames(anno_to_add)] <- anno_to_add
   eset <- set_anno(new_anno, eset, genes)
   return(eset)
@@ -190,13 +189,13 @@ add_density_annotation <- function(eset, proj, genes=T, radius=NULL) {
   anno <- get_anno(eset, genes)
   if (genes) {
     if (is.null(radius)) {
-      print("Set the radius to mad since the value was not provided")
+      spdl::warn("Set the radius to mad since the value was not provided")
       radius <- stats::mad(proj$X[,2:dim(proj$X)[[2]]])
     }
     nn_result <- dbscan::frNN(proj$X, eps = radius)
   } else {
     if (is.null(radius)) {
-      print("Set the radius to mad since the value was not provided")
+      spdl::warn("Set the radius to mad since the value was not provided")
       radius <- stats::mad(proj$Omega[,2:dim(proj$Omega)[[2]]])
     }
     nn_result <- dbscan::frNN(proj$Omega, eps = radius)

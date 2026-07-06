@@ -1,7 +1,11 @@
+#pragma once
+
 // [[Rcpp::depends(RcppArmadillo)]]
 #include <RcppArmadillo.h>
 
-//' Main training loop with all gradient steps. This implementation tries to move points within the specified angle theta only.
+//' Main training loop with all gradient steps. This is naive algorithm from version 1.0.
+//' It optimizes 3 terms (5 in experimental version). 
+//' Gradient steps performed in X and Omega spaces separatelly with NNLS used to merge them together into deconvolution term.
 //'
 //' @param X current X
 //' @param Omega current Omega
@@ -24,19 +28,17 @@
 //' @param r_const_X experimental. not tested
 //' @param r_const_Omega experimental. not tested
 //' @param thresh experimental. not tested
-//' @param X_center optimization restriction directions for X.
-//' @param Omega_center optimization restriction direcitons of Omega.
-//' @param theta_threshold angle to restrict optimization/
+//' @param convergence_tol tolerance for convergence.
+//' @param stop_criteria_window how long error should be on plateu to decrease the learning rate
+//' @param debug_stats wether to save grad norm values.
 //' @return new parameters
 // [[Rcpp::export]]
-Rcpp::List optimize_theta(const arma::mat& X,
+Rcpp::List optimize_coordinate_descent(const arma::mat& X,
                              const arma::mat& Omega,
                              const arma::mat& D_w,
                              const arma::mat& SVRt,
                              const arma::mat& R,
                              const arma::mat& S,
-                             const arma::mat& X_center,
-                             const arma::mat& Omega_center,
                              const double coef_der_X,
                              const double coef_der_Omega,
                              const double coef_hinge_H,
@@ -52,5 +54,6 @@ Rcpp::List optimize_theta(const arma::mat& X,
                              const double r_const_X = 0,
                              const double r_const_Omega = 0,
                              const double thresh = 0.8,
-                             const double theta_threshold = 0
-);
+                             const double convergence_tol=1e-12,
+                             const int stop_criteria_window = 1e+5, 
+                             const bool debug_stats=false);

@@ -139,7 +139,11 @@ generate_basis <- function(n_genes, n_cell_types, sd_ = 0.2) {
 }
 
 generate_basis_lbl <- function(n_genes, n_cell_types, lbl_dataset) {
-  if (n_cell_types != 3) stop("LBL basis works only for 3 cell types")
+  if (n_cell_types != 3) {
+    spdl::error("LBL basis works only for 3 cell types")
+    stop("LBL basis works only for 3 cell types")
+
+  }
   basis <- lbl_dataset[sample(nrow(lbl_dataset), n_genes), c(1, 4, 7)]
   
   # Common part with generate_basis below
