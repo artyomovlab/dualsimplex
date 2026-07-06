@@ -795,6 +795,16 @@ DualSimplexSolver <- R6Class(
       )
     },
 
+
+    #' @description 
+    #' Perform matrix decomposition into K components. 
+    #' This is the main example of how to run the method.
+    #' 
+    #' @param K number of steps to perform
+    deconvolve = function(K) {
+
+    },
+
     #' @description
     #' This is best starting point to run optimization
     #' This is how we run optimization while performed comparison with other methods. you can use this method as a template for yourself

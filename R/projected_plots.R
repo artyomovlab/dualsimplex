@@ -87,7 +87,7 @@ get_solution_history <- function(solution_proj, step, from_iter = 1, to_iter = N
     to_iter <- nit
   }
   # TODO: correct order initially
-  correct_order <- order((seq_len(ncol(stats$Omega) - 1)) %% nct)
+  correct_order <- order((seq_len(ncol(stats$Omega)) - 1) %% nct)
   stats$Omega <- stats$Omega[, correct_order]
 
   solution_history <- lapply(stats, function(mat) {

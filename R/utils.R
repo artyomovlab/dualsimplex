@@ -128,7 +128,7 @@ rasterize_if_needed <- function(plot) {
 #' 
 #' @return R list containing zero_distance and plane_distance
 calc_dist_from_truncated_svd <- function(approximated, original = NULL, residual = NULL, margin) {
-  if (is.null(original) & is.null(residual)) {
+  if (is.null(original) && is.null(residual)) {
     spdl::error("One of the 'original' or 'residual' matrix should be provided to calculate distances")
     stop("One of the 'original' or 'residual' matrix should be provided to calculate distances")
   }
