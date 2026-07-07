@@ -295,14 +295,14 @@ add_solution_history <- function(
   if (colored) {
     plt <- plt + geom(
       data = points_2d,
-      aes(x= .data[[x_col]], y = .data[[y_col]], color_name = point),
+      aes(x= .data[[x_col]], y = .data[[y_col]], col = point),
       size = pt_size,
       alpha = pt_opacity
     ) + theme(legend.position = "none")
   } else {
     plt <- plt + geom(
       data = points_2d,
-      aes(x= .data[[x_col]], y = .data[[y_col]], col = point),
+      aes(x= .data[[x_col]], y = .data[[y_col]], group = point),
       color = "black",
       size = pt_size,
       alpha = pt_opacity
