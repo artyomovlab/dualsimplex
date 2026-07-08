@@ -4,16 +4,22 @@
 \alias{quantile_filter}
 \title{Simple quantile filter based on annotation values}
 \usage{
-quantile_filter(eset, feature, quant, genes = T, keep_lower = T)
+quantile_filter(
+  eset,
+  annotation_feature,
+  quant,
+  for_features = T,
+  keep_lower = T
+)
 }
 \arguments{
 \item{eset}{Expression set (annotated matrix)}
 
-\item{feature}{numerical feature to test}
+\item{annotation_feature}{numerical feature to test}
 
 \item{quant}{which quantile}
 
-\item{genes}{if TRUE filter rows else columns}
+\item{for_features}{if TRUE filter rows else columns}
 
 \item{keep_lower}{if TRUE will return top highest, else top lowest}
 }

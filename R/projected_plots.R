@@ -1,5 +1,5 @@
 # Required functions:
-# 2. Plot specified dims of projected data, optionally colored by a passed column or highlighted genes
+# 2. Plot specified dims of projected data, optionally colored by a passed column or highlighted rows
 # 3. Plot solution for both spaces
 # 4. Plot solution history
 # 5. Plot solution history animated (with requireNamespace())

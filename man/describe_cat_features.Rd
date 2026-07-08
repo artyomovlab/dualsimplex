@@ -2,14 +2,14 @@
 % Please edit documentation in R/annotation.R
 \name{describe_cat_features}
 \alias{describe_cat_features}
-\title{Plot description of categorical features}
+\title{Plot description of categorical annotation features}
 \usage{
-describe_cat_features(eset, genes = T)
+describe_cat_features(eset, for_features = T)
 }
 \arguments{
 \item{eset}{Expression set}
 
-\item{genes}{if TRUE plot for plot for rows, otherwise columns}
+\item{for_features}{if TRUE plot for plot for rows, otherwise columns}
 }
 \value{
 Info about the feature

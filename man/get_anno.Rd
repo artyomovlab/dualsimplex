@@ -4,14 +4,14 @@
 \alias{get_anno}
 \title{Get annotations for the data}
 \usage{
-get_anno(eset, genes = T, feature = NULL)
+get_anno(eset, for_features = T, annotation_feature = NULL)
 }
 \arguments{
 \item{eset}{Expression set}
 
-\item{genes}{if TRUE return row annotations (genes) if FALSE return column annotaitons (samples)}
+\item{for_features}{if TRUE return row annotations (genes) if FALSE return column annotaitons (samples)}
 
-\item{feature}{name of specific annotation you want to extract}
+\item{annotation_feature}{name of specific annotation you want to extract}
 }
 \value{
 annotation object of the data

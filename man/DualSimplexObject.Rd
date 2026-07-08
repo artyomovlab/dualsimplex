@@ -102,7 +102,7 @@ In general it could be any matrix with names on columns and rows. Expression set
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$set_data(
   data,
-  gene_anno_lists = NULL,
+  feature_anno_lists = NULL,
   sample_anno_lists = NULL,
   max_sinkhorn_iterations = 20,
   max_dim = 50L,
@@ -117,7 +117,7 @@ In general it could be any matrix with names on columns and rows. Expression set
 \describe{
 \item{\code{data}}{input data matrix}
 
-\item{\code{gene_anno_lists}}{named list of lists. Each sublist contains names of rows which should have TRUE value in annotaiton column.}
+\item{\code{feature_anno_lists}}{named list of lists. Each sublist contains names of rows which should have TRUE value in annotaiton column.}
 
 \item{\code{sample_anno_lists}}{named list of lists. Each sublist contains names of columns which should have TRUE value in annotation column.}
 
@@ -147,7 +147,7 @@ In general it could be any matrix with names on columns and rows. Expression set
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{...}}{parameters to pass to plot_feature method.}
+\item{\code{...}}{parameters to pass to plot_annotation_feature method.}
 }
 \if{html}{\out{</div>}}
 }
@@ -157,21 +157,21 @@ In general it could be any matrix with names on columns and rows. Expression set
 \if{latex}{\out{\hypertarget{method-DualSimplexSolver-basic_filter}{}}}
 \subsection{Method \code{basic_filter()}}{
 Basic data filtering for gene expression datasets.
-Removes selected genes, filters by mad
+Removes selected features, filters by mad
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$basic_filter(
   log_mad_gt = 0,
   remove_true_cols_default = NULL,
   remove_true_cols_additional = c(),
   keep_true_cols = c(),
-  genes = T
+  for_features = T
 )}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{log_mad_gt}}{log madthreshold to remove genes (we remove low mad genes).}
+\item{\code{log_mad_gt}}{log mad threshold to remove features (we remove low mad features).}
 
 \item{\code{remove_true_cols_default}}{FALSE if tou don't want to use default gene names filter.}
 
@@ -179,7 +179,7 @@ Removes selected genes, filters by mad
 
 \item{\code{keep_true_cols}}{columns from annotation where we should keep instances with true value.}
 
-\item{\code{genes}}{true if want remove rows otherwise columns}
+\item{\code{for_features}}{true if want remove rows otherwise columns}
 }
 \if{html}{\out{</div>}}
 }
@@ -192,7 +192,7 @@ Add additional distance annotation based on KNN distances to selected annotation
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$add_knn_distances_anno(
   annotation_names_list = NULL,
-  genes = T,
+  for_features = T,
   k_neighbors = 20
 )}\if{html}{\out{</div>}}
 }
@@ -202,7 +202,7 @@ Add additional distance annotation based on KNN distances to selected annotation
 \describe{
 \item{\code{annotation_names_list}}{names of annotation columns with TRUE/FALSE.}
 
-\item{\code{genes}}{calculate for gene annotations or sample annotations.}
+\item{\code{for_features}}{calculate for row annotations or sample annotations.}
 
 \item{\code{k_neighbors}}{a number of neighbors to calculate the distance on for the annotation}
 }
@@ -215,7 +215,7 @@ Add additional distance annotation based on KNN distances to selected annotation
 \subsection{Method \code{updata_annotation()}}{
 Updata annotation. Will overwrite existing columns for matching names
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$updata_annotation(anno_to_add, genes = T)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$updata_annotation(anno_to_add, for_features = T)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -223,7 +223,7 @@ Updata annotation. Will overwrite existing columns for matching names
 \describe{
 \item{\code{anno_to_add}}{annotation to add to the object.}
 
-\item{\code{genes}}{gene annotations or sample annotations.}
+\item{\code{for_features}}{row annotations or sample annotations.}
 }
 \if{html}{\out{</div>}}
 }
@@ -234,7 +234,7 @@ Updata annotation. Will overwrite existing columns for matching names
 \subsection{Method \code{add_density_anno()}}{
 Add additional density annotation to points.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$add_density_anno(radius = NULL, genes = T)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$add_density_anno(radius = NULL, for_features = T)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -242,7 +242,7 @@ Add additional density annotation to points.
 \describe{
 \item{\code{radius}}{radius to count neighbors within.}
 
-\item{\code{genes}}{calculate for gene annotations or sample annotations.}
+\item{\code{for_features}}{calculate for row annotations or sample annotations.}
 }
 \if{html}{\out{</div>}}
 }
@@ -352,7 +352,7 @@ Filter points based on distance thresholds. (keep lower).
 \if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$distance_filter(
   plane_d_lt = NULL,
   zero_d_lt = NULL,
-  genes = T
+  for_features = T
 )}\if{html}{\out{</div>}}
 }
 
@@ -363,7 +363,7 @@ Filter points based on distance thresholds. (keep lower).
 
 \item{\code{zero_d_lt}}{threshold for zero distance.}
 
-\item{\code{genes}}{TRUE if filter rows, otherwise columns.}
+\item{\code{for_features}}{TRUE if filter rows, otherwise columns.}
 }
 \if{html}{\out{</div>}}
 }
@@ -377,7 +377,7 @@ Filter points based on distance thresholds. (keep lower).
 \if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$distance_quantile_filter(
   plane_quantile = NULL,
   zero_quantile = NULL,
-  genes = T,
+  for_features = T,
   keep_lower = T
 )}\if{html}{\out{</div>}}
 }
@@ -389,7 +389,7 @@ Filter points based on distance thresholds. (keep lower).
 
 \item{\code{zero_quantile}}{quantile for zero distance.}
 
-\item{\code{genes}}{TRUE if filter rows, otherwise columns.}
+\item{\code{for_features}}{TRUE if filter rows, otherwise columns.}
 
 \item{\code{keep_lower}}{TRUE if keep lower, FALSE to keep higher}
 }
@@ -401,26 +401,26 @@ Filter points based on distance thresholds. (keep lower).
 \if{latex}{\out{\hypertarget{method-DualSimplexSolver-iterative_n_sigma_filter}{}}}
 \subsection{Method \code{iterative_n_sigma_filter()}}{
 Iteratively filter by N sigma using all the features provided.
-aplication of  n_sigma_filter <- function(eset, feature, n_sigma = 3, genes = T)
+aplication of  n_sigma_filter <- function(eset, feature, n_sigma = 3, for_features = T)
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$iterative_n_sigma_filter(
-  features = NULL,
+  annnotation_features = NULL,
   n_sigma = 3,
   max_filtering_iterations = 500,
-  genes = T
+  for_features = T
 )}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{features}}{feature names (columns of pData or fData) as a vector.}
+\item{\code{annnotation_features}}{feature names (columns of pData or fData) as a vector.}
 
 \item{\code{n_sigma}}{number of sigmas to keep.}
 
 \item{\code{max_filtering_iterations}}{maximum fitering iterations to be performed}
 
-\item{\code{genes}}{TRUE if filter rows, otherwise columns.}
+\item{\code{for_features}}{TRUE if filter rows, otherwise columns.}
 }
 \if{html}{\out{</div>}}
 }
@@ -430,13 +430,13 @@ aplication of  n_sigma_filter <- function(eset, feature, n_sigma = 3, genes = T)
 \if{latex}{\out{\hypertarget{method-DualSimplexSolver-iterative_density_filter}{}}}
 \subsection{Method \code{iterative_density_filter()}}{
 Iteratively filter by N sigma using all the features provided.
-aplication of  n_sigma_filter <- function(eset, feature, n_sigma = 3, genes = T)
+aplication of  n_sigma_filter <- function(eset, annnotation_feature, n_sigma = 3, for_features = T)
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$iterative_density_filter(
   threshold = 0,
   max_filtering_iterations = 500,
   density_radius = NULL,
-  genes = TRUE
+  for_features = TRUE
 )}\if{html}{\out{</div>}}
 }
 
@@ -449,7 +449,7 @@ aplication of  n_sigma_filter <- function(eset, feature, n_sigma = 3, genes = T)
 
 \item{\code{density_radius}}{radius for density calculation.}
 
-\item{\code{genes}}{TRUE if filter rows, otherwise columns.}
+\item{\code{for_features}}{TRUE if filter rows, otherwise columns.}
 }
 \if{html}{\out{</div>}}
 }
@@ -459,26 +459,26 @@ aplication of  n_sigma_filter <- function(eset, feature, n_sigma = 3, genes = T)
 \if{latex}{\out{\hypertarget{method-DualSimplexSolver-iterative_mahalanobis_filter}{}}}
 \subsection{Method \code{iterative_mahalanobis_filter()}}{
 Iteratively filter by N sigma using all the features provided simultaniously.
-aplication of  n_sigma_filter <- function(eset, feature, n_sigma = 3, genes = T)
+aplication of  n_sigma_filter <- function(eset, feature, n_sigma = 3, for_features = T)
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$iterative_mahalanobis_filter(
-  features = NULL,
+  annotation_features = NULL,
   n_sigma = 3,
   max_filtering_iterations = 500,
-  genes = T
+  for_features = T
 )}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{features}}{feature names (columns of pData or fData) as a vector.}
+\item{\code{annotation_features}}{feature names (columns of pData or fData) as a vector.}
 
 \item{\code{n_sigma}}{number of sigmas to keep.}
 
 \item{\code{max_filtering_iterations}}{maximum fitering iterations to be performed}
 
-\item{\code{genes}}{TRUE if filter rows, otherwise columns.}
+\item{\code{for_features}}{TRUE if filter rows, otherwise columns.}
 }
 \if{html}{\out{</div>}}
 }
@@ -514,14 +514,14 @@ Do UMAP transformation for current projected data in both spaces.
 \subsection{Method \code{plot_projected()}}{
 Interface to plot points of the current object
 
- color_genes / color_samples can be:
+ color_feature / color_samples can be:
 - a set of names to be highlighted
 - a vector of values, the same length as the number of genes
 - a name of a column from annotation, default is zero_distance
 Important note: ggplot only allows to either draw history or color all the points
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$plot_projected(
-  color_genes = "zero_distance",
+  color_features = "zero_distance",
   color_samples = "zero_distance",
   use_dims = private$display_dims,
   with_legend = NULL,
@@ -538,7 +538,7 @@ Important note: ggplot only allows to either draw history or color all the point
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{color_genes}}{how to color genes (see description of method).}
+\item{\code{color_features}}{how to color features(see description of method).}
 
 \item{\code{color_samples}}{how to color samples (see description of method).}
 

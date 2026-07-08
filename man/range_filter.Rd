@@ -6,23 +6,23 @@
 \usage{
 range_filter(
   eset,
-  feature,
+  annotation_feature,
   threshold_lower,
   threshold_upper,
-  genes = T,
+  for_features = T,
   keep_within = T
 )
 }
 \arguments{
 \item{eset}{Expression set (annotated matrix)}
 
-\item{feature}{numerical feature to test}
+\item{annotation_feature}{numerical feature to test}
 
 \item{threshold_lower}{numerical threshold value}
 
 \item{threshold_upper}{numerical threshold value}
 
-\item{genes}{if TRUE filter rows else columns}
+\item{for_features}{if TRUE filter rows else columns}
 
 \item{keep_within}{should we keep or remove values within the range}
 }

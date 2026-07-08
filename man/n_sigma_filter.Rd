@@ -4,16 +4,16 @@
 \alias{n_sigma_filter}
 \title{Simple n_sigma filter based on annotation values}
 \usage{
-n_sigma_filter(eset, feature, n_sigma = 3, genes = T)
+n_sigma_filter(eset, annotation_feature, n_sigma = 3, for_features = T)
 }
 \arguments{
 \item{eset}{Expression set (annotated matrix)}
 
-\item{feature}{numerical feature to test}
+\item{annotation_feature}{numerical feature to test}
 
 \item{n_sigma}{how many standard deviations to keep}
 
-\item{genes}{if TRUE filter rows else columns}
+\item{for_features}{if TRUE filter rows else columns}
 }
 \value{
 modified set

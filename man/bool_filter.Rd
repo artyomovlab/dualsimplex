@@ -4,14 +4,14 @@
 \alias{bool_filter}
 \title{Simple filter based on annotation values}
 \usage{
-bool_filter(eset, by_cols, genes = T, remove_true = T)
+bool_filter(eset, by_cols, for_features = T, remove_true = T)
 }
 \arguments{
 \item{eset}{Expression set (annotated matrix)}
 
 \item{by_cols}{which columns of annotation to test}
 
-\item{genes}{if TRUE filter rows otherwise columns of eset}
+\item{for_features}{if TRUE filter rows otherwise columns of eset}
 
 \item{remove_true}{should we remove or keep these columns}
 }

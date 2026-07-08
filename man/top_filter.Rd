@@ -4,16 +4,16 @@
 \alias{top_filter}
 \title{Simple top_filter filter based on annotation values}
 \usage{
-top_filter(eset, feature, top_n, genes = T, max = T)
+top_filter(eset, annotation_feature, top_n, for_features = T, max = T)
 }
 \arguments{
 \item{eset}{Expression set (annotated matrix)}
 
-\item{feature}{numerical feature to test}
+\item{annotation_feature}{numerical feature to test}
 
 \item{top_n}{how many top values to keep}
 
-\item{genes}{if TRUE filter rows else columns}
+\item{for_features}{if TRUE filter rows else columns}
 
 \item{max}{if TRUE will return top highest, else top lowest}
 }

@@ -61,8 +61,8 @@ initializers <- list(
   },
 
   select_x = function(proj, kwargs = list()) {
-    if ("genes_subset" %in% kwargs) {
-      points <- proj$X[kwargs$genes_subset, ]
+    if ("features_subset" %in% kwargs) {
+      points <- proj$X[kwargs$features_subset, ]
     } else {
       points <- proj$X
     }

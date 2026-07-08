@@ -4,14 +4,14 @@
 \alias{names_filter}
 \title{Simple filter by row name}
 \usage{
-names_filter(eset, keep_names, genes = T)
+names_filter(eset, keep_names, for_features = T)
 }
 \arguments{
 \item{eset}{Expression set (annotated matrix)}
 
 \item{keep_names}{which genes to preserve}
 
-\item{genes}{if TRUE filter rows otherwise columns of eset}
+\item{for_features}{if TRUE filter rows otherwise columns of eset}
 }
 \value{
 modified set

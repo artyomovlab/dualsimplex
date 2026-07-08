@@ -94,7 +94,7 @@ This is only if you are willing to remove points from your dataset
 ```r
 plane_distance_threshold <- 0.05 # Change here several times to see result, start with big and lower it
 zero_distance_threshold <- 1
-dso$distance_filter(plane_d_lt = plane_distance_threshold, zero_d_lt = zero_distance_threshold, genes = T)
+dso$distance_filter(plane_d_lt = plane_distance_threshold, zero_d_lt = zero_distance_threshold, features = T)
 dso$project(K)
 dso$plot_projection_diagnostics() # See the distribution of points distances
 dso$plot_svd_history() # observe changes in SVD variance explained

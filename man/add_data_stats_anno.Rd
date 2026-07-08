@@ -4,12 +4,12 @@
 \alias{add_data_stats_anno}
 \title{Annotate the data with statistics for rows and columns}
 \usage{
-add_data_stats_anno(eset, genes = T)
+add_data_stats_anno(eset, for_features = T)
 }
 \arguments{
 \item{eset}{Expression set}
 
-\item{genes}{if TRUE apply to rows, otherwise columns}
+\item{for_features}{if TRUE apply to rows, otherwise columns}
 }
 \value{
 annotated Expression set

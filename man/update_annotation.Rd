@@ -4,14 +4,14 @@
 \alias{update_annotation}
 \title{Annotate the data with statistics for rows and columns}
 \usage{
-update_annotation(eset, anno_to_add, genes = T)
+update_annotation(eset, anno_to_add, for_features = T)
 }
 \arguments{
 \item{eset}{Expression set}
 
 \item{anno_to_add}{Annotation dataframe to add to exsiting one}
 
-\item{genes}{if TRUE apply to rows, otherwise columns}
+\item{for_features}{if TRUE apply to rows, otherwise columns}
 }
 \value{
 annotated Expression set

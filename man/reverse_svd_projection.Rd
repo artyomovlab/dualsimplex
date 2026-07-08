@@ -10,7 +10,7 @@ reverse_svd_projection(X_space_pts, Omega_space_pts, proj)
 \arguments{
 \item{X_space_pts}{points in samples space (X space, samples space, left simplex)}
 
-\item{Omega_space_pts}{points in features space (Omega space, genes space, right simplex)}
+\item{Omega_space_pts}{points in features space (Omega space, feature space, right simplex)}
 
 \item{proj}{dso$st$proj object containing projected points and umap info}
 }

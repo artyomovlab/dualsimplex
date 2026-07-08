@@ -212,7 +212,7 @@ transform_proj_umap <- function(points, proj) {
 #' from projected Omega points to original column normalized matrix W_gs
 #'
 #' @param X_space_pts points in samples space (X space, samples space, left simplex)
-#' @param Omega_space_pts   points in features space (Omega space, genes space, right simplex)
+#' @param Omega_space_pts   points in features space (Omega space, feature space, right simplex)
 #' @param proj dso$st$proj object containing projected points and umap info
 #' @return list of two matrices (H_ss, W_gs)
 #' @export

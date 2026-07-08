@@ -113,18 +113,18 @@ DualSimplexSolver <- R6Class(
         Sigma = self$st$proj_ops$Sigma
       )
     },
-    resolve_color_col = function(color, genes) {
+    resolve_color_col = function(color, for_features) {
       private$set_data_first()
-      anno <- get_anno(self$st$data, genes)
+      anno <- get_anno(self$st$data, for_features)
       if (is.character(color) && length(color) == 1) {
         if (!is.null(self$st$solution) && (color %in% colnames(self$st$solution$W))) {
           name <- color
-          if (genes) {
+          if (for_features) {
             color <- log(self$st$solution$W[, color] + 1)
           } else {
             color <- self$st$solution$H[color, ]
           }
-        } else if (genes && !is.null(self$st$marker_genes) && (color == "markers")) {
+        } else if (for_features && !is.null(self$st$marker_genes) && (color == "markers")) {
           name <- color
           color <- which_marker(rownames(self$st$data), self$st$marker_genes)
         } else if (color %in% colnames(anno)) {
@@ -148,7 +148,7 @@ DualSimplexSolver <- R6Class(
       } 
     },
 
-    update_variables = function(data,gene_anno_lists = NULL, sample_anno_lists = NULL, ...) {
+    update_variables = function(data,feature_anno_lists = NULL, sample_anno_lists = NULL, ...) {
       if (!inherits(data, "ExpressionSet")) data <- create_eset(data)
       if (any(rowSums(Biobase::exprs(data)) == 0)) {
         spdl::error("The data matrix should not contain all zero rows. Use remove_zero_rows() method")
@@ -158,7 +158,7 @@ DualSimplexSolver <- R6Class(
         spdl::error("The data matrix should not contain all zero rows. Use remove_zero_rows() method")
         stop("The data matrix should not contain all zero rows. Use remove_zero_rows() method")
       }
-      self$st$data <- add_default_anno(data, gene_anno_lists, sample_anno_lists)
+      self$st$data <- add_default_anno(data, feature_anno_lists, sample_anno_lists)
       self$st$scaling <- sinkhorn_scale(Biobase::exprs(self$st$data), max_iter = self$st$max_sinkhorn_iterations, epsilon=self$st$sinkhorn_tol)
       self$st$proj_ops <- calc_svd_ops(self$get_V_row(), max_dim = self$st$max_dim, self$st$svd_method, ...)
     }
@@ -188,7 +188,7 @@ DualSimplexSolver <- R6Class(
     #' In general it could be any matrix with names on columns and rows. Expression set will be created.
     #'
     #' @param data input data matrix
-    #' @param gene_anno_lists named list of lists. Each sublist contains names of rows which should have TRUE value in annotaiton column.
+    #' @param feature_anno_lists named list of lists. Each sublist contains names of rows which should have TRUE value in annotaiton column.
     #' @param sample_anno_lists named list of lists. Each sublist contains names of columns which should have TRUE value in annotation column.
     #' @param max_sinkhorn_iterations number of sinkhorn iterations to perform.
     #' @param max_dim maximum dimention we want the projection operation. It is passed to `calc_svd_ops` function.
@@ -197,7 +197,7 @@ DualSimplexSolver <- R6Class(
     #' @param ... additional arguments passed to function `run_svd`
     set_data = function(
       data,
-      gene_anno_lists = NULL,
+      feature_anno_lists = NULL,
       sample_anno_lists = NULL,
       max_sinkhorn_iterations=20,
       max_dim = 50L,
@@ -231,7 +231,7 @@ DualSimplexSolver <- R6Class(
       self$st$sinkhorn_tol <- sinkhorn_tol
       self$st$svd_method <- svd_method
 
-      private$update_variables(data, gene_anno_lists, sample_anno_lists, ...)
+      private$update_variables(data, feature_anno_lists, sample_anno_lists, ...)
       private$add_filtering_log_step("initial")
     },
 
@@ -239,36 +239,36 @@ DualSimplexSolver <- R6Class(
     #' plot MAD distribution for the data
     #' In general it could be any matrix with names on columns and rows. Expression set will be created.
     #'
-    #' @param ... parameters to pass to plot_feature method.
+    #' @param ... parameters to pass to plot_annotation_feature method.
     plot_mad = function(...) {
-      plot_feature(self$get_data(), "log_mad", ...)
+      plot_annotation_feature(self$get_data(), "log_mad", ...)
     },
     #' @description
     #' Basic data filtering for gene expression datasets.
-    #' Removes selected genes, filters by mad
+    #' Removes selected features, filters by mad
     #'
-    #' @param log_mad_gt log madthreshold to remove genes (we remove low mad genes).
+    #' @param log_mad_gt log mad threshold to remove features (we remove low mad features).
     #' @param remove_true_cols_default FALSE if tou don't want to use default gene names filter.
     #' @param remove_true_cols_additional additional columns from annotation to use for "remove true" filter.
     #' @param keep_true_cols columns from annotation where we should keep instances with true value.
-    #' @param genes true if want remove rows otherwise columns
+    #' @param for_features true if want remove rows otherwise columns
     basic_filter = function(
       log_mad_gt = 0,
       remove_true_cols_default = NULL,
       remove_true_cols_additional = c(),
       keep_true_cols = c(),
-      genes = T
+      for_features = T
     ) {
-      if (genes && is.null(remove_true_cols_default)) {
+      if (for_features && is.null(remove_true_cols_default)) {
         remove_true_cols_default <- c("RPLS", "LOC", "ORF", "SNOR")
       }
       private$set_data_first()
       # private$check_filtering_log()
       remove_true_cols <- c(remove_true_cols_default, remove_true_cols_additional)
       new_data <- self$get_data()
-      new_data <- threshold_filter(new_data, "log_mad", log_mad_gt, genes = genes, keep_lower = F)
-      new_data <- bool_filter(new_data, remove_true_cols, genes = genes, remove_true = T)
-      new_data <- bool_filter(new_data, keep_true_cols, genes = genes, remove_true = F)
+      new_data <- threshold_filter(new_data, "log_mad", log_mad_gt, for_features = for_features, keep_lower = F)
+      new_data <- bool_filter(new_data, remove_true_cols, for_features = for_features, remove_true = T)
+      new_data <- bool_filter(new_data, keep_true_cols, for_features = for_features, remove_true = F)
       new_data <- remove_zero_cols(new_data)
       new_data <- remove_zero_rows(new_data)
       private$update_variables(new_data)
@@ -286,14 +286,14 @@ DualSimplexSolver <- R6Class(
     #' Add additional distance annotation based on KNN distances to selected annotations.
     #'
     #' @param annotation_names_list names of annotation columns with TRUE/FALSE.
-    #' @param genes calculate for gene annotations or sample annotations.
+    #' @param for_features calculate for row annotations or sample annotations.
     #' @param k_neighbors a number of neighbors to calculate the distance on for the annotation
-    add_knn_distances_anno= function(annotation_names_list = NULL, genes = T, k_neighbors = 20) {
+    add_knn_distances_anno= function(annotation_names_list = NULL, for_features = T, k_neighbors = 20) {
       self$st$data <- add_knn_distances_anno(
         self$st$data,
         self$st$proj,
         annotation_columns = annotation_names_list,
-        genes = genes,
+        for_features = for_features,
         k_neighbors = k_neighbors
       )
     },
@@ -301,22 +301,22 @@ DualSimplexSolver <- R6Class(
     #' Updata annotation. Will overwrite existing columns for matching names
     #'
     #' @param anno_to_add annotation to add to the object.
-    #' @param genes gene annotations or sample annotations.
-    updata_annotation = function(anno_to_add,  genes = T) {
-      self$st$data <- update_annotation (self$st$data, anno_to_add, genes = genes)
+    #' @param for_features row annotations or sample annotations.
+    updata_annotation = function(anno_to_add,  for_features = T) {
+      self$st$data <- update_annotation (self$st$data, anno_to_add, for_features = for_features)
     },
 
     #' @description
     #' Add additional density annotation to points.
     #'
     #' @param radius radius to count neighbors within.
-    #' @param genes calculate for gene annotations or sample annotations.
-    add_density_anno= function(radius = NULL, genes = T) {
+    #' @param for_features calculate for row annotations or sample annotations.
+    add_density_anno= function(radius = NULL, for_features = T) {
       self$st$data <- add_density_annotation(
         self$st$data,
         self$st$proj,
         radius = radius,
-        genes = genes
+        for_features = for_features
       )
     },
 
@@ -399,12 +399,12 @@ DualSimplexSolver <- R6Class(
     plot_distances_distribution = function() {
       private$project_first()
       # TODO: maybe self$st$proj should be ExpressionSet with distances
-      show(plot_numeric_features(self$get_data(), features = c("plane_distance", "zero_distance"), ncol = 2, labels = c("Plane distance", "Zero distance")))
-      show(plot_numeric_features(self$get_data(), genes = F, features = c("plane_distance", "zero_distance"), ncol = 2, labels = c("Plane distance", "Zero distance"), bins = 30))
+      show(plot_numeric_features(self$get_data(), annotation_features = c("plane_distance", "zero_distance"), ncol = 2, labels = c("Plane distance", "Zero distance")))
+      show(plot_numeric_features(self$get_data(), for_features = F, annotation_features = c("plane_distance", "zero_distance"), ncol = 2, labels = c("Plane distance", "Zero distance"), bins = 30))
       # TODO: ordered plots
       plotlist <- list(
-        plot_feature_pair(self$get_data(), "plane_distance", "zero_distance", T, size = 0.1),
-        plot_feature_pair(self$get_data(), "plane_distance", "zero_distance", F, size = 0.1)
+        plot_annotation_feature_pair(self$get_data(), "plane_distance", "zero_distance", T, size = 0.1),
+        plot_annotation_feature_pair(self$get_data(), "plane_distance", "zero_distance", F, size = 0.1)
       )
       show(cowplot::plot_grid(plotlist = plotlist, ncol = 2))
     },
@@ -414,11 +414,11 @@ DualSimplexSolver <- R6Class(
     #'
     #' @param plane_d_lt threshold for plane distance.
     #' @param zero_d_lt threshold for zero distance.
-    #' @param genes TRUE if filter rows, otherwise columns.
+    #' @param for_features TRUE if filter rows, otherwise columns.
     distance_filter = function(
       plane_d_lt = NULL,
       zero_d_lt = NULL,
-      genes = T
+      for_features = T
     ) {
       private$project_first()
       if (is.null(plane_d_lt) && is.null(zero_d_lt)) {
@@ -432,14 +432,14 @@ DualSimplexSolver <- R6Class(
           new_data,
           "plane_distance",
           plane_d_lt,
-          genes
+          for_features
         )
       if (!is.null(zero_d_lt))
         new_data <- threshold_filter(
           new_data,
           "zero_distance",
           zero_d_lt,
-          genes
+          for_features
         )
       new_data <- remove_zero_cols(new_data)
       new_data <- remove_zero_rows(new_data)
@@ -460,12 +460,12 @@ DualSimplexSolver <- R6Class(
     #'
     #' @param plane_quantile quantile for plane distance.
     #' @param zero_quantile quantile for zero distance.
-    #' @param genes TRUE if filter rows, otherwise columns.
+    #' @param for_features TRUE if filter rows, otherwise columns.
     #' @param keep_lower TRUE if keep lower, FALSE to keep higher
     distance_quantile_filter = function(
       plane_quantile = NULL,
       zero_quantile = NULL,
-      genes = T,
+      for_features = T,
       keep_lower = T
     ) {
       private$project_first()
@@ -478,18 +478,18 @@ DualSimplexSolver <- R6Class(
       if (!is.null(plane_quantile))
         new_data <- quantile_filter(
           eset = new_data,
-          feature = "plane_distance",
+          annotation_feature = "plane_distance",
           quant =  plane_quantile,
           keep_lower = keep_lower,
-          genes = genes
+          for_features = for_features
         )
       if (!is.null(zero_quantile))
         new_data <- quantile_filter(
           eset = new_data,
-          feature = "zero_distance",
+          annotation_feature = "zero_distance",
           quant =  zero_quantile,
           keep_lower = keep_lower,
-          genes = genes
+          for_features = for_features
         )
       new_data <- remove_zero_cols(new_data)
       new_data <- remove_zero_rows(new_data)
@@ -508,27 +508,27 @@ DualSimplexSolver <- R6Class(
 
     #' @description
     #' Iteratively filter by N sigma using all the features provided.
-    #' aplication of  n_sigma_filter <- function(eset, feature, n_sigma = 3, genes = T)
-    #' @param features feature names (columns of pData or fData) as a vector.
+    #' aplication of  n_sigma_filter <- function(eset, feature, n_sigma = 3, for_features = T)
+    #' @param annnotation_features feature names (columns of pData or fData) as a vector.
     #' @param n_sigma number of sigmas to keep.
-    #' @param genes TRUE if filter rows, otherwise columns.
+    #' @param for_features TRUE if filter rows, otherwise columns.
     #' @param max_filtering_iterations maximum fitering iterations to be performed
     iterative_n_sigma_filter = function(
-      features = NULL,
+      annnotation_features = NULL,
       n_sigma = 3,
       max_filtering_iterations = 500,
-      genes = T
+      for_features = T
     ) {
       private$project_first()
-      if (is.null(features)) {
+      if (is.null(annnotation_features)) {
         spdl::error("Choose feature names from fData and pData columns to filter by")
         stop("Choose feature names from fData and pData columns to filter by")
       }
       new_data <- self$get_data()
 
-      if (!is.null(features)) {
+      if (!is.null(annnotation_features)) {
         filtering_iteration <-  1
-        previous_count <-  if(genes) dim(new_data)[[1]] else  dim(new_data)[[2]]
+        previous_count <-  if(for_features) dim(new_data)[[1]] else  dim(new_data)[[2]]
         new_count <- -1
         while((new_count < previous_count) && (filtering_iteration < max_filtering_iterations) ) {
           previous_count <-   if(new_count == -1) previous_count else  new_count
@@ -536,15 +536,15 @@ DualSimplexSolver <- R6Class(
 
           # Filter all features by selected sigma
           cell_types <-  self$st$n_cell_types
-          for (current_feature in features) {
+          for (current_feature in annnotation_features) {
               spdl::info("Feature: {}", current_feature)
-              new_data <- n_sigma_filter(eset = new_data, feature = current_feature,  n_sigma = n_sigma, genes = genes)
+              new_data <- n_sigma_filter(eset = new_data, annotation_feature = current_feature,  n_sigma = n_sigma, for_features = for_features)
               new_data <- remove_zero_cols(new_data)
               new_data <- remove_zero_rows(new_data)
-              new_count <-  if(genes) dim(new_data)[[1]] else  dim(new_data)[[2]]
+              new_count <-  if(for_features) dim(new_data)[[1]] else  dim(new_data)[[2]]
               spdl::info("Removed {} points", intermediate_count - new_count)
           }
-          new_count <-  if(genes) dim(new_data)[[1]] else  dim(new_data)[[2]]
+          new_count <-  if(for_features) dim(new_data)[[1]] else  dim(new_data)[[2]]
           private$update_variables(new_data)
           self$project(cell_types)
           new_data <- self$get_data()
@@ -554,7 +554,7 @@ DualSimplexSolver <- R6Class(
       private$add_filtering_log_step(
         "n_sigma_filter",
         paste(
-          paste('features =', paste0(features, collapse=',')),
+          paste('annnotation_features =', paste0(annnotation_features, collapse=',')),
           paste0("n_sigma = ", n_sigma),
           paste0("iterations = ", filtering_iteration),
           sep = ", "
@@ -566,33 +566,33 @@ DualSimplexSolver <- R6Class(
 
     #' @description
     #' Iteratively filter by N sigma using all the features provided.
-    #' aplication of  n_sigma_filter <- function(eset, feature, n_sigma = 3, genes = T)
+    #' aplication of  n_sigma_filter <- function(eset, annnotation_feature, n_sigma = 3, for_features = T)
     #' @param threshold threshold to filter neighborhoods
     #' @param density_radius radius for density calculation.
-    #' @param genes TRUE if filter rows, otherwise columns.
+    #' @param for_features TRUE if filter rows, otherwise columns.
     #' @param max_filtering_iterations maximum fitering iterations to be performed
     iterative_density_filter = function(
       threshold = 0,
       max_filtering_iterations = 500,
       density_radius = NULL,
-      genes = TRUE
+      for_features = TRUE
     ) {
       private$project_first()
       new_data <- self$get_data()
-      feature <- "density"
+      annotation_feature <- "density"
       filtering_iteration <-  1
-      previous_count <-  if(genes) dim(new_data)[[1]] else  dim(new_data)[[2]]
+      previous_count <-  if(for_features) dim(new_data)[[1]] else  dim(new_data)[[2]]
       new_count <- -1
       while((new_count < previous_count) && (filtering_iteration < max_filtering_iterations) ) {
         previous_count <-   if(new_count == -1) previous_count else  new_count
         cell_types <-  self$st$n_cell_types
-        new_data <- threshold_filter(eset = new_data, feature = feature,  threshold = threshold, genes = genes, keep_lower = F)
+        new_data <- threshold_filter(eset = new_data, annotation_feature = annotation_feature,  threshold = threshold, for_features = for_features, keep_lower = F)
         new_data <- remove_zero_cols(new_data)
         new_data <- remove_zero_rows(new_data)
-        new_count <-  if(genes) dim(new_data)[[1]] else  dim(new_data)[[2]]
+        new_count <-  if(for_features) dim(new_data)[[1]] else  dim(new_data)[[2]]
         private$update_variables(new_data)
         self$project(cell_types)
-        self$add_density_anno(radius=density_radius, genes=genes)
+        self$add_density_anno(radius=density_radius, for_features=for_features)
         new_data <- self$get_data()
         filtering_iteration <-  filtering_iteration + 1
         spdl::info("Removed {} points", previous_count - new_count)
@@ -610,35 +610,35 @@ DualSimplexSolver <- R6Class(
 
     #' @description
     #' Iteratively filter by N sigma using all the features provided simultaniously.
-    #' aplication of  n_sigma_filter <- function(eset, feature, n_sigma = 3, genes = T)
-    #' @param features feature names (columns of pData or fData) as a vector.
+    #' aplication of  n_sigma_filter <- function(eset, feature, n_sigma = 3, for_features = T)
+    #' @param annotation_features feature names (columns of pData or fData) as a vector.
     #' @param n_sigma number of sigmas to keep.
-    #' @param genes TRUE if filter rows, otherwise columns.
+    #' @param for_features TRUE if filter rows, otherwise columns.
     #' @param max_filtering_iterations maximum fitering iterations to be performed
     iterative_mahalanobis_filter = function(
-      features = NULL,
+      annotation_features = NULL,
       n_sigma = 3,
       max_filtering_iterations = 500,
-      genes = T
+      for_features = T
     ) {
       private$project_first()
-      if (is.null(features)) {
+      if (is.null(annotation_features)) {
         spdl::error("Choose feature names from fData and pData columns to filter by")
         stop("Choose feature names from fData and pData columns to filter by")
       }
       new_data <- self$get_data()
 
-      if (!is.null(features)) {
+      if (!is.null(annotation_features)) {
         filtering_iteration <-  1
-        previous_count <-  if(genes) dim(new_data)[[1]] else  dim(new_data)[[2]]
+        previous_count <-  if(for_features) dim(new_data)[[1]] else  dim(new_data)[[2]]
         new_count <- -1
         while((new_count < previous_count) && (filtering_iteration < max_filtering_iterations) ) {
         previous_count <-   if(new_count == -1) previous_count else  new_count
         cell_types <-  self$st$n_cell_types
-        new_data <- mahalanobis_n_sigma_filter(eset = new_data, features = features,  n_sigma = n_sigma, genes = genes)
+        new_data <- mahalanobis_n_sigma_filter(eset = new_data, annotation_features = annotation_features,  n_sigma = n_sigma, for_features = for_features)
         new_data <- remove_zero_cols(new_data)
         new_data <- remove_zero_rows(new_data)
-        new_count <-  if(genes) dim(new_data)[[1]] else  dim(new_data)[[2]]
+        new_count <-  if(for_features) dim(new_data)[[1]] else  dim(new_data)[[2]]
         private$update_variables(new_data)
         self$project(cell_types)
         new_data <- self$get_data()
@@ -648,7 +648,7 @@ DualSimplexSolver <- R6Class(
       private$add_filtering_log_step(
         "mahalanobis_filter",
         paste(
-          paste('features =', paste0(features, collapse=',')),
+          paste('annnotation_features =', paste0(annnotation_features, collapse=',')),
           paste0("n_sigma = ", n_sigma),
           paste0("iterations = ", filtering_iteration),
           sep = ", "
@@ -672,13 +672,13 @@ DualSimplexSolver <- R6Class(
     #' @description
     #' Interface to plot points of the current object
     #'
-    #'  color_genes / color_samples can be:
+    #'  color_feature / color_samples can be:
     #' - a set of names to be highlighted
     #' - a vector of values, the same length as the number of genes
     #' - a name of a column from annotation, default is zero_distance
     #' Important note: ggplot only allows to either draw history or color all the points
     #'
-    #' @param color_genes how to color genes (see description of method).
+    #' @param color_features how to color features(see description of method).
     #' @param color_samples how to color samples (see description of method).
     #' @param use_dims which dimensions to use (e.g. 2:3).
     #' @param with_legend TRUE if want to add legends to plots.
@@ -690,7 +690,7 @@ DualSimplexSolver <- R6Class(
     #' @param to_iter end point for history of solutions.
     #' @param ... any other params to be passed to plot_projected method.
     plot_projected = function(
-      color_genes = "zero_distance", color_samples = "zero_distance",
+      color_features = "zero_distance", color_samples = "zero_distance",
       use_dims = private$display_dims, with_legend = NULL,
       with_solution = TRUE, with_history = TRUE,
       wrap = T, show_plots = T, from_iter = 1, to_iter = NULL, ...
@@ -698,7 +698,7 @@ DualSimplexSolver <- R6Class(
       if (inherits(use_dims, "list")) {
         plotlist <- lapply(use_dims, function(this_use_dims) {
           self$plot_projected(
-            color_genes, color_samples, this_use_dims,
+            color_features, color_samples, this_use_dims,
             with_legend, with_solution, with_history,
             wrap, show_plots, from_iter, to_iter, ...
           )
@@ -712,10 +712,10 @@ DualSimplexSolver <- R6Class(
       }
       private$project_first()
 
-      color_genes <- private$resolve_color_col(color_genes, T)
+      color_features <- private$resolve_color_col(color_features, T)
       color_samples <- private$resolve_color_col(color_samples, F)
 
-      plt_X <- plot_projection_points(self$st$proj, use_dims, "X", color = color_genes$color, color_name = color_genes$name, ...)
+      plt_X <- plot_projection_points(self$st$proj, use_dims, "X", color = color_features$color, color_name = color_features$name, ...)
       plt_Omega <- plot_projection_points(self$st$proj, use_dims, "Omega", color = color_samples$color, color_name = color_samples$name, ...)
 
       if (!is.null(self$st$solution_proj)) {
@@ -725,7 +725,7 @@ DualSimplexSolver <- R6Class(
             self$st$proj,
             use_dims = use_dims,
             spaces = "X",
-            colored = is.null(color_genes$name),
+            colored = is.null(color_features$name),
             from_iter = from_iter,
             to_iter = to_iter
           )
@@ -1030,7 +1030,7 @@ DualSimplexSolver <- R6Class(
     save_solution = function(save_dir = NULL) {
       private$finalize_first()
       out_dir <- self$getset_save_dir(save_dir)
-      W <- cbind(gene_name = rownames(self$st$solution$W), self$st$solution$W)
+      W <- cbind(feature_name = rownames(self$st$solution$W), self$st$solution$W)
       H <- cbind(sample_name = colnames(self$st$solution$H), t(self$st$solution$H))
       write.table(W, file.path(out_dir, "basis.tsv"), sep = "\t", quote = F, row.names = F)
       write.table(H, file.path(out_dir, "proportions.tsv"), sep = "\t", quote = F, row.names = F)
