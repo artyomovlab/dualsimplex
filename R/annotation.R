@@ -95,7 +95,7 @@ add_name_lists_anno <- function(eset, name_lists, genes = T) {
 #'@return  annotated Expression set
 add_data_stats_anno <- function(eset, genes = T) {
   stat_fns <- list(
-    genes = list(
+    features = list(
       mean = matrixStats::rowMeans2,
       median = matrixStats::rowMedians,
       sd = matrixStats::rowSds,
@@ -111,7 +111,7 @@ add_data_stats_anno <- function(eset, genes = T) {
   )
 
   anno <- get_anno(eset, genes)
-  margin <- if (genes) "genes" else "samples"
+  margin <- if (genes) "features" else "samples"
 
 
   anno$log_mean <- log(stat_fns[[margin]][["mean"]](Biobase::exprs(eset))  + 1)

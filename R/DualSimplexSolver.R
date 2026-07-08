@@ -762,7 +762,7 @@ DualSimplexSolver <- R6Class(
         plt_Omega <- plt_Omega + theme(legend.position = "right")
       }
 
-      plt_X <- plt_X + ggtitle(paste(self$st$proj$meta$M, "genes"))
+      plt_X <- plt_X + ggtitle(paste(self$st$proj$meta$M, "features"))
       plt_Omega <- plt_Omega + ggtitle(paste(self$st$proj$meta$N, "samples"))
 
       plotlist <- list(plt_X, plt_Omega)

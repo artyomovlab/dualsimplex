@@ -234,12 +234,12 @@ add_solution <- function(
   } else {
     points_2d <- as.data.frame(points_2d[[1]])
   }
-  points_2d$point <- as.factor(points_2d$point)
+  points_2d$point <- as.factor(points_2d[["point"]])
   x_col <- colnames(points_2d)[[1]]
   y_col <- colnames(points_2d)[[2]]
   plt <- plt + geom_point(
     data = points_2d,
-    aes(x= .data[[x_col]], y = .data[[y_col]], fill = point),
+    aes(x= .data[[x_col]], y = .data[[y_col]], fill = .data[["point"]]),
     color = "black",
     pch = 21,
     size = pt_size
@@ -295,14 +295,14 @@ add_solution_history <- function(
   if (colored) {
     plt <- plt + geom(
       data = points_2d,
-      aes(x= .data[[x_col]], y = .data[[y_col]], col = point),
+      aes(x= .data[[x_col]], y = .data[[y_col]], col = .data[["point"]]),
       size = pt_size,
       alpha = pt_opacity
     ) + theme(legend.position = "none")
   } else {
     plt <- plt + geom(
       data = points_2d,
-      aes(x= .data[[x_col]], y = .data[[y_col]], group = point),
+      aes(x= .data[[x_col]], y = .data[[y_col]], group = .data[["point"]]),
       color = "black",
       size = pt_size,
       alpha = pt_opacity
