@@ -62,15 +62,15 @@ Rcpp::List optimize_positivity(const arma::mat& X,
                              const int stop_criteria_window,
                              const bool debug_stats
                              ) {
-    arma::mat errors_statistics(iterations, 21, arma::fill::zeros);
+    arma::mat errors_statistics(iterations + 1, 21, arma::fill::zeros);
 
-    arma::mat points_statistics_X(iterations, cell_types * cell_types, arma::fill::zeros);
-    arma::mat points_statistics_Omega(iterations, cell_types * cell_types, arma::fill::zeros);
+    arma::mat points_statistics_X(iterations + 1, cell_types * cell_types, arma::fill::zeros);
+    arma::mat points_statistics_Omega(iterations + 1, cell_types * cell_types, arma::fill::zeros);
     // arma::mat points_statistics_X_dtilda_uncorrected(iterations, cell_types * cell_types, arma::fill::zeros);
     // arma::mat points_statistics_Omega_dtilda_uncorrected(iterations, cell_types * cell_types, arma::fill::zeros);
     //arma::mat points_statistics_X_dtilda_corrected(iterations, cell_types * cell_types, arma::fill::zeros);
     //arma::mat points_statistics_Omega_dtilda_corrected(iterations, cell_types * cell_types, arma::fill::zeros);
-    arma::mat points_statistics_Dw(iterations, cell_types, arma::fill::zeros);
+    arma::mat points_statistics_Dw(iterations + 1, cell_types, arma::fill::zeros);
 
     arma::mat new_X = X;
     arma::mat new_Omega = Omega;
@@ -128,8 +128,10 @@ Rcpp::List optimize_positivity(const arma::mat& X,
     }
 
     // here we assume X and Omega are inverse of each other and positive as needed
+
     int itr_ = 0;
-    while ((itr_ < iterations) & (current_learning_rate > convergence_tol)) {
+    while ((itr_ < iterations + 1) & (current_learning_rate > convergence_tol)) {
+        if (itr_ > 0) { // in order to save initial errors, skip first step.
         hinge_term_H = l1_hinge_der_proportions_C__(new_X  * arma::diagmat(sqrt_Sigma)  * R, R) * arma::diagmat(sqrt_Sigma);
         hinge_term_W = (-new_Omega.t())  * arma::diagmat(sqrt_Sigma) * l1_hinge_der_basis_C__(S.t() * arma::diagmat(sqrt_Sigma) * new_Omega, S) * (new_Omega.t());
         der_X =  coef_hinge_H * hinge_term_H;
@@ -213,6 +215,7 @@ Rcpp::List optimize_positivity(const arma::mat& X,
 
         new_D_w = arma::pow(new_D_w_sqrt, 2);
         new_D_h = new_D_w * (N / M);
+        }
         double sum_ = accu(new_D_w) / M;
         arma::uword neg_props = getNegative(final_X * R);
         arma::uword neg_basis = getNegative(S.t() * final_Omega);
@@ -269,7 +272,7 @@ Rcpp::List optimize_positivity(const arma::mat& X,
 
         itr_++;
     }
-    if (itr_ < iterations) {
+    if (itr_ < iterations + 1) {
         points_statistics_X.resize(itr_, points_statistics_X.n_cols);
         points_statistics_Omega.resize(itr_, points_statistics_Omega.n_cols);
         points_statistics_Dw.resize(itr_, points_statistics_Dw.n_cols);

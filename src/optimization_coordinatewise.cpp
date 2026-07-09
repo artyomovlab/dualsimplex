@@ -30,10 +30,10 @@ Rcpp::List optimize_coordinate_descent(const arma::mat& X,
                              const double convergence_tol,
                              const int stop_criteria_window,
                              const bool debug_stats) {
-    arma::mat errors_statistics(iterations, 21, arma::fill::zeros);
-    arma::mat points_statistics_X(iterations, cell_types * cell_types, arma::fill::zeros);
-    arma::mat points_statistics_Omega(iterations, cell_types * cell_types, arma::fill::zeros);
-    arma::mat points_statistics_Dw(iterations, cell_types, arma::fill::zeros);
+    arma::mat errors_statistics(iterations + 1, 21, arma::fill::zeros);
+    arma::mat points_statistics_X(iterations + 1, cell_types * cell_types, arma::fill::zeros);
+    arma::mat points_statistics_Omega(iterations + 1, cell_types * cell_types, arma::fill::zeros);
+    arma::mat points_statistics_Dw(iterations + 1, cell_types, arma::fill::zeros);
 
 
     arma::mat new_X = X;
@@ -65,80 +65,82 @@ Rcpp::List optimize_coordinate_descent(const arma::mat& X,
                         
     int itr_ = 0;
 
-    while ((itr_ < iterations) & (current_learning_rate_X > convergence_tol) & (current_learning_rate_Omega > convergence_tol)) {
-        // derivative X
-        der_term_deconv_X =  -2 * (diagmat(new_D_w) * new_Omega.t() * (SVRt - new_Omega * diagmat(new_D_w) * new_X));
-        hinge_term_H = l1_hinge_der_proportions_C__(new_X * R, R);
-        der_X = der_term_deconv_X + coef_hinge_H * hinge_term_H;
-        der_X += coef_pos_D_h * 2 * new_D_h * (new_X.t() * new_D_h - sum_rows_R).t();
-        der_X.col(0).zeros();
-        der_X = correctByNorm(der_X) * mean_radius_X;
+    while ((itr_ < iterations + 1) & (current_learning_rate_X > convergence_tol) & (current_learning_rate_Omega > convergence_tol)) {
+        if (itr_ > 0) {
+            // derivative X
+            der_term_deconv_X =  -2 * (diagmat(new_D_w) * new_Omega.t() * (SVRt - new_Omega * diagmat(new_D_w) * new_X));
+            hinge_term_H = l1_hinge_der_proportions_C__(new_X * R, R);
+            der_X = der_term_deconv_X + coef_hinge_H * hinge_term_H;
+            der_X += coef_pos_D_h * 2 * new_D_h * (new_X.t() * new_D_h - sum_rows_R).t();
+            der_X.col(0).zeros();
+            der_X = correctByNorm(der_X) * mean_radius_X;
 
-        // cosine threshold correction if needed
-        if (thresh > 0) {
-            arma::mat tmp_X = (new_X - coef_der_X * der_X).t();
-            arma::mat tmp_X_2 = (new_X).t();
-            arma::uvec idx = update_idx(tmp_X, tmp_X_2, thresh);
+            // cosine threshold correction if needed
+            if (thresh > 0) {
+                arma::mat tmp_X = (new_X - coef_der_X * der_X).t();
+                arma::mat tmp_X_2 = (new_X).t();
+                arma::uvec idx = update_idx(tmp_X, tmp_X_2, thresh);
 
-            if (idx.n_elem > 0) {
-                der_X.rows(idx).zeros();
+                if (idx.n_elem > 0) {
+                    der_X.rows(idx).zeros();
+                }
             }
-        }
-        // Update X
-        new_X = new_X - current_learning_rate_X * der_X;
-        // threshold for length of the new X
-        if (r_const_X > 0) {
-            jump_X = jump_norm(new_X, r_const_X);
-            new_X = new_X % jump_X;
-        }
-
-        arma::mat vec_mtx(cell_types * cell_types, cell_types, arma::fill::zeros);
-        for (int c = 0; c < cell_types; c++) {
-            vec_mtx.col(c) = arma::vectorise(new_Omega.col(c) * new_X.row(c));
-        }
-        arma::mat A = arma::join_cols((M / N) * vec_mtx, coef_pos_D_h * new_X.t());
-
-        new_D_h = nnls_C__(A, C);
-        new_D_w = new_D_h * (M / N);
-
-        // derivative Omega
-        der_term_deconv_Omega =  -2 * (SVRt - new_Omega * diagmat(new_D_w) * new_X) * new_X.t() * diagmat(new_D_w);
-        hinge_term_W = l1_hinge_der_basis_C__(S.t() * new_Omega, S);
-        der_Omega = der_term_deconv_Omega + coef_hinge_W * hinge_term_W;
-        der_Omega += coef_pos_D_w * 2 * (new_Omega * new_D_w - sum_rows_S) * new_D_w.t();
-        der_Omega.row(0).zeros();
-        der_Omega = correctByNorm(der_Omega) * mean_radius_Omega;
-
-        if (thresh > 0) {
-            arma::mat tmp_Omega = new_Omega - coef_der_Omega * der_Omega;
-            arma::uvec idx2 = update_idx(tmp_Omega, new_Omega, thresh);
-
-            if (idx2.n_elem > 0) {
-                der_Omega.cols(idx2).zeros();
+            // Update X
+            new_X = new_X - current_learning_rate_X * der_X;
+            // threshold for length of the new X
+            if (r_const_X > 0) {
+                jump_X = jump_norm(new_X, r_const_X);
+                new_X = new_X % jump_X;
             }
+
+            arma::mat vec_mtx(cell_types * cell_types, cell_types, arma::fill::zeros);
+            for (int c = 0; c < cell_types; c++) {
+                vec_mtx.col(c) = arma::vectorise(new_Omega.col(c) * new_X.row(c));
+            }
+            arma::mat A = arma::join_cols((M / N) * vec_mtx, coef_pos_D_h * new_X.t());
+
+            new_D_h = nnls_C__(A, C);
+            new_D_w = new_D_h * (M / N);
+
+            // derivative Omega
+            der_term_deconv_Omega =  -2 * (SVRt - new_Omega * diagmat(new_D_w) * new_X) * new_X.t() * diagmat(new_D_w);
+            hinge_term_W = l1_hinge_der_basis_C__(S.t() * new_Omega, S);
+            der_Omega = der_term_deconv_Omega + coef_hinge_W * hinge_term_W;
+            der_Omega += coef_pos_D_w * 2 * (new_Omega * new_D_w - sum_rows_S) * new_D_w.t();
+            der_Omega.row(0).zeros();
+            der_Omega = correctByNorm(der_Omega) * mean_radius_Omega;
+
+            if (thresh > 0) {
+                arma::mat tmp_Omega = new_Omega - coef_der_Omega * der_Omega;
+                arma::uvec idx2 = update_idx(tmp_Omega, new_Omega, thresh);
+
+                if (idx2.n_elem > 0) {
+                    der_Omega.cols(idx2).zeros();
+                }
+            }
+
+            // Update Omega
+            new_Omega = new_Omega - current_learning_rate_Omega * der_Omega;
+            if (r_const_Omega > 0) {
+                arma::mat t_Omega = new_Omega.t();
+                jump_Omega = jump_norm(t_Omega, r_const_Omega);
+                jump_Omega = jump_Omega.t();
+                // has_jump_Omega = any(jump_Omega != 1);
+                new_Omega = new_Omega % jump_Omega;
+            }
+
+            vec_mtx.fill(arma::fill::zeros);
+            A.fill(arma::fill::zeros);
+
+            for (int c = 0; c < cell_types; c++) {
+                vec_mtx.col(c) = arma::vectorise(new_Omega.col(c) * new_X.row(c));
+            }
+            A = arma::join_cols(vec_mtx, coef_pos_D_w * new_Omega);
+
+            new_D_w = nnls_C__(A, B);
+
+            new_D_h = new_D_w * (N / M);
         }
-
-        // Update Omega
-        new_Omega = new_Omega - current_learning_rate_Omega * der_Omega;
-        if (r_const_Omega > 0) {
-            arma::mat t_Omega = new_Omega.t();
-            jump_Omega = jump_norm(t_Omega, r_const_Omega);
-            jump_Omega = jump_Omega.t();
-            // has_jump_Omega = any(jump_Omega != 1);
-            new_Omega = new_Omega % jump_Omega;
-        }
-
-        vec_mtx.fill(arma::fill::zeros);
-        A.fill(arma::fill::zeros);
-
-        for (int c = 0; c < cell_types; c++) {
-            vec_mtx.col(c) = arma::vectorise(new_Omega.col(c) * new_X.row(c));
-        }
-        A = arma::join_cols(vec_mtx, coef_pos_D_w * new_Omega);
-
-        new_D_w = nnls_C__(A, B);
-
-        new_D_h = new_D_w * (N / M);
 
         arma::uword neg_props = getNegative(new_X * R);
         arma::uword neg_basis = getNegative(S.t() * new_Omega);
@@ -207,7 +209,7 @@ Rcpp::List optimize_coordinate_descent(const arma::mat& X,
 
     }
 
-    if (itr_ < iterations) {
+    if (itr_ < iterations + 1) {
         points_statistics_X.resize(itr_, points_statistics_X.n_cols);
         points_statistics_Omega.resize(itr_, points_statistics_Omega.n_cols);
         points_statistics_Dw.resize(itr_, points_statistics_Dw.n_cols);
