@@ -180,38 +180,63 @@ initializers <- list(
       D_h = Ds$D_h
     ))
   },
-  random_invertible= function(proj, kwargs = NULL){
+  random_invertible = function(proj, kwargs = NULL) {
     n_cell_types <- proj$meta$K
     M <- proj$meta$M
     N <- proj$meta$N
-    sigma_1 <-  sqrt(M/N)
-    # We want to ensure that X_dtilda and Omega_dtilda are inverse and have all positive first row/column respectively
+    sigma_1 <-  sqrt(M / N)
+    # We want to ensure that X_dtilda and Omega_dtilda are inverse
+    # and have all positive first row/column respectively
 
     # First we generate d candidates  generationg vector whos elements sum to M
     d_elements <-  runif(n_cell_types, min = 1e-5, max = 1.0)
-    d_elements <- M* d_elements / sum(d_elements)
+    d_elements <- M * d_elements / sum(d_elements)
 
     # r1 (row of omega) will be  sqrt(d) / sqrt(sigma_1) / sqrt(M)
     r1 <- sqrt(d_elements) / (sqrt(sigma_1) * sqrt(M))
     # c1 is predefined. its sqrt(d) / sqrt(sigma_1) / sqrt(N)
     c1 <- sqrt(d_elements) / (sqrt(sigma_1) * sqrt(N))
     if (!((sum(r1 * c1) - 1) < 1e-6)) {
-      spdl::error("Something is broken initalization and matrix will not inverted of each other")
+      spdl::error("Error in first row/column initialization.  r1 and c1 should have specific relation")
     }
-    # construct the null space vectors of the
+    # construct the null space vectors of the r1. 
+    # N_r orthonormal to r1
     N_r <- MASS::Null(matrix(r1, ncol = 1))
-    # then X_d_tilda will be the  new c1 with this null space
-    X_dtilda <- cbind(c1, N_r)
+    
+    # However orthonormality of N_r is not necessary for us
+    # We break it with the random invertible matrix
+    dim_null <- ncol(N_r)
+    W <- matrix(runif(dim_null * dim_null, min = -1.0, max = 1.0), nrow = dim_null)
+    # Force it to be diagonally dominant so it is computationally stable
+    diag(W) <- rowSums(W) + 1.0
+    # Scramble the null space. V is now linearly independent, in the null space,
+    # but NO LONGER orthonormal.
+    V <- N_r %*% W
+    X_dtilda <- cbind(c1, V)
     # and omega should be the inverse of this matrix
-    Omega_dtilda <- MASS::ginv(X_dtilda)
+    Omega_dtilda <- solve(X_dtilda)
 
     # Now let's combine all of this to the new matrix X and Omega
-    # X should be   * 1/sqrt(D)  * X_d_tilda   * Sigma
-    X <- diag(1/sqrt(d_elements))%*%  X_dtilda %*% sqrt(proj$meta$Sigma)  ;
-    # Omega should be 1/sqrt(D) * X_d_tilda * Sigma
-    Omega <-  sqrt(proj$meta$Sigma) %*%  Omega_dtilda %*% diag(1/sqrt(d_elements));
+    # X should be   * 1/sqrt(D)  * X_d_tilda   * sqrt(Sigma)
+    X <- diag(1 / sqrt(d_elements)) %*%  X_dtilda %*% sqrt(proj$meta$Sigma)
+    # Omega should be sqrt(Sigma) * Omega_dtilda * 1/sqrt(D)
+    Omega <-  sqrt(proj$meta$Sigma) %*% Omega_dtilda %*% diag(1/sqrt(d_elements))
+    # --- ASSERTS ---
+    identity_check <- Omega_dtilda %*% X_dtilda
+    target_identity <- diag(nrow(X_dtilda))
+    # Check inverse
+    if (max(abs(identity_check - target_identity)) > 1e-6) {
+      spdl::error("X_dtilda and Omega_dtilda are not mathematical inverses of each other.")
+    }
+    # Check r1 c1 property
+    new_r1 <- Omega_dtilda[1, ]
+    if (abs(sum(new_r1 * c1) - 1) < 1e-6) {
+      spdl::error("We lost r1 vs c1 properties in the middle")
+    }
+    # ------
+
     Dw <- as.matrix(d_elements)
-    Dh <- Dw *(N / M);
+    Dh <- Dw * (N / M)
     return(list(
       X = X,
       Omega = t(Omega),
@@ -220,7 +245,7 @@ initializers <- list(
     ))
 
   },
-    random_symmetric = function(proj, kwargs = NULL) {
+  random_symmetric = function(proj, kwargs = NULL) {
     if (!is.null(kwargs) && "n" %in% kwargs) {
       n <- kwargs[["n"]]
     } else {

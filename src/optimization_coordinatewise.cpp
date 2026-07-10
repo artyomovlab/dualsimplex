@@ -138,7 +138,6 @@ Rcpp::List optimize_coordinate_descent(const arma::mat& X,
             A = arma::join_cols(vec_mtx, coef_pos_D_w * new_Omega);
 
             new_D_w = nnls_C__(A, B);
-
             new_D_h = new_D_w * (N / M);
         }
 
