@@ -173,6 +173,10 @@ initializers <- list(
     X <- proj$X[ids_X, ]
 
     Ds <- get_Dwh_from_XOmega(X, Omega, proj)
+    colnames(X) <- colnames(proj$X)
+    rownames(X) <- paste("Init ", c(1: n_cell_types))
+    rownames(Omega) <- colnames(proj$Omega)
+    colnames(Omega) <- paste("Init ", c(1: n_cell_types))
     return(list(
       X = X,
       Omega = t(Omega),
@@ -232,6 +236,10 @@ initializers <- list(
     if (!(abs(sum(new_r1 * c1) - 1) < 1e-6)) {
       spdl::error("We lost r1 vs c1 properties in the middle")
     }
+    colnames(X) <- colnames(proj$X)
+    rownames(X) <- paste("Init ", c(1: n_cell_types))
+    rownames(Omega) <- colnames(proj$Omega)
+    colnames(Omega) <- paste("Init ", c(1: n_cell_types))
     # ------
     Dw <- as.matrix(d_elements)
     Dh <- Dw * (N / M)
