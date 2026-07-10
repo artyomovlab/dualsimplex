@@ -175,11 +175,12 @@ initializers <- list(
     Ds <- get_Dwh_from_XOmega(X, Omega, proj)
     colnames(X) <- colnames(proj$X)
     rownames(X) <- paste("Init ", c(1: n_cell_types))
-    rownames(Omega) <- colnames(proj$Omega)
-    colnames(Omega) <- paste("Init ", c(1: n_cell_types))
+    Omega <- t(Omega)
+    colnames(Omega) <- colnames(proj$Omega)
+    rownames(Omega) <- paste("Init ", c(1: n_cell_types))
     return(list(
       X = X,
-      Omega = t(Omega),
+      Omega = Omega,
       D_w = Ds$D_w,
       D_h = Ds$D_h
     ))
@@ -238,14 +239,15 @@ initializers <- list(
     }
     colnames(X) <- colnames(proj$X)
     rownames(X) <- paste("Init ", c(1: n_cell_types))
-    rownames(Omega) <- colnames(proj$Omega)
-    colnames(Omega) <- paste("Init ", c(1: n_cell_types))
+    Omega <- t(Omega)
+    colnames(Omega) <- colnames(proj$Omega)
+    rownames(Omega) <- paste("Init ", c(1: n_cell_types))
     # ------
     Dw <- as.matrix(d_elements)
     Dh <- Dw * (N / M)
     return(list(
       X = X,
-      Omega = t(Omega),
+      Omega = Omega,
       D_w = Dw,
       D_h = Dh
     ))
