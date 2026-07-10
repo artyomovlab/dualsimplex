@@ -258,39 +258,41 @@ optimize_solution <- function(
   colnames(solution_proj$Omega) <- rownames(proj$meta$R)
   colnames(solution_proj$X) <- rownames(proj$meta$R)
 
+  target_iterations <-  ifelse(from_idx == 1, iterations + 1, iterations) 
+
   solution_proj$optim_history$errors_statistics <- rbind(
     solution_proj$optim_history$errors_statistics,
-      optimization_result$errors_statistics
+    tail(optimization_result$errors_statistics, target_iterations)
   )
 
   solution_proj$optim_history$points_statistics_X <- rbind(
     solution_proj$optim_history$points_statistics_X,
-      optimization_result$points_statistics_X
+    tail(optimization_result$points_statistics_X,  target_iterations)
   )
   solution_proj$optim_history$points_statistics_Omega <- rbind(
     solution_proj$optim_history$points_statistics_Omega,
-           optimization_result$points_statistics_Omega
+    tail(optimization_result$points_statistics_Omega, target_iterations)
   )
   solution_proj$optim_history$points_statistics_Dw <- rbind(
   solution_proj$optim_history$points_statistics_Dw,
-           optimization_result$points_statistics_Dw
+           tail(optimization_result$points_statistics_Dw, target_iterations)
   )
   if (config$method == "positivity")  {
   #   solution_proj$optim_history$points_statistics_X_dtilda <- rbind(
   #     solution_proj$optim_history$points_statistics_X_dtilda,
-  #     optimization_result$points_statistics_X_dtilda
+  #     tail(optimization_result$points_statistics_X_dtilda, target_iterations)
   # )
   #   solution_proj$optim_history$points_statistics_X_dtilda_uncorrected <- rbind(
   #     solution_proj$optim_history$points_statistics_X_dtilda_uncorrected,
-  #     optimization_result$points_statistics_X_dtilda_uncorrected
+  #     tail(optimization_result$points_statistics_X_dtilda_uncorrected, target_iterations)
   # )
   #   solution_proj$optim_history$points_statistics_Omega_dtilda <- rbind(
   #     solution_proj$optim_history$points_statistics_Omega_dtilda,
-  #     optimization_result$points_statistics_Omega_dtilda
+  #     tail(optimization_result$points_statistics_Omega_dtilda, target_iterations)
   # )
   #   solution_proj$optim_history$points_statistics_Omega_dtilda_uncorrected <- rbind(
   #     solution_proj$optim_history$points_statistics_Omega_dtilda_uncorrected,
-  #     optimization_result$points_statistics_Omega_dtilda_uncorrected
+  #     tail(optimization_result$points_statistics_Omega_dtilda_uncorrected, target_iterations)
   # )
 
   }
