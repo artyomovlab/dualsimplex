@@ -77,7 +77,7 @@ concat_data <- function(data_list, group_colname) {
 #' @param to_iter end point
 #' @return X and Omega values for desired timestamps
 #' @export
-get_solution_history <- function(solution_proj, step, from_iter = 1, to_iter = NULL) {
+get_solution_history <- function(solution_proj, step, from_iter = 0, to_iter = NULL) {
   stats <- list()
   stats$X <- solution_proj$optim_history$points_statistics_X
   stats$Omega <- solution_proj$optim_history$points_statistics_Omega
@@ -93,7 +93,7 @@ get_solution_history <- function(solution_proj, step, from_iter = 1, to_iter = N
   solution_history <- lapply(stats, function(mat) {
     tran <- matrix(c(t(mat)), ncol = nct, byrow = T)
     tran <- cbind(tran, rep(1:nct, times = nit))
-    tran <- cbind(tran, rep(1:nit, each = nct))
+    tran <- cbind(tran, rep(0:(nit - 1), each = nct))
     colnames(tran) <- c(paste0("dim_", 1:nct), "point", "iter")
     tran <- tran[(tran[, "iter"] >= from_iter) & (tran[, "iter"] <= to_iter), ]
     tran <- tran[((tran[, "iter"] %% step) == 0) | (tran[, "iter"] == to_iter) | (tran[, "iter"] == from_iter), ]
@@ -271,7 +271,7 @@ add_solution_history <- function(
   pt_size = 0.5,
   pt_opacity = 0.95,
   step = 100,
-  from_iter = 1,
+  from_iter = 0,
   to_iter = NULL,
   spaces = c("X", "Omega"),
   colored = TRUE,

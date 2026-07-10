@@ -693,7 +693,7 @@ DualSimplexSolver <- R6Class(
       color_features = "zero_distance", color_samples = "zero_distance",
       use_dims = private$display_dims, with_legend = NULL,
       with_solution = TRUE, with_history = TRUE,
-      wrap = T, show_plots = T, from_iter = 1, to_iter = NULL, ...
+      wrap = T, show_plots = T, from_iter = 0, to_iter = NULL, ...
     ) {
       if (inherits(use_dims, "list")) {
         plotlist <- lapply(use_dims, function(this_use_dims) {
