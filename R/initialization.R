@@ -199,10 +199,9 @@ initializers <- list(
     if (!((sum(r1 * c1) - 1) < 1e-6)) {
       spdl::error("Error in first row/column initialization.  r1 and c1 should have specific relation")
     }
-    # construct the null space vectors of the r1. 
-    # N_r orthonormal to r1
+    # construct the null space vectors of the r1.
+    # N_r orthonormal and orthogonal to r1
     N_r <- MASS::Null(matrix(r1, ncol = 1))
-    
     # However orthonormality of N_r is not necessary for us
     # We break it with the random invertible matrix
     dim_null <- ncol(N_r)
@@ -230,11 +229,10 @@ initializers <- list(
     }
     # Check r1 c1 property
     new_r1 <- Omega_dtilda[1, ]
-    if (abs(sum(new_r1 * c1) - 1) < 1e-6) {
+    if (!(abs(sum(new_r1 * c1) - 1) < 1e-6)) {
       spdl::error("We lost r1 vs c1 properties in the middle")
     }
     # ------
-
     Dw <- as.matrix(d_elements)
     Dh <- Dw * (N / M)
     return(list(
