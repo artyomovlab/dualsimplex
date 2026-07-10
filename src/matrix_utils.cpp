@@ -50,8 +50,9 @@ arma::mat get_relative_coordinates_closest(const arma::mat& projected_points,con
             coefficients(i, vertex) = target_determinant/main_determinant;
         }
     }
-
-    coefficients.elem(arma::find(coefficients < 0)).fill(min_value);
+    if (min_value >= 0) {
+        coefficients.elem(arma::find(coefficients < 0)).fill(min_value);
+    }
     // now normalize row
     coefficients.each_col() %=  (1 / arma::sum(coefficients, 1));
     return coefficients;

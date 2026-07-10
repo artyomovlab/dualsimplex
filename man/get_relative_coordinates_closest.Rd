@@ -17,7 +17,7 @@ get_relative_coordinates_closest(
 
 \item{solution_points}{solution points to calculate respective relative coordinates (K x K).}
 
-\item{min_value}{value to replace negative elements.}
+\item{min_value}{value to replace negative elements. -1 to keep negatives}
 }
 \value{
 arma::mat coordinates of the points with respect to simplex vertices (number_of_points x K).

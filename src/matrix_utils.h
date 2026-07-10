@@ -31,7 +31,7 @@ double getSum(arma::mat X, arma::mat M);
 //'
 //' @param projected_points coordinates of rows/columns in svd space (number_of_poitns x K).
 //' @param solution_points solution points to calculate respective relative coordinates (K x K).
-//' @param min_value value to replace negative elements.
+//' @param min_value value to replace negative elements. -1 to keep negatives
 //' @return arma::mat coordinates of the points with respect to simplex vertices (number_of_points x K).
 //' @export
 // [[Rcpp::export]]
