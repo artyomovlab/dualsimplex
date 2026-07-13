@@ -213,7 +213,6 @@ initializers <- list(
     W <- matrix(runif(dim_null * dim_null, min = -1.0, max = 1.0), nrow = dim_null)
     # Force it to be diagonally dominant so it is computationally stable
     diag(W) <- rowSums(W) + 1.0
-    W <- W / n_cell_types # scale W to a number of K to reduce scaling effect of big W
     # Scramble the null space. V is now linearly independent, in the null space,
     # but NO LONGER orthonormal.
     V <- N_r %*% W
