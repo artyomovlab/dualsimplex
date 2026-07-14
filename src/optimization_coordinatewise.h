@@ -2,6 +2,8 @@
 
 // [[Rcpp::depends(RcppArmadillo)]]
 #include <RcppArmadillo.h>
+// [[Rcpp::depends(spdl)]]
+#include <spdl.h>
 
 //' Main training loop with all gradient steps. This is naive algorithm from version 1.0.
 //' It optimizes 3 terms (5 in experimental version). 

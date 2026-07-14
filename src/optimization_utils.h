@@ -2,7 +2,8 @@
 
 // [[Rcpp::depends(RcppArmadillo)]]
 #include <RcppArmadillo.h>
-
+// [[Rcpp::depends(spdl)]]
+#include <spdl.h>
 
 //' Experimental jump norm calculation. legacy
 //'
