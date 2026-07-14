@@ -214,6 +214,8 @@ Rcpp::List optimize_theta(const arma::mat& X,
         points_statistics_Dw.row(itr_) = new_D_w.as_row();
 
     }
+    spdl::info("Optimization completed with number of iterations perfomed: {}", iterations);
+
 
     return Rcpp::List::create(Rcpp::Named("new_X") = new_X,
     Rcpp::Named("new_Omega") = new_Omega,

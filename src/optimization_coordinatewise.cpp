@@ -207,7 +207,7 @@ Rcpp::List optimize_coordinate_descent(const arma::mat& X,
         itr_++;
 
     }
-    spdl::info("Optimization completed with number of iterations perfomed: {}", itr_);
+    spdl::info("Optimization completed with number of iterations perfomed: {}", itr_ - 1);
     if (itr_ < iterations + 1) {
         points_statistics_X.resize(itr_, points_statistics_X.n_cols);
         points_statistics_Omega.resize(itr_, points_statistics_Omega.n_cols);

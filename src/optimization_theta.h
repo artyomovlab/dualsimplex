@@ -1,5 +1,7 @@
 // [[Rcpp::depends(RcppArmadillo)]]
 #include <RcppArmadillo.h>
+// [[Rcpp::depends(spdl)]]
+#include <spdl.h>
 
 //' Main training loop with all gradient steps. This implementation tries to move points within the specified angle theta only.
 //'
