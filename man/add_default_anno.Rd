@@ -2,14 +2,14 @@
 % Please edit documentation in R/annotation.R
 \name{add_default_anno}
 \alias{add_default_anno}
-\title{Add dannotations for rows (genes) and columns (samples) of the matrix}
+\title{Add annotations for rows (genes) and columns (samples) of the matrix}
 \usage{
-add_default_anno(eset, gene_name_lists = NULL, sample_name_lists = NULL)
+add_default_anno(eset, feature_name_lists = NULL, sample_name_lists = NULL)
 }
 \arguments{
 \item{eset}{Expression set}
 
-\item{gene_name_lists}{named list of lists. Each sublist contains names of rows which should have TRUE value in annotaiton column.}
+\item{feature_name_lists}{named list of lists. Each sublist contains names of rows which should have TRUE value in annotaiton column.}
 
 \item{sample_name_lists}{named list of lists. Each sublist contains names of columns which should have TRUE value in annotation column.}
 }
@@ -19,6 +19,6 @@ annotated expression set. (fData, pData) now contain annotations
 \description{
 Will add (log_mean, log_median, log_sd, log_mad) for both rows and columns.
 For rows additionaly will produce columns for TRUE/FALSE regex filters specified in `add_gene_names_regex_anno`
-and also add TRUE/FALSE columns specified in gene_name_lists
+and also add TRUE/FALSE columns specified in feature_name_lists
 For columns additionaly will produce TRUE/FALSE columns pecified in sample_name_lists
 }

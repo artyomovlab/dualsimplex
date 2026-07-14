@@ -8,7 +8,8 @@ add_noise(
   simulation,
   noise_deviation,
   protect_genes = c(),
-  protect_samples = c()
+  protect_samples = c(),
+  noise_type = "norm_exp"
 )
 }
 \arguments{
@@ -19,6 +20,8 @@ add_noise(
 \item{protect_genes}{do not modigy these rows}
 
 \item{protect_samples}{do not modigy these samples}
+
+\item{noise_type}{norm_exp/additive/proportional controls how noise is generated}
 }
 \value{
 modified sim object

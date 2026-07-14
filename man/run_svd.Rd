@@ -7,13 +7,13 @@
 run_svd(V, k, method = "svd", ...)
 }
 \arguments{
-\item{V}{input matrix}
+\item{V}{input matrix.}
 
-\item{k}{how many dimensions to take}
+\item{k}{how many dimensions to take.}
 
 \item{method}{SVD method to be used. Currently 'svd' and 'irlba' are implemented.}
 
-\item{...}{all other parameters passed to spesified SVD algorithm}
+\item{...}{all other parameters passed to spesified SVD algorithm.}
 }
 \value{
 a SVD object contains u, v, d as in base::svd

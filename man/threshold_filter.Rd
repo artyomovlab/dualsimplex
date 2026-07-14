@@ -4,16 +4,22 @@
 \alias{threshold_filter}
 \title{Simple threshold filter based on annotation values}
 \usage{
-threshold_filter(eset, feature, threshold, genes = T, keep_lower = T)
+threshold_filter(
+  eset,
+  annotation_feature,
+  threshold,
+  for_features = TRUE,
+  keep_lower = TRUE
+)
 }
 \arguments{
 \item{eset}{Expression set (annotated matrix)}
 
-\item{feature}{numerical feature to test}
+\item{annotation_feature}{numerical feature to test}
 
 \item{threshold}{numerical threshold value}
 
-\item{genes}{if TRUE filter rows else columns}
+\item{for_features}{if TRUE filter rows else columns}
 
 \item{keep_lower}{should we remove or keep values below threshold}
 }

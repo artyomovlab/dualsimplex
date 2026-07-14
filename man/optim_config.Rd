@@ -5,23 +5,32 @@
 \title{Make optimization config object for the training method}
 \usage{
 optim_config(
-  coef_der_X = 0.1,
-  coef_der_Omega = 0.1,
-  coef_hinge_H = 1,
-  coef_hinge_W = 1,
-  coef_pos_D_h = 0,
-  coef_pos_D_w = 0,
-  limit_X = 0,
-  limit_Omega = 0,
-  cosine_thresh = 0,
+  method = "positivity",
+  debug_stats = FALSE,
+  coef_der_X = 0.01,
+  coef_der_Omega = 0.01,
+  coef_hinge_H = 0.5,
+  coef_hinge_W = 0.5,
+  total_regularization_weight = 0,
+  reg_X = 1,
+  reg_Omega = 1,
+  stop_criteria_window = 800,
+  convergence_tol = 1e-09,
   x_center = NULL,
   omega_center = NULL,
   center_threshold = 0,
-  solution_balancing_threshold = 10000,
-  method = "basic"
+  limit_X = 0,
+  limit_Omega = 0,
+  cosine_thresh = 0,
+  coef_pos_D_h = 0,
+  coef_pos_D_w = 0
 )
 }
 \arguments{
+\item{method}{method of optimization to use can be  basic/positivity.}
+
+\item{debug_stats}{keep track on gradient norms}
+
 \item{coef_der_X}{learning rate for X space}
 
 \item{coef_der_Omega}{learning rate for Omega space}
@@ -30,15 +39,15 @@ optim_config(
 
 \item{coef_hinge_W}{positiviy penalty for Omega space (beta)}
 
-\item{coef_pos_D_h}{EXPERIMENTAL: penalty for D_h value (how far X^TxDh if from A(R))). should be 0 since not tested.}
+\item{total_regularization_weight}{regularization weight for optimization}
 
-\item{coef_pos_D_w}{EXPERIMENTAL: penalty for D_w value (how far OmegaxDw if from B(S))). should be 0 since not tested.}
+\item{reg_X}{regularization weight for X}
 
-\item{limit_X}{EXPERIMENTAL: if you want to restrict X from changing to much. should be 0 since not tested.}
+\item{reg_Omega}{regularization weight for Omega}
 
-\item{limit_Omega}{EXPERIMENTAL: if you want to restrict Omega from changing to much. should be 0 since not tested.}
+\item{stop_criteria_window}{learning rate will be decreased if total error did not change within this window}
 
-\item{cosine_thresh}{EXPERIMENTAL: if you want to restrict derivative from changing to much. should be 0 since not tested.}
+\item{convergence_tol}{the limit for the learnig rate decrasing}
 
 \item{x_center}{X rays around which to perform search in theta search.}
 
@@ -46,9 +55,15 @@ optim_config(
 
 \item{center_threshold}{constraint for the  step.}
 
-\item{solution_balancing_threshold}{EXPERIMENTAL: only for positivity so far. If optimization going to far from the points in one space, some value of this distance will be transferred to the second space/}
+\item{limit_X}{EXPERIMENTAL: if you want to restrict X from changing to much. should be 0 since not tested.}
 
-\item{method}{method of optimization to use can be  basic/positivity.}
+\item{limit_Omega}{EXPERIMENTAL: if you want to restrict Omega from changing to much. should be 0 since not tested.}
+
+\item{cosine_thresh}{EXPERIMENTAL: if you want to restrict derivative from changing to much. should be 0 since not tested.}
+
+\item{coef_pos_D_h}{EXPERIMENTAL: penalty for D_h value (how far X^TxDh if from A(R))). should be 0 since not tested.}
+
+\item{coef_pos_D_w}{EXPERIMENTAL: penalty for D_w value (how far OmegaxDw if from B(S))). should be 0 since not tested.}
 }
 \value{
 ready to use list with algorithm configuration

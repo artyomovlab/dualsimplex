@@ -36,7 +36,7 @@ arma::vec nnls_nonzero_col(const arma::mat &A,
     arma::vec mu = -A.t() * b;
     arma::mat H = A.t() * A;
     arma::vec x(A.n_cols), x0(A.n_cols);
-    x.fill(1e-5);
+    x.fill(1e-9);
     x0.fill(-9999);
 
     int i = 0;
@@ -45,7 +45,7 @@ arma::vec nnls_nonzero_col(const arma::mat &A,
         x0 = x;
         for (unsigned int k = 0; k < A.n_cols; k++) {
             tmp = x(k) - mu(k) / H.at(k, k);
-            if (tmp < 0) tmp = 1e-5;
+            if (tmp < 0) tmp = 1e-9;
             if (tmp != x(k)) mu += (tmp - x(k)) * H.col(k);
             x(k) = tmp;
         }

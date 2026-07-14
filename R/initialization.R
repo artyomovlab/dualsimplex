@@ -3,7 +3,7 @@
 #' In general it can use provided markers, solution for one of the simplex or random values
 #'
 #' @param proj dso$st$proj object containing containing all results of projection operation. (e.g. projected points and vectors)
-#' @param strategy strategy to use for initialization. valid values are "select_x", "select_omega", "random" and "marker_means"
+#' @param strategy strategy to use for initialization. valid values are "select_x", "select_omega", "random", "random_invertible" and "marker_means"
 #' @param kwargs put here marker gene names for each of the cell type if use  marker_means
 #' @export
 initialize_solution <- function(proj, strategy = "select_x", kwargs = NULL) {
@@ -16,21 +16,24 @@ initialize_solution <- function(proj, strategy = "select_x", kwargs = NULL) {
 initializers <- list(
   marker_means = function(proj, kwargs) {
     if (!"marker_list" %in% names(kwargs)) {
-      stop("Put marker_list in kwargs for marker_means init.")
+      spdl::error("Specify marker_list in kwargs for marker_means init.")
+      stop("Specify marker_list in kwargs for marker_means init.")
     }
     mm <- lapply(kwargs$marker_list, function(ct_markers) {
       sel <- ct_markers[ct_markers %in% rownames(proj$X)]
-      if (length(sel) == 0) stop("One or more cell types has zero markers present")
-      colMeans(proj$X[sel, ])
+      if (length(sel) == 0) {
+        spdl::error("One or more cell types has zero markers present")
+        stop("One or more cell types has zero markers present")
+      }
     })
     K <- proj$meta$K
     X <- matrix(unlist(mm), ncol = K, byrow = T)
 
-    rownames(X) <-  paste0("marker_derived", 1:nrow(X))
+    rownames(X) <-  paste0("marker_derived", seq_len(nrow(X)))
     # Check if we have enough markers
 
     if (length(kwargs$marker_list) < K) {
-        print("Not enough markers were provided for the current K. Will set other vertices randomly with the highest center property after n attempts")
+        spdl::warn("Not enough markers were provided for the current K. Will set other vertices randomly with the highest center property after n attempts")
         if (!is.null(kwargs) && "n" %in% kwargs) {
             n <- kwargs$n
         } else {
@@ -58,8 +61,8 @@ initializers <- list(
   },
 
   select_x = function(proj, kwargs = list()) {
-    if ("genes_subset" %in% kwargs) {
-      points <- proj$X[kwargs$genes_subset, ]
+    if ("features_subset" %in% kwargs) {
+      points <- proj$X[kwargs$features_subset, ]
     } else {
       points <- proj$X
     }
@@ -170,14 +173,87 @@ initializers <- list(
     X <- proj$X[ids_X, ]
 
     Ds <- get_Dwh_from_XOmega(X, Omega, proj)
+    colnames(X) <- colnames(proj$X)
+    rownames(X) <- paste("Init ", c(1: n_cell_types))
+    Omega <- t(Omega)
+    colnames(Omega) <- colnames(proj$Omega)
+    rownames(Omega) <- paste("Init ", c(1: n_cell_types))
     return(list(
       X = X,
-      Omega = t(Omega),
+      Omega = Omega,
       D_w = Ds$D_w,
       D_h = Ds$D_h
     ))
   },
-    random_symmetric = function(proj, kwargs = NULL) {
+  random_invertible = function(proj, kwargs = NULL) {
+    n_cell_types <- proj$meta$K
+    M <- proj$meta$M
+    N <- proj$meta$N
+    sigma_1 <-  sqrt(M / N)
+    # We want to ensure that X_dtilda and Omega_dtilda are inverse
+    # and have all positive first row/column respectively
+
+    # First we generate d candidates  generationg vector whos elements sum to M
+    d_elements <-  runif(n_cell_types, min = 1e-5, max = 1.0)
+    d_elements <- M * d_elements / sum(d_elements)
+
+    # r1 (row of omega) will be  sqrt(d) / sqrt(sigma_1) / sqrt(M)
+    r1 <- sqrt(d_elements) / (sqrt(sigma_1) * sqrt(M))
+    # c1 is predefined. its sqrt(d) / sqrt(sigma_1) / sqrt(N)
+    c1 <- sqrt(d_elements) / (sqrt(sigma_1) * sqrt(N))
+    if (!((sum(r1 * c1) - 1) < 1e-6)) {
+      spdl::error("Error in first row/column initialization.  r1 and c1 should have specific relation")
+    }
+    # construct the null space vectors of the r1.
+    # N_r orthonormal and orthogonal to r1
+    N_r <- MASS::Null(matrix(r1, ncol = 1))
+    # However orthonormality of N_r is not necessary for us
+    # We break it with the random invertible matrix
+    dim_null <- ncol(N_r)
+    W <- matrix(runif(dim_null * dim_null, min = -1.0, max = 1.0), nrow = dim_null)
+    # Force it to be diagonally dominant so it is computationally stable
+    diag(W) <- rowSums(W) + 1.0
+    # Scramble the null space. V is now linearly independent, in the null space,
+    # but NO LONGER orthonormal.
+    V <- N_r %*% W
+    X_dtilda <- cbind(c1, V)
+    # and omega should be the inverse of this matrix
+    Omega_dtilda <- solve(X_dtilda)
+
+    # Now let's combine all of this to the new matrix X and Omega
+    # X should be   * 1/sqrt(D)  * X_d_tilda   * sqrt(Sigma)
+    X <- diag(1 / sqrt(d_elements)) %*%  X_dtilda %*% sqrt(proj$meta$Sigma)
+    # Omega should be sqrt(Sigma) * Omega_dtilda * 1/sqrt(D)
+    Omega <-  sqrt(proj$meta$Sigma) %*% Omega_dtilda %*% diag(1/sqrt(d_elements))
+    # --- ASSERTS ---
+    identity_check <- Omega_dtilda %*% X_dtilda
+    target_identity <- diag(nrow(X_dtilda))
+    # Check inverse
+    if (max(abs(identity_check - target_identity)) > 1e-6) {
+      spdl::error("X_dtilda and Omega_dtilda are not mathematical inverses of each other.")
+    }
+    # Check r1 c1 property
+    new_r1 <- Omega_dtilda[1, ]
+    if (!(abs(sum(new_r1 * c1) - 1) < 1e-6)) {
+      spdl::error("We lost r1 vs c1 properties in the middle")
+    }
+    colnames(X) <- colnames(proj$X)
+    rownames(X) <- paste("Init ", c(1: n_cell_types))
+    Omega <- t(Omega)
+    colnames(Omega) <- colnames(proj$Omega)
+    rownames(Omega) <- paste("Init ", c(1: n_cell_types))
+    # ------
+    Dw <- as.matrix(d_elements)
+    Dh <- Dw * (N / M)
+    return(list(
+      X = X,
+      Omega = Omega,
+      D_w = Dw,
+      D_h = Dh
+    ))
+
+  },
+  random_symmetric = function(proj, kwargs = NULL) {
     if (!is.null(kwargs) && "n" %in% kwargs) {
       n <- kwargs[["n"]]
     } else {
@@ -220,11 +296,14 @@ initializers <- list(
     # Having center points provided we want to initialize in some
     # random point within theta angle
     if (!"init_centers" %in% names(kwargs)) {
-      stop("Put init_centers with X and optionaly Omega in kwargs to set
+      spdl::error("Specify init_centers with X and optionaly Omega in kwargs to set
+      some starting point for this initialization.")
+      stop("Specify init_centers with X and optionaly Omega in kwargs to set
       some starting point for this initialization.")
     }
     if (!"theta" %in% names(kwargs)) {
-      stop("Put theta in kwargs to set some constraint on theta.")
+      spdl::error("Specify theta in kwargs to set some constraint on theta.")
+      stop("Specify theta in kwargs to set some constraint on theta.")
     }
     max_length <- 1.5
     n_cell_types <- proj$meta$K

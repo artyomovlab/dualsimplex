@@ -1,6 +1,9 @@
+#pragma once
+
 // [[Rcpp::depends(RcppArmadillo)]]
 #include <RcppArmadillo.h>
-
+// [[Rcpp::depends(spdl)]]
+#include <spdl.h>
 
 std::tuple<arma::mat, arma::mat, arma::mat> ensure_D_integrity_c(const arma::mat& X_dtilde,
                               const arma::mat& Omega_dtilde,
@@ -29,7 +32,9 @@ Rcpp::List ensure_D_integrity(const arma::mat& X_dtilde,
 
 
 
-//' Main function to calculate error terms
+//' Main training loop with all gradient steps. This is the main algorithm for now. 
+//' It optimizes two positivity terms ensuring invertability of both X and Omega. 
+//' Gradient steps performed in X space.
 //'
 //' @param X current X
 //' @param Omega current Omega
@@ -38,42 +43,36 @@ Rcpp::List ensure_D_integrity(const arma::mat& X_dtilde,
 //' @param R current R
 //' @param S current S
 //' @param coef_der_X learning rate X
-//' @param coef_der_Omega learning rate Omega
 //' @param coef_hinge_H lambda
 //' @param coef_hinge_W beta
-//' @param coef_pos_D_h experimental coefficient for D. legacy not tested.
-//' @param coef_pos_D_w experimental coefficient for D. legacy not tested.
 //' @param cell_types number of components (K)
 //' @param N current N
 //' @param M current M
 //' @param iterations number of iterations
-//' @param mean_radius_X data dependent restriction for updates
-//' @param mean_radius_Omega dependent restriction for updates
-//' @param r_const_X experimental. not tested
-//' @param r_const_Omega experimental. not tested
-//' @param thresh experimental. not tested
-//' @param solution_balancing_threshold experimental. If solution is to far away we re-balance norms of the solution vectors between X and Omega
+//' @param total_regularization_weight total weight for the regularization terms
+//' @param reg_X proportion / regularization coefficient for X
+//' @param reg_Omega proportion / regularization coefficient for Omega.
+//' @param convergence_tol tolerance for convergence.
+//' @param stop_criteria_window how long error should be on plateu to decrease the learning rate
+//' @param debug_stats wether to save grad norm values.
 //' @return new parameters
 // [[Rcpp::export]]
-Rcpp::List alternative_derivative_stage2(const arma::mat& X,
+Rcpp::List optimize_positivity(const arma::mat& X,
                              const arma::mat& Omega,
                              const arma::mat& D_w,
                              const arma::mat& SVRt,
                              const arma::mat& R,
                              const arma::mat& S,
                              const double coef_der_X,
-                             const double coef_der_Omega,
-                             const double coef_hinge_H,
-                             const double coef_hinge_W,
-                             const double coef_pos_D_h,
-                             const double coef_pos_D_w,
+                             double coef_hinge_H,
+                             double coef_hinge_W,
                              const int cell_types,
                              const double N,
                              const double M,
                              const int iterations,
-                             const double mean_radius_X,
-                             const double mean_radius_Omega,
-                             const double r_const_X = 0,
-                             const double r_const_Omega = 0,
-                             const double thresh = 0.8,
-                             const double solution_balancing_threshold = 10000);
+                             double total_regularization_weight = 0,
+                             const double reg_X = 1,
+                             const double reg_Omega=1,
+                             const double convergence_tol=1e-12,
+                             const int stop_criteria_window = 1e+5, 
+                             const bool debug_stats=false);

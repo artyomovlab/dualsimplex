@@ -31,7 +31,7 @@ calc_svd_ops <- function(V_row, max_dim = 50L, method = "svd", ...) {
     R[1, ] <- -R[1, ]
   }
 
-  rownames(R) <- paste0("dim_", 1:nrow(R))
+  rownames(R) <- paste0("dim_", seq_len(nrow(R)))
   colnames(R) <- colnames(V_row)
   rownames(S) <- rownames(R)
   colnames(S) <- rownames(V_row)
@@ -56,6 +56,7 @@ svd_project_with_ops <- function(scaling, ops, dims = NULL) {
   # Setup
   if (!is.null(dims)) {
     if (max(dims) > ops[["max_dim"]]) {
+      spdl::error("Not enough dimension in ops. Run `set_data` or `calc_svd_ops` with larger max_dim parameter")
       stop("Not enough dimension in ops. Run `calc_svd_ops` with larger max_dim parameter")
     }
 
@@ -181,11 +182,19 @@ add_proj_umap <- function(proj, with_model = FALSE, neighbors_X = 15, neighbors_
 #' @export
 transform_proj_umap <- function(points, proj) {
   if (is.null(proj$umap)) {
+    spdl::error(paste(
+      "Projection umap is not calculated.",
+      "Use add_proj_umap(proj, with_model = TRUE) first."
+    ))
     stop(paste(
       "Projection umap is not calculated.",
       "Use add_proj_umap(proj, with_model = TRUE) first."
     ))
   } else if (is.null(proj$umap$model)) {
+    spdl::error(paste(
+      "No model was calculated for umap.",
+      "Use add_proj_umap(proj, with_model = TRUE) first."
+    ))
     stop(paste(
       "No model was calculated for umap.",
       "Use add_proj_umap(proj, with_model = TRUE) first."
@@ -203,7 +212,7 @@ transform_proj_umap <- function(points, proj) {
 #' from projected Omega points to original column normalized matrix W_gs
 #'
 #' @param X_space_pts points in samples space (X space, samples space, left simplex)
-#' @param Omega_space_pts   points in features space (Omega space, genes space, right simplex)
+#' @param Omega_space_pts   points in features space (Omega space, feature space, right simplex)
 #' @param proj dso$st$proj object containing projected points and umap info
 #' @return list of two matrices (H_ss, W_gs)
 #' @export
@@ -225,11 +234,33 @@ reverse_solution_projection <- function(solution_proj, proj) {
   solution_scaled <- reverse_svd_projection(solution_proj$X, t(solution_proj$Omega), proj)
   names(solution_scaled) <- c("H_row", "W_col")
   if (is.null(rownames(solution_scaled$H_row)) && is.null(colnames(solution_scaled$W_col))) {
-    rownames(solution_scaled$H_row) <- paste0("cell_type_", 1:nrow(solution_scaled$H_row))
+    rownames(solution_scaled$H_row) <- paste0("cell_type_", seq_len(nrow(solution_scaled$H_row)))
     colnames(solution_scaled$W_col) <- rownames(solution_scaled$H_row)
   }
   return(solution_scaled)
 }
+
+#' Transform solution back from projected space to original space. Obtains paired matrices
+#' Remember result matrices are paired not the same as for reverse_solution_projection.
+#' @param solution_proj dso$st$solution_proj object containing solution and optimization history
+#' @param proj dso$st$proj object containing projected points and info about projection
+#' @return solution_scaled object containing two matrices (H_gs, W_ss)
+#' @import Rcpp
+#' @import RcppArmadillo
+#' @return list containing H_gs (col_norm) W_ss (row_norm)
+#' @export
+reverse_solution_projection_geometrical <- function(solution_proj, proj) {
+  w_ss <- get_relative_coordinates_closest(proj$X, solution_proj$X)
+  h_gs <-  t(get_relative_coordinates_closest(proj$Omega, solution_proj$Omega))
+  rownames(w_ss) <-  rownames(proj$X)
+  colnames(h_gs) <-  rownames(proj$Omega)
+  solution_scaled <-  list("H_col" = h_gs, "W_row" = w_ss)
+  rownames(solution_scaled$H_col) <- paste0("cell_type_", seq_len(nrow(solution_scaled$H_col)))
+  colnames(solution_scaled$W_row) <- rownames(solution_scaled$H_col)
+  return(solution_scaled)
+}
+
+
 
 #' Go from H_ss, W_gs to X and Omega coordinates. Used get coordinates for external W, H matrices.
 #'
@@ -315,10 +346,10 @@ plot_svd_ds_matrix <- function(svd_ds, cumulative = T, variance = T) {
     vars <- t(apply(vars, 1, function(step_vars) {cumsum(step_vars / sum(step_vars))}))
   }
   vars <- as.data.frame(vars)
-  colnames(vars) <- 1:ncol(vars)
+  colnames(vars) <- seq_len(ncol(vars))
   values <- colnames(vars)
   if (is.null(rownames(svd_ds)))
-    rownames(svd_ds) <- 1:nrow(svd_ds)
+    rownames(svd_ds) <- seq_len(nrow(svd_ds))
   vars[, "step"] <- as.factor(rownames(svd_ds))
   to_plot <- tidyr::pivot_longer(
     vars,
@@ -333,11 +364,10 @@ plot_svd_ds_matrix <- function(svd_ds, cumulative = T, variance = T) {
 
 #' SVD wrapper function
 #' 
-#' @param V input matrix
-#' @param k how many dimensions to take
+#' @param V input matrix.
+#' @param k how many dimensions to take.
 #' @param method SVD method to be used. Currently 'svd' and 'irlba' are implemented.
-#' @param ... all other parameters passed to spesified SVD algorithm
-#' 
+#' @param ... all other parameters passed to spesified SVD algorithm.
 #' @return a SVD object contains u, v, d as in base::svd
 run_svd <- function(V, k, method = "svd", ...) {
   # Sanity check
@@ -358,16 +388,13 @@ run_svd <- function(V, k, method = "svd", ...) {
         )
     )
   )
-  
   # Sanity check
   if (!(method %in% names(implemented))) {
+    spdl::error("`method` should be one of the ", paste(names(implemented), collapse = ", "), ".")
     stop("`method` should be one of the ", paste(names(implemented), collapse = ", "), ".")
   }
-  
-  
   # Construct arguments
   user_args <- as.list(substitute(...()))
-  
   # Sanity check. Following approach prevent argument duplication check in `...`.
   # Let's check it manually.
   if (any(duplicated(names(user_args)))) {
@@ -380,8 +407,7 @@ run_svd <- function(V, k, method = "svd", ...) {
       " matched by multiple actual arguments."
     )
   }
-  
-  # Unique argumants are selected in following order:
+  # Unique arguments are selected in following order:
   #   1. user input in `...`,
   #   2. custom 'defaults'
   #   3. default arguments in the original function. This is handled by `do.call`

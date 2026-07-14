@@ -60,6 +60,71 @@ reverse_sinkhorn <- function(H_row, W_col, scaling) {
   return(unscaled)
 }
 
+#' reverse Sinkhorn transform scaled matrix
+#'
+#' Calculate all normalizing matrices and restore "unscaled" W and H
+#' columns of D_ws_col and D_hs_row will contain history of D_w and D_h matrices
+#' W_column, H_column will contain "unscaled" W and H
+#'
+#' @param H_col solution matrix H_ss produced by optimization algorithm (X*R).
+#' @param W_row solution matrix W_gs produced by optimization algorithm (t(S)*Omega).
+#' @param scaling dso$scaling object containing normalization matrices.
+#' @param enforce_sum_to_one_H algorithm will use NNLS to find H as close to column normalized as possible.
+#' @param enforce_sum_to_one_V algorithm will ensure result V is column normalized (leading to H column normalizing).
+#' @return unscaled object
+#' @import Rcpp
+#' @import RcppArmadillo
+#' @export
+clean_reverse_sinkhorn <- function(H_col, W_row, scaling, enforce_sum_to_one_H = 0, enforce_sum_to_one_V = 0) {
+  unscaled <- clean_reverse_sinkhorn_c(
+    H_col,
+    W_row,
+    scaling$D_vs_row,
+    scaling$D_vs_col,
+    scaling$iterations,
+    enforce_sum_to_one_H = enforce_sum_to_one_H,
+    enforce_sum_to_one_V = enforce_sum_to_one_V
+    )
+
+  dimnames(unscaled$H) <- dimnames(H_col)
+  dimnames(unscaled$W) <- dimnames(W_row)
+  # Alternative solution - W could be col-norm or H col-norm
+  dimnames(unscaled$H_2) <- dimnames(H_col)
+  dimnames(unscaled$W_2) <- dimnames(W_row)
+  return(unscaled)
+}
+
+
+#' reverse Sinkhorn transform scaled matrix
+#'
+#' Calculate all normalizing matrices and restore "unscaled" W and H
+#' columns of D_ws_col and D_hs_row will contain history of D_w and D_h matrices
+#' W_column, H_column will contain "unscaled" W and H
+#'
+#' @param h_col solution matrix H_ss produced by optimization algorithm (X*R)
+#' @param w_row solution matrix W_gs produced by optimization algorithm (t(S)*Omega)
+#' @param scaling dso$scaling object containing normalization matrices
+#' @param v_inf_row result V_ss matrix (you can get it with `get_V_row` function)
+#' @return unscaled object
+#' @import Rcpp
+#' @import RcppArmadillo
+#' @export
+geometrical_reverse_sinkhorn <- function(h_col, w_row, scaling, v_inf_row) {
+  unscaled <- geometrical_reverse_sinkhorn_c(h_col,
+                                 w_row,
+                                 scaling$D_vs_row,
+                                 scaling$D_vs_col,
+                                 v_inf_row,
+                                 scaling$iterations)
+
+
+  dimnames(unscaled$H) <- dimnames(h_col)
+  dimnames(unscaled$W) <- dimnames(w_row)
+  dimnames(unscaled$H_col) <- dimnames(h_col)
+  dimnames(unscaled$W_corrected) <- dimnames(w_row)
+  return(unscaled)
+}
+
 #' Wrapper to call reverse sinkhorn on dso object
 #'
 #' @param solution_scaled contain solution matrices $H_row and $W_col
@@ -73,6 +138,41 @@ reverse_solution_sinkhorn <- function(solution_scaled, scaling) {
     solution_scaled$H_row,
     solution_scaled$W_col,
     scaling
+  ))
+}
+
+#' Wrapper to call reverse sinkhorn on dso object
+#'
+#' @param solution_scaled contain solution matrices $H_row and $W_col.
+#' @param scaling dso$scaling object containing normalization matrices.
+#' @param ... everything which can be passed to `clean_reverse_sinkhorn_c` function.
+#' @return unscaled object
+#' @import Rcpp
+#' @import RcppArmadillo
+#' @export
+clean_reverse_solution_sinkhorn<- function(solution_scaled, scaling, ...) {
+  return(clean_reverse_sinkhorn(
+    solution_scaled$H_col,
+    solution_scaled$W_row,
+    scaling, ...
+  ))
+}
+
+#' Wrapper to call geometrical sinkhorn on dso object
+#'
+#' @param solution_scaled contain solution matrices $H_row and $W_col
+#' @param scaling dso$scaling object containing normalization matrices
+#' @param V_inf_row V_ss matrix obtained during forward scaling (can get with `get_V_row()` function)
+#' @return unscaled object
+#' @import Rcpp
+#' @import RcppArmadillo
+#' @export
+geometrical_reverse_solution_sinkhorn<- function(solution_scaled, scaling, V_inf_row) {
+  return(geometrical_reverse_sinkhorn(
+    solution_scaled$H_col,
+    solution_scaled$W_row,
+    scaling,
+    V_inf_row
   ))
 }
 

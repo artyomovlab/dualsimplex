@@ -3,54 +3,73 @@
 #' Make optimization config object for the training method
 #'
 #' Just to have centralized object to change
-#'
+#' @param method method of optimization to use can be  basic/positivity.
+#' @param debug_stats keep track on gradient norms
 #' @param coef_der_X learning rate for X space
 #' @param coef_der_Omega learning rate for Omega space
 #' @param coef_hinge_H positiviy penalty for X space (lambda)
 #' @param coef_hinge_W positiviy penalty for Omega space (beta)
+#' @param total_regularization_weight regularization weight for optimization
+#' @param reg_X regularization weight for X
+#' @param reg_Omega regularization weight for Omega
+#' @param convergence_tol the limit for the learnig rate decrasing
+#' @param stop_criteria_window learning rate will be decreased if total error did not change within this window
+#' @param x_center X rays around which to perform search in theta search.
+#' @param omega_center Omega rays around which to perform search in theta search.
+#' @param center_threshold constraint for the  step.
 #' @param coef_pos_D_h EXPERIMENTAL: penalty for D_h value (how far X^TxDh if from A(R))). should be 0 since not tested.
 #' @param coef_pos_D_w EXPERIMENTAL: penalty for D_w value (how far OmegaxDw if from B(S))). should be 0 since not tested.
 #' @param limit_X EXPERIMENTAL: if you want to restrict X from changing to much. should be 0 since not tested.
 #' @param limit_Omega EXPERIMENTAL: if you want to restrict Omega from changing to much. should be 0 since not tested.
 #' @param cosine_thresh  EXPERIMENTAL: if you want to restrict derivative from changing to much. should be 0 since not tested.
-#' @param x_center X rays around which to perform search in theta search.
-#' @param omega_center Omega rays around which to perform search in theta search.
-#' @param center_threshold constraint for the  step.
-#' @param solution_balancing_threshold EXPERIMENTAL: only for positivity so far. If optimization going to far from the points in one space, some value of this distance will be transferred to the second space/
-#' @param method method of optimization to use can be  basic/positivity.
 #' @return ready to use list with algorithm configuration
 #' @export
 optim_config <- function(
-  coef_der_X = 0.1,
-  coef_der_Omega = 0.1,
-  coef_hinge_H = 1,
-  coef_hinge_W = 1,
-  coef_pos_D_h = 0,
-  coef_pos_D_w = 0,
-  limit_X = 0,
-  limit_Omega = 0,
-  cosine_thresh = 0,
+  method = "positivity", # positivity/coordinate_descent/theta
+  debug_stats = FALSE,
+  coef_der_X = 0.01,
+  coef_der_Omega = 0.01,
+  coef_hinge_H = 0.5,
+  coef_hinge_W = 0.5,
+  # Positivity method with fair gradients and stopping criteria
+  total_regularization_weight = 0,
+  reg_X = 1,
+  reg_Omega = 1,
+  stop_criteria_window = 800,
+  convergence_tol = 1e-9,
+  # Theta optimization within angle
   x_center = NULL,
   omega_center = NULL,
   center_threshold = 0,
-  solution_balancing_threshold= 10000,
-  method = "basic" # basic/positivity/theta
+  # Experimental params
+  limit_X = 0,
+  limit_Omega = 0,
+  cosine_thresh = 0,
+  coef_pos_D_h = 0,
+  coef_pos_D_w = 0
 ) {
   return(list(
+    method = method,
+    debug_stats = debug_stats,
     coef_der_X = coef_der_X,
     coef_der_Omega = coef_der_Omega,
     coef_hinge_H = coef_hinge_H,
     coef_hinge_W = coef_hinge_W,
+
+    total_regularization_weight = total_regularization_weight,
+    reg_X = reg_X,
+    reg_Omega = reg_Omega,
+    convergence_tol = convergence_tol,
+    stop_criteria_window = stop_criteria_window,
+
+    x_center = x_center,
+    omega_center = omega_center,
+    center_threshold = center_threshold,
     coef_pos_D_h = coef_pos_D_h,
     coef_pos_D_w = coef_pos_D_w,
     limit_X = limit_X,
     limit_Omega = limit_Omega,
-    cosine_thresh = cosine_thresh,
-    x_center = x_center,
-    omega_center = omega_center,
-    center_threshold = center_threshold,
-    solution_balancing_threshold=solution_balancing_threshold,
-    method = method
+    cosine_thresh = cosine_thresh
   ))
 }
 
@@ -80,6 +99,7 @@ optimize_solution <- function(
 ) {
   # Cleaning inputs
   if (!("X" %in% names(solution_proj)) && ("Omega" %in% names(solution_proj))) {
+    spdl::error("Both X and Omega must be initialized first in solution_proj")
     stop("Both X and Omega must be initialized first in solution_proj")
   }
 
@@ -91,7 +111,12 @@ optimize_solution <- function(
       blocks_statistics = data.frame(matrix(0, nrow = 0, ncol = 13)),
       errors_statistics = NULL,
       points_statistics_X = NULL,
-      points_statistics_Omega = NULL
+      points_statistics_Omega = NULL,
+      points_statistics_Dw = NULL,
+      points_statistics_X_dtilda = NULL,
+      points_statistics_Omega_dtilda = NULL,
+      points_statistics_X_dtilda_uncorrected = NULL,
+      points_statistics_Omega_dtilda_uncorrected = NULL
     )
   }
 
@@ -161,27 +186,45 @@ optimize_solution <- function(
     R = proj$meta$R,
     S = proj$meta$S,
     coef_der_X = config$coef_der_X,
-    coef_der_Omega = config$coef_der_Omega,
     coef_hinge_H = config$coef_hinge_H,
     coef_hinge_W = config$coef_hinge_W,
-    coef_pos_D_h = config$coef_pos_D_h,
-    coef_pos_D_w = config$coef_pos_D_w,
     cell_types = n_cell_types,
     N = proj$meta$N,
     M = proj$meta$M,
-    iterations = iterations,
-    mean_radius_X = mean_radius_X,
-    mean_radius_Omega = mean_radius_Omega,
-    r_const_X = r_limits$R_limit_X,
-    r_const_Omega = r_limits$R_limit_Omega,
-    thresh = config$cosine_thresh
+    iterations = iterations
   )
   optimization_result <- if (config$method == "positivity") {
-    optimization_params$solution_balancing_threshold <- config$solution_balancing_threshold
-    do.call(alternative_derivative_stage2, optimization_params)
-  } else if (config$method == "basic") {
-    do.call(derivative_stage2, optimization_params)
+    optimization_params$total_regularization_weight <- config$total_regularization_weight
+    optimization_params$reg_X  <- config$reg_X
+    optimization_params$reg_Omega  <- config$reg_Omega
+    optimization_params$convergence_tol <- config$convergence_tol
+    optimization_params$debug_stats <- config$debug_stats
+    optimization_params$stop_criteria_window  <- config$stop_criteria_window
+
+    do.call(optimize_positivity, optimization_params)
+  } else if (config$method == "coordinate_descent") {
+    optimization_params$r_const_X <-  r_limits$R_limit_X
+    optimization_params$r_const_Omega <-  r_limits$R_limit_Omega
+    optimization_params$thresh <- config$cosine_thresh
+    optimization_params$coef_pos_D_h <-  config$coef_pos_D_h
+    optimization_params$coef_pos_D_w <-  config$coef_pos_D_w
+    optimization_params$coef_der_Omega <- config$coef_der_Omega
+    optimization_params$mean_radius_X <-  mean_radius_X
+    optimization_params$mean_radius_Omega  <- mean_radius_Omega
+    optimization_params$convergence_tol <- config$convergence_tol
+    optimization_params$debug_stats <- config$debug_stats
+    optimization_params$stop_criteria_window  <- config$stop_criteria_window
+    do.call(optimize_coordinate_descent, optimization_params)
   } else if (config$method == "theta") {
+    optimization_params$r_const_X <-  r_limits$R_limit_X
+    optimization_params$r_const_Omega <-  r_limits$R_limit_Omega
+    optimization_params$thresh <- config$cosine_thresh
+    optimization_params$coef_pos_D_h <-  config$coef_pos_D_h
+    optimization_params$coef_pos_D_w <-  config$coef_pos_D_w
+    optimization_params$coef_der_Omega <- config$coef_der_Omega
+    optimization_params$mean_radius_X <-  mean_radius_X
+    optimization_params$mean_radius_Omega  <- mean_radius_Omega
+
     # this optimization ensures that solution points are not going away to far from the predefined center points.
     # the distance is measured as cosine distance between rays originating from 0.
     optimization_params$X_center <- config$x_center # predefined center point for X space. could be NULL
@@ -191,10 +234,20 @@ optimize_solution <- function(
         optimization_params$Omega_center  <- config$omega_center
     }
     optimization_params$theta_threshold <- config$center_threshold # threshold for the angle
-    do.call(theta_derivative_stage2, optimization_params)
+    do.call(optimize_theta, optimization_params)
   } else {
-    print("Unknown optimization method. Will do the basic one")
-    do.call(derivative_stage2, optimization_params)
+    spdl::warn("Unknown optimization method. Will do the basic one")
+    optimization_params$r_const_X <-  r_limits$R_limit_X
+    optimization_params$r_const_Omega <-  r_limits$R_limit_Omega
+    optimization_params$thresh <- config$cosine_thresh
+    optimization_params$coef_pos_D_h <-  config$coef_pos_D_h
+    optimization_params$coef_pos_D_w <-  config$coef_pos_D_w
+    optimization_params$coef_der_Omega <- config$coef_der_Omega
+    optimization_params$convergence_tol <- config$convergence_tol
+    optimization_params$debug_stats <- config$debug_stats
+    optimization_params$stop_criteria_window  <- config$stop_criteria_window
+    do.call(optimize_coordinate_descent, optimization_params)
+
   }
 
   solution_proj$X <- optimization_result$new_X
@@ -205,36 +258,71 @@ optimize_solution <- function(
   colnames(solution_proj$Omega) <- rownames(proj$meta$R)
   colnames(solution_proj$X) <- rownames(proj$meta$R)
 
+  target_iterations <-  ifelse(from_idx == 1, iterations + 1, iterations) 
+
   solution_proj$optim_history$errors_statistics <- rbind(
     solution_proj$optim_history$errors_statistics,
-      optimization_result$errors_statistics
+    tail(optimization_result$errors_statistics, target_iterations)
   )
 
   solution_proj$optim_history$points_statistics_X <- rbind(
     solution_proj$optim_history$points_statistics_X,
-      optimization_result$points_statistics_X
+    tail(optimization_result$points_statistics_X,  target_iterations)
   )
   solution_proj$optim_history$points_statistics_Omega <- rbind(
     solution_proj$optim_history$points_statistics_Omega,
-           optimization_result$points_statistics_Omega
+    tail(optimization_result$points_statistics_Omega, target_iterations)
   )
+  solution_proj$optim_history$points_statistics_Dw <- rbind(
+  solution_proj$optim_history$points_statistics_Dw,
+           tail(optimization_result$points_statistics_Dw, target_iterations)
+  )
+  if (config$method == "positivity")  {
+  #   solution_proj$optim_history$points_statistics_X_dtilda <- rbind(
+  #     solution_proj$optim_history$points_statistics_X_dtilda,
+  #     tail(optimization_result$points_statistics_X_dtilda, target_iterations)
+  # )
+  #   solution_proj$optim_history$points_statistics_X_dtilda_uncorrected <- rbind(
+  #     solution_proj$optim_history$points_statistics_X_dtilda_uncorrected,
+  #     tail(optimization_result$points_statistics_X_dtilda_uncorrected, target_iterations)
+  # )
+  #   solution_proj$optim_history$points_statistics_Omega_dtilda <- rbind(
+  #     solution_proj$optim_history$points_statistics_Omega_dtilda,
+  #     tail(optimization_result$points_statistics_Omega_dtilda, target_iterations)
+  # )
+  #   solution_proj$optim_history$points_statistics_Omega_dtilda_uncorrected <- rbind(
+  #     solution_proj$optim_history$points_statistics_Omega_dtilda_uncorrected,
+  #     tail(optimization_result$points_statistics_Omega_dtilda_uncorrected, target_iterations)
+  # )
+
+  }
 
   colnames(solution_proj$optim_history$errors_statistics) <-
     c(
       "deconv_error",
-      "lamdba_error",
+      "lambda_error",
       "beta_error",
       "D_h_error",
       "D_w_error",
       "total_error",
+      "scaled_total_error",
       "neg_props_count",
       "neg_basis_count",
       "sum_d_w",
-      "average_norm"
+      "average_norm",
+      "learning_rate",
+      "gradient_norm",
+      "average_hinge_H_gradient_norm",
+      "average_hinge_W_gradient_norm",
+      "average_reg_X_gradient_norm",
+      "average_reg_Omega_gradient_norm",
+      "best_error_value",
+      "best_error_iteration",
+      "scaled_lambda_error",
+      "scaled_beta_error"
     )
   return(solution_proj)
 }
-
 
 calc_r_limits <- function(
   data_proj,
@@ -279,7 +367,7 @@ plot_errors <- function(
   solution_proj,
   variables = c(
     "deconv_error",
-    "lamdba_error",
+    "lambda_error",
     "beta_error",
     "D_h_error",
     "D_w_error",

@@ -1,7 +1,7 @@
 Package: DualSimplex
 Type: Package
 Title: Projective dual simplex based gene expression deconvolution
-Version: 1.1
+Version: 1.2
 Date: 2023-08-24
 Authors@R:
   c(person(given = "Denis",
@@ -31,6 +31,7 @@ biocViews:
 Imports:
     Rcpp,
     RcppArmadillo,
+    spdl,
     rlang,
     irlba,
     limma,
@@ -59,5 +60,5 @@ Suggests:
     ggrastr,
     Hmisc,
     scales
-LinkingTo: Rcpp, RcppArmadillo
+LinkingTo: Rcpp, RcppArmadillo, RcppSpdlog
 RoxygenNote: 7.3.3

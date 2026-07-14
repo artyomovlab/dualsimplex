@@ -37,6 +37,29 @@ arma::uword getNegative(arma::mat X) {
 
 double getSum(arma::mat X, arma::mat M) { return arma::accu(X) / M.n_rows; }
 
+arma::mat get_relative_coordinates_closest(const arma::mat& projected_points,const arma::mat& solution_points, const double min_value) {
+    arma::mat coefficients(projected_points.n_rows, solution_points.n_rows, arma::fill::zeros);
+    double main_determinant = arma::det(solution_points);
+    double target_determinant = 1.0;
+    arma::mat target_matrix;
+    for (unsigned int i = 0; i < projected_points.n_rows; i++) {
+        for (unsigned int vertex = 0; vertex < solution_points.n_rows; vertex++ ) {
+            target_matrix = solution_points;
+            target_matrix.row(vertex) = projected_points.row(i);
+            target_determinant = arma::det(target_matrix);
+            coefficients(i, vertex) = target_determinant/main_determinant;
+        }
+    }
+    if (min_value >= 0) {
+        coefficients.elem(arma::find(coefficients < 0)).fill(min_value);
+    }
+    // now normalize row
+    coefficients.each_col() %=  (1 / arma::sum(coefficients, 1));
+    return coefficients;
+}
+
+
+
 
 Rcpp::List getNonnegativeLowRankApproximationWithSVD(const arma::mat& X,  
                                                      const int rank,
@@ -251,7 +274,7 @@ Rcpp::List getNonnegativeLowRankApproximationWithTangentMethod(const arma::mat& 
   arma::rowvec approximation_fro_norm(iterations, arma::fill::zeros);
   arma::rowvec normalized_feature_movements(iterations, arma::fill::zeros);
 
-  svd(Ur,Sr,Vr,X);
+  arma::svd(Ur,Sr,Vr,X);
   Ur = Ur.head_cols(rank); // m*r
   Vr = Vr.head_cols(rank); // n*r
   Sr = Sr.head(rank); // r
@@ -295,7 +318,7 @@ Rcpp::List getNonnegativeLowRankApproximationWithTangentMethod(const arma::mat& 
     arma::qr_econ(Q2, R2, G2); // (m*r) (r*r)
     Z = arma::join_rows(G1 * Vr, R1.t()); // join_rows((r*n x n*r), r*r) ->  r*2r
     Z = arma::join_cols(Z, arma::join_rows(R2, arma::zeros(size(R2))));  // 2r*2r
-    svd(U2r,S2r,V2r,Z); //   
+    arma::svd(U2r,S2r,V2r,Z); //   
     U2r = U2r.head_cols(rank); // 2r*r
     V2r = V2r.head_cols(rank); // 2r*r
     S2r = S2r.head(rank); //r

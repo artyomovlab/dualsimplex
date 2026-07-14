@@ -1,39 +1,39 @@
-#' Add dannotations for rows (genes) and columns (samples) of the matrix
+#' Add annotations for rows (genes) and columns (samples) of the matrix
 #'
 #' Will add (log_mean, log_median, log_sd, log_mad) for both rows and columns.
 #' For rows additionaly will produce columns for TRUE/FALSE regex filters specified in `add_gene_names_regex_anno`
-#' and also add TRUE/FALSE columns specified in gene_name_lists
+#' and also add TRUE/FALSE columns specified in feature_name_lists
 #' For columns additionaly will produce TRUE/FALSE columns pecified in sample_name_lists
 #'
 #' @param eset Expression set
-#' @param gene_name_lists named list of lists. Each sublist contains names of rows which should have TRUE value in annotaiton column.
+#' @param feature_name_lists named list of lists. Each sublist contains names of rows which should have TRUE value in annotaiton column.
 #' @param sample_name_lists named list of lists. Each sublist contains names of columns which should have TRUE value in annotation column.
 #' @return annotated expression set. (fData, pData) now contain annotations
 #'
 #' @export
 add_default_anno <- function(
   eset,
-  gene_name_lists = NULL,
+  feature_name_lists = NULL,
   sample_name_lists = NULL
 ) {
-  eset <- add_default_gene_anno(eset, gene_name_lists)
+  eset <- add_default_feature_anno(eset, feature_name_lists)
   eset <- add_default_sample_anno(eset, sample_name_lists)
   return(eset)
 }
 
-add_default_gene_anno <- function(eset, name_lists = NULL) {
-  eset <- add_data_stats_anno(eset, genes = T)
+add_default_feature_anno <- function(eset, name_lists = NULL) {
+  eset <- add_data_stats_anno(eset, for_features = T)
   eset <- add_gene_names_regex_anno(eset)
   if (!is.null(name_lists)) {
-    eset <- add_name_lists_anno(eset, name_lists, genes = T)
+    eset <- add_name_lists_anno(eset, name_lists, for_features = T)
   }
   return(eset)
 }
 
 add_default_sample_anno <- function(eset, name_lists = NULL) {
-  eset <- add_data_stats_anno(eset, genes = F)
+  eset <- add_data_stats_anno(eset, for_features = F)
   if (!is.null(name_lists)) {
-    eset <- add_name_lists_anno(eset, name_lists, genes = F)
+    eset <- add_name_lists_anno(eset, name_lists, for_features = F)
   }
   return(eset)
 }
@@ -42,7 +42,7 @@ add_default_sample_anno <- function(eset, name_lists = NULL) {
 create_eset <- function(data) {
   Biobase::ExpressionSet(
     assayData = data,
-    featureData = create_gene_anno(data),
+    featureData = create_feature_anno(data),
     phenoData = create_sample_anno(data)
   )
 }
@@ -53,10 +53,10 @@ create_sample_anno <- function(data) {
   return(Biobase::AnnotatedDataFrame(sample_anno))
 }
 
-create_gene_anno <- function(data) {
-  gene_anno <- data.frame(matrix(nrow=nrow(data), ncol=0))
-  rownames(gene_anno) <- rownames(data)
-  return(Biobase::AnnotatedDataFrame(gene_anno))
+create_feature_anno <- function(data) {
+  feature_anno <- data.frame(matrix(nrow=nrow(data), ncol=0))
+  rownames(feature_anno) <- rownames(data)
+  return(Biobase::AnnotatedDataFrame(feature_anno))
 }
 
 
@@ -76,12 +76,12 @@ add_gene_names_regex_anno <- function(eset) {
   return(eset)
 }
 
-add_name_lists_anno <- function(eset, name_lists, genes = T) {
-  anno <- get_anno(eset, genes)
+add_name_lists_anno <- function(eset, name_lists, for_features = TRUE) {
+  anno <- get_anno(eset, for_features)
   for (anno_name in names(name_lists)) {
     anno[, anno_name] <- rownames(anno) %in% name_lists[[anno_name]]
   }
-  eset <- set_anno(anno, eset, genes)
+  eset <- set_anno(anno, eset, for_features)
   return(eset)
 }
 
@@ -90,12 +90,12 @@ add_name_lists_anno <- function(eset, name_lists, genes = T) {
 #' Will add (log_mean, log_median, log_sd, log_mad) for both rows and columns.
 #'
 #'@param eset Expression set
-#'@param genes if TRUE apply to rows, otherwise columns
+#'@param for_features if TRUE apply to rows, otherwise columns
 #'@importFrom matrixStats rowMeans2 rowMedians rowSds rowMads colMeans2 colSds colMads colMedians
 #'@return  annotated Expression set
-add_data_stats_anno <- function(eset, genes = T) {
+add_data_stats_anno <- function(eset, for_features = T) {
   stat_fns <- list(
-    genes = list(
+    features = list(
       mean = matrixStats::rowMeans2,
       median = matrixStats::rowMedians,
       sd = matrixStats::rowSds,
@@ -110,8 +110,8 @@ add_data_stats_anno <- function(eset, genes = T) {
     )
   )
 
-  anno <- get_anno(eset, genes)
-  margin <- if (genes) "genes" else "samples"
+  anno <- get_anno(eset, for_features)
+  margin <- if (for_features) "features" else "samples"
 
 
   anno$log_mean <- log(stat_fns[[margin]][["mean"]](Biobase::exprs(eset))  + 1)
@@ -119,7 +119,23 @@ add_data_stats_anno <- function(eset, genes = T) {
   anno$log_sd <- log(stat_fns[[margin]][["sd"]](Biobase::exprs(eset)) + 1)
   anno$log_mad <- log(stat_fns[[margin]][["mad"]](Biobase::exprs(eset)) + 1)
 
-  eset <- set_anno(anno, eset, genes)
+  eset <- set_anno(anno, eset, for_features)
+  return(eset)
+}
+
+#' Annotate the data with statistics for rows and columns
+#'
+#' Will add (log_mean, log_median, log_sd, log_mad) for both rows and columns.
+#'
+#'@param eset Expression set
+#'@param anno_to_add Annotation dataframe to add to exsiting one
+#'@param for_features if TRUE apply to rows, otherwise columns
+#'@return  annotated Expression set
+update_annotation <- function(eset, anno_to_add, for_features = T) {
+  old_anno <- get_anno(eset, for_features)
+  new_anno <- old_anno
+  new_anno[rownames(anno_to_add), colnames(anno_to_add)] <- anno_to_add
+  eset <- set_anno(new_anno, eset, for_features)
   return(eset)
 }
 
@@ -158,28 +174,28 @@ add_distances_anno <- function(eset, V_row, proj) {
   return(eset)
 }
 
-add_knn_distances_anno <- function(eset, proj, annotation_columns,  k_neighbors, genes=T) {
-  anno <- get_anno(eset, genes)
+add_knn_distances_anno <- function(eset, proj, annotation_columns,  k_neighbors, for_features = T) {
+  anno <- get_anno(eset, for_features)
   for (anno_name in annotation_columns) {
     knns <-  FNN::get.knnx(proj$X[anno[[anno_name]], ], proj$X, k = k_neighbors)
     distances <- apply(knns$nn.dist, 1, min, na.rm=T)
     anno[, paste0(anno_name, "_subset_distance")] <- distances
   }
-  eset <- set_anno(anno, eset, genes)
+  eset <- set_anno(anno, eset, for_features)
   return(eset)
 }
 
-add_density_annotation <- function(eset, proj, genes=T, radius=NULL) {
-  anno <- get_anno(eset, genes)
-  if (genes) {
+add_density_annotation <- function(eset, proj, for_features=T, radius=NULL) {
+  anno <- get_anno(eset, for_features)
+  if (for_features) {
     if (is.null(radius)) {
-      print("Set the radius to mad since the value was not provided")
+      spdl::warn("Set the radius to mad since the value was not provided")
       radius <- stats::mad(proj$X[,2:dim(proj$X)[[2]]])
     }
     nn_result <- dbscan::frNN(proj$X, eps = radius)
   } else {
     if (is.null(radius)) {
-      print("Set the radius to mad since the value was not provided")
+      spdl::warn("Set the radius to mad since the value was not provided")
       radius <- stats::mad(proj$Omega[,2:dim(proj$Omega)[[2]]])
     }
     nn_result <- dbscan::frNN(proj$Omega, eps = radius)
@@ -188,7 +204,7 @@ add_density_annotation <- function(eset, proj, genes=T, radius=NULL) {
   nn_mean_distance <-  unlist(lapply(nn_result$dist, mean))
   anno$density <-  nn_count[rownames(anno)]
   anno$mean_nn_distance <-  nn_mean_distance[rownames(anno)]
-  eset <- set_anno(anno, eset, genes)
+  eset <- set_anno(anno, eset, for_features)
   return(eset)
 }
 
@@ -197,18 +213,18 @@ add_density_annotation <- function(eset, proj, genes=T, radius=NULL) {
 #' Returns fData and pData of the Expresison set.
 #'
 #' @param eset Expression set
-#' @param genes if TRUE return row annotations (genes) if FALSE return column annotaitons (samples)
-#' @param feature name of specific annotation you want to extract
+#' @param for_features if TRUE return row annotations (genes) if FALSE return column annotaitons (samples)
+#' @param annotation_feature name of specific annotation you want to extract
 #' @return annotation object of the data
 #' @export
-get_anno <- function(eset, genes = T, feature = NULL) {
-  if (genes) {
+get_anno <- function(eset, for_features = T, annotation_feature = NULL) {
+  if (for_features) {
     anno <- Biobase::fData(eset)
   } else {
     anno <- Biobase::pData(eset)
   }
-  if (!is.null(feature)) {
-    anno <- anno[, feature]
+  if (!is.null(annotation_feature)) {
+    anno <- anno[, annotation_feature]
   }
   return(anno)
 }
@@ -219,10 +235,10 @@ get_anno <- function(eset, genes = T, feature = NULL) {
 #'
 #' @param anno annotation object to be set for the data
 #' @param eset Expression set
-#' @param genes if TRUE set row annotations (genes) if FALSE set column annotaitons (samples)
+#' @param for_features if TRUE set row annotations (genes) if FALSE set column annotaitons (samples)
 #' @export
-set_anno <- function(anno, eset, genes = T) {
-  if (genes) {
+set_anno <- function(anno, eset, for_features = T) {
+  if (for_features) {
     eset <- eset[rownames(anno), ]
     Biobase::fData(eset) <- anno
   } else {
@@ -240,21 +256,22 @@ set_anno <- function(anno, eset, genes = T) {
 #' just geom_histogram for the feature selected
 #'
 #' @param eset Expression set
-#' @param feature annotation variable name (e.g. log_mad)
-#' @param genes if TRUE plot for plot for rows, otherwise columns
+#' @param annotation_feature annotation variable name (e.g. log_mad)
+#' @param for_features if TRUE plot for plot for rows, otherwise columns
 #' @param col_by name of the feature to color by
 #' @param bins bin number for a historgramm
 #' @return ggplot object
 #' @export
-plot_feature <- function(eset, feature, genes = T, col_by = NULL, bins = 100) {
-  anno <- get_anno(eset, genes)
+plot_annotation_feature <- function(eset, annotation_feature, for_features = T, col_by = NULL, bins = 100) {
+  anno <- get_anno(eset, for_features)
   fill <- if (is.null(col_by)) "grey40" else "white"
-  plt <- if (is.numeric(anno[, feature])) {
-    ggplot(anno, aes_string(x = feature, color = col_by)) +
+  plt <- if (is.numeric(anno[, annotation_feature])) {
+    ggplot(anno, aes( x=.data[[annotation_feature]], color = .data[[col_by]])) +
       geom_histogram(bins = bins, fill = fill) +
       theme_minimal() +
-      ggtitle(paste0(nrow(anno), if (genes) " genes" else " samples"))
+      ggtitle(paste0(nrow(anno), if (for_features) " Features" else " Samples"))
   } else {
+    spdl::error("Non-numeric features are not supported")
     stop("Non-numeric features are not supported")
   }
   return(plt)
@@ -265,63 +282,63 @@ plot_feature <- function(eset, feature, genes = T, col_by = NULL, bins = 100) {
 #' Uses ggplot geom_point() you can add any valid geom_point(...) parameters after all arguments
 #'
 #' @param eset Expression set
-#' @param feature_1 annotation variable name (e.g. log_mad)
-#' @param feature_2 annotation variable name (e.g. log_mad)
-#' @param genes if TRUE plot for plot for rows, otherwise columns
+#' @param annotation_feature_1 annotation variable name (e.g. log_mad)
+#' @param annotation_feature_2 annotation variable name (e.g. log_mad)
+#' @param for_features if TRUE plot for plot for rows, otherwise columns
 #' @param col_by name of the feature to color by
 #' @param ... any valid geom_point(...) parameters
 #' @return ggplot object
 #' @export
-plot_feature_pair <- function(
+plot_annotation_feature_pair <- function(
   eset,
-  feature_1,
-  feature_2,
-  genes = T,
+  annotation_feature_1,
+  annotation_feature_2,
+  for_features = T,
   col_by = NULL,
   ...
 ) {
-  anno <- get_anno(eset, genes)
+  anno <- get_anno(eset, for_features)
   fill <- if (is.null(col_by)) "grey40" else "white"
-  plt <- if (is.numeric(anno[, feature_1]) && is.numeric(anno[, feature_2])) {
-    ggplot(anno, aes_string(x = feature_1, y = feature_2, color = col_by)) +
+  plt <- if (is.numeric(anno[,   annotation_feature_1,]) && is.numeric(anno[, annotation_feature_2])) {
+    ggplot(anno, aes(x = .data[[annotation_feature_2]], y = .data[[annotation_feature_2]], color = .data[[col_by]])) +
       geom_point(...) +
       theme_minimal() +
-      ggtitle(paste0(nrow(anno), if (genes) " genes" else " samples"))
+      ggtitle(paste0(nrow(anno), if (for_features) " Features" else " Samples"))
   } else {
     stop("Non-numeric features are not supported")
   }
   return(plt)
 }
 
-#' Plot distribution for multiple features from annotation
+#' Plot distribution for multiple annotation features from annotation
 #'
-#' geom_histogramm for selected features. Uses cowplot::plot_grid()
+#' geom_histogramm for selected annotation features. Uses cowplot::plot_grid()
 #'
 #' @param eset Expression set.
-#' @param genes if TRUE plot for plot for rows, otherwise columns.
+#' @param for_features if TRUE plot for plot for rows, otherwise columns.
 #' @param col_by name of the feature to color by.
 #' @param bins bin number for a historgramm.
-#' @param features annotation variable name (e.g. log_mad).
+#' @param annotation_features annotation variable name (e.g. log_mad).
 #' @param ncol how many columns to make in cowplot.
 #' @param labels additional label for points.
 #' @return cowplot object.
 #' @export
 plot_numeric_features <- function(
   eset,
-  genes = T,
+  for_features = TRUE,
   col_by = NULL,
   bins = 100,
-  features = NULL,
+  annotation_features = NULL,
   ncol = NULL,
   labels = "Numeric features"
 ) {
-  anno <- get_anno(eset, genes)
-  if (is.null(features)) {
+  anno <- get_anno(eset, for_features)
+  if (is.null(annotation_features)) {
     numeric_cols <- colnames(anno)[sapply(colnames(anno), function(x) is.numeric(anno[, x]))]
-    features <- numeric_cols
+    annotation_features <- numeric_cols
   }
-  plotlist <- lapply(features, function(feature) {
-    plot_feature(eset, feature, genes, col_by, bins) + ggtitle("")
+  plotlist <- lapply(annotation_features, function(current_feature) {
+    plot_annotation_feature(eset, current_feature, for_features, col_by, bins) + ggtitle("")
   })
   if (is.null(ncol)) {
     return(plotlist)
@@ -330,22 +347,22 @@ plot_numeric_features <- function(
       cowplot::plot_grid(
         plotlist = plotlist,
         ncol = ncol,
-        labels = paste(if (genes) "Genes," else "Samples,", labels)
+        labels = paste(if (for_features) "Features," else "Samples,", labels)
       )
     )
   }
 }
 
-#' Plot description of categorical features
+#' Plot description of categorical annotation features
 #'
 #' You need Hmisc package to run this.
 #'
 #' @param eset Expression set
-#' @param genes if TRUE plot for plot for rows, otherwise columns
+#' @param for_features if TRUE plot for plot for rows, otherwise columns
 #' @return Info about the feature
 #' @export
-describe_cat_features <- function(eset, genes = T) {
-  anno <- get_anno(eset, genes)
+describe_cat_features <- function(eset, for_features = T) {
+  anno <- get_anno(eset, for_features)
   cat_cols <- colnames(anno)[sapply(colnames(anno), function(x) is.factor(anno[, x]) | is.logical(anno[, x]))]
   cat_features_anno <- anno[, cat_cols, drop = F]
   if (requireNamespace('Hmisc', quietly = TRUE)) {

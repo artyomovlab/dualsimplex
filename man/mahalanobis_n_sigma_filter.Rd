@@ -6,20 +6,20 @@
 \usage{
 mahalanobis_n_sigma_filter(
   eset,
-  features,
+  annotation_features,
   n_sigma = 3,
-  genes = T,
+  for_features = T,
   keep_lower = T
 )
 }
 \arguments{
 \item{eset}{Expression set (annotated matrix)}
 
-\item{features}{numerical features to test}
+\item{annotation_features}{numerical features to test}
 
 \item{n_sigma}{how many standard deviations to keep}
 
-\item{genes}{if TRUE filter rows else columns}
+\item{for_features}{if TRUE filter rows else columns}
 
 \item{keep_lower}{wether to take values inside interval}
 }

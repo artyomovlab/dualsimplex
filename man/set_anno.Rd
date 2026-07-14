@@ -4,14 +4,14 @@
 \alias{set_anno}
 \title{Set custom annotations for the data}
 \usage{
-set_anno(anno, eset, genes = T)
+set_anno(anno, eset, for_features = T)
 }
 \arguments{
 \item{anno}{annotation object to be set for the data}
 
 \item{eset}{Expression set}
 
-\item{genes}{if TRUE set row annotations (genes) if FALSE set column annotaitons (samples)}
+\item{for_features}{if TRUE set row annotations (genes) if FALSE set column annotaitons (samples)}
 }
 \description{
 sets fData and pData of the Expresison set using provided data

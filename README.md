@@ -65,7 +65,7 @@ N <- 100 # number of samples (e.g. mixtures)
 M <- 10000 # number of features (e.g. genes)
 K <- 3 # Number of pure components
 
-sim <- create_simulation(n_genes = M,
+sim <- simulation_gene_expression(n_genes = M,
                          n_samples = N,
                          n_cell_types = K,
                          with_marker_genes = FALSE)
@@ -73,7 +73,7 @@ sim <- sim %>% add_noise(noise_deviation = 3.5)
 
 data_raw <- sim$data
 true_W <- sim$basis
-true_H <- sim$proportions
+true_H <- sim$coefs
 ```
 
 ### Create a Solver object
@@ -94,7 +94,7 @@ This is only if you are willing to remove points from your dataset
 ```r
 plane_distance_threshold <- 0.05 # Change here several times to see result, start with big and lower it
 zero_distance_threshold <- 1
-dso$distance_filter(plane_d_lt = plane_distance_threshold, zero_d_lt = zero_distance_threshold, genes = T)
+dso$distance_filter(plane_d_lt = plane_distance_threshold, zero_d_lt = zero_distance_threshold, features = T)
 dso$project(K)
 dso$plot_projection_diagnostics() # See the distribution of points distances
 dso$plot_svd_history() # observe changes in SVD variance explained

@@ -2,14 +2,14 @@
 % Please edit documentation in R/annotation.R
 \name{plot_numeric_features}
 \alias{plot_numeric_features}
-\title{Plot distribution for multiple features from annotation}
+\title{Plot distribution for multiple annotation features from annotation}
 \usage{
 plot_numeric_features(
   eset,
-  genes = T,
+  for_features = TRUE,
   col_by = NULL,
   bins = 100,
-  features = NULL,
+  annotation_features = NULL,
   ncol = NULL,
   labels = "Numeric features"
 )
@@ -17,13 +17,13 @@ plot_numeric_features(
 \arguments{
 \item{eset}{Expression set.}
 
-\item{genes}{if TRUE plot for plot for rows, otherwise columns.}
+\item{for_features}{if TRUE plot for plot for rows, otherwise columns.}
 
 \item{col_by}{name of the feature to color by.}
 
 \item{bins}{bin number for a historgramm.}
 
-\item{features}{annotation variable name (e.g. log_mad).}
+\item{annotation_features}{annotation variable name (e.g. log_mad).}
 
 \item{ncol}{how many columns to make in cowplot.}
 
@@ -33,5 +33,5 @@ plot_numeric_features(
 cowplot object.
 }
 \description{
-geom_histogramm for selected features. Uses cowplot::plot_grid()
+geom_histogramm for selected annotation features. Uses cowplot::plot_grid()
 }

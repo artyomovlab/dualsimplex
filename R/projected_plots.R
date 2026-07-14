@@ -1,5 +1,5 @@
 # Required functions:
-# 2. Plot specified dims of projected data, optionally colored by a passed column or highlighted genes
+# 2. Plot specified dims of projected data, optionally colored by a passed column or highlighted rows
 # 3. Plot solution for both spaces
 # 4. Plot solution history
 # 5. Plot solution history animated (with requireNamespace())
@@ -31,7 +31,8 @@ get_2d_subset <- function(proj, use_dims, extra_points_proj = NULL) {
       }
     } else {
       if (proj$meta$K > 3) {
-        stop("Specify use_dims (e.g. 2:3) or calculate umap")
+        spdl::error("Specify use_dims (e.g. use_dims = c(2:3)) or calculate umap")
+        stop("Specify use_dims (e.g. use_dims = c(2:3)) or calculate umap")
       } else {
         use_dims <- 2:3
       }
@@ -76,7 +77,7 @@ concat_data <- function(data_list, group_colname) {
 #' @param to_iter end point
 #' @return X and Omega values for desired timestamps
 #' @export
-get_solution_history <- function(solution_proj, step, from_iter = 1, to_iter = NULL) {
+get_solution_history <- function(solution_proj, step, from_iter = 0, to_iter = NULL) {
   stats <- list()
   stats$X <- solution_proj$optim_history$points_statistics_X
   stats$Omega <- solution_proj$optim_history$points_statistics_Omega
@@ -86,13 +87,13 @@ get_solution_history <- function(solution_proj, step, from_iter = 1, to_iter = N
     to_iter <- nit
   }
   # TODO: correct order initially
-  correct_order <- order((1:ncol(stats$Omega) - 1) %% nct)
+  correct_order <- order((seq_len(ncol(stats$Omega)) - 1) %% nct)
   stats$Omega <- stats$Omega[, correct_order]
 
   solution_history <- lapply(stats, function(mat) {
     tran <- matrix(c(t(mat)), ncol = nct, byrow = T)
     tran <- cbind(tran, rep(1:nct, times = nit))
-    tran <- cbind(tran, rep(1:nit, each = nct))
+    tran <- cbind(tran, rep(0:(nit - 1), each = nct))
     colnames(tran) <- c(paste0("dim_", 1:nct), "point", "iter")
     tran <- tran[(tran[, "iter"] >= from_iter) & (tran[, "iter"] <= to_iter), ]
     tran <- tran[((tran[, "iter"] %% step) == 0) | (tran[, "iter"] == to_iter) | (tran[, "iter"] == from_iter), ]
@@ -226,19 +227,19 @@ add_solution <- function(
   points_2d <- get_2d_subset(proj, use_dims, solution_proj)[spaces]
   points_2d <- lapply(
     points_2d,
-    function(pts) cbind(pts, point = 1:nrow(pts))
+    function(pts) cbind(pts, point = seq_len(nrow(pts)))
   )
   if (length(spaces) > 1) {
     points_2d <- concat_data(points_2d, "space")
   } else {
     points_2d <- as.data.frame(points_2d[[1]])
   }
-  points_2d$point <- as.factor(points_2d$point)
+  points_2d$point <- as.factor(points_2d[["point"]])
   x_col <- colnames(points_2d)[[1]]
   y_col <- colnames(points_2d)[[2]]
   plt <- plt + geom_point(
     data = points_2d,
-    aes_string(x_col, y_col, fill = "point"),
+    aes(x= .data[[x_col]], y = .data[[y_col]], fill = .data[["point"]]),
     color = "black",
     pch = 21,
     size = pt_size
@@ -270,7 +271,7 @@ add_solution_history <- function(
   pt_size = 0.5,
   pt_opacity = 0.95,
   step = 100,
-  from_iter = 1,
+  from_iter = 0,
   to_iter = NULL,
   spaces = c("X", "Omega"),
   colored = TRUE,
@@ -294,14 +295,14 @@ add_solution_history <- function(
   if (colored) {
     plt <- plt + geom(
       data = points_2d,
-      aes_string(x_col, y_col, col = "point"),
+      aes(x= .data[[x_col]], y = .data[[y_col]], col = .data[["point"]]),
       size = pt_size,
       alpha = pt_opacity
     ) + theme(legend.position = "none")
   } else {
     plt <- plt + geom(
       data = points_2d,
-      aes_string(x_col, y_col, group = "point"),
+      aes(x= .data[[x_col]], y = .data[[y_col]], group = .data[["point"]]),
       color = "black",
       size = pt_size,
       alpha = pt_opacity
@@ -378,8 +379,8 @@ plot_points_2d_clean <- function(
   pt_size = 1,
   ...
 ) {
-  plt <- ggplot(to_plot, aes_string(x = x_col, y = y_col, color = color_col))
-
+  plt <- ggplot(to_plot, 
+   aes(x= .data[[x_col]], y = .data[[y_col]], color =  .data[[color_col]]))
 
   if (color_scheme == "default" || color_scheme == "highlight" || color_scheme == "direct_single_color" ) {
     plt <- plt + rasterize_if_needed(geom_point(size = pt_size, color = base_color, alpha = pt_opacity))
@@ -408,6 +409,7 @@ plot_points_2d_clean <- function(
         ...
       ))
   } else {
+    spdl::error("Invalid color_scheme")
     stop("Invalid color_scheme")
   }
 

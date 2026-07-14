@@ -6,7 +6,7 @@
 \usage{
 plot_errors(
   solution_proj,
-  variables = c("deconv_error", "lamdba_error", "beta_error", "D_h_error", "D_w_error",
+  variables = c("deconv_error", "lambda_error", "beta_error", "D_h_error", "D_w_error",
     "total_error")
 )
 }

@@ -55,7 +55,7 @@ plot_basis_distribution <- function(W, max_expr = 25, logp1 = T) {
     stat = "bin",
     binwidth = 0.5,
     boundary = 0
-  ) + xlim(0, max(max_expr, max(to_plot$expression))) + ylab("genes")
+  ) + xlim(0, max(max_expr, max(to_plot$expression))) + ylab("features")
   return(plt)
 }
 
@@ -129,7 +129,7 @@ get_fold_change <- function(signature, stat = "mean_fc", colnorm = T) {
   if (colnorm) {
     signature <- apply(signature, 2, function(x) x / sum(x))
   }
-  for (ct_col_i in 1:ncol(cell_types_stats)) {
+  for (ct_col_i in seq_len(ncol(cell_types_stats))) {
     stat_fun <- if (stat == "mean_fc")
       function(gene_row) {
         gene_row[ct_col_i] / mean(gene_row[-ct_col_i])
@@ -138,8 +138,10 @@ get_fold_change <- function(signature, stat = "mean_fc", colnorm = T) {
       function(gene_row) {
         gene_row[ct_col_i] / min(gene_row[-ct_col_i] + 1)
       }
-    else
+    else {
+      spdl::error("Unknown stat: {}", stat)
       stop(paste0("Unknown stat: ", stat))
+    }
     cell_types_stats[, ct_col_i] <- apply(signature, 1, stat_fun)
   }
   cell_types_stats
