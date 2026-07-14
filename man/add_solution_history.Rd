@@ -12,7 +12,7 @@ add_solution_history(
   pt_size = 0.5,
   pt_opacity = 0.95,
   step = 100,
-  from_iter = 1,
+  from_iter = 0,
   to_iter = NULL,
   spaces = c("X", "Omega"),
   colored = TRUE,

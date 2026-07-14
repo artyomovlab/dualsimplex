@@ -54,6 +54,7 @@ dso$plot_projected("zero_distance",
 \item \href{#method-DualSimplexSolver-plot_svd}{\code{DualSimplexSolver$plot_svd()}}
 \item \href{#method-DualSimplexSolver-plot_svd_history}{\code{DualSimplexSolver$plot_svd_history()}}
 \item \href{#method-DualSimplexSolver-project}{\code{DualSimplexSolver$project()}}
+\item \href{#method-DualSimplexSolver-factorize}{\code{DualSimplexSolver$factorize()}}
 \item \href{#method-DualSimplexSolver-plot_projection_diagnostics}{\code{DualSimplexSolver$plot_projection_diagnostics()}}
 \item \href{#method-DualSimplexSolver-plot_distances_distribution}{\code{DualSimplexSolver$plot_distances_distribution()}}
 \item \href{#method-DualSimplexSolver-distance_filter}{\code{DualSimplexSolver$distance_filter()}}
@@ -317,6 +318,37 @@ Calculate svd projection for current data. Will perform SVD.
 }
 }
 \if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-DualSimplexSolver-factorize"></a>}}
+\if{latex}{\out{\hypertarget{method-DualSimplexSolver-factorize}{}}}
+\subsection{Method \code{factorize()}}{
+Minimal facorization steps to be perfomed
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$factorize(
+  K,
+  initialization_strategy = "random_invertible",
+  optim_iteraitons = 10000,
+  optim_config = OPTIM_CONFIG_DEFAULT,
+  ...
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{K}}{selected number of dimensions (K) to work with.}
+
+\item{\code{initialization_strategy}}{strategy for initializing the solution.}
+
+\item{\code{optim_iteraitons}}{number of optimization iterations.}
+
+\item{\code{optim_config}}{optimization configuration.}
+
+\item{\code{...}}{additional arguments for initialization.}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-DualSimplexSolver-plot_projection_diagnostics"></a>}}
 \if{latex}{\out{\hypertarget{method-DualSimplexSolver-plot_projection_diagnostics}{}}}
 \subsection{Method \code{plot_projection_diagnostics()}}{
@@ -529,7 +561,7 @@ Important note: ggplot only allows to either draw history or color all the point
   with_history = TRUE,
   wrap = T,
   show_plots = T,
-  from_iter = 1,
+  from_iter = 0,
   to_iter = NULL,
   ...
 )}\if{html}{\out{</div>}}

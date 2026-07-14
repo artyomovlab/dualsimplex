@@ -4,7 +4,7 @@
 \alias{get_solution_history}
 \title{Get history of values for X and Omega from optimization logs}
 \usage{
-get_solution_history(solution_proj, step, from_iter = 1, to_iter = NULL)
+get_solution_history(solution_proj, step, from_iter = 0, to_iter = NULL)
 }
 \arguments{
 \item{solution_proj}{dso$st$solution_proj object containing all optimization logs and result}

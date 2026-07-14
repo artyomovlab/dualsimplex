@@ -382,6 +382,23 @@ DualSimplexSolver <- R6Class(
       )
     },
 
+    #' @description
+    #' Minimal facorization steps to be perfomed
+    #'
+    #' @param K selected number of dimensions (K) to work with.
+    #' @param initialization_strategy strategy for initializing the solution.
+    #' @param optim_iteraitons number of optimization iterations.
+    #' @param optim_config optimization configuration.
+    #' @param ... additional arguments for initialization.
+    factorize = function(K, initialization_strategy = "random_invertible", optim_iteraitons = 10000, optim_config=OPTIM_CONFIG_DEFAULT, ...) {
+      private$set_data_first()
+      self$project(K)
+      self$init_solution(initialization_strategy, ...)
+      self$optim_solution(optim_iteraitons, optim_config)
+      solution <- self$finalize_solution()
+      return(solution)
+    },
+
 
     #' @description
     #' A set of plots to extimate the projection.
