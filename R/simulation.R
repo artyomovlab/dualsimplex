@@ -149,7 +149,7 @@ simulation_mixtures_of_basis <- function(predefined_basis, n, k = NULL, mean_coe
   data[data < 0] <- 0
   
   res <- list(
-    basis = predefined_basis,
+    basis = basis,
     coefs = coefs,
     data = data,
     mixed_sample_names = colnames(data)

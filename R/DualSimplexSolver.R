@@ -902,8 +902,8 @@ DualSimplexSolver <- R6Class(
         solution_scaled <- reverse_solution_projection(self$st$solution_proj, self$st$proj)
         self$st$solution_no_corr <- reverse_solution_sinkhorn(solution_scaled, self$st$scaling)
         self$st$solution <- list(
-          W = self$st$solution_no_corr$Dv_inv_W_row,
-          H = self$st$solution_no_corr$H_row
+          W = self$st$solution_no_corr$W,
+          H = self$st$solution_no_corr$H
         )
       } else if (reverse_sinkhorn_type == "nnls_H_norm") {
         # Starts with H_ss, W_fs
