@@ -129,12 +129,6 @@ Rcpp::List optimize_positivity(const arma::mat& X,
     }
 
     // here we assume X and Omega are inverse of each other and positive as needed
-    spdl::warn("start with X");
-    Rcpp::Rcout << new_X  << std::endl;
-    spdl::warn("start with Omega");
-    Rcpp::Rcout << new_Omega  << std::endl;
-    spdl::warn("start with D");
-    Rcpp::Rcout << new_D_w  << std::endl;
 
     int itr_ = 0;
     while ((itr_ < iterations + 1) & (current_learning_rate > convergence_tol)) {
@@ -151,8 +145,6 @@ Rcpp::List optimize_positivity(const arma::mat& X,
         
         // Regularization here is advised but not mandatory since X and Omega regularize each other.
         der_X = der_X + total_regularization_weight * der_reg;
-        spdl::warn("derrivative X");
-        Rcpp::Rcout << der_X  << std::endl;
         if (debug_stats) {
             average_gradient_norm = arma::mean(arma::vecnorm(der_X, 2, 1));
             average_hinge_H_gradient_norm = arma::mean(arma::vecnorm(hinge_term_H, 2, 1));
@@ -161,8 +153,6 @@ Rcpp::List optimize_positivity(const arma::mat& X,
             average_hinge_reg_Omega_gradient_norm = arma::mean(arma::vecnorm(reg_Omega_term, 2, 1));
         }
         tmp_X = (new_X - current_learning_rate * der_X); // estimate new X given derivative
-        spdl::warn("candidate X");
-        Rcpp::Rcout << tmp_X  << std::endl;
         // Ensure if first column of X is all-positive
         if (arma::any(tmp_X.col(0) <= 0)) {
             for (int c=0; c < cell_types; c++) {
@@ -181,12 +171,8 @@ Rcpp::List optimize_positivity(const arma::mat& X,
                 spdl::warn("Any gradient step gives bad X, probably X was bad before");
             }
         }
-        spdl::warn("corrected X");
-        Rcpp::Rcout << tmp_X  << std::endl;
-
         tmp_Omega = arma::pinv(tmp_X);
-        spdl::warn("candidate Omega");
-        Rcpp::Rcout << tmp_Omega  << std::endl;
+
         // Ensure if first row of Omega is all positive
         
 
@@ -202,12 +188,7 @@ Rcpp::List optimize_positivity(const arma::mat& X,
                     matrix_value =  tmp_Omega(0,c); 
                 }
                 shrink_iteration++;
-                spdl::warn("Shrink Iteration completed. First column of X: ");
-                Rcpp::Rcout << tmp_X.col(0)  << std::endl;
-                spdl::warn("Shrink Iteration completed. First row of Omega: ");
-                Rcpp::Rcout << tmp_Omega.row(0)  << std::endl;
             }
-
             if (shrink_iteration != shrink_limit) {
                     // if we were able to find the solution. accept these new X and Omega
                     // Do nothing its ok
@@ -216,10 +197,7 @@ Rcpp::List optimize_positivity(const arma::mat& X,
                     tmp_X = new_X;
                     tmp_Omega = arma::pinv(tmp_X); 
             }
-            spdl::warn("corrected X");
-            Rcpp::Rcout << tmp_X  << std::endl;
-            spdl::warn("corrected Omega");
-            Rcpp::Rcout << tmp_Omega  << std::endl;
+
             new_Omega = tmp_Omega;
             new_X = tmp_X;
         } else {
