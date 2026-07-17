@@ -195,7 +195,7 @@ Rcpp::List optimize_positivity(const arma::mat& X,
                     int shrink_iteration = 0;
                     while((matrix_value <= 0)& (shrink_iteration < shrink_limit)) {
                     der_X /=  2;
-                    der_X.row(c) *= 2;
+                    der_X.col(0) *= 2;
                     tmp_X = (new_X - current_learning_rate * der_X);
                     tmp_Omega = arma::pinv(tmp_X);
                     matrix_value =  tmp_Omega(0,c);
@@ -205,13 +205,19 @@ Rcpp::List optimize_positivity(const arma::mat& X,
                     // if we were able to find the solution. accept these new X and Omega
                     // Do nothing its ok
                     } else {
-                        spdl::warn("Iteration {} Couldn't find good inverse X for the row {}, reject X update for this row", itr_, c);
-                        arma::rowvec only_good_row  = der_X.row(c);
+                        spdl::warn("Iteration {} Couldn't find good inverse X, leading to negative omega rows, reject X update except for first column", itr_);
+                        arma::rowvec only_good_col  = der_X.col(0);
                         der_X.fill(0);
-                        der_X.row(c) = only_good_row;
+                        der_X.col(0) = only_good_col;
                         tmp_X = (new_X - current_learning_rate * der_X);
                     }
                 }
+               spdl::warn("Shrink Iteration completed. First column of X: ");
+               Rcpp::Rcout << tmp_X.col(0)  << std::endl;
+               spdl::warn("Shrink Iteration completed. First row of Omega: ");
+               Rcpp::Rcout << tmp_Omega.row(0)  << std::endl;
+
+
             }
             spdl::warn("corrected X");
             Rcpp::Rcout << tmp_X  << std::endl;
