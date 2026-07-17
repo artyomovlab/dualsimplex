@@ -211,8 +211,9 @@ initializers <- list(
     # We break it with the random invertible matrix
     dim_null <- ncol(N_r)
     W <- matrix(runif(dim_null * dim_null, min = -1.0, max = 1.0), nrow = dim_null)
-    # Force it to be diagonally dominant so it is computationally stable
+    # Force it to be diagonally dominant so it is computationally stable (invertible)
     diag(W) <- rowSums(W) + 1.0
+    W <- W / n_cell_types
     # Scramble the null space. V is now linearly independent, in the null space,
     # but NO LONGER orthonormal.
     V <- N_r %*% W
