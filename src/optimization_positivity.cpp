@@ -216,7 +216,7 @@ Rcpp::List optimize_positivity(const arma::mat& X,
             spdl::warn("corrected X");
             Rcpp::Rcout << tmp_X  << std::endl;
             spdl::warn("corrected Omega");
-            Rcpp::Rcout << tmp_X  << std::endl;
+            Rcpp::Rcout << tmp_Omega  << std::endl;
             new_Omega = tmp_Omega;
             new_X = tmp_X;
         } else {
