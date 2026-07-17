@@ -188,33 +188,33 @@ Rcpp::List optimize_positivity(const arma::mat& X,
         spdl::warn("candidate Omega");
         Rcpp::Rcout << tmp_Omega  << std::endl;
         // Ensure if first row of Omega is all positive
+        
+
         if (arma::any( tmp_Omega.row(0) <= 0)) {
-            for (int c=0; c < cell_types; c++) {
-                double matrix_value =  tmp_Omega(0,c);
-                if (matrix_value <= 0) {
-                    int shrink_iteration = 0;
-                    while((matrix_value <= 0)& (shrink_iteration < shrink_limit)) {
+            int shrink_iteration = 0;
+            while (arma::any( tmp_Omega.row(0) <= 0) & (shrink_iteration < shrink_limit)) {
+                for (int c=0; c < cell_types; c++) {
+                    double matrix_value =  tmp_Omega(0,c);
                     der_X /=  2;
+                    der_X.row(c) *= 2;
                     tmp_X = (new_X - current_learning_rate * der_X);
                     tmp_Omega = arma::pinv(tmp_X);
-                    matrix_value =  tmp_Omega(0,c);
-                    shrink_iteration++;
-                   }
-                if (shrink_iteration != shrink_limit) {
+                    matrix_value =  tmp_Omega(0,c); 
+                }
+                shrink_iteration++;
+                spdl::warn("Shrink Iteration completed. First column of X: ");
+                Rcpp::Rcout << tmp_X.col(0)  << std::endl;
+                spdl::warn("Shrink Iteration completed. First row of Omega: ");
+                Rcpp::Rcout << tmp_Omega.row(0)  << std::endl;
+            }
+
+            if (shrink_iteration != shrink_limit) {
                     // if we were able to find the solution. accept these new X and Omega
                     // Do nothing its ok
-                    } else {
-                        spdl::warn("Iteration {} Couldn't find good inverse X, Reject optimization step.", itr_);
-                        tmp_X = new_X;
-                        tmp_Omega = arma::pinv(tmp_X); 
-                    }
-                }
-               spdl::warn("Shrink Iteration completed. First column of X: ");
-               Rcpp::Rcout << tmp_X.col(0)  << std::endl;
-               spdl::warn("Shrink Iteration completed. First row of Omega: ");
-               Rcpp::Rcout << tmp_Omega.row(0)  << std::endl;
-
-
+            } else {
+                spdl::warn("Iteration {} Couldn't find good inverse X, Reject optimization step.", itr_);
+                    tmp_X = new_X;
+                    tmp_Omega = arma::pinv(tmp_X); 
             }
             spdl::warn("corrected X");
             Rcpp::Rcout << tmp_X  << std::endl;
