@@ -210,7 +210,7 @@ initializers <- list(
     # However orthonormality of N_r is not necessary for us
     # We break it with the random invertible matrix
     dim_null <- ncol(N_r)
-    random_scale <- 10^runif(1, min = -1.5, max = 1.5) # to have random relation in sizes between X and Omega
+    random_scale <- 10^runif(1, min = -0.5, max = 0.5) # to have random relation in sizes between X and Omega
     W <- matrix(runif(dim_null * dim_null, min = -random_scale, max = random_scale), nrow = dim_null)
     # Force it to be diagonally dominant so it is computationally stable (invertible)
     diag(W) <- rowSums(W) + random_scale
