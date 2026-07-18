@@ -212,7 +212,7 @@ initializers <- list(
     # Generate random angles
     # since it is rnorm, it should be invertible with extremely high probability
     dim_null <- ncol(N_r)
-    W <- matrix(rnorm(dim_null^2), nrow = dim_null)
+    W_raw <- matrix(rnorm(dim_null^2), nrow = dim_null)
 
     # Multiplying by this matrix will give us new independent vectors
     # Scramble the null space. V is now linearly independent, in the null space,
