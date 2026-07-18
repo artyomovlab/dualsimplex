@@ -209,17 +209,31 @@ initializers <- list(
     N_r <- MASS::Null(matrix(r1, ncol = 1))
     # However orthonormality of N_r is not necessary for us
     # We break it with the random invertible matrix
-    dim_null <- ncol(N_r)
-
     # Generate random angles
     # since it is rnorm, it should be invertible with extremely high probability
+    dim_null <- ncol(N_r)
     W <- matrix(rnorm(dim_null^2), nrow = dim_null)
-    # Scale these angles randomly to have different lengths of vectors
-    random_scale <- 10^runif(1, min = -0.5, max = 0.5)
-    # scale matrix to have some random scale (controls the size of the triangle)
-    W <- W * random_scale
+
+    # Multiplying by this matrix will give us new independent vectors
     # Scramble the null space. V is now linearly independent, in the null space,
     # but NO LONGER orthonormal.
+    V_raw <- N_r %*% W_raw
+    # And combination of the c1 will give invertible matrix
+    X_dtilda_raw <- cbind(c1, V_raw)
+    # However lengths of the result vector could be strange and not really related to the data points
+    X_raw <- diag(1 / sqrt(d_elements)) %*% X_dtilda_raw %*% sqrt(proj$meta$Sigma)
+    current_X_norms <- apply(X_raw[, 2:n_cell_types, drop = FALSE], MARGIN = 2, FUN = function(col) sqrt(sum(col^2)))
+
+    # We will generate final lengths ourselves not reaching 5 of the mean lenths of the data
+    data_norms <- apply(proj$X, MARGIN = 1, FUN = function(pt) sqrt(sum(pt^2)))
+    mean_data_norm <- mean(data_norms)
+    # New random lengths we generate
+    desired_X_lengths <- runif(dim_null, min = 0.05 * mean_data_norm, max = 5 * mean_data_norm)
+    scale_factors <- desired_X_lengths / current_X_norms
+    # Next jsut scale W according to this
+    W <- W_raw %*% diag(scale_factors)
+
+    # Now produce new vectors with this correction
     V <- N_r %*% W
     X_dtilda <- cbind(c1, V)
     # and omega should be the inverse of this matrix
