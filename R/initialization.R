@@ -227,8 +227,12 @@ initializers <- list(
     # We will generate final lengths ourselves not reaching 5 of the mean lenths of the data
     data_norms <- apply(proj$X, MARGIN = 1, FUN = function(pt) sqrt(sum(pt^2)))
     mean_data_norm <- mean(data_norms)
+    max_allowed_norm <- 4 * mean(data_norms)
+    min_allowed_norm <- 0.05 * max_allowed_norm
     # New random lengths we generate
-    desired_X_lengths <- runif(dim_null, min = 0.05 * mean_data_norm, max = 5 * mean_data_norm)
+    log_min <- log10(min_allowed_norm)
+    log_max <- log10(max_allowed_norm)
+    desired_X_lengths <- 10^runif(dim_null, min = log_min, max = log_max)
     scale_factors <- desired_X_lengths / current_X_norms
     # Next jsut scale W according to this
     W <- W_raw %*% diag(scale_factors)
