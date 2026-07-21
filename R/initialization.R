@@ -228,7 +228,7 @@ initializers <- list(
     data_norms <- apply(proj$X, MARGIN = 1, FUN = function(pt) sqrt(sum(pt^2)))
     mean_data_norm <- mean(data_norms)
     max_allowed_norm <- 2 * mean(data_norms)
-    min_allowed_norm <- 0.3 * max_allowed_norm
+    min_allowed_norm <- 0.3 * mean(data_norms)
     # New random lengths we generate
     log_min <- log10(min_allowed_norm)
     log_max <- log10(max_allowed_norm)
