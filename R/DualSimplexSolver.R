@@ -789,7 +789,7 @@ DualSimplexSolver <- R6Class(
     #' @description
     #' Initialize current solution
     #'
-    #' @param strategy strategy to use for initialization. valid values are "select_x", "select_omega", "random" and "marker_means"
+    #' @param strategy strategy to use for initialization. valid values are "random_invertible","invertible_symetric","select_x", "select_omega", "random" and "marker_means"
     #' @param ... any other params to be passed to initialization methods (e.g. marker genes)
     init_solution = function(strategy = "random_invertible", ...) {
       private$project_first()

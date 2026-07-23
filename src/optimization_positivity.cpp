@@ -111,6 +111,7 @@ Rcpp::List optimize_positivity(const arma::mat& X,
 
     // Start initial inverse search
   //  Rcpp::Rcout << "Check initial inverse matrix properties"  << std::endl;
+                        
     tmp_Omega = arma::pinv(new_X);
     if (arma::any( tmp_Omega.row(0) <= 0)) {
        spdl::warn("Couldn't find good initial inverse of X provided. Will try with Omega");
@@ -152,7 +153,6 @@ Rcpp::List optimize_positivity(const arma::mat& X,
             average_hinge_reg_Omega_gradient_norm = arma::mean(arma::vecnorm(reg_Omega_term, 2, 1));
         }
         tmp_X = (new_X - current_learning_rate * der_X); // estimate new X given derivative
-
         // Ensure if first column of X is all-positive
         if (arma::any(tmp_X.col(0) <= 0)) {
             for (int c=0; c < cell_types; c++) {
@@ -171,34 +171,33 @@ Rcpp::List optimize_positivity(const arma::mat& X,
                 spdl::warn("Any gradient step gives bad X, probably X was bad before");
             }
         }
-
         tmp_Omega = arma::pinv(tmp_X);
+
         // Ensure if first row of Omega is all positive
+        
+
         if (arma::any( tmp_Omega.row(0) <= 0)) {
-            for (int c=0; c < cell_types; c++) {
-                double matrix_value =  tmp_Omega(0,c);
-                if (matrix_value <= 0) {
-                    int shrink_iteration = 0;
-                    while((matrix_value <= 0)& (shrink_iteration < shrink_limit)) {
+            int shrink_iteration = 0;
+            while (arma::any( tmp_Omega.row(0) <= 0) & (shrink_iteration < shrink_limit)) {
+                for (int c=0; c < cell_types; c++) {
+                    double matrix_value =  tmp_Omega(0,c);
                     der_X /=  2;
                     der_X.row(c) *= 2;
                     tmp_X = (new_X - current_learning_rate * der_X);
                     tmp_Omega = arma::pinv(tmp_X);
-                    matrix_value =  tmp_Omega(0,c);
-                    shrink_iteration++;
-                   }
-                if (shrink_iteration != shrink_limit) {
+                    matrix_value =  tmp_Omega(0,c); 
+                }
+                shrink_iteration++;
+            }
+            if (shrink_iteration != shrink_limit) {
                     // if we were able to find the solution. accept these new X and Omega
                     // Do nothing its ok
-                    } else {
-                        spdl::warn("Iteration {} Couldn't find good inverse X for the row {}, reject X update for this row", itr_, c);
-                        arma::rowvec only_good_row  = der_X.row(c);
-                        der_X.fill(0);
-                        der_X.row(c) = only_good_row;
-                        tmp_X = (new_X - current_learning_rate * der_X);
-                    }
-                }
+            } else {
+                spdl::warn("Iteration {} Couldn't find good inverse X, Reject optimization step.", itr_);
+                    tmp_X = new_X;
+                    tmp_Omega = arma::pinv(tmp_X); 
             }
+
             new_Omega = tmp_Omega;
             new_X = tmp_X;
         } else {

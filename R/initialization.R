@@ -3,7 +3,7 @@
 #' In general it can use provided markers, solution for one of the simplex or random values
 #'
 #' @param proj dso$st$proj object containing containing all results of projection operation. (e.g. projected points and vectors)
-#' @param strategy strategy to use for initialization. valid values are "select_x", "select_omega", "random", "random_invertible" and "marker_means"
+#' @param strategy strategy to use for initialization. valid values are "select_x", "select_omega", "random", "random_invertible", "invertible_symetric" and "marker_means"
 #' @param kwargs put here marker gene names for each of the cell type if use  marker_means
 #' @export
 initialize_solution <- function(proj, strategy = "select_x", kwargs = NULL) {
@@ -193,7 +193,7 @@ initializers <- list(
     # We want to ensure that X_dtilda and Omega_dtilda are inverse
     # and have all positive first row/column respectively
 
-    # First we generate d candidates  generationg vector whos elements sum to M
+    # First we generate d candidates  generationg vector whose elements sum to M
     d_elements <-  runif(n_cell_types, min = 1e-5, max = 1.0)
     d_elements <- M * d_elements / sum(d_elements)
 
@@ -209,12 +209,35 @@ initializers <- list(
     N_r <- MASS::Null(matrix(r1, ncol = 1))
     # However orthonormality of N_r is not necessary for us
     # We break it with the random invertible matrix
+    # Generate random angles
+    # since it is rnorm, it should be invertible with extremely high probability
     dim_null <- ncol(N_r)
-    W <- matrix(runif(dim_null * dim_null, min = -1.0, max = 1.0), nrow = dim_null)
-    # Force it to be diagonally dominant so it is computationally stable
-    diag(W) <- rowSums(W) + 1.0
+    W_raw <- matrix(rnorm(dim_null^2), nrow = dim_null)
+
+    # Multiplying by this matrix will give us new independent vectors
     # Scramble the null space. V is now linearly independent, in the null space,
     # but NO LONGER orthonormal.
+    V_raw <- N_r %*% W_raw
+    # And combination of the c1 will give invertible matrix
+    X_dtilda_raw <- cbind(c1, V_raw)
+    # However lengths of the result vector could be strange and not really related to the data points
+    X_raw <- diag(1 / sqrt(d_elements)) %*% X_dtilda_raw %*% sqrt(proj$meta$Sigma)
+    current_X_norms <- apply(X_raw[, 2:n_cell_types, drop = FALSE], MARGIN = 2, FUN = function(col) sqrt(sum(col^2)))
+
+    # We will generate final lengths ourselves not reaching 5 of the mean lenths of the data
+    data_norms <- apply(proj$X, MARGIN = 1, FUN = function(pt) sqrt(sum(pt^2)))
+    mean_data_norm <- mean(data_norms)
+    max_allowed_norm <- 2 * mean(data_norms)
+    min_allowed_norm <- 0.3 * mean(data_norms)
+    # New random lengths we generate
+    log_min <- log10(min_allowed_norm)
+    log_max <- log10(max_allowed_norm)
+    desired_X_lengths <- 10^runif(dim_null, min = log_min, max = log_max)
+    scale_factors <- desired_X_lengths / current_X_norms
+    # Next jsut scale W according to this
+    W <- W_raw %*% diag(scale_factors)
+
+    # Now produce new vectors with this correction
     V <- N_r %*% W
     X_dtilda <- cbind(c1, V)
     # and omega should be the inverse of this matrix
@@ -253,45 +276,65 @@ initializers <- list(
     ))
 
   },
-  random_symmetric = function(proj, kwargs = NULL) {
-    if (!is.null(kwargs) && "n" %in% kwargs) {
-      n <- kwargs[["n"]]
-    } else {
-      n <- 100
-    }
+  invertible_symetric = function(proj, kwargs = NULL) {
     n_cell_types <- proj$meta$K
     M <- proj$meta$M
     N <- proj$meta$N
+    sigma_1 <-  sqrt(M / N)
+    # We want to ensure that X_dtilda and Omega_dtilda are inverse
+    # and have all positive first row/column respectively
 
-    idx_table_X <- matrix(0, ncol = n_cell_types + 1, nrow = n)
+    # First we generate d candidates  generationg vector whos elements sum to M
+    d_elements <-  runif(n_cell_types, min = 1e-5, max = 1.0)
+    d_elements <- M * d_elements / sum(d_elements)
 
-    for (i in 1:n) {
-      #X
-      ids_X <- sample(1:M, n_cell_types)
-      X <- proj$X[ids_X, ]
-      metric_X <- sqrt(sum(apply(X[, -1], 2, mean) ^ 2))
-      idx_table_X[i, ] <- c(ids_X, metric_X)
+    # r1 (row of omega) will be  sqrt(d) / sqrt(sigma_1) / sqrt(M)
+    r1 <- sqrt(d_elements) / (sqrt(sigma_1) * sqrt(M))
+    # c1 is predefined. its sqrt(d) / sqrt(sigma_1) / sqrt(N)
+    c1 <- sqrt(d_elements) / (sqrt(sigma_1) * sqrt(N))
+    if (!((sum(r1 * c1) - 1) < 1e-6)) {
+      spdl::error("Error in first row/column initialization.  r1 and c1 should have specific relation")
     }
+    # construct the null space vectors of the r1.
+    # N_r orthonormal and orthogonal to r1
+    N_r <- MASS::Null(matrix(r1, ncol = 1))
+    X_dtilda <- cbind(c1, N_r)
+    # and omega should be the inverse of this matrix
+    Omega_dtilda <- solve(X_dtilda)
 
-    minrow <- function(mat) mat[which.min(mat[, ncol(mat)]), ]
-
-
-    # X
-    ids_X <- minrow(idx_table_X)[1:n_cell_types]
-    X <- proj$X[ids_X, ]
-    Omega <- t(proj$X[ids_X, ])
-
-    Dw <- MASS::ginv(t(X)) %*% proj$meta$A
-    Dh <- Dw *(N / M);
-
-    Ds <- get_Dwh_from_XOmega(X, Omega, proj)
+    # Now let's combine all of this to the new matrix X and Omega
+    # X should be   * 1/sqrt(D)  * X_d_tilda   * sqrt(Sigma)
+    X <- diag(1 / sqrt(d_elements)) %*%  X_dtilda %*% sqrt(proj$meta$Sigma)
+    # Omega should be sqrt(Sigma) * Omega_dtilda * 1/sqrt(D)
+    Omega <-  sqrt(proj$meta$Sigma) %*% Omega_dtilda %*% diag(1/sqrt(d_elements))
+    # --- ASSERTS ---
+    identity_check <- Omega_dtilda %*% X_dtilda
+    target_identity <- diag(nrow(X_dtilda))
+    # Check inverse
+    if (max(abs(identity_check - target_identity)) > 1e-6) {
+      spdl::error("X_dtilda and Omega_dtilda are not mathematical inverses of each other.")
+    }
+    # Check r1 c1 property
+    new_r1 <- Omega_dtilda[1, ]
+    if (!(abs(sum(new_r1 * c1) - 1) < 1e-6)) {
+      spdl::error("We lost r1 vs c1 properties in the middle")
+    }
+    colnames(X) <- colnames(proj$X)
+    rownames(X) <- paste("Init ", c(1: n_cell_types))
+    Omega <- t(Omega)
+    colnames(Omega) <- colnames(proj$Omega)
+    rownames(Omega) <- paste("Init ", c(1: n_cell_types))
+    # ------
+    Dw <- as.matrix(d_elements)
+    Dh <- Dw * (N / M)
     return(list(
       X = X,
-      Omega = t(Omega),
+      Omega = Omega,
       D_w = Dw,
       D_h = Dh
     ))
   },
+
   random_X_within_theta_angle = function(proj, kwargs) {
     # Having center points provided we want to initialize in some
     # random point within theta angle
