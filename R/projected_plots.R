@@ -72,9 +72,9 @@ concat_data <- function(data_list, group_colname) {
 #' Points will be taken uniformly in the
 #'
 #' @param solution_proj dso$st$solution_proj object containing all optimization logs and result
-#' @param step step to skip some values
-#' @param from_iter starting point
-#' @param to_iter end point
+#' @param step step to skip some values. selected values are calculated based on total values.
+#' @param from_iter starting point from 0 to $get_n_iters()
+#' @param to_iter end point from 0 to $get_n_iters()
 #' @return X and Omega values for desired timestamps
 #' @export
 get_solution_history <- function(solution_proj, step, from_iter = 0, to_iter = NULL) {
@@ -84,11 +84,11 @@ get_solution_history <- function(solution_proj, step, from_iter = 0, to_iter = N
   nct <- sqrt(ncol(stats$Omega))
   nit <- nrow(stats$Omega)
   if (is.null(to_iter)) {
-    to_iter <- nit
+    to_iter <- nit - 1
   }
   if (nit <= 0) {
     # No optimization steps performed
-    return (NULL)
+    return(NULL)
   }
   # TODO: correct order initially
   correct_order <- order((seq_len(ncol(stats$Omega)) - 1) %% nct)
@@ -100,7 +100,7 @@ get_solution_history <- function(solution_proj, step, from_iter = 0, to_iter = N
     tran <- cbind(tran, rep(0:(nit - 1), each = nct))
     colnames(tran) <- c(paste0("dim_", 1:nct), "point", "iter")
     tran <- tran[(tran[, "iter"] >= from_iter) & (tran[, "iter"] <= to_iter), ]
-    tran <- tran[((tran[, "iter"] %% floor(step)) == 0) | (tran[, "iter"] == to_iter) | (tran[, "iter"] == from_iter), ]
+    tran <- tran[(((tran[, "iter"] + 1) %% floor(step)) == 0) | (tran[, "iter"] == to_iter) | (tran[, "iter"] == from_iter), ]
     tran <- as.data.frame(tran)
     tran[, "point"] <- as.factor(tran[, "point"])
     return(tran)
