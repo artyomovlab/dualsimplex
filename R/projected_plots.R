@@ -86,6 +86,10 @@ get_solution_history <- function(solution_proj, step, from_iter = 0, to_iter = N
   if (is.null(to_iter)) {
     to_iter <- nit
   }
+  if (nit <= 0) {
+    # No optimization steps performed
+    return (NULL)
+  }
   # TODO: correct order initially
   correct_order <- order((seq_len(ncol(stats$Omega)) - 1) %% nct)
   stats$Omega <- stats$Omega[, correct_order]
@@ -96,7 +100,7 @@ get_solution_history <- function(solution_proj, step, from_iter = 0, to_iter = N
     tran <- cbind(tran, rep(0:(nit - 1), each = nct))
     colnames(tran) <- c(paste0("dim_", 1:nct), "point", "iter")
     tran <- tran[(tran[, "iter"] >= from_iter) & (tran[, "iter"] <= to_iter), ]
-    tran <- tran[((tran[, "iter"] %% step) == 0) | (tran[, "iter"] == to_iter) | (tran[, "iter"] == from_iter), ]
+    tran <- tran[((tran[, "iter"] %% floor(step)) == 0) | (tran[, "iter"] == to_iter) | (tran[, "iter"] == from_iter), ]
     tran <- as.data.frame(tran)
     tran[, "point"] <- as.factor(tran[, "point"])
     return(tran)
