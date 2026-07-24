@@ -78,6 +78,7 @@ concat_data <- function(data_list, group_colname) {
 #' @return X and Omega values for desired timestamps
 #' @export
 get_solution_history <- function(solution_proj, step, from_iter = 0, to_iter = NULL) {
+  step <- floor(step)
   stats <- list()
   stats$X <- solution_proj$optim_history$points_statistics_X
   stats$Omega <- solution_proj$optim_history$points_statistics_Omega
@@ -95,12 +96,15 @@ get_solution_history <- function(solution_proj, step, from_iter = 0, to_iter = N
   stats$Omega <- stats$Omega[, correct_order]
 
   solution_history <- lapply(stats, function(mat) {
+    # Take rows (from_iter+1) +  (from_iter+1)+step ....  and (to_iter+1) if not taken
+    indexes <- unique(c(seq((from_iter + 1), (to_iter + 1), by = step),to_iter + 1))
+    mat <- mat[indexes, ] 
     tran <- matrix(c(t(mat)), ncol = nct, byrow = T)
-    tran <- cbind(tran, rep(1:nct, times = nit))
-    tran <- cbind(tran, rep(0:(nit - 1), each = nct))
+    tran <- cbind(tran, rep(1:nct, times = nrow(mat)))
+    tran <- cbind(tran, rep((indexes - 1), each = nct))
     colnames(tran) <- c(paste0("dim_", 1:nct), "point", "iter")
-    tran <- tran[(tran[, "iter"] >= from_iter) & (tran[, "iter"] <= to_iter), ]
-    tran <- tran[((tran[, "iter"] %% floor(step)) == 0) | (tran[, "iter"] == to_iter) | (tran[, "iter"] == from_iter), ]
+    #tran <- tran[(tran[, "iter"] >= from_iter) & (tran[, "iter"] <= to_iter), ]
+    #tran <- tran[((tran[, "iter"] %% floor(step)) == 0) | (tran[, "iter"] == to_iter) | (tran[, "iter"] == from_iter), ]
     tran <- as.data.frame(tran)
     tran[, "point"] <- as.factor(tran[, "point"])
     return(tran)
