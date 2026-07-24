@@ -81,12 +81,6 @@ DualSimplexSolver <- R6Class(
         stop("Call optim_solution first")
       }
     },
-    perform_at_least_one_optim_iteration_first = function() {
-      if (is.null(self$st$solution_proj$optim_history$errors_statistics)) {
-        spdl::error("Call optim_solution first")
-        stop("Call optim_solution first")
-      }
-    },
     finalize_first = function() {
       if (is.null(self$st$solution)) {
         spdl::error("Call finalize_solution first")
