@@ -282,6 +282,7 @@ add_solution_history <- function(
   path = TRUE
 ) {
   solution_history <- get_solution_history(solution_proj, step, from_iter = from_iter, to_iter = to_iter)
+  if (!is.null(solution_history)) {
   points_2d <- get_2d_subset(proj, use_dims, solution_history)[spaces]
   if (length(spaces) > 1) {
     solution_history <- concat_data(solution_history[spaces], "space")
@@ -315,7 +316,7 @@ add_solution_history <- function(
 
   plt <- plt +
     labs(title = paste0(max(solution_history$iter), " iterations"))
-
+  }
   return(plt)
 }
 
