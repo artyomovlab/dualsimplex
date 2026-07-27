@@ -143,6 +143,34 @@ optimize_coordinate_descent <- function(X, Omega, D_w, SVRt, R, S, coef_der_X, c
     .Call('_DualSimplex_optimize_coordinate_descent', PACKAGE = 'DualSimplex', X, Omega, D_w, SVRt, R, S, coef_der_X, coef_der_Omega, coef_hinge_H, coef_hinge_W, coef_pos_D_h, coef_pos_D_w, cell_types, N, M, iterations, mean_radius_X, mean_radius_Omega, r_const_X, r_const_Omega, thresh, convergence_tol, stop_criteria_window, debug_stats)
 }
 
+#' Main training loop with all gradient steps. This is the main algorithm for now. 
+#' It optimizes positivity of W and regularize the size of X by dual simplex alignment. 
+#' Gradient steps performed in X space.
+#'
+#' @param X current X
+#' @param Omega current Omega
+#' @param D_w current D_w
+#' @param SVRt current SVRt (sigma)
+#' @param R current R
+#' @param S current S
+#' @param coef_der_X learning rate X
+#' @param coef_alignment gamma?
+#' @param coef_hinge_W beta
+#' @param cell_types number of components (K)
+#' @param N current N
+#' @param M current M
+#' @param iterations number of iterations
+#' @param total_regularization_weight total weight for the regularization terms
+#' @param reg_X proportion / regularization coefficient for X
+#' @param reg_Omega proportion / regularization coefficient for Omega.
+#' @param convergence_tol tolerance for convergence.
+#' @param stop_criteria_window how long error should be on plateu to decrease the learning rate
+#' @param debug_stats wether to save grad norm values.
+#' @return new parameters
+optimize_alignment <- function(X, Omega, D_w, SVRt, R, S, coef_der_X, coef_hinge_W, coef_alignment, cell_types, N, M, iterations, total_regularization_weight, reg_X, reg_Omega, convergence_tol, stop_criteria_window, debug_stats) {
+    .Call('_DualSimplex_optimize_alignment', PACKAGE = 'DualSimplex', X, Omega, D_w, SVRt, R, S, coef_der_X, coef_hinge_W, coef_alignment, cell_types, N, M, iterations, total_regularization_weight, reg_X, reg_Omega, convergence_tol, stop_criteria_window, debug_stats)
+}
+
 #' Transform X and Omega points enforcing the desired equality for first coordinates
 #' This is done by moving magnitude from  i-th point of X to respective i-th point of the Omega and vice versa.
 #'

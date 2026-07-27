@@ -5,12 +5,13 @@
 \title{Make optimization config object for the training method}
 \usage{
 optim_config(
-  method = "positivity",
+  method = c("positivity", "coordinate_descent", "theta", "alignment"),
   debug_stats = FALSE,
   coef_der_X = 0.01,
   coef_der_Omega = 0.01,
   coef_hinge_H = 0.5,
   coef_hinge_W = 0.5,
+  coef_alignment = 0.5,
   total_regularization_weight = 0,
   reg_X = 1,
   reg_Omega = 1,

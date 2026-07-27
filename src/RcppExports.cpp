@@ -172,6 +172,35 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// optimize_alignment
+Rcpp::List optimize_alignment(const arma::mat& X, const arma::mat& Omega, const arma::mat& D_w, const arma::mat& SVRt, const arma::mat& R, const arma::mat& S, const double coef_der_X, double coef_hinge_W, double coef_alignment, const int cell_types, const double N, const double M, const int iterations, double total_regularization_weight, const double reg_X, const double reg_Omega, const double convergence_tol, const int stop_criteria_window, const bool debug_stats);
+RcppExport SEXP _DualSimplex_optimize_alignment(SEXP XSEXP, SEXP OmegaSEXP, SEXP D_wSEXP, SEXP SVRtSEXP, SEXP RSEXP, SEXP SSEXP, SEXP coef_der_XSEXP, SEXP coef_hinge_WSEXP, SEXP coef_alignmentSEXP, SEXP cell_typesSEXP, SEXP NSEXP, SEXP MSEXP, SEXP iterationsSEXP, SEXP total_regularization_weightSEXP, SEXP reg_XSEXP, SEXP reg_OmegaSEXP, SEXP convergence_tolSEXP, SEXP stop_criteria_windowSEXP, SEXP debug_statsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type Omega(OmegaSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type D_w(D_wSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type SVRt(SVRtSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type R(RSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type S(SSEXP);
+    Rcpp::traits::input_parameter< const double >::type coef_der_X(coef_der_XSEXP);
+    Rcpp::traits::input_parameter< double >::type coef_hinge_W(coef_hinge_WSEXP);
+    Rcpp::traits::input_parameter< double >::type coef_alignment(coef_alignmentSEXP);
+    Rcpp::traits::input_parameter< const int >::type cell_types(cell_typesSEXP);
+    Rcpp::traits::input_parameter< const double >::type N(NSEXP);
+    Rcpp::traits::input_parameter< const double >::type M(MSEXP);
+    Rcpp::traits::input_parameter< const int >::type iterations(iterationsSEXP);
+    Rcpp::traits::input_parameter< double >::type total_regularization_weight(total_regularization_weightSEXP);
+    Rcpp::traits::input_parameter< const double >::type reg_X(reg_XSEXP);
+    Rcpp::traits::input_parameter< const double >::type reg_Omega(reg_OmegaSEXP);
+    Rcpp::traits::input_parameter< const double >::type convergence_tol(convergence_tolSEXP);
+    Rcpp::traits::input_parameter< const int >::type stop_criteria_window(stop_criteria_windowSEXP);
+    Rcpp::traits::input_parameter< const bool >::type debug_stats(debug_statsSEXP);
+    rcpp_result_gen = Rcpp::wrap(optimize_alignment(X, Omega, D_w, SVRt, R, S, coef_der_X, coef_hinge_W, coef_alignment, cell_types, N, M, iterations, total_regularization_weight, reg_X, reg_Omega, convergence_tol, stop_criteria_window, debug_stats));
+    return rcpp_result_gen;
+END_RCPP
+}
 // ensure_D_integrity
 Rcpp::List ensure_D_integrity(const arma::mat& X_dtilde, const arma::mat& Omega_dtilde, const arma::vec sqrt_Sigma, const double N, const double M);
 RcppExport SEXP _DualSimplex_ensure_D_integrity(SEXP X_dtildeSEXP, SEXP Omega_dtildeSEXP, SEXP sqrt_SigmaSEXP, SEXP NSEXP, SEXP MSEXP) {
@@ -482,6 +511,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_DualSimplex_nnls_C__", (DL_FUNC) &_DualSimplex_nnls_C__, 4},
     {"_DualSimplex_nnls_nonzero_C__", (DL_FUNC) &_DualSimplex_nnls_nonzero_C__, 4},
     {"_DualSimplex_optimize_coordinate_descent", (DL_FUNC) &_DualSimplex_optimize_coordinate_descent, 24},
+    {"_DualSimplex_optimize_alignment", (DL_FUNC) &_DualSimplex_optimize_alignment, 19},
     {"_DualSimplex_ensure_D_integrity", (DL_FUNC) &_DualSimplex_ensure_D_integrity, 5},
     {"_DualSimplex_optimize_positivity", (DL_FUNC) &_DualSimplex_optimize_positivity, 19},
     {"_DualSimplex_optimize_theta", (DL_FUNC) &_DualSimplex_optimize_theta, 24},

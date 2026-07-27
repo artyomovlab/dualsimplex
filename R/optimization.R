@@ -25,12 +25,13 @@
 #' @return ready to use list with algorithm configuration
 #' @export
 optim_config <- function(
-  method = "positivity", # positivity/coordinate_descent/theta
+  method = c("positivity", "coordinate_descent", "theta", "alignment"),  # let R handel selection and checking
   debug_stats = FALSE,
   coef_der_X = 0.01,
   coef_der_Omega = 0.01,
   coef_hinge_H = 0.5,
   coef_hinge_W = 0.5,
+  coef_alignment = 0.5,  # [CJLee] first try default as 0.5
   # Positivity method with fair gradients and stopping criteria
   total_regularization_weight = 0,
   reg_X = 1,
@@ -49,12 +50,13 @@ optim_config <- function(
   coef_pos_D_w = 0
 ) {
   return(list(
-    method = method,
+    method = match.arg(method),  # this will check if user provide proper method name, otherwise use the default `positivity`
     debug_stats = debug_stats,
     coef_der_X = coef_der_X,
     coef_der_Omega = coef_der_Omega,
     coef_hinge_H = coef_hinge_H,
     coef_hinge_W = coef_hinge_W,
+    coef_alignment = coef_alignment,
 
     total_regularization_weight = total_regularization_weight,
     reg_X = reg_X,
@@ -235,6 +237,17 @@ optimize_solution <- function(
     }
     optimization_params$theta_threshold <- config$center_threshold # threshold for the angle
     do.call(optimize_theta, optimization_params)
+  }else if (config$method == "alignment") {
+    optimization_params[["coef_alignment"]] <- config$coef_alignment
+    optimization_params[["coef_hinge_H"]] <- NULL
+    optimization_params$total_regularization_weight <- config$total_regularization_weight
+    optimization_params$reg_X  <- config$reg_X
+    optimization_params$reg_Omega  <- config$reg_Omega
+    optimization_params$convergence_tol <- config$convergence_tol
+    optimization_params$debug_stats <- config$debug_stats
+    optimization_params$stop_criteria_window  <- config$stop_criteria_window
+
+    do.call(optimize_alignment, optimization_params)
   } else {
     spdl::warn("Unknown optimization method. Will do the basic one")
     optimization_params$r_const_X <-  r_limits$R_limit_X
