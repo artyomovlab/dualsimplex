@@ -18,8 +18,9 @@
 //' @param R current R
 //' @param S current S
 //' @param coef_der_X learning rate X
-//' @param coef_alignment gamma?
 //' @param coef_hinge_W beta
+//' @param coef_hinge_H lambda
+//' @param coef_alignment gamma?
 //' @param cell_types number of components (K)
 //' @param N current N
 //' @param M current M
@@ -40,6 +41,7 @@ Rcpp::List optimize_alignment(const arma::mat& X,
                              const arma::mat& S,
                              const double coef_der_X,
                              double coef_hinge_W,
+                             double coef_hinge_H,
                              double coef_alignment,
                              const int cell_types,
                              const double N,

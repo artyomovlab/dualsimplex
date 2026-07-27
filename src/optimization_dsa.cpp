@@ -13,6 +13,7 @@ Rcpp::List optimize_alignment(const arma::mat& X,
                              const arma::mat& S,
                              const double coef_der_X,
                              double coef_hinge_W,
+                             double coef_hinge_H,
                              double coef_alignment,
                              const int cell_types,
                              const double N,
@@ -51,11 +52,12 @@ Rcpp::List optimize_alignment(const arma::mat& X,
     arma::mat hinge_term_H, hinge_term_W, reg_X_term, reg_Omega_term;
     arma::mat dsa_term;
     arma::mat tmp_X, tmp_Omega;
-    // make all coefficients sum to 1 for simplicity
-    // double coef_sum = coef_hinge_H + coef_hinge_W + total_regularization_weight;
-    // coef_hinge_H = coef_hinge_H / coef_sum;
-    // coef_hinge_W = coef_hinge_W / coef_sum;
-    // total_regularization_weight = total_regularization_weight / coef_sum; 
+    // make all negativity weights sum to 1 for simplicity
+    double coef_sum = coef_hinge_H + coef_hinge_W + total_regularization_weight;
+    coef_hinge_H = coef_hinge_H / coef_sum;
+    coef_hinge_W = coef_hinge_W / coef_sum;
+    total_regularization_weight = total_regularization_weight / coef_sum; 
+
     double shrink_limit = 500;
     double current_learning_rate = coef_der_X;
     double best_error_value = 10000;
@@ -99,7 +101,10 @@ Rcpp::List optimize_alignment(const arma::mat& X,
         hinge_term_W = (-new_Omega.t())  * arma::diagmat(sqrt_Sigma) * l1_hinge_der_basis_C__(S.t() * arma::diagmat(sqrt_Sigma) * new_Omega, S) * (new_Omega.t());
         der_X =  coef_hinge_W * hinge_term_W;
         
-        // For data with only pure sample, we use dual sipmlex alignment to find verticex of sample simplex instead of negativity term.
+        hinge_term_H = l1_hinge_der_proportions_C__(new_X  * arma::diagmat(sqrt_Sigma)  * R, R) * arma::diagmat(sqrt_Sigma);
+        der_X +=  coef_hinge_H * hinge_term_H;
+
+        // For data with only pure sample, we could use dual sipmlex alignment to find verticex of sample simplex instead of negativity term.
         Y = new_Omega - arma::diagmat(sigma_fs) * new_X.t();  // alignment differenct X_dtilda^-1 - sigma_fs * X_dtilda^T
         dsa_term = -2 * new_X.t() * Y * new_X.t() - 2 * Y.t() * arma::diagmat(sigma_fs);
         der_X += coef_alignment * dsa_term;
@@ -194,7 +199,7 @@ Rcpp::List optimize_alignment(const arma::mat& X,
                                                SVRt,
                                                R,
                                                S,
-                                               coef_alignment,  // ???
+                                               coef_hinge_H,
                                                coef_hinge_W);
 
         current_error_value = current_errors["total_error"];
