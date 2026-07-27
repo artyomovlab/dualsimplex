@@ -40,6 +40,8 @@ optim_config(
 
 \item{coef_hinge_W}{positiviy penalty for Omega space (beta)}
 
+\item{coef_alignment}{alignment penalty (gamma)}
+
 \item{total_regularization_weight}{regularization weight for optimization}
 
 \item{reg_X}{regularization weight for X}

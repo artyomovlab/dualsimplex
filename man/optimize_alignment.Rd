@@ -15,6 +15,7 @@ optimize_alignment(
   S,
   coef_der_X,
   coef_hinge_W,
+  coef_hinge_H,
   coef_alignment,
   cell_types,
   N,
@@ -44,6 +45,8 @@ optimize_alignment(
 \item{coef_der_X}{learning rate X}
 
 \item{coef_hinge_W}{beta}
+
+\item{coef_hinge_H}{lambda}
 
 \item{coef_alignment}{gamma?}
 
