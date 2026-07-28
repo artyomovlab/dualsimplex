@@ -78,7 +78,13 @@ We need to return both the optimization results and the rich logs seamlessly bac
    )
    ```
 
-### Milestone 4: Verification, Migration, and Test Strategy
+### Milestone 4: Back Compatibility Layer [NEW]
+
+- Build a dedicated C++ or R backward compatibility module.
+- Design it to intercept and seamlessly convert the newly refactored data/output formats back into the legacy matrix structure.
+- The outcome must ensure that all surrounding legacy code blocks and external dependencies continue to operate with zero downstream friction.
+
+### Milestone 5: Verification, Migration, and Test Strategy
 
 To prevent regressions, the migration will be iterative and safely scoped.
 
