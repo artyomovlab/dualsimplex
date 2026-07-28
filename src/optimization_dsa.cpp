@@ -53,10 +53,10 @@ Rcpp::List optimize_alignment(const arma::mat& X,
     arma::mat dsa_term;
     arma::mat tmp_X, tmp_Omega;
     // make all negativity weights sum to 1 for simplicity
-    double coef_sum = coef_hinge_H + coef_hinge_W + total_regularization_weight;
-    coef_hinge_H = coef_hinge_H / coef_sum;
-    coef_hinge_W = coef_hinge_W / coef_sum;
-    total_regularization_weight = total_regularization_weight / coef_sum; 
+    // double coef_sum = coef_hinge_H + coef_hinge_W + total_regularization_weight;
+    // coef_hinge_H = coef_hinge_H / coef_sum;
+    // coef_hinge_W = coef_hinge_W / coef_sum;
+    // total_regularization_weight = total_regularization_weight / coef_sum; 
 
     double shrink_limit = 500;
     double current_learning_rate = coef_der_X;
