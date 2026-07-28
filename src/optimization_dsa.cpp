@@ -5,6 +5,39 @@
 #include "optimization_positivity.h"
 #include "optimization_dsa.h"
 
+// Strategy Calculators Implementation
+std::vector<Metric> DeconvErrorCalculator::calculate(const OptimizationState& state) const {
+    arma::mat D_w_diag = arma::diagmat(state.D_w);
+    double deconv_error = std::pow(arma::norm(state.SVRt - state.Omega * D_w_diag * state.X, "fro"), 2.0);
+    return {{"deconv_error", deconv_error}};
+}
+
+std::vector<Metric> HingeProportionsErrorCalculator::calculate(const OptimizationState& state) const {
+    double raw = hinge_C__(state.X * state.R);
+    double lambda_error = state.coef_hinge_H * raw;
+    double scaled_lambda_error = (state.R.n_cols > 0) ? (lambda_error / state.R.n_cols) : lambda_error;
+    return {
+        {"lambda_error", lambda_error},
+        {"scaled_lambda_error", scaled_lambda_error}
+    };
+}
+
+std::vector<Metric> HingeBasisErrorCalculator::calculate(const OptimizationState& state) const {
+    double raw = hinge_C__(state.S.t() * state.Omega);
+    double beta_error = state.coef_hinge_W * raw;
+    double scaled_beta_error = (state.S.n_cols > 0) ? (beta_error / state.S.n_cols) : beta_error;
+    return {
+        {"beta_error", beta_error},
+        {"scaled_beta_error", scaled_beta_error}
+    };
+}
+
+std::vector<Metric> ScaleNormErrorCalculator::calculate(const OptimizationState& state) const {
+    double average_norm_X = arma::mean(arma::vecnorm(state.X, 2, 1));
+    double average_norm_Omega = arma::sum(arma::vecnorm(state.Omega, 2, 0));
+    return {{"average_norm", average_norm_X + average_norm_Omega}};
+}
+
 Rcpp::List optimize_alignment(
     const arma::mat& X,
     const arma::mat& Omega,
@@ -31,6 +64,21 @@ Rcpp::List optimize_alignment(
     arma::mat points_statistics_X(iterations + 1, cell_types * cell_types, arma::fill::zeros);
     arma::mat points_statistics_Omega(iterations + 1, cell_types * cell_types, arma::fill::zeros);
     arma::mat points_statistics_Dw(iterations + 1, cell_types, arma::fill::zeros);
+
+    CompositeErrorCalculator composite_calc;
+    composite_calc.add_calculator(std::make_shared<DeconvErrorCalculator>());
+    composite_calc.add_calculator(std::make_shared<HingeProportionsErrorCalculator>());
+    composite_calc.add_calculator(std::make_shared<HingeBasisErrorCalculator>());
+    composite_calc.add_calculator(std::make_shared<ScaleNormErrorCalculator>());
+
+    RcppLogger rcpp_logger;
+    std::map<std::string, std::string> metadata;
+    metadata["algorithm"] = "optimize_alignment";
+    metadata["iterations"] = std::to_string(iterations);
+    metadata["coef_hinge_H"] = std::to_string(coef_hinge_H);
+    metadata["coef_hinge_W"] = std::to_string(coef_hinge_W);
+    metadata["coef_alignment"] = std::to_string(coef_alignment);
+    rcpp_logger.log_metadata(metadata);
 
     arma::mat new_X = X;
     arma::mat new_Omega = Omega;
@@ -87,6 +135,8 @@ Rcpp::List optimize_alignment(
     else {
         new_Omega = tmp_Omega;
     }
+
+    // TODO: log the error for initialized X and Omega, so we can start iteration from iter_ = 1
 
 
     // here we assume X and Omega are inverse of each other and positive as needed
@@ -242,6 +292,16 @@ Rcpp::List optimize_alignment(
         points_statistics_Omega.row(itr_) = final_Omega.as_row();
         points_statistics_Dw.row(itr_) = new_D_w.as_row();
 
+        // Shadow logging (Milestone 5 Phase 1 dual run)
+        OptimizationState current_state{
+            final_X, final_Omega, new_D_w, new_D_h, SVRt, R, S, coef_hinge_H, coef_hinge_W
+        };
+        std::vector<Metric> metrics = composite_calc.calculate(current_state);
+        metrics.push_back({"learning_rate", current_learning_rate});
+        metrics.push_back({"neg_props", static_cast<double>(neg_props)});
+        metrics.push_back({"neg_basis", static_cast<double>(neg_basis)});
+        rcpp_logger.log_metrics(itr_, metrics);
+
         itr_++;
     }
     spdl::info("Optimization completed with number of iterations perfomed: {}", itr_ - 1);
@@ -262,11 +322,9 @@ Rcpp::List optimize_alignment(
         Rcpp::Named("errors_statistics") = errors_statistics,
         Rcpp::Named("points_statistics_X") = points_statistics_X,
         Rcpp::Named("points_statistics_Omega") = points_statistics_Omega,
-        Rcpp::Named("points_statistics_Dw") = points_statistics_Dw
-        //   ,Rcpp::Named("points_statistics_Omega_dtilda_uncorrected") = points_statistics_Omega_dtilda_uncorrected,
-        //   Rcpp::Named("points_statistics_Omega_dtilda") = points_statistics_Omega_dtilda_corrected,
-        //   Rcpp::Named("points_statistics_X_dtilda_uncorrected") = points_statistics_X_dtilda_uncorrected,
-        //   Rcpp::Named("points_statistics_X_dtilda") = points_statistics_X_dtilda_corrected
+        Rcpp::Named("points_statistics_Dw") = points_statistics_Dw,
+        Rcpp::Named("history") = rcpp_logger.to_dataframe(),
+        Rcpp::Named("metadata") = rcpp_logger.to_metadata_list()
     );
 }
 

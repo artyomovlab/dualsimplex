@@ -5,6 +5,160 @@
 // [[Rcpp::depends(spdl)]]
 #include <spdl.h>
 
+#include <string>
+#include <vector>
+#include <memory>
+#include <map>
+#include <fstream>
+
+// ============================================================================
+// Milestone 1: Core C++ Abstraction & Interface Design (Strategy & Composite Patterns)
+// ============================================================================
+
+struct OptimizationState {
+    const arma::mat& X;
+    const arma::mat& Omega;
+    const arma::mat& D_w;
+    const arma::mat& D_h;
+    const arma::mat& SVRt;
+    const arma::mat& R;
+    const arma::mat& S;
+    double coef_hinge_H{0.0};
+    double coef_hinge_W{0.0};
+};
+
+struct Metric {
+    std::string name;
+    double value;
+};
+
+class IErrorCalculator {
+public:
+    virtual ~IErrorCalculator() = default;
+    virtual std::vector<Metric> calculate(const OptimizationState& state) const = 0;
+};
+
+class CompositeErrorCalculator : public IErrorCalculator {
+private:
+    std::vector<std::shared_ptr<IErrorCalculator>> calculators_;
+public:
+    void add_calculator(std::shared_ptr<IErrorCalculator> calc) {
+        calculators_.push_back(calc);
+    }
+
+    std::vector<Metric> calculate(const OptimizationState& state) const override {
+        std::vector<Metric> combined;
+        for (const auto& calc : calculators_) {
+            auto metrics = calc->calculate(state);
+            combined.insert(combined.end(), metrics.begin(), metrics.end());
+        }
+        return combined;
+    }
+};
+
+class DeconvErrorCalculator : public IErrorCalculator {
+public:
+    std::vector<Metric> calculate(const OptimizationState& state) const override;
+};
+
+class HingeProportionsErrorCalculator : public IErrorCalculator {
+public:
+    std::vector<Metric> calculate(const OptimizationState& state) const override;
+};
+
+class HingeBasisErrorCalculator : public IErrorCalculator {
+public:
+    std::vector<Metric> calculate(const OptimizationState& state) const override;
+};
+
+class ScaleNormErrorCalculator : public IErrorCalculator {
+public:
+    std::vector<Metric> calculate(const OptimizationState& state) const override;
+};
+
+// ============================================================================
+// Milestone 2 & 3: Logging & Serialization Strategy (Observer Pattern)
+// ============================================================================
+
+class ILogger {
+public:
+    virtual ~ILogger() = default;
+    virtual void log_metrics(int iteration, const std::vector<Metric>& metrics) = 0;
+    virtual void log_metadata(const std::map<std::string, std::string>& metadata) = 0;
+};
+
+class RcppLogger : public ILogger {
+private:
+    std::vector<int> iterations_;
+    std::vector<std::string> metric_names_;
+    std::vector<double> values_;
+    std::map<std::string, std::string> metadata_;
+
+public:
+    void log_metrics(int iteration, const std::vector<Metric>& metrics) override {
+        for (const auto& m : metrics) {
+            iterations_.push_back(iteration);
+            metric_names_.push_back(m.name);
+            values_.push_back(m.value);
+        }
+    }
+
+    void log_metadata(const std::map<std::string, std::string>& metadata) override {
+        metadata_ = metadata;
+    }
+
+    Rcpp::DataFrame to_dataframe() const {
+        return Rcpp::DataFrame::create(
+            Rcpp::Named("iteration") = iterations_,
+            Rcpp::Named("metric_name") = metric_names_,
+            Rcpp::Named("value") = values_
+        );
+    }
+
+    Rcpp::List to_metadata_list() const {
+        Rcpp::List lst;
+        for (const auto& kv : metadata_) {
+            lst[kv.first] = kv.second;
+        }
+        return lst;
+    }
+};
+
+class CsvLogger : public ILogger {
+private:
+    std::string filename_;
+    std::ofstream out_;
+
+public:
+    explicit CsvLogger(const std::string& filename) : filename_(filename) {
+        out_.open(filename_);
+        if (out_.is_open()) {
+            out_ << "iteration,metric_name,value\n";
+        }
+    }
+
+    ~CsvLogger() override {
+        if (out_.is_open()) {
+            out_.close();
+        }
+    }
+
+    void log_metrics(int iteration, const std::vector<Metric>& metrics) override {
+        if (!out_.is_open()) return;
+        for (const auto& m : metrics) {
+            out_ << iteration << "," << m.name << "," << m.value << "\n";
+        }
+    }
+
+    void log_metadata(const std::map<std::string, std::string>& metadata) override {
+        if (!out_.is_open()) return;
+        for (const auto& kv : metadata) {
+            out_ << "# " << kv.first << ": " << kv.second << "\n";
+        }
+    }
+};
+
+
 
 
 //' Main training loop with all gradient steps. This is the main algorithm for now. 
