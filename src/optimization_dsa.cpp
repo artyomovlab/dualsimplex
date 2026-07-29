@@ -78,7 +78,6 @@ Rcpp::List optimize_alignment(
     const int stop_criteria_window,
     const bool debug_stats
 ) {
-    arma::mat errors_statistics(iterations + 1, 21, arma::fill::zeros);
     arma::mat points_statistics_X(iterations + 1, cell_types * cell_types, arma::fill::zeros);
     arma::mat points_statistics_Omega(iterations + 1, cell_types * cell_types, arma::fill::zeros);
     arma::mat points_statistics_Dw(iterations + 1, cell_types, arma::fill::zeros);
@@ -256,22 +255,26 @@ Rcpp::List optimize_alignment(
         }
         
         double sum_ = accu(new_D_w) / M;
-        arma::uword neg_props = getNegative(final_X * R);
-        arma::uword neg_basis = getNegative(S.t() * final_Omega);
         
-        Rcpp::List current_errors = calcErrors(
-            final_X,
-            final_Omega,
-            new_D_w,
-            new_D_h,
-            SVRt,
-            R,
-            S,
-            coef_hinge_H,
-            coef_hinge_W
-        );
+        OptimizationState current_state{
+            final_X, final_Omega, new_D_w, new_D_h, SVRt, R, S, coef_hinge_H, coef_hinge_W
+        };
+        std::vector<Metric> metrics = composite_calc.calculate(current_state);
 
-        current_error_value = current_errors["total_error"];
+        // [CJLee] Extract metrics for control flow logic
+        double deconv_err = 0.0, lambda_err = 0.0, beta_err = 0.0;
+        double scaled_lambda_err = 0.0, scaled_beta_err = 0.0;
+        for (const auto& m : metrics) {
+            if (m.name == "deconv_error") deconv_err = m.value;
+            else if (m.name == "lambda_error") lambda_err = m.value;
+            else if (m.name == "beta_error") beta_err = m.value;
+            else if (m.name == "scaled_lambda_error") scaled_lambda_err = m.value;
+            else if (m.name == "scaled_beta_error") scaled_beta_err = m.value;
+        }
+
+        current_error_value = deconv_err + lambda_err + beta_err;
+        double scaled_total_error = deconv_err + scaled_lambda_err + scaled_beta_err;
+
         if (current_error_value < best_error_value) {
             best_error_iteration = itr_;
             best_error_value = current_error_value;
@@ -281,42 +284,25 @@ Rcpp::List optimize_alignment(
             current_learning_rate = current_learning_rate / 2;
             best_error_iteration = itr_; // reset iteration counter
         }
-                                               
-        errors_statistics.row(itr_) = arma::rowvec{
-            current_errors["deconv_error"],            //1
-            current_errors["lambda_error"], //2
-            current_errors["beta_error"], //3
-            current_errors["D_h_error"], //4
-            current_errors["D_w_error"], //5
-            current_errors["total_error"], //6
-            current_errors["scaled_total_error"], //7
-            static_cast<double>(neg_props), //8
-            static_cast<double>(neg_basis), //9
-            sum_, //10
-            current_errors["average_norm"], //11
-            current_learning_rate, //12
-            average_gradient_norm, //13
-            average_hinge_H_gradient_norm, //14
-            average_hinge_W_gradient_norm, //15
-            average_hinge_reg_X_gradient_norm, //16
-            average_hinge_reg_Omega_gradient_norm, //17
-            best_error_value, //18
-            static_cast<double>(best_error_iteration), //19,
-            current_errors["scaled_lambda_error"],            //20
-            current_errors["scaled_beta_error"] //21
-        };
+
+        // [CJLee] Mostly for backward compatibility
+        metrics.push_back({"total_error", current_error_value});
+        metrics.push_back({"scaled_total_error", scaled_total_error});
+        metrics.push_back({"learning_rate", current_learning_rate});
+        metrics.push_back({"sum_", sum_});
+        metrics.push_back({"average_gradient_norm", average_gradient_norm});
+        metrics.push_back({"average_hinge_H_gradient_norm", average_hinge_H_gradient_norm});
+        metrics.push_back({"average_hinge_W_gradient_norm", average_hinge_W_gradient_norm});
+        metrics.push_back({"average_hinge_reg_X_gradient_norm", average_hinge_reg_X_gradient_norm});
+        metrics.push_back({"average_hinge_reg_Omega_gradient_norm", average_hinge_reg_Omega_gradient_norm});
+        metrics.push_back({"best_error_value", best_error_value});
+        metrics.push_back({"best_error_iteration", static_cast<double>(best_error_iteration)});
+
+        rcpp_logger.log_metrics(itr_, metrics);
         
         points_statistics_X.row(itr_) = final_X.as_row();
         points_statistics_Omega.row(itr_) = final_Omega.as_row();
         points_statistics_Dw.row(itr_) = new_D_w.as_row();
-
-        // Shadow logging (Milestone 5 Phase 1 dual run)
-        OptimizationState current_state{
-            final_X, final_Omega, new_D_w, new_D_h, SVRt, R, S, coef_hinge_H, coef_hinge_W
-        };
-        std::vector<Metric> metrics = composite_calc.calculate(current_state);
-        metrics.push_back({"learning_rate", current_learning_rate});
-        rcpp_logger.log_metrics(itr_, metrics);
 
         itr_++;
     }
@@ -325,10 +311,9 @@ Rcpp::List optimize_alignment(
         points_statistics_X.resize(itr_, points_statistics_X.n_cols);
         points_statistics_Omega.resize(itr_, points_statistics_Omega.n_cols);
         points_statistics_Dw.resize(itr_, points_statistics_Dw.n_cols);
-        errors_statistics.resize(itr_, errors_statistics.n_cols);
     }
 
-
+    arma::mat errors_statistics = rcpp_logger.to_legacy_matrix();
 
     return Rcpp::List::create(
         Rcpp::Named("new_X") = final_X,
