@@ -93,6 +93,8 @@ To prevent regressions, the migration will be iterative and safely scoped.
 2. **Phase 2: R-Side Validation**
    Compare the final legacy matrix to the new long-format DataFrame in R (using `tidyr::pivot_wider` to match shapes). Ensure absolute numerical equivalence.
 3. **Phase 3: Cleanup & Scaling**
-   Remove the hardcoded 21-column matrices and old `calcErrors` functions. Extend the pattern to other algorithms in the repository.
-4. **Phase 4: C++ Unit Testing**
+   Remove the hardcoded 21-column matrices and old `calcErrors` functions. Implement the changes in `optimize_alignment` for testing.
+4. **Phase 4: Extend the new pattern pattern to other algorithms in the repository**
+   Refactor all other optimization algorithms (`optimize_positivity`, `optimize_theta`, etc.) to use this new flexible system instead of the legacy matrix-based tracking.
+5. **Phase 5: C++ Unit Testing**
    Leverage the newly decoupled architecture to write isolated C++ unit tests for individual error math without needing to run the full optimization loop.
