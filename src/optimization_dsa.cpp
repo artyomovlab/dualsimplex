@@ -118,108 +118,141 @@ Rcpp::List optimize_alignment(
         new_Omega = tmp_Omega;
     }
 
-    // TODO: log the error for initialized X and Omega, so we can start iteration from iter_ = 1
+    // Log initial state (iteration 0)
+    double sum_ = accu(new_D_w) / M;
+    OptimizationState init_state{
+        final_X, final_Omega, new_D_w, new_D_h, SVRt, R, S, coef_hinge_H, coef_hinge_W
+    };
+    std::vector<Metric> init_metrics = composite_calc.calculate(init_state);
 
+    double deconv_err = 0.0, lambda_err = 0.0, beta_err = 0.0;
+    double scaled_lambda_err = 0.0, scaled_beta_err = 0.0;
+    for (const auto& m : init_metrics) {
+        if (m.name == "deconv_error") deconv_err = m.value;
+        else if (m.name == "lambda_error") lambda_err = m.value;
+        else if (m.name == "beta_error") beta_err = m.value;
+        else if (m.name == "scaled_lambda_error") scaled_lambda_err = m.value;
+        else if (m.name == "scaled_beta_error") scaled_beta_err = m.value;
+    }
+
+    current_error_value = deconv_err + lambda_err + beta_err;
+    best_error_value = current_error_value;
+    best_error_iteration = 0;
+
+    init_metrics.push_back({"total_error", current_error_value});
+    init_metrics.push_back({"scaled_total_error", deconv_err + scaled_lambda_err + scaled_beta_err});
+    init_metrics.push_back({"learning_rate", current_learning_rate});
+    init_metrics.push_back({"sum_", sum_});
+    init_metrics.push_back({"average_gradient_norm", average_gradient_norm});
+    init_metrics.push_back({"average_hinge_H_gradient_norm", average_hinge_H_gradient_norm});
+    init_metrics.push_back({"average_hinge_W_gradient_norm", average_hinge_W_gradient_norm});
+    init_metrics.push_back({"average_hinge_reg_X_gradient_norm", average_hinge_reg_X_gradient_norm});
+    init_metrics.push_back({"average_hinge_reg_Omega_gradient_norm", average_hinge_reg_Omega_gradient_norm});
+    init_metrics.push_back({"best_error_value", best_error_value});
+    init_metrics.push_back({"best_error_iteration", static_cast<double>(best_error_iteration)});
+
+    rcpp_logger.log_metrics(0, init_metrics);
+    points_statistics_X.row(0) = final_X.as_row();
+    points_statistics_Omega.row(0) = final_Omega.as_row();
+    points_statistics_Dw.row(0) = new_D_w.as_row();
 
     // here we assume X and Omega are inverse of each other and positive as needed
-    int itr_ = 0;
-    while ((itr_ < iterations + 1) & (current_learning_rate > convergence_tol)) {
-        if (itr_ > 0) { // in order to save initial errors, skip first step.
-            // For data with only pure sample, we could use dual sipmlex alignment to find verticex of sample
-            // simplex instead of negativity term.
-            Y = new_Omega - arma::diagmat(sigma_fs) * new_X.t();  // alignment differenct X_dtilda^-1 - sigma_fs * X_dtilda^T
-            der_dsa = -2 * new_X.t() * Y * new_X.t() - 2 * Y.t() * arma::diagmat(sigma_fs);
-            der_X = coef_alignment * der_dsa;
+    int itr_ = 1;
+    while ((itr_ < iterations + 1) && (current_learning_rate > convergence_tol)) {
+        // For data with only pure sample, we could use dual sipmlex alignment to find verticex of sample
+        // simplex instead of negativity term.
+        Y = new_Omega - arma::diagmat(sigma_fs) * new_X.t();  // alignment differenct X_dtilda^-1 - sigma_fs * X_dtilda^T
+        der_dsa = -2 * new_X.t() * Y * new_X.t() - 2 * Y.t() * arma::diagmat(sigma_fs);
+        der_X = coef_alignment * der_dsa;
 
-            // negativity terms for gene and cell simplex. 
-            // To save computation time, we only compute it if the coefficient is non-zero.
-            if (0 < coef_hinge_W) {  // vertices of cell simplex
-                hinge_term_W = (-new_Omega.t()) * arma::diagmat(sqrt_Sigma) * l1_hinge_der_basis_C__(S.t() * arma::diagmat(sqrt_Sigma) * new_Omega, S) * (new_Omega.t());
-                der_X += coef_hinge_W * hinge_term_W;
-            }
-            if (0 < coef_hinge_H) {  // vertices of gene simplex
-                hinge_term_H = l1_hinge_der_proportions_C__(new_X * arma::diagmat(sqrt_Sigma) * R, R) * arma::diagmat(sqrt_Sigma);
-                der_X +=  coef_hinge_H * hinge_term_H;
-            }
-
-
-            //    // Regularization here is advised but not mandatory since X and Omega regularize each other.
-            //     reg_X_term = 2 * new_X;
-            //     reg_Omega_term = (-new_Omega.t()) * 2 * new_Omega * (new_Omega.t());
-            //     der_reg = reg_X * reg_X_term +  reg_Omega * reg_Omega_term ; //regularization for X 
-            //     der_X = der_X + total_regularization_weight * der_reg;
-
-            if (debug_stats) {
-                average_gradient_norm = arma::mean(arma::vecnorm(der_X, 2, 1));
-                average_hinge_H_gradient_norm = arma::mean(arma::vecnorm(hinge_term_H, 2, 1));
-                average_hinge_W_gradient_norm = arma::mean(arma::vecnorm(hinge_term_W, 2, 1));
-                // average_hinge_reg_X_gradient_norm = arma::mean(arma::vecnorm(reg_X_term, 2, 1));
-                // average_hinge_reg_Omega_gradient_norm = arma::mean(arma::vecnorm(reg_Omega_term, 2, 1));
-            }
-            tmp_X = (new_X - current_learning_rate * der_X); // estimate new X given derivative
-
-            // Ensure if first column of X is all-positive
-            if (arma::any(tmp_X.col(0) <= 0)) {
-                for (int c=0; c < cell_types; c++) {
-                    double matrix_value =  tmp_X(c,0);
-                    if (matrix_value <= 0) {
-                    int shrink_iteration = 0;
-                    while((matrix_value <= 0) & (shrink_iteration < shrink_limit)) {
-                        der_X.row(c) /=  2;
-                        tmp_X = (new_X - current_learning_rate * der_X);
-                        matrix_value =  tmp_X(c,0);
-                        shrink_iteration++;
-                    }
-                    }
-                }
-                if  (arma::any( tmp_X.col(0) <= 0)) {
-                    spdl::warn("Any gradient step gives bad X, probably X was bad before");
-                }
-            }
-
-            tmp_Omega = arma::pinv(tmp_X);
-            // Ensure if first row of Omega is all positive
-            if (arma::any( tmp_Omega.row(0) <= 0)) {
-                for (int c=0; c < cell_types; c++) {
-                    double matrix_value =  tmp_Omega(0,c);
-                    if (matrix_value <= 0) {
-                        int shrink_iteration = 0;
-                        while((matrix_value <= 0)& (shrink_iteration < shrink_limit)) {
-                        der_X /=  2;
-                        der_X.row(c) *= 2;
-                        tmp_X = (new_X - current_learning_rate * der_X);
-                        tmp_Omega = arma::pinv(tmp_X);
-                        matrix_value =  tmp_Omega(0,c);
-                        shrink_iteration++;
-                    }
-                    if (shrink_iteration != shrink_limit) {
-                        // if we were able to find the solution. accept these new X and Omega
-                        // Do nothing its ok
-                        } else {
-                            spdl::warn("Iteration {} Couldn't find good inverse X for the row {}, reject X update for this row", itr_, c);
-                            arma::rowvec only_good_row  = der_X.row(c);
-                            der_X.fill(0);
-                            der_X.row(c) = only_good_row;
-                            tmp_X = (new_X - current_learning_rate * der_X);
-                        }
-                    }
-                }
-                new_Omega = tmp_Omega;
-                new_X = tmp_X;
-            } else {
-                new_Omega = tmp_Omega;
-                new_X = tmp_X;
-            }
-
-            std::tie(new_X, new_Omega, new_D_w_sqrt) = ensure_D_integrity_c(new_X, new_Omega, sqrt_Sigma, N, M);
-            final_X = arma::diagmat(1/new_D_w_sqrt) * new_X * arma::diagmat(sqrt_Sigma);
-            final_Omega = arma::diagmat(sqrt_Sigma)* new_Omega * arma::diagmat(1/new_D_w_sqrt);
-
-            new_D_w = arma::pow(new_D_w_sqrt, 2);
-            new_D_h = new_D_w * (N / M);
+        // negativity terms for gene and cell simplex. 
+        // To save computation time, we only compute it if the coefficient is non-zero.
+        if (0 < coef_hinge_W) {  // vertices of cell simplex
+            hinge_term_W = (-new_Omega.t()) * arma::diagmat(sqrt_Sigma) * l1_hinge_der_basis_C__(S.t() * arma::diagmat(sqrt_Sigma) * new_Omega, S) * (new_Omega.t());
+            der_X += coef_hinge_W * hinge_term_W;
         }
-        
-        double sum_ = accu(new_D_w) / M;
+        if (0 < coef_hinge_H) {  // vertices of gene simplex
+            hinge_term_H = l1_hinge_der_proportions_C__(new_X * arma::diagmat(sqrt_Sigma) * R, R) * arma::diagmat(sqrt_Sigma);
+            der_X +=  coef_hinge_H * hinge_term_H;
+        }
+
+
+        //    // Regularization here is advised but not mandatory since X and Omega regularize each other.
+        //     reg_X_term = 2 * new_X;
+        //     reg_Omega_term = (-new_Omega.t()) * 2 * new_Omega * (new_Omega.t());
+        //     der_reg = reg_X * reg_X_term +  reg_Omega * reg_Omega_term ; //regularization for X 
+        //     der_X = der_X + total_regularization_weight * der_reg;
+
+        if (debug_stats) {
+            average_gradient_norm = arma::mean(arma::vecnorm(der_X, 2, 1));
+            average_hinge_H_gradient_norm = arma::mean(arma::vecnorm(hinge_term_H, 2, 1));
+            average_hinge_W_gradient_norm = arma::mean(arma::vecnorm(hinge_term_W, 2, 1));
+            // average_hinge_reg_X_gradient_norm = arma::mean(arma::vecnorm(reg_X_term, 2, 1));
+            // average_hinge_reg_Omega_gradient_norm = arma::mean(arma::vecnorm(reg_Omega_term, 2, 1));
+        }
+        tmp_X = (new_X - current_learning_rate * der_X); // estimate new X given derivative
+
+        // Ensure if first column of X is all-positive
+        if (arma::any(tmp_X.col(0) <= 0)) {
+            for (int c=0; c < cell_types; c++) {
+                double matrix_value =  tmp_X(c,0);
+                if (matrix_value <= 0) {
+                int shrink_iteration = 0;
+                while((matrix_value <= 0) & (shrink_iteration < shrink_limit)) {
+                    der_X.row(c) /=  2;
+                    tmp_X = (new_X - current_learning_rate * der_X);
+                    matrix_value =  tmp_X(c,0);
+                    shrink_iteration++;
+                }
+                }
+            }
+            if  (arma::any( tmp_X.col(0) <= 0)) {
+                spdl::warn("Any gradient step gives bad X, probably X was bad before");
+            }
+        }
+
+        tmp_Omega = arma::pinv(tmp_X);
+        // Ensure if first row of Omega is all positive
+        if (arma::any( tmp_Omega.row(0) <= 0)) {
+            for (int c=0; c < cell_types; c++) {
+                double matrix_value =  tmp_Omega(0,c);
+                if (matrix_value <= 0) {
+                    int shrink_iteration = 0;
+                    while((matrix_value <= 0)& (shrink_iteration < shrink_limit)) {
+                    der_X /=  2;
+                    der_X.row(c) *= 2;
+                    tmp_X = (new_X - current_learning_rate * der_X);
+                    tmp_Omega = arma::pinv(tmp_X);
+                    matrix_value =  tmp_Omega(0,c);
+                    shrink_iteration++;
+                }
+                if (shrink_iteration != shrink_limit) {
+                    // if we were able to find the solution. accept these new X and Omega
+                    // Do nothing its ok
+                    } else {
+                        spdl::warn("Iteration {} Couldn't find good inverse X for the row {}, reject X update for this row", itr_, c);
+                        arma::rowvec only_good_row  = der_X.row(c);
+                        der_X.fill(0);
+                        der_X.row(c) = only_good_row;
+                        tmp_X = (new_X - current_learning_rate * der_X);
+                    }
+                }
+            }
+            new_Omega = tmp_Omega;
+            new_X = tmp_X;
+        } else {
+            new_Omega = tmp_Omega;
+            new_X = tmp_X;
+        }
+
+        std::tie(new_X, new_Omega, new_D_w_sqrt) = ensure_D_integrity_c(new_X, new_Omega, sqrt_Sigma, N, M);
+        final_X = arma::diagmat(1/new_D_w_sqrt) * new_X * arma::diagmat(sqrt_Sigma);
+        final_Omega = arma::diagmat(sqrt_Sigma)* new_Omega * arma::diagmat(1/new_D_w_sqrt);
+
+        new_D_w = arma::pow(new_D_w_sqrt, 2);
+        new_D_h = new_D_w * (N / M);
+
+        sum_ = accu(new_D_w) / M;
         
         OptimizationState current_state{
             final_X, final_Omega, new_D_w, new_D_h, SVRt, R, S, coef_hinge_H, coef_hinge_W
@@ -227,8 +260,8 @@ Rcpp::List optimize_alignment(
         std::vector<Metric> metrics = composite_calc.calculate(current_state);
 
         // [CJLee] Extract metrics for control flow logic
-        double deconv_err = 0.0, lambda_err = 0.0, beta_err = 0.0;
-        double scaled_lambda_err = 0.0, scaled_beta_err = 0.0;
+        deconv_err = 0.0; lambda_err = 0.0; beta_err = 0.0;
+        scaled_lambda_err = 0.0; scaled_beta_err = 0.0;
         for (const auto& m : metrics) {
             if (m.name == "deconv_error") deconv_err = m.value;
             else if (m.name == "lambda_error") lambda_err = m.value;
@@ -238,7 +271,6 @@ Rcpp::List optimize_alignment(
         }
 
         current_error_value = deconv_err + lambda_err + beta_err;
-        double scaled_total_error = deconv_err + scaled_lambda_err + scaled_beta_err;
 
         if (current_error_value < best_error_value) {
             best_error_iteration = itr_;
@@ -252,7 +284,7 @@ Rcpp::List optimize_alignment(
 
         // [CJLee] Mostly for backward compatibility
         metrics.push_back({"total_error", current_error_value});
-        metrics.push_back({"scaled_total_error", scaled_total_error});
+        metrics.push_back({"scaled_total_error", deconv_err + scaled_lambda_err + scaled_beta_err});
         metrics.push_back({"learning_rate", current_learning_rate});
         metrics.push_back({"sum_", sum_});
         metrics.push_back({"average_gradient_norm", average_gradient_norm});
