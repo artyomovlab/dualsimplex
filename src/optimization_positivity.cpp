@@ -131,6 +131,9 @@ Rcpp::List optimize_positivity(const arma::mat& X,
     // here we assume X and Omega are inverse of each other and positive as needed
 
     int itr_ = 0;
+    if (current_learning_rate <= convergence_tol) {
+        spdl::error("Initial learning rate can not be smaller than convergence_tol");
+    }
     while ((itr_ < iterations + 1) & (current_learning_rate > convergence_tol)) {
         if (itr_ > 0) { // in order to save initial errors, skip first step.
         hinge_term_H = l1_hinge_der_proportions_C__(new_X  * arma::diagmat(sqrt_Sigma)  * R, R) * arma::diagmat(sqrt_Sigma);

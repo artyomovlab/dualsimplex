@@ -72,31 +72,39 @@ concat_data <- function(data_list, group_colname) {
 #' Points will be taken uniformly in the
 #'
 #' @param solution_proj dso$st$solution_proj object containing all optimization logs and result
-#' @param step step to skip some values
-#' @param from_iter starting point
-#' @param to_iter end point
+#' @param step step to skip some values. selected values are calculated based on total values.
+#' @param from_iter starting point from 0 to $get_n_iters()
+#' @param to_iter end point from 0 to $get_n_iters()
 #' @return X and Omega values for desired timestamps
 #' @export
 get_solution_history <- function(solution_proj, step, from_iter = 0, to_iter = NULL) {
+  step <- floor(step)
   stats <- list()
   stats$X <- solution_proj$optim_history$points_statistics_X
   stats$Omega <- solution_proj$optim_history$points_statistics_Omega
   nct <- sqrt(ncol(stats$Omega))
   nit <- nrow(stats$Omega)
   if (is.null(to_iter)) {
-    to_iter <- nit
+    to_iter <- nit - 1
+  }
+  if (nit <= 0) {
+    # No optimization steps performed
+    return(NULL)
   }
   # TODO: correct order initially
   correct_order <- order((seq_len(ncol(stats$Omega)) - 1) %% nct)
   stats$Omega <- stats$Omega[, correct_order]
 
   solution_history <- lapply(stats, function(mat) {
+    # Take rows (from_iter+1) +  (from_iter+1)+step ....  and (to_iter+1) if not taken
+    indexes <- unique(c(seq((from_iter + 1), (to_iter + 1), by = step),to_iter + 1))
+    mat <- mat[indexes, ] 
     tran <- matrix(c(t(mat)), ncol = nct, byrow = T)
-    tran <- cbind(tran, rep(1:nct, times = nit))
-    tran <- cbind(tran, rep(0:(nit - 1), each = nct))
+    tran <- cbind(tran, rep(1:nct, times = nrow(mat)))
+    tran <- cbind(tran, rep((indexes - 1), each = nct))
     colnames(tran) <- c(paste0("dim_", 1:nct), "point", "iter")
-    tran <- tran[(tran[, "iter"] >= from_iter) & (tran[, "iter"] <= to_iter), ]
-    tran <- tran[((tran[, "iter"] %% step) == 0) | (tran[, "iter"] == to_iter) | (tran[, "iter"] == from_iter), ]
+    #tran <- tran[(tran[, "iter"] >= from_iter) & (tran[, "iter"] <= to_iter), ]
+    #tran <- tran[((tran[, "iter"] %% floor(step)) == 0) | (tran[, "iter"] == to_iter) | (tran[, "iter"] == from_iter), ]
     tran <- as.data.frame(tran)
     tran[, "point"] <- as.factor(tran[, "point"])
     return(tran)
@@ -278,6 +286,7 @@ add_solution_history <- function(
   path = TRUE
 ) {
   solution_history <- get_solution_history(solution_proj, step, from_iter = from_iter, to_iter = to_iter)
+  if (!is.null(solution_history)) {
   points_2d <- get_2d_subset(proj, use_dims, solution_history)[spaces]
   if (length(spaces) > 1) {
     solution_history <- concat_data(solution_history[spaces], "space")
@@ -311,7 +320,7 @@ add_solution_history <- function(
 
   plt <- plt +
     labs(title = paste0(max(solution_history$iter), " iterations"))
-
+  }
   return(plt)
 }
 

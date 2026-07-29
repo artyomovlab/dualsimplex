@@ -375,16 +375,20 @@ plot_errors <- function(
   )
 ) {
   to_plot <- data.frame(solution_proj$optim_history$errors_statistics[, variables, drop=F])
-  to_plot$iteration <- 0:(nrow(solution_proj$optim_history$errors_statistics) - 1)
-  to_plot <- reshape2::melt(to_plot, id.vars = "iteration", measure.vars = variables)
-  plt <-
-    ggplot(to_plot, aes(
-      x = .data$iteration,
-      y = log10(.data$value),
-      color = .data$variable
-    )) +
-    geom_line() + theme_minimal()
-  plt
+  if (nrow(solution_proj$optim_history$errors_statistics) == 0) {
+    spdl::warn("Nothing to plot, errors_statistics was empty")
+  } else {
+    to_plot$iteration <- 0:(nrow(solution_proj$optim_history$errors_statistics) - 1)
+    to_plot <- reshape2::melt(to_plot, id.vars = "iteration", measure.vars = variables)
+    plt <-
+      ggplot(to_plot, aes(
+        x = .data$iteration,
+        y = log10(.data$value),
+        color = .data$variable
+      )) +
+      geom_line() + theme_minimal()
+    plt
+  }
 }
 
 

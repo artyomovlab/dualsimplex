@@ -64,7 +64,9 @@ Rcpp::List optimize_coordinate_descent(const arma::mat& X,
 
                         
     int itr_ = 0;
-
+    if ((current_learning_rate_X <= convergence_tol) & (current_learning_rate_Omega <= convergence_tol)) {
+        spdl::error("Initial learning rate can not be smaller than convergence_tol");
+    }                            
     while ((itr_ < iterations + 1) & (current_learning_rate_X > convergence_tol) & (current_learning_rate_Omega > convergence_tol)) {
         if (itr_ > 0) {
             // derivative X
