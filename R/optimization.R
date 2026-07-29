@@ -289,9 +289,19 @@ optimize_solution <- function(
     tail(optimization_result$points_statistics_Dw, target_iterations)
   )
   if (!is.null(optimization_result$history)) {
+    new_history <- optimization_result$history
+    # Continue iteration numbers from previous run
+    if (from_idx > 1 && !is.null(solution_proj$optim_history$history)) {
+      # Drop the overlapping first iteration (iteration 0 of the new run)
+      new_history <- new_history[new_history$iteration > 0, , drop = FALSE]
+
+      # Offset the iteration numbers so they continue from the previous run
+      last_iter <- max(solution_proj$optim_history$history$iteration)
+      new_history$iteration <- new_history$iteration + last_iter
+    }
     solution_proj$optim_history$history <- rbind(
       solution_proj$optim_history$history,
-      optimization_result$history
+      new_history
     )
   }
   if (!is.null(optimization_result$metadata)) {
