@@ -5,6 +5,20 @@
 #include "optimization_positivity.h"
 #include "optimization_dsa.h"
 
+struct HingeStats {
+    double hinge_sum{0.0};
+    arma::uword neg_count{0};
+};
+
+inline HingeStats compute_hinge_stats(const arma::mat& M) {
+    arma::uvec neg_indices = arma::find(M < 0);
+    if (neg_indices.is_empty()) {
+        return {0.0, 0};
+    }
+    double hinge_sum = -arma::accu(M.elem(neg_indices));
+    return {hinge_sum, neg_indices.n_elem};
+}
+
 // Strategy Calculators Implementation
 std::vector<Metric> DeconvErrorCalculator::calculate(const OptimizationState& state) const {
     arma::mat D_w_diag = arma::diagmat(state.D_w);
@@ -13,22 +27,26 @@ std::vector<Metric> DeconvErrorCalculator::calculate(const OptimizationState& st
 }
 
 std::vector<Metric> HingeProportionsErrorCalculator::calculate(const OptimizationState& state) const {
-    double raw = hinge_C__(state.X * state.R);
-    double lambda_error = state.coef_hinge_H * raw;
+    arma::mat H = state.X * state.R;
+    HingeStats stats = compute_hinge_stats(H);
+    double lambda_error = state.coef_hinge_H * stats.hinge_sum;
     double scaled_lambda_error = (state.R.n_cols > 0) ? (lambda_error / state.R.n_cols) : lambda_error;
     return {
         {"lambda_error", lambda_error},
-        {"scaled_lambda_error", scaled_lambda_error}
+        {"scaled_lambda_error", scaled_lambda_error},
+        {"neg_props", static_cast<double>(stats.neg_count)}
     };
 }
 
 std::vector<Metric> HingeBasisErrorCalculator::calculate(const OptimizationState& state) const {
-    double raw = hinge_C__(state.S.t() * state.Omega);
-    double beta_error = state.coef_hinge_W * raw;
+    arma::mat W = state.S.t() * state.Omega;
+    HingeStats stats = compute_hinge_stats(W);
+    double beta_error = state.coef_hinge_W * stats.hinge_sum;
     double scaled_beta_error = (state.S.n_cols > 0) ? (beta_error / state.S.n_cols) : beta_error;
     return {
         {"beta_error", beta_error},
-        {"scaled_beta_error", scaled_beta_error}
+        {"scaled_beta_error", scaled_beta_error},
+        {"neg_basis", static_cast<double>(stats.neg_count)}
     };
 }
 
@@ -298,8 +316,6 @@ Rcpp::List optimize_alignment(
         };
         std::vector<Metric> metrics = composite_calc.calculate(current_state);
         metrics.push_back({"learning_rate", current_learning_rate});
-        metrics.push_back({"neg_props", static_cast<double>(neg_props)});
-        metrics.push_back({"neg_basis", static_cast<double>(neg_basis)});
         rcpp_logger.log_metrics(itr_, metrics);
 
         itr_++;
