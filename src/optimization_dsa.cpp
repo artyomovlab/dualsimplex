@@ -8,6 +8,18 @@
 #include "optimization_logger.h"
 
 
+class AlignmentErrorCalculator : public IErrorCalculator {
+public:
+    std::vector<Metric> calculate(const OptimizationState& state) const override {
+        double ratio = static_cast<double>(state.R.n_cols) / static_cast<double>(state.S.n_cols);
+        // make sure sigma_fs is a diagonal matrix
+        arma::mat sigma_fs = arma::diagmat(arma::diagvec(state.SVRt)) * ratio;
+        double alignment_error = arma::norm(state.Omega - sigma_fs * state.X.t(), "fro");
+        return {{"alignment_error", alignment_error}};
+    }
+};
+
+
 Rcpp::List optimize_alignment(
     const arma::mat& X,
     const arma::mat& Omega,
@@ -39,6 +51,7 @@ Rcpp::List optimize_alignment(
     composite_calc.add_calculator(std::make_shared<HingeProportionsErrorCalculator>());
     composite_calc.add_calculator(std::make_shared<HingeBasisErrorCalculator>());
     composite_calc.add_calculator(std::make_shared<ScaleNormErrorCalculator>());
+    composite_calc.add_calculator(std::make_shared<AlignmentErrorCalculator>());
 
     RcppLogger rcpp_logger;
     std::map<std::string, std::string> metadata;
