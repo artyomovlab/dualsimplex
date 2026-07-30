@@ -52,6 +52,8 @@ Rcpp::List optimize_alignment(
     composite_calc.add_calculator(std::make_shared<HingeBasisErrorCalculator>());
     composite_calc.add_calculator(std::make_shared<ScaleNormErrorCalculator>());
     composite_calc.add_calculator(std::make_shared<AlignmentErrorCalculator>());
+    composite_calc.add_ensemble_metric("total_error", {"deconv_error", "lambda_error", "beta_error"});
+    composite_calc.add_ensemble_metric("scaled_total_error", {"deconv_error", "scaled_lambda_error", "scaled_beta_error"});
 
     RcppLogger rcpp_logger;
     std::map<std::string, std::string> metadata;
@@ -119,39 +121,29 @@ Rcpp::List optimize_alignment(
     }
 
     // Log initial state (iteration 0)
-    double sum_ = accu(new_D_w) / M;
     OptimizationState init_state{
         final_X, final_Omega, new_D_w, new_D_h, SVRt, R, S, coef_hinge_H, coef_hinge_W
     };
     std::vector<Metric> init_metrics = composite_calc.calculate(init_state);
 
-    double deconv_err = 0.0, lambda_err = 0.0, beta_err = 0.0;
-    double scaled_lambda_err = 0.0, scaled_beta_err = 0.0;
-    for (const auto& m : init_metrics) {
-        if (m.name == "deconv_error") deconv_err = m.value;
-        else if (m.name == "lambda_error") lambda_err = m.value;
-        else if (m.name == "beta_error") beta_err = m.value;
-        else if (m.name == "scaled_lambda_error") scaled_lambda_err = m.value;
-        else if (m.name == "scaled_beta_error") scaled_beta_err = m.value;
-    }
-
-    current_error_value = deconv_err + lambda_err + beta_err;
+    current_error_value = get_metric_value(init_metrics, "total_error");
     best_error_value = current_error_value;
     best_error_iteration = 0;
 
-    init_metrics.push_back({"total_error", current_error_value});
-    init_metrics.push_back({"scaled_total_error", deconv_err + scaled_lambda_err + scaled_beta_err});
     init_metrics.push_back({"learning_rate", current_learning_rate});
-    init_metrics.push_back({"sum_", sum_});
+    init_metrics.push_back({"sum_", accu(new_D_w) / M});
+    init_metrics.push_back({"best_error_value", best_error_value});
+    init_metrics.push_back({"best_error_iteration", static_cast<double>(best_error_iteration)});
+
+    // For backward compatibility, we can drop them in the future.
     init_metrics.push_back({"average_gradient_norm", average_gradient_norm});
     init_metrics.push_back({"average_hinge_H_gradient_norm", average_hinge_H_gradient_norm});
     init_metrics.push_back({"average_hinge_W_gradient_norm", average_hinge_W_gradient_norm});
     init_metrics.push_back({"average_hinge_reg_X_gradient_norm", average_hinge_reg_X_gradient_norm});
     init_metrics.push_back({"average_hinge_reg_Omega_gradient_norm", average_hinge_reg_Omega_gradient_norm});
-    init_metrics.push_back({"best_error_value", best_error_value});
-    init_metrics.push_back({"best_error_iteration", static_cast<double>(best_error_iteration)});
 
     rcpp_logger.log_metrics(0, init_metrics);
+
     points_statistics_X.row(0) = final_X.as_row();
     points_statistics_Omega.row(0) = final_Omega.as_row();
     points_statistics_Dw.row(0) = new_D_w.as_row();
@@ -159,6 +151,9 @@ Rcpp::List optimize_alignment(
     // here we assume X and Omega are inverse of each other and positive as needed
     int itr_ = 1;
     while ((itr_ < iterations + 1) && (current_learning_rate > convergence_tol)) {
+        // -------------------------------------------------------------
+        // Main optimization logic
+        // -------------------------------------------------------------
         // For data with only pure sample, we could use dual sipmlex alignment to find verticex of sample
         // simplex instead of negativity term.
         Y = new_Omega - arma::diagmat(sigma_fs) * new_X.t();  // alignment differenct X_dtilda^-1 - sigma_fs * X_dtilda^T
@@ -183,15 +178,9 @@ Rcpp::List optimize_alignment(
         //     der_reg = reg_X * reg_X_term +  reg_Omega * reg_Omega_term ; //regularization for X 
         //     der_X = der_X + total_regularization_weight * der_reg;
 
-        if (debug_stats) {
-            average_gradient_norm = arma::mean(arma::vecnorm(der_X, 2, 1));
-            average_hinge_H_gradient_norm = arma::mean(arma::vecnorm(hinge_term_H, 2, 1));
-            average_hinge_W_gradient_norm = arma::mean(arma::vecnorm(hinge_term_W, 2, 1));
-            // average_hinge_reg_X_gradient_norm = arma::mean(arma::vecnorm(reg_X_term, 2, 1));
-            // average_hinge_reg_Omega_gradient_norm = arma::mean(arma::vecnorm(reg_Omega_term, 2, 1));
-        }
-        tmp_X = (new_X - current_learning_rate * der_X); // estimate new X given derivative
 
+        // Update X_dtilda
+        tmp_X = (new_X - current_learning_rate * der_X);
         // Ensure if first column of X is all-positive
         if (arma::any(tmp_X.col(0) <= 0)) {
             for (int c=0; c < cell_types; c++) {
@@ -211,6 +200,7 @@ Rcpp::List optimize_alignment(
             }
         }
 
+        // Update Omega_dtilda
         tmp_Omega = arma::pinv(tmp_X);
         // Ensure if first row of Omega is all positive
         if (arma::any( tmp_Omega.row(0) <= 0)) {
@@ -244,33 +234,23 @@ Rcpp::List optimize_alignment(
             new_Omega = tmp_Omega;
             new_X = tmp_X;
         }
-
+ 
+        // Update Ds, X and Omega
         std::tie(new_X, new_Omega, new_D_w_sqrt) = ensure_D_integrity_c(new_X, new_Omega, sqrt_Sigma, N, M);
         final_X = arma::diagmat(1/new_D_w_sqrt) * new_X * arma::diagmat(sqrt_Sigma);
         final_Omega = arma::diagmat(sqrt_Sigma)* new_Omega * arma::diagmat(1/new_D_w_sqrt);
-
         new_D_w = arma::pow(new_D_w_sqrt, 2);
         new_D_h = new_D_w * (N / M);
 
-        sum_ = accu(new_D_w) / M;
-        
+        // -------------------------------------------------------------
+        // Optimization Control Flow & Adaptive Step Size
+        // -------------------------------------------------------------
         OptimizationState current_state{
             final_X, final_Omega, new_D_w, new_D_h, SVRt, R, S, coef_hinge_H, coef_hinge_W
         };
         std::vector<Metric> metrics = composite_calc.calculate(current_state);
 
-        // [CJLee] Extract metrics for control flow logic
-        deconv_err = 0.0; lambda_err = 0.0; beta_err = 0.0;
-        scaled_lambda_err = 0.0; scaled_beta_err = 0.0;
-        for (const auto& m : metrics) {
-            if (m.name == "deconv_error") deconv_err = m.value;
-            else if (m.name == "lambda_error") lambda_err = m.value;
-            else if (m.name == "beta_error") beta_err = m.value;
-            else if (m.name == "scaled_lambda_error") scaled_lambda_err = m.value;
-            else if (m.name == "scaled_beta_error") scaled_beta_err = m.value;
-        }
-
-        current_error_value = deconv_err + lambda_err + beta_err;
+        current_error_value = get_metric_value(metrics, "total_error");
 
         if (current_error_value < best_error_value) {
             best_error_iteration = itr_;
@@ -282,27 +262,40 @@ Rcpp::List optimize_alignment(
             best_error_iteration = itr_; // reset iteration counter
         }
 
-        // [CJLee] Mostly for backward compatibility
-        metrics.push_back({"total_error", current_error_value});
-        metrics.push_back({"scaled_total_error", deconv_err + scaled_lambda_err + scaled_beta_err});
         metrics.push_back({"learning_rate", current_learning_rate});
-        metrics.push_back({"sum_", sum_});
+        metrics.push_back({"sum_", accu(new_D_w) / M});
+        metrics.push_back({"best_error_value", best_error_value});
+        metrics.push_back({"best_error_iteration", static_cast<double>(best_error_iteration)});
+
+        // -------------------------------------------------------------
+        // Additional diagnostics
+        // -------------------------------------------------------------
+        if (debug_stats) {
+            average_gradient_norm = arma::mean(arma::vecnorm(der_X, 2, 1));
+            average_hinge_H_gradient_norm = arma::mean(arma::vecnorm(hinge_term_H, 2, 1));
+            average_hinge_W_gradient_norm = arma::mean(arma::vecnorm(hinge_term_W, 2, 1));
+            // average_hinge_reg_X_gradient_norm = arma::mean(arma::vecnorm(reg_X_term, 2, 1));
+            // average_hinge_reg_Omega_gradient_norm = arma::mean(arma::vecnorm(reg_Omega_term, 2, 1));
+        }
         metrics.push_back({"average_gradient_norm", average_gradient_norm});
         metrics.push_back({"average_hinge_H_gradient_norm", average_hinge_H_gradient_norm});
         metrics.push_back({"average_hinge_W_gradient_norm", average_hinge_W_gradient_norm});
         metrics.push_back({"average_hinge_reg_X_gradient_norm", average_hinge_reg_X_gradient_norm});
         metrics.push_back({"average_hinge_reg_Omega_gradient_norm", average_hinge_reg_Omega_gradient_norm});
-        metrics.push_back({"best_error_value", best_error_value});
-        metrics.push_back({"best_error_iteration", static_cast<double>(best_error_iteration)});
+
 
         rcpp_logger.log_metrics(itr_, metrics);
-        
+
+        // -------------------------------------------------------------
+        // Solution Trajectory Recording
+        // -------------------------------------------------------------
         points_statistics_X.row(itr_) = final_X.as_row();
         points_statistics_Omega.row(itr_) = final_Omega.as_row();
         points_statistics_Dw.row(itr_) = new_D_w.as_row();
 
         itr_++;
     }
+    
     spdl::info("Optimization completed with number of iterations perfomed: {}", itr_ - 1);
     if (itr_ < iterations + 1) {
         points_statistics_X.resize(itr_, points_statistics_X.n_cols);
@@ -310,7 +303,7 @@ Rcpp::List optimize_alignment(
         points_statistics_Dw.resize(itr_, points_statistics_Dw.n_cols);
     }
 
-    arma::mat errors_statistics = rcpp_logger.to_legacy_matrix();
+    arma::mat errors_statistics = rcpp_logger.to_legacy_matrix();  // For backward compatibility, we can drop them in the future.
 
     return Rcpp::List::create(
         Rcpp::Named("new_X") = final_X,
