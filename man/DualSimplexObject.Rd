@@ -598,7 +598,7 @@ Important note: ggplot only allows to either draw history or color all the point
   \subsection{Arguments}{
     \if{html}{\out{<div class="arguments">}}
     \describe{
-      \item{\code{strategy}}{strategy to use for initialization. valid values are "select_x", "select_omega", "random" and "marker_means"}
+      \item{\code{strategy}}{strategy to use for initialization. valid values are "random_invertible","invertible_symetric","select_x", "select_omega", "random" and "marker_means"}
       \item{\code{...}}{any other params to be passed to initialization methods (e.g. marker genes)}
     }
     \if{html}{\out{</div>}}
