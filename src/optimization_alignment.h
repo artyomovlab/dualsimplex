@@ -45,9 +45,9 @@
 //' @return new parameters
 // [[Rcpp::export]]
 Rcpp::List optimize_alignment(
-    const arma::mat& X,
-    const arma::mat& Omega,
-    const arma::mat& D_w,
+    const arma::mat& initial_X,
+    const arma::mat& initial_Omega,
+    const arma::mat& initial_D_w,
     const arma::mat& SVRt,
     const arma::mat& R,
     const arma::mat& S,
@@ -55,7 +55,7 @@ Rcpp::List optimize_alignment(
     double coef_hinge_W,
     double coef_hinge_H,
     double coef_alignment,
-    const int cell_types,
+    const int k,
     const double N,
     const double M,
     const int iterations,
@@ -94,24 +94,24 @@ Rcpp::List optimize_alignment(
 //' @param stop_criteria_window how long error should be on plateu to decrease the learning rate
 //' @param debug_stats wether to save grad norm values.
 //' @return new parameters
-Rcpp::List optimize_alignment_hard(
-    const arma::mat& X,
-    const arma::mat& Omega,
-    const arma::mat& D_w,
-    const arma::mat& SVRt,
-    const arma::mat& R,
-    const arma::mat& S,
-    const double coef_der_X,
-    double coef_hinge_W,
-    double coef_hinge_H,
-    const int cell_types,
-    const double N,
-    const double M,
-    const int iterations,
-    double total_regularization_weight,
-    const double reg_X,
-    const double reg_Omega,
-    const double convergence_tol,
-    const int stop_criteria_window,
-    const bool debug_stats
-);
+// Rcpp::List optimize_alignment_hard(
+//     const arma::mat& X,
+//     const arma::mat& Omega,
+//     const arma::mat& D_w,
+//     const arma::mat& SVRt,
+//     const arma::mat& R,
+//     const arma::mat& S,
+//     const double coef_der_X,
+//     double coef_hinge_W,
+//     double coef_hinge_H,
+//     const int cell_types,
+//     const double N,
+//     const double M,
+//     const int iterations,
+//     double total_regularization_weight,
+//     const double reg_X,
+//     const double reg_Omega,
+//     const double convergence_tol,
+//     const int stop_criteria_window,
+//     const bool debug_stats
+// );
