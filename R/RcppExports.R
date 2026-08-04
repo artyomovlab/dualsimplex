@@ -110,39 +110,6 @@ nnls_nonzero_C__ <- function(A, b, max_iter = 500L, tol = 1e-6) {
     .Call('_DualSimplex_nnls_nonzero_C__', PACKAGE = 'DualSimplex', A, b, max_iter, tol)
 }
 
-#' Main training loop with all gradient steps. This is naive algorithm from version 1.0.
-#' It optimizes 3 terms (5 in experimental version). 
-#' Gradient steps performed in X and Omega spaces separatelly with NNLS used to merge them together into deconvolution term.
-#'
-#' @param X current X
-#' @param Omega current Omega
-#' @param D_w current D_w
-#' @param SVRt current SVRt (sigma)
-#' @param R current R
-#' @param S current S
-#' @param coef_der_X learning rate X
-#' @param coef_der_Omega learning rate Omega
-#' @param coef_hinge_H lambda
-#' @param coef_hinge_W beta
-#' @param coef_pos_D_h experimental coefficient for D. legacy not tested.
-#' @param coef_pos_D_w experimental coefficient for D. legacy not tested.
-#' @param cell_types number of components (K)
-#' @param N current N
-#' @param M current M
-#' @param iterations number of iterations
-#' @param mean_radius_X data dependent restriction for updates
-#' @param mean_radius_Omega dependent restriction for updates
-#' @param r_const_X experimental. not tested
-#' @param r_const_Omega experimental. not tested
-#' @param thresh experimental. not tested
-#' @param convergence_tol tolerance for convergence.
-#' @param stop_criteria_window how long error should be on plateu to decrease the learning rate
-#' @param debug_stats wether to save grad norm values.
-#' @return new parameters
-optimize_coordinate_descent <- function(X, Omega, D_w, SVRt, R, S, coef_der_X, coef_der_Omega, coef_hinge_H, coef_hinge_W, coef_pos_D_h, coef_pos_D_w, cell_types, N, M, iterations, mean_radius_X, mean_radius_Omega, r_const_X = 0, r_const_Omega = 0, thresh = 0.8, convergence_tol = 1e-12, stop_criteria_window = 1e+5L, debug_stats = FALSE) {
-    .Call('_DualSimplex_optimize_coordinate_descent', PACKAGE = 'DualSimplex', X, Omega, D_w, SVRt, R, S, coef_der_X, coef_der_Omega, coef_hinge_H, coef_hinge_W, coef_pos_D_h, coef_pos_D_w, cell_types, N, M, iterations, mean_radius_X, mean_radius_Omega, r_const_X, r_const_Omega, thresh, convergence_tol, stop_criteria_window, debug_stats)
-}
-
 #' Main training loop with all gradient steps.
 #' This formulation eliminate the Frobenius norm in the objective function and hardcode the simplex alignment by 
 NULL
@@ -196,8 +163,41 @@ NULL
 #' @param stop_criteria_window how long error should be on plateu to decrease the learning rate
 #' @param debug_stats wether to save grad norm values.
 #' @return new parameters
-optimize_alignment <- function(X, Omega, D_w, SVRt, R, S, coef_der_X, coef_hinge_W, coef_hinge_H, coef_alignment, cell_types, N, M, iterations, total_regularization_weight, reg_X, reg_Omega, convergence_tol, stop_criteria_window, debug_stats) {
-    .Call('_DualSimplex_optimize_alignment', PACKAGE = 'DualSimplex', X, Omega, D_w, SVRt, R, S, coef_der_X, coef_hinge_W, coef_hinge_H, coef_alignment, cell_types, N, M, iterations, total_regularization_weight, reg_X, reg_Omega, convergence_tol, stop_criteria_window, debug_stats)
+optimize_alignment <- function(initial_X, initial_Omega, initial_D_w, SVRt, R, S, coef_der_X, coef_hinge_W, coef_hinge_H, coef_alignment, k, N, M, iterations, total_regularization_weight, reg_X, reg_Omega, convergence_tol, stop_criteria_window, debug_stats) {
+    .Call('_DualSimplex_optimize_alignment', PACKAGE = 'DualSimplex', initial_X, initial_Omega, initial_D_w, SVRt, R, S, coef_der_X, coef_hinge_W, coef_hinge_H, coef_alignment, k, N, M, iterations, total_regularization_weight, reg_X, reg_Omega, convergence_tol, stop_criteria_window, debug_stats)
+}
+
+#' Main training loop with all gradient steps. This is naive algorithm from version 1.0.
+#' It optimizes 3 terms (5 in experimental version). 
+#' Gradient steps performed in X and Omega spaces separatelly with NNLS used to merge them together into deconvolution term.
+#'
+#' @param X current X
+#' @param Omega current Omega
+#' @param D_w current D_w
+#' @param SVRt current SVRt (sigma)
+#' @param R current R
+#' @param S current S
+#' @param coef_der_X learning rate X
+#' @param coef_der_Omega learning rate Omega
+#' @param coef_hinge_H lambda
+#' @param coef_hinge_W beta
+#' @param coef_pos_D_h experimental coefficient for D. legacy not tested.
+#' @param coef_pos_D_w experimental coefficient for D. legacy not tested.
+#' @param cell_types number of components (K)
+#' @param N current N
+#' @param M current M
+#' @param iterations number of iterations
+#' @param mean_radius_X data dependent restriction for updates
+#' @param mean_radius_Omega dependent restriction for updates
+#' @param r_const_X experimental. not tested
+#' @param r_const_Omega experimental. not tested
+#' @param thresh experimental. not tested
+#' @param convergence_tol tolerance for convergence.
+#' @param stop_criteria_window how long error should be on plateu to decrease the learning rate
+#' @param debug_stats wether to save grad norm values.
+#' @return new parameters
+optimize_coordinate_descent <- function(X, Omega, D_w, SVRt, R, S, coef_der_X, coef_der_Omega, coef_hinge_H, coef_hinge_W, coef_pos_D_h, coef_pos_D_w, cell_types, N, M, iterations, mean_radius_X, mean_radius_Omega, r_const_X = 0, r_const_Omega = 0, thresh = 0.8, convergence_tol = 1e-12, stop_criteria_window = 1e+5L, debug_stats = FALSE) {
+    .Call('_DualSimplex_optimize_coordinate_descent', PACKAGE = 'DualSimplex', X, Omega, D_w, SVRt, R, S, coef_der_X, coef_der_Omega, coef_hinge_H, coef_hinge_W, coef_pos_D_h, coef_pos_D_w, cell_types, N, M, iterations, mean_radius_X, mean_radius_Omega, r_const_X, r_const_Omega, thresh, convergence_tol, stop_criteria_window, debug_stats)
 }
 
 #' Transform X and Omega points enforcing the desired equality for first coordinates

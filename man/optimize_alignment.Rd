@@ -7,9 +7,9 @@ It optimizes positivity of W and regularize the size of X by dual simplex alignm
 Gradient steps performed in X space.}
 \usage{
 optimize_alignment(
-  X,
-  Omega,
-  D_w,
+  initial_X,
+  initial_Omega,
+  initial_D_w,
   SVRt,
   R,
   S,
@@ -17,7 +17,7 @@ optimize_alignment(
   coef_hinge_W,
   coef_hinge_H,
   coef_alignment,
-  cell_types,
+  k,
   N,
   M,
   iterations,
@@ -30,12 +30,6 @@ optimize_alignment(
 )
 }
 \arguments{
-\item{X}{current X}
-
-\item{Omega}{current Omega}
-
-\item{D_w}{current D_w}
-
 \item{SVRt}{current SVRt (sigma)}
 
 \item{R}{current R}
@@ -49,8 +43,6 @@ optimize_alignment(
 \item{coef_hinge_H}{lambda}
 
 \item{coef_alignment}{gamma?}
-
-\item{cell_types}{number of components (K)}
 
 \item{N}{current N}
 
@@ -69,6 +61,14 @@ optimize_alignment(
 \item{stop_criteria_window}{how long error should be on plateu to decrease the learning rate}
 
 \item{debug_stats}{wether to save grad norm values.}
+
+\item{X}{current X}
+
+\item{Omega}{current Omega}
+
+\item{D_w}{current D_w}
+
+\item{cell_types}{number of components (K)}
 }
 \value{
 new parameters
