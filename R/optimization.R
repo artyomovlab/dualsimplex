@@ -319,7 +319,9 @@ optimize_solution <- function(
       "best_error_value",
       "best_error_iteration",
       "scaled_lambda_error",
-      "scaled_beta_error"
+      "scaled_beta_error",
+      "average_final_gradient_norm",
+      "total_shrink_iterations"
     )
   return(solution_proj)
 }

@@ -62,7 +62,7 @@ Rcpp::List optimize_positivity(const arma::mat& X,
                              const int stop_criteria_window,
                              const bool debug_stats
                              ) {
-    arma::mat errors_statistics(iterations + 1, 21, arma::fill::zeros);
+    arma::mat errors_statistics(iterations + 1, 23, arma::fill::zeros);
 
     arma::mat points_statistics_X(iterations + 1, cell_types * cell_types, arma::fill::zeros);
     arma::mat points_statistics_Omega(iterations + 1, cell_types * cell_types, arma::fill::zeros);
@@ -99,6 +99,8 @@ Rcpp::List optimize_positivity(const arma::mat& X,
     int best_error_iteration = 0;
     double current_error_value;
     double average_gradient_norm = 0;
+    double average_final_gradient_norm = 0;
+    double total_shrink_iterations = 0;
     double average_hinge_H_gradient_norm = 0;
     double average_hinge_W_gradient_norm = 0;
     double average_hinge_reg_X_gradient_norm = 0;
@@ -193,6 +195,7 @@ Rcpp::List optimize_positivity(const arma::mat& X,
                 shrink_iteration++;
             }
             if (shrink_iteration != shrink_limit) {
+                total_shrink_iterations = total_shrink_iterations + shrink_iteration;
                     // if we were able to find the solution. accept these new X and Omega
                     // Do nothing its ok
             } else {
@@ -210,6 +213,11 @@ Rcpp::List optimize_positivity(const arma::mat& X,
         // optional track X dtilda statistics
         // points_statistics_X_dtilda_uncorrected.row(itr_) = new_X.as_row();
         // points_statistics_Omega_dtilda_uncorrected.row(itr_) = new_Omega.as_row();
+
+        if (debug_stats) {
+            average_final_gradient_norm = arma::mean(arma::vecnorm(der_X, 2, 1));
+        }
+
 
         std::tie(new_X, new_Omega, new_D_w_sqrt) = ensure_D_integrity_c(new_X, new_Omega, sqrt_Sigma, N, M);
         final_X = arma::diagmat(1/new_D_w_sqrt) * new_X * arma::diagmat(sqrt_Sigma);
@@ -263,7 +271,9 @@ Rcpp::List optimize_positivity(const arma::mat& X,
                                                    best_error_value, //18
                                                    static_cast<double>(best_error_iteration), //19,
                                                    current_errors["scaled_lambda_error"],            //20
-                                                   current_errors["scaled_beta_error"] //21
+                                                   current_errors["scaled_beta_error"], //21,
+                                                   average_final_gradient_norm, //22
+                                                   total_shrink_iterations //23
                                                 };
         
         //points_statistics_X_dtilda_corrected.row(itr_) = new_X.as_row();
