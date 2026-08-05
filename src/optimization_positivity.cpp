@@ -186,11 +186,13 @@ Rcpp::List optimize_positivity(const arma::mat& X,
             while (arma::any( tmp_Omega.row(0) <= 0) & (shrink_iteration < shrink_limit)) {
                 for (int c=0; c < cell_types; c++) {
                     double matrix_value =  tmp_Omega(0,c);
-                    der_X /=  2;
-                    der_X.row(c) *= 2;
-                    tmp_X = (new_X - current_learning_rate * der_X);
-                    tmp_Omega = arma::pinv(tmp_X);
-                    matrix_value =  tmp_Omega(0,c); 
+                    if (matrix_value <= 0) {
+                        der_X /=  2;
+                        der_X.row(c) *= 2;
+                        tmp_X = (new_X - current_learning_rate * der_X);
+                        tmp_Omega = arma::pinv(tmp_X);
+                        matrix_value =  tmp_Omega(0,c); 
+                    }
                 }
                 shrink_iteration++;
             }
