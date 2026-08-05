@@ -298,7 +298,7 @@ optimize_solution <- function(
   }
 
   colnames(solution_proj$optim_history$errors_statistics) <-
-    c(
+    head(c(
       "deconv_error",
       "lambda_error",
       "beta_error",
@@ -322,7 +322,7 @@ optimize_solution <- function(
       "scaled_beta_error",
       "average_final_gradient_norm",
       "total_shrink_iterations"
-    )
+    ), dim(solution_proj$optim_history$errors_statistics)[[2]])
   return(solution_proj)
 }
 

@@ -30,7 +30,7 @@ Rcpp::List optimize_coordinate_descent(const arma::mat& X,
                              const double convergence_tol,
                              const int stop_criteria_window,
                              const bool debug_stats) {
-    arma::mat errors_statistics(iterations + 1, 21, arma::fill::zeros);
+    arma::mat errors_statistics(iterations + 1, 23, arma::fill::zeros);
     arma::mat points_statistics_X(iterations + 1, cell_types * cell_types, arma::fill::zeros);
     arma::mat points_statistics_Omega(iterations + 1, cell_types * cell_types, arma::fill::zeros);
     arma::mat points_statistics_Dw(iterations + 1, cell_types, arma::fill::zeros);
@@ -201,7 +201,9 @@ Rcpp::List optimize_coordinate_descent(const arma::mat& X,
                                                    best_error_value, //18
                                                    static_cast<double>(best_error_iteration), //19,
                                                    current_errors["scaled_lambda_error"],            //20
-                                                   current_errors["scaled_beta_error"] //21
+                                                   current_errors["scaled_beta_error"], //21
+                                                   average_gradient_norm, //22
+                                                   0
                                                    };
         points_statistics_X.row(itr_) = new_X.as_row();
         points_statistics_Omega.row(itr_) = new_Omega.as_row();
