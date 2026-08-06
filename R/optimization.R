@@ -322,7 +322,7 @@ optimize_solution <- function(
       "scaled_beta_error",
       "average_final_gradient_norm",
       "total_shrink_iterations"
-    ), dim(solution_proj$optim_history$errors_statistics)[[2]])
+    ), ncol(solution_proj$optim_history$errors_statistics))
   return(solution_proj)
 }
 
