@@ -336,32 +336,37 @@ optimize_solution <- function(
     # )
   }
 
-  colnames(solution_proj$optim_history$errors_statistics) <-
-    head(c(
-      "deconv_error",
-      "lambda_error",
-      "beta_error",
-      "D_h_error",
-      "D_w_error",
-      "total_error",
-      "scaled_total_error",
-      "neg_props_count",
-      "neg_basis_count",
-      "sum_d_w",
-      "average_norm",
-      "learning_rate",
-      "gradient_norm",
-      "average_hinge_H_gradient_norm",
-      "average_hinge_W_gradient_norm",
-      "average_reg_X_gradient_norm",
-      "average_reg_Omega_gradient_norm",
-      "best_error_value",
-      "best_error_iteration",
-      "scaled_lambda_error",
-      "scaled_beta_error",
-      "average_final_gradient_norm",
-      "total_shrink_iterations"
-    ), ncol(solution_proj$optim_history$errors_statistics))
+  if (!is.null(solution_proj$optim_history$errors_statistics)) { # for compatibility
+    colnames(solution_proj$optim_history$errors_statistics) <- head(
+      c(
+        "deconv_error",
+        "lambda_error",
+        "beta_error",
+        "D_h_error",
+        "D_w_error",
+        "total_error",
+        "scaled_total_error",
+        "neg_props_count",
+        "neg_basis_count",
+        "sum_d_w",
+        "average_norm",
+        "learning_rate",
+        "gradient_norm",
+        "average_hinge_H_gradient_norm",
+        "average_hinge_W_gradient_norm",
+        "average_reg_X_gradient_norm",
+        "average_reg_Omega_gradient_norm",
+        "best_error_value",
+        "best_error_iteration",
+        "scaled_lambda_error",
+        "scaled_beta_error",
+        "average_final_gradient_norm",
+        "total_shrink_iterations"
+      ),
+      ncol(solution_proj$optim_history$errors_statistics)
+    )
+  }
+
   return(solution_proj)
 }
 
@@ -415,22 +420,36 @@ plot_errors <- function(
     "total_error"
   )
 ) {
-  to_plot <- data.frame(solution_proj$optim_history$errors_statistics[, variables, drop = F])
-  if (nrow(solution_proj$optim_history$errors_statistics) == 0) {
-    spdl::warn("Nothing to plot, errors_statistics was empty")
-  } else {
-    to_plot$iteration <- 0:(nrow(solution_proj$optim_history$errors_statistics) - 1)
-    to_plot <- reshape2::melt(to_plot, id.vars = "iteration", measure.vars = variables)
-    plt <-
-      ggplot(to_plot, aes(
-        x = .data$iteration,
-        y = log10(.data$value),
-        color = .data$variable
-      )) +
-      geom_line() +
-      theme_minimal()
-    plt
+  # for compatibility
+  if (is.null(solution_proj$optim_history$history)) { # for compatibility
+    to_plot <- data.frame(solution_proj$optim_history$errors_statistics[, variables, drop = F])
+    if (nrow(solution_proj$optim_history$errors_statistics) == 0) {
+      spdl::warn("Nothing to plot, errors_statistics was empty")
+    } else {
+      to_plot$iteration <- 0:(nrow(solution_proj$optim_history$errors_statistics) - 1)
+      to_plot <- reshape2::melt(to_plot, id.vars = "iteration", measure.vars = variables)
+      plt <-
+        ggplot(to_plot, aes(
+          x = .data$iteration,
+          y = log10(.data$value),
+          color = .data$variable
+        )) +
+        geom_line() +
+        theme_minimal()
+      return(plt) # early return so we can skip else clause
+    }
   }
+  history <- solution_proj$optim_history$history
+  ggplot(
+    history[history$metric_name %in% variables, ],
+    mapping = aes(
+      x = iteration,
+      y = log10(value),
+      color = metric_name
+    )
+  ) +
+    geom_line() +
+    theme_minimal()
 }
 
 
@@ -446,19 +465,39 @@ plot_negative_proportions_change <- function(proj, solution_proj) {
   N <- proj$meta$N
   M <- proj$meta$M
   K <- proj$meta$K
-  errors_statistics <- solution_proj$optim_history$errors_statistics
   total_H <- N * K
-  toPlot <- as.data.frame(errors_statistics[, "neg_props_count", drop = F])
-  last_prop_count <- round(toPlot[nrow(toPlot), "neg_props_count"] / total_H, 6) * 100
-  toPlot$iteration <- 0:(nrow(toPlot) - 1)
-  plt <- ggplot(toPlot, aes(y = .data$neg_props_count, x = .data$iteration)) +
+
+  if (is.null(solution_proj$optim_history$history)) { # for compatibility
+    errors_statistics <- solution_proj$optim_history$errors_statistics
+    toPlot <- as.data.frame(errors_statistics[, "neg_props_count", drop = F])
+    last_prop_count <- round(toPlot[nrow(toPlot), "neg_props_count"] / total_H, 6) * 100
+    toPlot$iteration <- 0:(nrow(toPlot) - 1)
+    plt <- ggplot(toPlot, aes(y = .data$neg_props_count, x = .data$iteration)) +
+      geom_line() +
+      theme_minimal() +
+      xlab("Iteration") +
+      ylab("Negative proportions") +
+      annotate("text", x = Inf, y = Inf, label = paste0(last_prop_count, "%"), vjust = 1, hjust = 1) +
+      ggtitle("Number of negative proportions")
+    return(plt)
+  }
+
+  history <- solution_proj$optim_history$history
+  last_prop_percentage <- round(tail(history[history$metric_name == "neg_props", "value"], 1) / total_H, 6) * 100
+
+  ggplot(
+    history[history$metric_name == "neg_props", ],
+    mapping = aes(
+      x = iteration,
+      y = value
+    )
+  ) +
     geom_line() +
     theme_minimal() +
     xlab("Iteration") +
     ylab("Negative proportions") +
-    annotate("text", x = Inf, y = Inf, label = paste0(last_prop_count, "%"), vjust = 1, hjust = 1) +
+    annotate("text", x = Inf, y = Inf, label = paste0(last_prop_percentage, "%"), vjust = 1, hjust = 1) +
     ggtitle("Number of negative proportions")
-  return(plt)
 }
 
 #' Plot changes in negativity of matrix W
@@ -473,17 +512,37 @@ plot_negative_basis_change <- function(proj, solution_proj) {
   N <- proj$meta$N
   M <- proj$meta$M
   K <- proj$meta$K
-  errors_statistics <- solution_proj$optim_history$errors_statistics
   total_W <- M * K
-  toPlot <- as.data.frame(errors_statistics[, "neg_basis_count", drop = F])
-  last_basis_count <- round(toPlot[nrow(toPlot), "neg_basis_count"] / total_W, 6) * 100
-  toPlot$iteration <- 0:(nrow(toPlot) - 1)
-  plt <- ggplot(toPlot, aes(y = .data$neg_basis_count, x = .data$iteration)) +
+
+  if (is.null(solution_proj$optim_history$history)) { # for compatibility
+    errors_statistics <- solution_proj$optim_history$errors_statistics
+    toPlot <- as.data.frame(errors_statistics[, "neg_basis_count", drop = F])
+    last_basis_count <- round(toPlot[nrow(toPlot), "neg_basis_count"] / total_W, 6) * 100
+    toPlot$iteration <- 0:(nrow(toPlot) - 1)
+    plt <- ggplot(toPlot, aes(y = .data$neg_basis_count, x = .data$iteration)) +
+      geom_line() +
+      theme_minimal() +
+      xlab("Iteration") +
+      ylab("Negative basis") +
+      annotate("text", x = Inf, y = Inf, label = paste0(last_basis_count, "%"), vjust = 1, hjust = 1) +
+      ggtitle("Number of negative basis elements")
+    return(plt)
+  }
+
+  history <- solution_proj$optim_history$history
+  neg_basis_percentage <- round(tail(history[history$metric_name == "neg_basis", "value"], 1) / total_W, 6) * 100
+
+  ggplot(
+    history[history$metric_name == "neg_basis", ],
+    mapping = aes(
+      x = iteration,
+      y = value
+    )
+  ) +
     geom_line() +
     theme_minimal() +
     xlab("Iteration") +
     ylab("Negative basis") +
-    annotate("text", x = Inf, y = Inf, label = paste0(last_basis_count, "%"), vjust = 1, hjust = 1) +
+    annotate("text", x = Inf, y = Inf, label = paste0(neg_basis_percentage, "%"), vjust = 1, hjust = 1) +
     ggtitle("Number of negative basis elements")
-  return(plt)
 }
