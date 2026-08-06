@@ -19,90 +19,91 @@ svd projection,
 optimization of simplex corners (NMF solution).
 }
 \examples{
-M <-  8000 # number of genes (rows)
-N <-  200 # number of samples (columns)
-K <-  3 # number of main components
-sim <- simulation_gene_expression(n_genes = M,
-                                  n_samples = N,
-                                  n_cell_types = K,
-                                  with_marker_genes = FALSE
-                                  )
+M <- 8000 # number of genes (rows)
+N <- 200 # number of samples (columns)
+K <- 3 # number of main components
+sim <- simulation_gene_expression(
+  n_genes = M,
+  n_samples = N,
+  n_cell_types = K,
+  with_marker_genes = FALSE
+)
 dso <- DualSimplexSolver$new()
 dso$set_data(sim$data) # run Sinkhorn procedure
 dso$project(K) # project to SVD space
 dso$plot_projected("zero_distance",
-                   "zero_distance",
-                   with_solution = TRUE,
-                   use_dims = list(2:3)) # visualize the projection
+  "zero_distance",
+  with_solution = TRUE,
+  use_dims = list(2:3)
+) # visualize the projection
 }
 \section{Public fields}{
-  \if{html}{\out{<div class="r6-fields">}}
-  \describe{
-    \item{\code{st}}{contain the "state" of the current object. (data, solution, projections etc..).}
-  }
-  \if{html}{\out{</div>}}
+\if{html}{\out{<div class="r6-fields">}}
+\describe{
+\item{\code{st}}{contain the "state" of the current object. (data, solution, projections etc..).}
+}
+\if{html}{\out{</div>}}
 }
 \section{Methods}{
 \subsection{Public methods}{
-  \itemize{
-    \item \href{#method-DualSimplexSolver-set_data}{\code{DualSimplexSolver$set_data()}}
-    \item \href{#method-DualSimplexSolver-plot_mad}{\code{DualSimplexSolver$plot_mad()}}
-    \item \href{#method-DualSimplexSolver-basic_filter}{\code{DualSimplexSolver$basic_filter()}}
-    \item \href{#method-DualSimplexSolver-add_knn_distances_anno}{\code{DualSimplexSolver$add_knn_distances_anno()}}
-    \item \href{#method-DualSimplexSolver-updata_annotation}{\code{DualSimplexSolver$updata_annotation()}}
-    \item \href{#method-DualSimplexSolver-add_density_anno}{\code{DualSimplexSolver$add_density_anno()}}
-    \item \href{#method-DualSimplexSolver-plot_svd}{\code{DualSimplexSolver$plot_svd()}}
-    \item \href{#method-DualSimplexSolver-plot_svd_history}{\code{DualSimplexSolver$plot_svd_history()}}
-    \item \href{#method-DualSimplexSolver-project}{\code{DualSimplexSolver$project()}}
-    \item \href{#method-DualSimplexSolver-factorize}{\code{DualSimplexSolver$factorize()}}
-    \item \href{#method-DualSimplexSolver-plot_projection_diagnostics}{\code{DualSimplexSolver$plot_projection_diagnostics()}}
-    \item \href{#method-DualSimplexSolver-plot_distances_distribution}{\code{DualSimplexSolver$plot_distances_distribution()}}
-    \item \href{#method-DualSimplexSolver-distance_filter}{\code{DualSimplexSolver$distance_filter()}}
-    \item \href{#method-DualSimplexSolver-distance_quantile_filter}{\code{DualSimplexSolver$distance_quantile_filter()}}
-    \item \href{#method-DualSimplexSolver-iterative_n_sigma_filter}{\code{DualSimplexSolver$iterative_n_sigma_filter()}}
-    \item \href{#method-DualSimplexSolver-iterative_density_filter}{\code{DualSimplexSolver$iterative_density_filter()}}
-    \item \href{#method-DualSimplexSolver-iterative_mahalanobis_filter}{\code{DualSimplexSolver$iterative_mahalanobis_filter()}}
-    \item \href{#method-DualSimplexSolver-run_umap}{\code{DualSimplexSolver$run_umap()}}
-    \item \href{#method-DualSimplexSolver-plot_projected}{\code{DualSimplexSolver$plot_projected()}}
-    \item \href{#method-DualSimplexSolver-init_solution}{\code{DualSimplexSolver$init_solution()}}
-    \item \href{#method-DualSimplexSolver-optim_solution}{\code{DualSimplexSolver$optim_solution()}}
-    \item \href{#method-DualSimplexSolver-default_optimization}{\code{DualSimplexSolver$default_optimization()}}
-    \item \href{#method-DualSimplexSolver-plot_error_history}{\code{DualSimplexSolver$plot_error_history()}}
-    \item \href{#method-DualSimplexSolver-finalize_solution}{\code{DualSimplexSolver$finalize_solution()}}
-    \item \href{#method-DualSimplexSolver-plot_negative_basis_change}{\code{DualSimplexSolver$plot_negative_basis_change()}}
-    \item \href{#method-DualSimplexSolver-plot_negative_proportions_change}{\code{DualSimplexSolver$plot_negative_proportions_change()}}
-    \item \href{#method-DualSimplexSolver-plot_solution_distribution}{\code{DualSimplexSolver$plot_solution_distribution()}}
-    \item \href{#method-DualSimplexSolver-set_display_dims}{\code{DualSimplexSolver$set_display_dims()}}
-    \item \href{#method-DualSimplexSolver-set_save_dir}{\code{DualSimplexSolver$set_save_dir()}}
-    \item \href{#method-DualSimplexSolver-get_save_dir}{\code{DualSimplexSolver$get_save_dir()}}
-    \item \href{#method-DualSimplexSolver-getset_save_dir}{\code{DualSimplexSolver$getset_save_dir()}}
-    \item \href{#method-DualSimplexSolver-save_state}{\code{DualSimplexSolver$save_state()}}
-    \item \href{#method-DualSimplexSolver-save_solution}{\code{DualSimplexSolver$save_solution()}}
-    \item \href{#method-DualSimplexSolver-load_state}{\code{DualSimplexSolver$load_state()}}
-    \item \href{#method-DualSimplexSolver-generate_summary}{\code{DualSimplexSolver$generate_summary()}}
-    \item \href{#method-DualSimplexSolver-get_data}{\code{DualSimplexSolver$get_data()}}
-    \item \href{#method-DualSimplexSolver-get_filtering_stats}{\code{DualSimplexSolver$get_filtering_stats()}}
-    \item \href{#method-DualSimplexSolver-get_n_cell_types}{\code{DualSimplexSolver$get_n_cell_types()}}
-    \item \href{#method-DualSimplexSolver-get_n_iters}{\code{DualSimplexSolver$get_n_iters()}}
-    \item \href{#method-DualSimplexSolver-get_negative_ratios}{\code{DualSimplexSolver$get_negative_ratios()}}
-    \item \href{#method-DualSimplexSolver-get_solution}{\code{DualSimplexSolver$get_solution()}}
-    \item \href{#method-DualSimplexSolver-get_ct_names}{\code{DualSimplexSolver$get_ct_names()}}
-    \item \href{#method-DualSimplexSolver-get_marker_genes}{\code{DualSimplexSolver$get_marker_genes()}}
-    \item \href{#method-DualSimplexSolver-get_V_row}{\code{DualSimplexSolver$get_V_row()}}
-    \item \href{#method-DualSimplexSolver-get_V_column}{\code{DualSimplexSolver$get_V_column()}}
-    \item \href{#method-DualSimplexSolver-get_coordinates_from_external_matrices}{\code{DualSimplexSolver$get_coordinates_from_external_matrices()}}
-    \item \href{#method-DualSimplexSolver-clone}{\code{DualSimplexSolver$clone()}}
-  }
+\itemize{
+\item \href{#method-DualSimplexSolver-set_data}{\code{DualSimplexSolver$set_data()}}
+\item \href{#method-DualSimplexSolver-plot_mad}{\code{DualSimplexSolver$plot_mad()}}
+\item \href{#method-DualSimplexSolver-basic_filter}{\code{DualSimplexSolver$basic_filter()}}
+\item \href{#method-DualSimplexSolver-add_knn_distances_anno}{\code{DualSimplexSolver$add_knn_distances_anno()}}
+\item \href{#method-DualSimplexSolver-updata_annotation}{\code{DualSimplexSolver$updata_annotation()}}
+\item \href{#method-DualSimplexSolver-add_density_anno}{\code{DualSimplexSolver$add_density_anno()}}
+\item \href{#method-DualSimplexSolver-plot_svd}{\code{DualSimplexSolver$plot_svd()}}
+\item \href{#method-DualSimplexSolver-plot_svd_history}{\code{DualSimplexSolver$plot_svd_history()}}
+\item \href{#method-DualSimplexSolver-project}{\code{DualSimplexSolver$project()}}
+\item \href{#method-DualSimplexSolver-factorize}{\code{DualSimplexSolver$factorize()}}
+\item \href{#method-DualSimplexSolver-plot_projection_diagnostics}{\code{DualSimplexSolver$plot_projection_diagnostics()}}
+\item \href{#method-DualSimplexSolver-plot_distances_distribution}{\code{DualSimplexSolver$plot_distances_distribution()}}
+\item \href{#method-DualSimplexSolver-distance_filter}{\code{DualSimplexSolver$distance_filter()}}
+\item \href{#method-DualSimplexSolver-distance_quantile_filter}{\code{DualSimplexSolver$distance_quantile_filter()}}
+\item \href{#method-DualSimplexSolver-iterative_n_sigma_filter}{\code{DualSimplexSolver$iterative_n_sigma_filter()}}
+\item \href{#method-DualSimplexSolver-iterative_density_filter}{\code{DualSimplexSolver$iterative_density_filter()}}
+\item \href{#method-DualSimplexSolver-iterative_mahalanobis_filter}{\code{DualSimplexSolver$iterative_mahalanobis_filter()}}
+\item \href{#method-DualSimplexSolver-run_umap}{\code{DualSimplexSolver$run_umap()}}
+\item \href{#method-DualSimplexSolver-plot_projected}{\code{DualSimplexSolver$plot_projected()}}
+\item \href{#method-DualSimplexSolver-init_solution}{\code{DualSimplexSolver$init_solution()}}
+\item \href{#method-DualSimplexSolver-optim_solution}{\code{DualSimplexSolver$optim_solution()}}
+\item \href{#method-DualSimplexSolver-default_optimization}{\code{DualSimplexSolver$default_optimization()}}
+\item \href{#method-DualSimplexSolver-plot_error_history}{\code{DualSimplexSolver$plot_error_history()}}
+\item \href{#method-DualSimplexSolver-finalize_solution}{\code{DualSimplexSolver$finalize_solution()}}
+\item \href{#method-DualSimplexSolver-plot_negative_basis_change}{\code{DualSimplexSolver$plot_negative_basis_change()}}
+\item \href{#method-DualSimplexSolver-plot_negative_proportions_change}{\code{DualSimplexSolver$plot_negative_proportions_change()}}
+\item \href{#method-DualSimplexSolver-plot_solution_distribution}{\code{DualSimplexSolver$plot_solution_distribution()}}
+\item \href{#method-DualSimplexSolver-set_display_dims}{\code{DualSimplexSolver$set_display_dims()}}
+\item \href{#method-DualSimplexSolver-set_save_dir}{\code{DualSimplexSolver$set_save_dir()}}
+\item \href{#method-DualSimplexSolver-get_save_dir}{\code{DualSimplexSolver$get_save_dir()}}
+\item \href{#method-DualSimplexSolver-getset_save_dir}{\code{DualSimplexSolver$getset_save_dir()}}
+\item \href{#method-DualSimplexSolver-save_state}{\code{DualSimplexSolver$save_state()}}
+\item \href{#method-DualSimplexSolver-save_solution}{\code{DualSimplexSolver$save_solution()}}
+\item \href{#method-DualSimplexSolver-load_state}{\code{DualSimplexSolver$load_state()}}
+\item \href{#method-DualSimplexSolver-generate_summary}{\code{DualSimplexSolver$generate_summary()}}
+\item \href{#method-DualSimplexSolver-get_data}{\code{DualSimplexSolver$get_data()}}
+\item \href{#method-DualSimplexSolver-get_filtering_stats}{\code{DualSimplexSolver$get_filtering_stats()}}
+\item \href{#method-DualSimplexSolver-get_n_cell_types}{\code{DualSimplexSolver$get_n_cell_types()}}
+\item \href{#method-DualSimplexSolver-get_n_iters}{\code{DualSimplexSolver$get_n_iters()}}
+\item \href{#method-DualSimplexSolver-get_negative_ratios}{\code{DualSimplexSolver$get_negative_ratios()}}
+\item \href{#method-DualSimplexSolver-get_solution}{\code{DualSimplexSolver$get_solution()}}
+\item \href{#method-DualSimplexSolver-get_ct_names}{\code{DualSimplexSolver$get_ct_names()}}
+\item \href{#method-DualSimplexSolver-get_marker_genes}{\code{DualSimplexSolver$get_marker_genes()}}
+\item \href{#method-DualSimplexSolver-get_V_row}{\code{DualSimplexSolver$get_V_row()}}
+\item \href{#method-DualSimplexSolver-get_V_column}{\code{DualSimplexSolver$get_V_column()}}
+\item \href{#method-DualSimplexSolver-get_coordinates_from_external_matrices}{\code{DualSimplexSolver$get_coordinates_from_external_matrices()}}
+\item \href{#method-DualSimplexSolver-clone}{\code{DualSimplexSolver$clone()}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-DualSimplexSolver-set_data"></a>}}
 \if{latex}{\out{\hypertarget{method-DualSimplexSolver-set_data}{}}}
-\subsection{\code{DualSimplexSolver$set_data()}}{
-  Set data to the object.
+\subsection{Method \code{set_data()}}{
+Set data to the object.
 In general it could be any matrix with names on columns and rows. Expression set will be created.
-  \subsection{Usage}{
-    \if{html}{\out{<div class="r">}}
-    \preformatted{DualSimplexSolver$set_data(
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$set_data(
   data,
   feature_anno_lists = NULL,
   sample_anno_lists = NULL,
@@ -111,447 +112,449 @@ In general it could be any matrix with names on columns and rows. Expression set
   sinkhorn_tol = 1e-12,
   svd_method = "svd",
   ...
-)}
-    \if{html}{\out{</div>}}
-  }
-  \subsection{Arguments}{
-    \if{html}{\out{<div class="arguments">}}
-    \describe{
-      \item{\code{data}}{input data matrix}
-      \item{\code{feature_anno_lists}}{named list of lists. Each sublist contains names of rows which should have TRUE value in annotaiton column.}
-      \item{\code{sample_anno_lists}}{named list of lists. Each sublist contains names of columns which should have TRUE value in annotation column.}
-      \item{\code{max_sinkhorn_iterations}}{number of sinkhorn iterations to perform.}
-      \item{\code{max_dim}}{maximum dimention we want the projection operation. It is passed to `calc_svd_ops` function.}
-      \item{\code{sinkhorn_tol}}{tolerance for Sinkhorn calculation. It is passed to `sinkhron_scale` function.}
-      \item{\code{svd_method}}{which SVD algorithm to use.}
-      \item{\code{...}}{additional arguments passed to function `run_svd`}
-    }
-    \if{html}{\out{</div>}}
-  }
+)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{data}}{input data matrix}
+
+\item{\code{feature_anno_lists}}{named list of lists. Each sublist contains names of rows which should have TRUE value in annotaiton column.}
+
+\item{\code{sample_anno_lists}}{named list of lists. Each sublist contains names of columns which should have TRUE value in annotation column.}
+
+\item{\code{max_sinkhorn_iterations}}{number of sinkhorn iterations to perform.}
+
+\item{\code{max_dim}}{maximum dimention we want the projection operation. It is passed to `calc_svd_ops` function.}
+
+\item{\code{sinkhorn_tol}}{tolerance for Sinkhorn calculation. It is passed to `sinkhron_scale` function.}
+
+\item{\code{svd_method}}{which SVD algorithm to use.}
+
+\item{\code{...}}{additional arguments passed to function `run_svd`}
+}
+\if{html}{\out{</div>}}
+}
+}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-DualSimplexSolver-plot_mad"></a>}}
 \if{latex}{\out{\hypertarget{method-DualSimplexSolver-plot_mad}{}}}
-\subsection{\code{DualSimplexSolver$plot_mad()}}{
-  plot MAD distribution for the data
+\subsection{Method \code{plot_mad()}}{
+plot MAD distribution for the data
 In general it could be any matrix with names on columns and rows. Expression set will be created.
-  \subsection{Usage}{
-    \if{html}{\out{<div class="r">}}
-    \preformatted{DualSimplexSolver$plot_mad(...)}
-    \if{html}{\out{</div>}}
-  }
-  \subsection{Arguments}{
-    \if{html}{\out{<div class="arguments">}}
-    \describe{
-      \item{\code{...}}{parameters to pass to plot_annotation_feature method.}
-    }
-    \if{html}{\out{</div>}}
-  }
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$plot_mad(...)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{...}}{parameters to pass to plot_annotation_feature method.}
+}
+\if{html}{\out{</div>}}
+}
+}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-DualSimplexSolver-basic_filter"></a>}}
 \if{latex}{\out{\hypertarget{method-DualSimplexSolver-basic_filter}{}}}
-\subsection{\code{DualSimplexSolver$basic_filter()}}{
-  Basic data filtering for gene expression datasets.
+\subsection{Method \code{basic_filter()}}{
+Basic data filtering for gene expression datasets.
 Removes selected features, filters by mad
-  \subsection{Usage}{
-    \if{html}{\out{<div class="r">}}
-    \preformatted{DualSimplexSolver$basic_filter(
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$basic_filter(
   log_mad_gt = 0,
   remove_true_cols_default = NULL,
   remove_true_cols_additional = c(),
   keep_true_cols = c(),
   for_features = T
-)}
-    \if{html}{\out{</div>}}
-  }
-  \subsection{Arguments}{
-    \if{html}{\out{<div class="arguments">}}
-    \describe{
-      \item{\code{log_mad_gt}}{log mad threshold to remove features (we remove low mad features).}
-      \item{\code{remove_true_cols_default}}{FALSE if tou don't want to use default gene names filter.}
-      \item{\code{remove_true_cols_additional}}{additional columns from annotation to use for "remove true" filter.}
-      \item{\code{keep_true_cols}}{columns from annotation where we should keep instances with true value.}
-      \item{\code{for_features}}{true if want remove rows otherwise columns}
-    }
-    \if{html}{\out{</div>}}
-  }
+)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{log_mad_gt}}{log mad threshold to remove features (we remove low mad features).}
+
+\item{\code{remove_true_cols_default}}{FALSE if tou don't want to use default gene names filter.}
+
+\item{\code{remove_true_cols_additional}}{additional columns from annotation to use for "remove true" filter.}
+
+\item{\code{keep_true_cols}}{columns from annotation where we should keep instances with true value.}
+
+\item{\code{for_features}}{true if want remove rows otherwise columns}
+}
+\if{html}{\out{</div>}}
+}
+}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-DualSimplexSolver-add_knn_distances_anno"></a>}}
 \if{latex}{\out{\hypertarget{method-DualSimplexSolver-add_knn_distances_anno}{}}}
-\subsection{\code{DualSimplexSolver$add_knn_distances_anno()}}{
-  Add additional distance annotation based on KNN distances to selected annotations.
-  \subsection{Usage}{
-    \if{html}{\out{<div class="r">}}
-    \preformatted{DualSimplexSolver$add_knn_distances_anno(
+\subsection{Method \code{add_knn_distances_anno()}}{
+Add additional distance annotation based on KNN distances to selected annotations.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$add_knn_distances_anno(
   annotation_names_list = NULL,
   for_features = T,
   k_neighbors = 20
-)}
-    \if{html}{\out{</div>}}
-  }
-  \subsection{Arguments}{
-    \if{html}{\out{<div class="arguments">}}
-    \describe{
-      \item{\code{annotation_names_list}}{names of annotation columns with TRUE/FALSE.}
-      \item{\code{for_features}}{calculate for row annotations or sample annotations.}
-      \item{\code{k_neighbors}}{a number of neighbors to calculate the distance on for the annotation}
-    }
-    \if{html}{\out{</div>}}
-  }
+)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{annotation_names_list}}{names of annotation columns with TRUE/FALSE.}
+
+\item{\code{for_features}}{calculate for row annotations or sample annotations.}
+
+\item{\code{k_neighbors}}{a number of neighbors to calculate the distance on for the annotation}
+}
+\if{html}{\out{</div>}}
+}
+}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-DualSimplexSolver-updata_annotation"></a>}}
 \if{latex}{\out{\hypertarget{method-DualSimplexSolver-updata_annotation}{}}}
-\subsection{\code{DualSimplexSolver$updata_annotation()}}{
-  Updata annotation. Will overwrite existing columns for matching names
-  \subsection{Usage}{
-    \if{html}{\out{<div class="r">}}
-    \preformatted{DualSimplexSolver$updata_annotation(anno_to_add, for_features = T)}
-    \if{html}{\out{</div>}}
-  }
-  \subsection{Arguments}{
-    \if{html}{\out{<div class="arguments">}}
-    \describe{
-      \item{\code{anno_to_add}}{annotation to add to the object.}
-      \item{\code{for_features}}{row annotations or sample annotations.}
-    }
-    \if{html}{\out{</div>}}
-  }
+\subsection{Method \code{updata_annotation()}}{
+Updata annotation. Will overwrite existing columns for matching names
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$updata_annotation(anno_to_add, for_features = T)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{anno_to_add}}{annotation to add to the object.}
+
+\item{\code{for_features}}{row annotations or sample annotations.}
+}
+\if{html}{\out{</div>}}
+}
+}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-DualSimplexSolver-add_density_anno"></a>}}
 \if{latex}{\out{\hypertarget{method-DualSimplexSolver-add_density_anno}{}}}
-\subsection{\code{DualSimplexSolver$add_density_anno()}}{
-  Add additional density annotation to points.
-  \subsection{Usage}{
-    \if{html}{\out{<div class="r">}}
-    \preformatted{DualSimplexSolver$add_density_anno(radius = NULL, for_features = T)}
-    \if{html}{\out{</div>}}
-  }
-  \subsection{Arguments}{
-    \if{html}{\out{<div class="arguments">}}
-    \describe{
-      \item{\code{radius}}{radius to count neighbors within.}
-      \item{\code{for_features}}{calculate for row annotations or sample annotations.}
-    }
-    \if{html}{\out{</div>}}
-  }
+\subsection{Method \code{add_density_anno()}}{
+Add additional density annotation to points.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$add_density_anno(radius = NULL, for_features = T)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{radius}}{radius to count neighbors within.}
+
+\item{\code{for_features}}{calculate for row annotations or sample annotations.}
+}
+\if{html}{\out{</div>}}
+}
+}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-DualSimplexSolver-plot_svd"></a>}}
 \if{latex}{\out{\hypertarget{method-DualSimplexSolver-plot_svd}{}}}
-\subsection{\code{DualSimplexSolver$plot_svd()}}{
-  Interface to plot svd
+\subsection{Method \code{plot_svd()}}{
+Interface to plot svd
 Will return the elbow plot of singular values.
-  \subsection{Usage}{
-    \if{html}{\out{<div class="r">}}
-    \preformatted{DualSimplexSolver$plot_svd(dims = self$st$dims)}
-    \if{html}{\out{</div>}}
-  }
-  \subsection{Arguments}{
-    \if{html}{\out{<div class="arguments">}}
-    \describe{
-      \item{\code{dims}}{how many dimensions to plot}
-    }
-    \if{html}{\out{</div>}}
-  }
-  \subsection{Returns}{
-    plot to work with
-  }
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$plot_svd(dims = self$st$dims)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{dims}}{how many dimensions to plot}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+plot to work with
+}
+}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-DualSimplexSolver-plot_svd_history"></a>}}
 \if{latex}{\out{\hypertarget{method-DualSimplexSolver-plot_svd_history}{}}}
-\subsection{\code{DualSimplexSolver$plot_svd_history()}}{
-  Interface to plot svd history of filtering steps through the svd plot.
-  \subsection{Usage}{
-    \if{html}{\out{<div class="r">}}
-    \preformatted{DualSimplexSolver$plot_svd_history(
+\subsection{Method \code{plot_svd_history()}}{
+Interface to plot svd history of filtering steps through the svd plot.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$plot_svd_history(
   steps_sel = NULL,
   n_dims = NULL,
   cumulative = T,
   variance = T
-)}
-    \if{html}{\out{</div>}}
-  }
-  \subsection{Arguments}{
-    \if{html}{\out{<div class="arguments">}}
-    \describe{
-      \item{\code{steps_sel}}{selected filtering steps, list.}
-      \item{\code{n_dims}}{how many dimensions to plot}
-      \item{\code{cumulative}}{wether plot should be cumulative}
-      \item{\code{variance}}{plot variance explained}
-    }
-    \if{html}{\out{</div>}}
-  }
-  \subsection{Returns}{
-    plot to work with
-  }
+)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{steps_sel}}{selected filtering steps, list.}
+
+\item{\code{n_dims}}{how many dimensions to plot}
+
+\item{\code{cumulative}}{wether plot should be cumulative}
+
+\item{\code{variance}}{plot variance explained}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+plot to work with
+}
+}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-DualSimplexSolver-project"></a>}}
 \if{latex}{\out{\hypertarget{method-DualSimplexSolver-project}{}}}
-\subsection{\code{DualSimplexSolver$project()}}{
-  Calculate svd projection for current data. Will perform SVD.
-  \subsection{Usage}{
-    \if{html}{\out{<div class="r">}}
-    \preformatted{DualSimplexSolver$project(n_cell_types)}
-    \if{html}{\out{</div>}}
-  }
-  \subsection{Arguments}{
-    \if{html}{\out{<div class="arguments">}}
-    \describe{
-      \item{\code{n_cell_types}}{selected number of dimensions (K) to work with.}
-    }
-    \if{html}{\out{</div>}}
-  }
+\subsection{Method \code{project()}}{
+Calculate svd projection for current data. Will perform SVD.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$project(n_cell_types)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{n_cell_types}}{selected number of dimensions (K) to work with.}
+}
+\if{html}{\out{</div>}}
+}
+}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-DualSimplexSolver-factorize"></a>}}
 \if{latex}{\out{\hypertarget{method-DualSimplexSolver-factorize}{}}}
-\subsection{\code{DualSimplexSolver$factorize()}}{
-  Minimal facorization steps to be perfomed
-  \subsection{Usage}{
-    \if{html}{\out{<div class="r">}}
-    \preformatted{DualSimplexSolver$factorize(
+\subsection{Method \code{factorize()}}{
+Minimal facorization steps to be perfomed
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$factorize(
   K,
   initialization_strategy = "random_invertible",
   optim_iteraitons = 10000,
   optim_config = OPTIM_CONFIG_DEFAULT,
   ...
-)}
-    \if{html}{\out{</div>}}
-  }
-  \subsection{Arguments}{
-    \if{html}{\out{<div class="arguments">}}
-    \describe{
-      \item{\code{K}}{selected number of dimensions (K) to work with.}
-      \item{\code{initialization_strategy}}{strategy for initializing the solution.}
-      \item{\code{optim_iteraitons}}{number of optimization iterations.}
-      \item{\code{optim_config}}{optimization configuration.}
-      \item{\code{...}}{additional arguments for initialization.}
-    }
-    \if{html}{\out{</div>}}
-  }
+)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{K}}{selected number of dimensions (K) to work with.}
+
+\item{\code{initialization_strategy}}{strategy for initializing the solution.}
+
+\item{\code{optim_iteraitons}}{number of optimization iterations.}
+
+\item{\code{optim_config}}{optimization configuration.}
+
+\item{\code{...}}{additional arguments for initialization.}
+}
+\if{html}{\out{</div>}}
+}
+}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-DualSimplexSolver-plot_projection_diagnostics"></a>}}
 \if{latex}{\out{\hypertarget{method-DualSimplexSolver-plot_projection_diagnostics}{}}}
-\subsection{\code{DualSimplexSolver$plot_projection_diagnostics()}}{
-  A set of plots to extimate the projection.
-  \subsection{Usage}{
-    \if{html}{\out{<div class="r">}}
-    \preformatted{DualSimplexSolver$plot_projection_diagnostics(use_dims = private$display_dims)}
-    \if{html}{\out{</div>}}
-  }
-  \subsection{Arguments}{
-    \if{html}{\out{<div class="arguments">}}
-    \describe{
-      \item{\code{use_dims}}{which dimensions use for projeciton plots}
-    }
-    \if{html}{\out{</div>}}
-  }
+\subsection{Method \code{plot_projection_diagnostics()}}{
+A set of plots to extimate the projection.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$plot_projection_diagnostics(use_dims = private$display_dims)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{use_dims}}{which dimensions use for projeciton plots}
+}
+\if{html}{\out{</div>}}
+}
+}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-DualSimplexSolver-plot_distances_distribution"></a>}}
 \if{latex}{\out{\hypertarget{method-DualSimplexSolver-plot_distances_distribution}{}}}
-\subsection{\code{DualSimplexSolver$plot_distances_distribution()}}{
-  Plot scatterplot of plane distance to zero distance for each point
-  \subsection{Usage}{
-    \if{html}{\out{<div class="r">}}
-    \preformatted{DualSimplexSolver$plot_distances_distribution()}
-    \if{html}{\out{</div>}}
-  }
+\subsection{Method \code{plot_distances_distribution()}}{
+Plot scatterplot of plane distance to zero distance for each point
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$plot_distances_distribution()}\if{html}{\out{</div>}}
 }
 
+}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-DualSimplexSolver-distance_filter"></a>}}
 \if{latex}{\out{\hypertarget{method-DualSimplexSolver-distance_filter}{}}}
-\subsection{\code{DualSimplexSolver$distance_filter()}}{
-  Filter points based on distance thresholds. (keep lower).
-  \subsection{Usage}{
-    \if{html}{\out{<div class="r">}}
-    \preformatted{DualSimplexSolver$distance_filter(
+\subsection{Method \code{distance_filter()}}{
+Filter points based on distance thresholds. (keep lower).
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$distance_filter(
   plane_d_lt = NULL,
   zero_d_lt = NULL,
   for_features = T
-)}
-    \if{html}{\out{</div>}}
-  }
-  \subsection{Arguments}{
-    \if{html}{\out{<div class="arguments">}}
-    \describe{
-      \item{\code{plane_d_lt}}{threshold for plane distance.}
-      \item{\code{zero_d_lt}}{threshold for zero distance.}
-      \item{\code{for_features}}{TRUE if filter rows, otherwise columns.}
-    }
-    \if{html}{\out{</div>}}
-  }
+)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{plane_d_lt}}{threshold for plane distance.}
+
+\item{\code{zero_d_lt}}{threshold for zero distance.}
+
+\item{\code{for_features}}{TRUE if filter rows, otherwise columns.}
+}
+\if{html}{\out{</div>}}
+}
+}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-DualSimplexSolver-distance_quantile_filter"></a>}}
 \if{latex}{\out{\hypertarget{method-DualSimplexSolver-distance_quantile_filter}{}}}
-\subsection{\code{DualSimplexSolver$distance_quantile_filter()}}{
-  Filter points based on distance thresholds. (keep lower).
-  \subsection{Usage}{
-    \if{html}{\out{<div class="r">}}
-    \preformatted{DualSimplexSolver$distance_quantile_filter(
+\subsection{Method \code{distance_quantile_filter()}}{
+Filter points based on distance thresholds. (keep lower).
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$distance_quantile_filter(
   plane_quantile = NULL,
   zero_quantile = NULL,
   for_features = T,
   keep_lower = T
-)}
-    \if{html}{\out{</div>}}
-  }
-  \subsection{Arguments}{
-    \if{html}{\out{<div class="arguments">}}
-    \describe{
-      \item{\code{plane_quantile}}{quantile for plane distance.}
-      \item{\code{zero_quantile}}{quantile for zero distance.}
-      \item{\code{for_features}}{TRUE if filter rows, otherwise columns.}
-      \item{\code{keep_lower}}{TRUE if keep lower, FALSE to keep higher}
-    }
-    \if{html}{\out{</div>}}
-  }
+)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{plane_quantile}}{quantile for plane distance.}
+
+\item{\code{zero_quantile}}{quantile for zero distance.}
+
+\item{\code{for_features}}{TRUE if filter rows, otherwise columns.}
+
+\item{\code{keep_lower}}{TRUE if keep lower, FALSE to keep higher}
+}
+\if{html}{\out{</div>}}
+}
+}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-DualSimplexSolver-iterative_n_sigma_filter"></a>}}
 \if{latex}{\out{\hypertarget{method-DualSimplexSolver-iterative_n_sigma_filter}{}}}
-\subsection{\code{DualSimplexSolver$iterative_n_sigma_filter()}}{
-  Iteratively filter by N sigma using all the features provided.
+\subsection{Method \code{iterative_n_sigma_filter()}}{
+Iteratively filter by N sigma using all the features provided.
 aplication of  n_sigma_filter <- function(eset, feature, n_sigma = 3, for_features = T)
-  \subsection{Usage}{
-    \if{html}{\out{<div class="r">}}
-    \preformatted{DualSimplexSolver$iterative_n_sigma_filter(
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$iterative_n_sigma_filter(
   annnotation_features = NULL,
   n_sigma = 3,
   max_filtering_iterations = 500,
   for_features = T
-)}
-    \if{html}{\out{</div>}}
-  }
-  \subsection{Arguments}{
-    \if{html}{\out{<div class="arguments">}}
-    \describe{
-      \item{\code{annnotation_features}}{feature names (columns of pData or fData) as a vector.}
-      \item{\code{n_sigma}}{number of sigmas to keep.}
-      \item{\code{max_filtering_iterations}}{maximum fitering iterations to be performed}
-      \item{\code{for_features}}{TRUE if filter rows, otherwise columns.}
-    }
-    \if{html}{\out{</div>}}
-  }
+)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{annnotation_features}}{feature names (columns of pData or fData) as a vector.}
+
+\item{\code{n_sigma}}{number of sigmas to keep.}
+
+\item{\code{max_filtering_iterations}}{maximum fitering iterations to be performed}
+
+\item{\code{for_features}}{TRUE if filter rows, otherwise columns.}
+}
+\if{html}{\out{</div>}}
+}
+}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-DualSimplexSolver-iterative_density_filter"></a>}}
 \if{latex}{\out{\hypertarget{method-DualSimplexSolver-iterative_density_filter}{}}}
-\subsection{\code{DualSimplexSolver$iterative_density_filter()}}{
-  Iteratively filter by N sigma using all the features provided.
+\subsection{Method \code{iterative_density_filter()}}{
+Iteratively filter by N sigma using all the features provided.
 aplication of  n_sigma_filter <- function(eset, annnotation_feature, n_sigma = 3, for_features = T)
-  \subsection{Usage}{
-    \if{html}{\out{<div class="r">}}
-    \preformatted{DualSimplexSolver$iterative_density_filter(
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$iterative_density_filter(
   threshold = 0,
   max_filtering_iterations = 500,
   density_radius = NULL,
   for_features = TRUE
-)}
-    \if{html}{\out{</div>}}
-  }
-  \subsection{Arguments}{
-    \if{html}{\out{<div class="arguments">}}
-    \describe{
-      \item{\code{threshold}}{threshold to filter neighborhoods}
-      \item{\code{max_filtering_iterations}}{maximum fitering iterations to be performed}
-      \item{\code{density_radius}}{radius for density calculation.}
-      \item{\code{for_features}}{TRUE if filter rows, otherwise columns.}
-    }
-    \if{html}{\out{</div>}}
-  }
+)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{threshold}}{threshold to filter neighborhoods}
+
+\item{\code{max_filtering_iterations}}{maximum fitering iterations to be performed}
+
+\item{\code{density_radius}}{radius for density calculation.}
+
+\item{\code{for_features}}{TRUE if filter rows, otherwise columns.}
+}
+\if{html}{\out{</div>}}
+}
+}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-DualSimplexSolver-iterative_mahalanobis_filter"></a>}}
 \if{latex}{\out{\hypertarget{method-DualSimplexSolver-iterative_mahalanobis_filter}{}}}
-\subsection{\code{DualSimplexSolver$iterative_mahalanobis_filter()}}{
-  Iteratively filter by N sigma using all the features provided simultaniously.
+\subsection{Method \code{iterative_mahalanobis_filter()}}{
+Iteratively filter by N sigma using all the features provided simultaniously.
 aplication of  n_sigma_filter <- function(eset, feature, n_sigma = 3, for_features = T)
-  \subsection{Usage}{
-    \if{html}{\out{<div class="r">}}
-    \preformatted{DualSimplexSolver$iterative_mahalanobis_filter(
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$iterative_mahalanobis_filter(
   annotation_features = NULL,
   n_sigma = 3,
   max_filtering_iterations = 500,
   for_features = T
-)}
-    \if{html}{\out{</div>}}
-  }
-  \subsection{Arguments}{
-    \if{html}{\out{<div class="arguments">}}
-    \describe{
-      \item{\code{annotation_features}}{feature names (columns of pData or fData) as a vector.}
-      \item{\code{n_sigma}}{number of sigmas to keep.}
-      \item{\code{max_filtering_iterations}}{maximum fitering iterations to be performed}
-      \item{\code{for_features}}{TRUE if filter rows, otherwise columns.}
-    }
-    \if{html}{\out{</div>}}
-  }
+)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{annotation_features}}{feature names (columns of pData or fData) as a vector.}
+
+\item{\code{n_sigma}}{number of sigmas to keep.}
+
+\item{\code{max_filtering_iterations}}{maximum fitering iterations to be performed}
+
+\item{\code{for_features}}{TRUE if filter rows, otherwise columns.}
+}
+\if{html}{\out{</div>}}
+}
+}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-DualSimplexSolver-run_umap"></a>}}
 \if{latex}{\out{\hypertarget{method-DualSimplexSolver-run_umap}{}}}
-\subsection{\code{DualSimplexSolver$run_umap()}}{
-  Do UMAP transformation for current projected data in both spaces.
-  \subsection{Usage}{
-    \if{html}{\out{<div class="r">}}
-    \preformatted{DualSimplexSolver$run_umap(
+\subsection{Method \code{run_umap()}}{
+Do UMAP transformation for current projected data in both spaces.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$run_umap(
   with_model = Sys.info()[["sysname"]] != "Darwin",
   neighbors_X = 50,
   neighbors_Omega = 10
-)}
-    \if{html}{\out{</div>}}
-  }
-  \subsection{Arguments}{
-    \if{html}{\out{<div class="arguments">}}
-    \describe{
-      \item{\code{with_model}}{specific umap model selection for Mac users. For Mac there is a known issue with this library.}
-      \item{\code{neighbors_X}}{parameter for UMAP.}
-      \item{\code{neighbors_Omega}}{parameter for UMAP.}
-    }
-    \if{html}{\out{</div>}}
-  }
+)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{with_model}}{specific umap model selection for Mac users. For Mac there is a known issue with this library.}
+
+\item{\code{neighbors_X}}{parameter for UMAP.}
+
+\item{\code{neighbors_Omega}}{parameter for UMAP.}
+}
+\if{html}{\out{</div>}}
+}
+}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-DualSimplexSolver-plot_projected"></a>}}
 \if{latex}{\out{\hypertarget{method-DualSimplexSolver-plot_projected}{}}}
-\subsection{\code{DualSimplexSolver$plot_projected()}}{
-  Interface to plot points of the current object
+\subsection{Method \code{plot_projected()}}{
+Interface to plot points of the current object
 
  color_feature / color_samples can be:
 - a set of names to be highlighted
 - a vector of values, the same length as the number of genes
 - a name of a column from annotation, default is zero_distance
 Important note: ggplot only allows to either draw history or color all the points
-  \subsection{Usage}{
-    \if{html}{\out{<div class="r">}}
-    \preformatted{DualSimplexSolver$plot_projected(
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$plot_projected(
   color_features = "zero_distance",
   color_samples = "zero_distance",
   use_dims = private$display_dims,
@@ -563,468 +566,426 @@ Important note: ggplot only allows to either draw history or color all the point
   from_iter = 0,
   to_iter = NULL,
   ...
-)}
-    \if{html}{\out{</div>}}
-  }
-  \subsection{Arguments}{
-    \if{html}{\out{<div class="arguments">}}
-    \describe{
-      \item{\code{color_features}}{how to color features(see description of method).}
-      \item{\code{color_samples}}{how to color samples (see description of method).}
-      \item{\code{use_dims}}{which dimensions to use (e.g. 2:3).}
-      \item{\code{with_legend}}{TRUE if want to add legends to plots.}
-      \item{\code{with_solution}}{TRUE if want to  add current solution points.}
-      \item{\code{with_history}}{TRUE if want to  add  solution history points/lines.}
-      \item{\code{wrap}}{FALSE if want to have two separated plots, not single one.}
-      \item{\code{show_plots}}{FALSE if don't want plots to be displayed.}
-      \item{\code{from_iter}}{starting point for history of solutions.}
-      \item{\code{to_iter}}{end point for history of solutions.}
-      \item{\code{...}}{any other params to be passed to plot_projected method.}
-    }
-    \if{html}{\out{</div>}}
-  }
+)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{color_features}}{how to color features(see description of method).}
+
+\item{\code{color_samples}}{how to color samples (see description of method).}
+
+\item{\code{use_dims}}{which dimensions to use (e.g. 2:3).}
+
+\item{\code{with_legend}}{TRUE if want to add legends to plots.}
+
+\item{\code{with_solution}}{TRUE if want to  add current solution points.}
+
+\item{\code{with_history}}{TRUE if want to  add  solution history points/lines.}
+
+\item{\code{wrap}}{FALSE if want to have two separated plots, not single one.}
+
+\item{\code{show_plots}}{FALSE if don't want plots to be displayed.}
+
+\item{\code{from_iter}}{starting point for history of solutions.}
+
+\item{\code{to_iter}}{end point for history of solutions.}
+
+\item{\code{...}}{any other params to be passed to plot_projected method.}
+}
+\if{html}{\out{</div>}}
+}
+}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-DualSimplexSolver-init_solution"></a>}}
 \if{latex}{\out{\hypertarget{method-DualSimplexSolver-init_solution}{}}}
-\subsection{\code{DualSimplexSolver$init_solution()}}{
-  Initialize current solution
-  \subsection{Usage}{
-    \if{html}{\out{<div class="r">}}
-    \preformatted{DualSimplexSolver$init_solution(strategy = "random_invertible", ...)}
-    \if{html}{\out{</div>}}
-  }
-  \subsection{Arguments}{
-    \if{html}{\out{<div class="arguments">}}
-    \describe{
-      \item{\code{strategy}}{strategy to use for initialization. valid values are "random_invertible","invertible_symetric","select_x", "select_omega", "random" and "marker_means"}
-      \item{\code{...}}{any other params to be passed to initialization methods (e.g. marker genes)}
-    }
-    \if{html}{\out{</div>}}
-  }
+\subsection{Method \code{init_solution()}}{
+Initialize current solution
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$init_solution(strategy = "random_invertible", ...)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{strategy}}{strategy to use for initialization. valid values are "random_invertible","invertible_symetric","select_x", "select_omega", "random" and "marker_means"}
+
+\item{\code{...}}{any other params to be passed to initialization methods (e.g. marker genes)}
+}
+\if{html}{\out{</div>}}
+}
+}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-DualSimplexSolver-optim_solution"></a>}}
 \if{latex}{\out{\hypertarget{method-DualSimplexSolver-optim_solution}{}}}
-\subsection{\code{DualSimplexSolver$optim_solution()}}{
-  Perform optimization for current solution
-  \subsection{Usage}{
-    \if{html}{\out{<div class="r">}}
-    \preformatted{DualSimplexSolver$optim_solution(
+\subsection{Method \code{optim_solution()}}{
+Perform optimization for current solution
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$optim_solution(
   iterations = 10000,
   config = OPTIM_CONFIG_DEFAULT
-)}
-    \if{html}{\out{</div>}}
-  }
-  \subsection{Arguments}{
-    \if{html}{\out{<div class="arguments">}}
-    \describe{
-      \item{\code{iterations}}{number of steps to perform}
-      \item{\code{config}}{optimization config (result of optim_config method)}
-    }
-    \if{html}{\out{</div>}}
-  }
+)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{iterations}}{number of steps to perform}
+
+\item{\code{config}}{optimization config (result of optim_config method)}
+}
+\if{html}{\out{</div>}}
+}
+}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-DualSimplexSolver-default_optimization"></a>}}
 \if{latex}{\out{\hypertarget{method-DualSimplexSolver-default_optimization}{}}}
-\subsection{\code{DualSimplexSolver$default_optimization()}}{
-  This is best starting point to run optimization
+\subsection{Method \code{default_optimization()}}{
+This is best starting point to run optimization
 This is how we run optimization while performed comparison with other methods. you can use this method as a template for yourself
-  \subsection{Usage}{
-    \if{html}{\out{<div class="r">}}
-    \preformatted{DualSimplexSolver$default_optimization(config = OPTIM_CONFIG_DEFAULT)}
-    \if{html}{\out{</div>}}
-  }
-  \subsection{Arguments}{
-    \if{html}{\out{<div class="arguments">}}
-    \describe{
-      \item{\code{config}}{optimization config (coef_hinge_H, coef_hinge_W, coef_der_X, coef_der_Omega) will be overwritten.}
-    }
-    \if{html}{\out{</div>}}
-  }
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$default_optimization(config = OPTIM_CONFIG_DEFAULT)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{config}}{optimization config (coef_hinge_H, coef_hinge_W, coef_der_X, coef_der_Omega) will be overwritten.}
+}
+\if{html}{\out{</div>}}
+}
+}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-DualSimplexSolver-plot_error_history"></a>}}
 \if{latex}{\out{\hypertarget{method-DualSimplexSolver-plot_error_history}{}}}
-\subsection{\code{DualSimplexSolver$plot_error_history()}}{
-  Plot errors log
-  \subsection{Usage}{
-    \if{html}{\out{<div class="r">}}
-    \preformatted{DualSimplexSolver$plot_error_history()}
-    \if{html}{\out{</div>}}
-  }
+\subsection{Method \code{plot_error_history()}}{
+Plot errors log
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$plot_error_history()}\if{html}{\out{</div>}}
 }
 
+}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-DualSimplexSolver-finalize_solution"></a>}}
 \if{latex}{\out{\hypertarget{method-DualSimplexSolver-finalize_solution}{}}}
-\subsection{\code{DualSimplexSolver$finalize_solution()}}{
-  Finalize solution.
-Get result W and H matrices by going back from projection space and performing reverse sinkhorn 
+\subsection{Method \code{finalize_solution()}}{
+Finalize solution.
+Get result W and H matrices by going back from projection space and performing reverse sinkhorn
 Return from projection to sinkhorn transformed matrice.
-  \subsection{Usage}{
-    \if{html}{\out{<div class="r">}}
-    \preformatted{DualSimplexSolver$finalize_solution(reverse_sinkhorn_type = "clean")}
-    \if{html}{\out{</div>}}
-  }
-  \subsection{Arguments}{
-    \if{html}{\out{<div class="arguments">}}
-    \describe{
-      \item{\code{reverse_sinkhorn_type}}{type of reverse sinkhorn to run  - clean/clean_H_norm/clean_V_norm/nnls/nnls_H_norm/geometric.}
-    }
-    \if{html}{\out{</div>}}
-  }
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$finalize_solution(reverse_sinkhorn_type = "clean")}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{reverse_sinkhorn_type}}{type of reverse sinkhorn to run  - clean/clean_H_norm/clean_V_norm/nnls/nnls_H_norm/geometric.}
+}
+\if{html}{\out{</div>}}
+}
+}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-DualSimplexSolver-plot_negative_basis_change"></a>}}
 \if{latex}{\out{\hypertarget{method-DualSimplexSolver-plot_negative_basis_change}{}}}
-\subsection{\code{DualSimplexSolver$plot_negative_basis_change()}}{
-  Interface to plot negativity changes in basis (Matrix W)
-  \subsection{Usage}{
-    \if{html}{\out{<div class="r">}}
-    \preformatted{DualSimplexSolver$plot_negative_basis_change()}
-    \if{html}{\out{</div>}}
-  }
+\subsection{Method \code{plot_negative_basis_change()}}{
+Interface to plot negativity changes in basis (Matrix W)
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$plot_negative_basis_change()}\if{html}{\out{</div>}}
 }
 
+}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-DualSimplexSolver-plot_negative_proportions_change"></a>}}
 \if{latex}{\out{\hypertarget{method-DualSimplexSolver-plot_negative_proportions_change}{}}}
-\subsection{\code{DualSimplexSolver$plot_negative_proportions_change()}}{
-  Interface to plot negativity changes in coefficients (Matrix H)
-  \subsection{Usage}{
-    \if{html}{\out{<div class="r">}}
-    \preformatted{DualSimplexSolver$plot_negative_proportions_change()}
-    \if{html}{\out{</div>}}
-  }
+\subsection{Method \code{plot_negative_proportions_change()}}{
+Interface to plot negativity changes in coefficients (Matrix H)
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$plot_negative_proportions_change()}\if{html}{\out{</div>}}
 }
 
+}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-DualSimplexSolver-plot_solution_distribution"></a>}}
 \if{latex}{\out{\hypertarget{method-DualSimplexSolver-plot_solution_distribution}{}}}
-\subsection{\code{DualSimplexSolver$plot_solution_distribution()}}{
-  Interface to plot solution distribution as histogramm by main component
-  \subsection{Usage}{
-    \if{html}{\out{<div class="r">}}
-    \preformatted{DualSimplexSolver$plot_solution_distribution()}
-    \if{html}{\out{</div>}}
-  }
+\subsection{Method \code{plot_solution_distribution()}}{
+Interface to plot solution distribution as histogramm by main component
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$plot_solution_distribution()}\if{html}{\out{</div>}}
 }
 
+}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-DualSimplexSolver-set_display_dims"></a>}}
 \if{latex}{\out{\hypertarget{method-DualSimplexSolver-set_display_dims}{}}}
-\subsection{\code{DualSimplexSolver$set_display_dims()}}{
-  set and remember which dimensions to use for plotting functions
-  \subsection{Usage}{
-    \if{html}{\out{<div class="r">}}
-    \preformatted{DualSimplexSolver$set_display_dims(display_dims)}
-    \if{html}{\out{</div>}}
-  }
-  \subsection{Arguments}{
-    \if{html}{\out{<div class="arguments">}}
-    \describe{
-      \item{\code{display_dims}}{(e.g. 2:3, 3:4, NULL)}
-    }
-    \if{html}{\out{</div>}}
-  }
+\subsection{Method \code{set_display_dims()}}{
+set and remember which dimensions to use for plotting functions
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$set_display_dims(display_dims)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{display_dims}}{(e.g. 2:3, 3:4, NULL)}
+}
+\if{html}{\out{</div>}}
+}
+}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-DualSimplexSolver-set_save_dir"></a>}}
 \if{latex}{\out{\hypertarget{method-DualSimplexSolver-set_save_dir}{}}}
-\subsection{\code{DualSimplexSolver$set_save_dir()}}{
-  set and remember direvtory to save model state
-  \subsection{Usage}{
-    \if{html}{\out{<div class="r">}}
-    \preformatted{DualSimplexSolver$set_save_dir(new_dir_path)}
-    \if{html}{\out{</div>}}
-  }
-  \subsection{Arguments}{
-    \if{html}{\out{<div class="arguments">}}
-    \describe{
-      \item{\code{new_dir_path}}{path to save model}
-    }
-    \if{html}{\out{</div>}}
-  }
+\subsection{Method \code{set_save_dir()}}{
+set and remember direvtory to save model state
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$set_save_dir(new_dir_path)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{new_dir_path}}{path to save model}
+}
+\if{html}{\out{</div>}}
+}
+}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-DualSimplexSolver-get_save_dir"></a>}}
 \if{latex}{\out{\hypertarget{method-DualSimplexSolver-get_save_dir}{}}}
-\subsection{\code{DualSimplexSolver$get_save_dir()}}{
-  get current save directory for the model
-  \subsection{Usage}{
-    \if{html}{\out{<div class="r">}}
-    \preformatted{DualSimplexSolver$get_save_dir()}
-    \if{html}{\out{</div>}}
-  }
+\subsection{Method \code{get_save_dir()}}{
+get current save directory for the model
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$get_save_dir()}\if{html}{\out{</div>}}
 }
 
+}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-DualSimplexSolver-getset_save_dir"></a>}}
 \if{latex}{\out{\hypertarget{method-DualSimplexSolver-getset_save_dir}{}}}
-\subsection{\code{DualSimplexSolver$getset_save_dir()}}{
-  set and remember directory to save model state. returns directory name.
-  \subsection{Usage}{
-    \if{html}{\out{<div class="r">}}
-    \preformatted{DualSimplexSolver$getset_save_dir(new_dir_path = NULL)}
-    \if{html}{\out{</div>}}
-  }
-  \subsection{Arguments}{
-    \if{html}{\out{<div class="arguments">}}
-    \describe{
-      \item{\code{new_dir_path}}{path to save model}
-    }
-    \if{html}{\out{</div>}}
-  }
+\subsection{Method \code{getset_save_dir()}}{
+set and remember directory to save model state. returns directory name.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$getset_save_dir(new_dir_path = NULL)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{new_dir_path}}{path to save model}
+}
+\if{html}{\out{</div>}}
+}
+}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-DualSimplexSolver-save_state"></a>}}
 \if{latex}{\out{\hypertarget{method-DualSimplexSolver-save_state}{}}}
-\subsection{\code{DualSimplexSolver$save_state()}}{
-  save model state to directory
-  \subsection{Usage}{
-    \if{html}{\out{<div class="r">}}
-    \preformatted{DualSimplexSolver$save_state(save_dir = NULL)}
-    \if{html}{\out{</div>}}
-  }
-  \subsection{Arguments}{
-    \if{html}{\out{<div class="arguments">}}
-    \describe{
-      \item{\code{save_dir}}{path to save model}
-    }
-    \if{html}{\out{</div>}}
-  }
+\subsection{Method \code{save_state()}}{
+save model state to directory
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$save_state(save_dir = NULL)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{save_dir}}{path to save model}
+}
+\if{html}{\out{</div>}}
+}
+}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-DualSimplexSolver-save_solution"></a>}}
 \if{latex}{\out{\hypertarget{method-DualSimplexSolver-save_solution}{}}}
-\subsection{\code{DualSimplexSolver$save_solution()}}{
-  save current model solution (H and W) to separate tsv files
-  \subsection{Usage}{
-    \if{html}{\out{<div class="r">}}
-    \preformatted{DualSimplexSolver$save_solution(save_dir = NULL)}
-    \if{html}{\out{</div>}}
-  }
-  \subsection{Arguments}{
-    \if{html}{\out{<div class="arguments">}}
-    \describe{
-      \item{\code{save_dir}}{path to save matrices}
-    }
-    \if{html}{\out{</div>}}
-  }
+\subsection{Method \code{save_solution()}}{
+save current model solution (H and W) to separate tsv files
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$save_solution(save_dir = NULL)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{save_dir}}{path to save matrices}
+}
+\if{html}{\out{</div>}}
+}
+}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-DualSimplexSolver-load_state"></a>}}
 \if{latex}{\out{\hypertarget{method-DualSimplexSolver-load_state}{}}}
-\subsection{\code{DualSimplexSolver$load_state()}}{
-  load model from the specified directory.
-  \subsection{Usage}{
-    \if{html}{\out{<div class="r">}}
-    \preformatted{DualSimplexSolver$load_state(input_dir = NULL)}
-    \if{html}{\out{</div>}}
-  }
-  \subsection{Arguments}{
-    \if{html}{\out{<div class="arguments">}}
-    \describe{
-      \item{\code{input_dir}}{path to load model from}
-    }
-    \if{html}{\out{</div>}}
-  }
+\subsection{Method \code{load_state()}}{
+load model from the specified directory.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$load_state(input_dir = NULL)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{input_dir}}{path to load model from}
+}
+\if{html}{\out{</div>}}
+}
+}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-DualSimplexSolver-generate_summary"></a>}}
 \if{latex}{\out{\hypertarget{method-DualSimplexSolver-generate_summary}{}}}
-\subsection{\code{DualSimplexSolver$generate_summary()}}{
-  Generate automatically generated report for the method
-  \subsection{Usage}{
-    \if{html}{\out{<div class="r">}}
-    \preformatted{DualSimplexSolver$generate_summary(
+\subsection{Method \code{generate_summary()}}{
+Generate automatically generated report for the method
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$generate_summary(
   save_dir = NULL,
   seurat_obj = NULL,
   with_animated_optim = F
-)}
-    \if{html}{\out{</div>}}
-  }
-  \subsection{Arguments}{
-    \if{html}{\out{<div class="arguments">}}
-    \describe{
-      \item{\code{save_dir}}{path to save report}
-      \item{\code{seurat_obj}}{seurat object to use for markers visualization}
-      \item{\code{with_animated_optim}}{TRUE to save gif with optimization process}
-    }
-    \if{html}{\out{</div>}}
-  }
+)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{save_dir}}{path to save report}
+
+\item{\code{seurat_obj}}{seurat object to use for markers visualization}
+
+\item{\code{with_animated_optim}}{TRUE to save gif with optimization process}
+}
+\if{html}{\out{</div>}}
+}
+}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-DualSimplexSolver-get_data"></a>}}
 \if{latex}{\out{\hypertarget{method-DualSimplexSolver-get_data}{}}}
-\subsection{\code{DualSimplexSolver$get_data()}}{
-  get current data.
-  \subsection{Usage}{
-    \if{html}{\out{<div class="r">}}
-    \preformatted{DualSimplexSolver$get_data()}
-    \if{html}{\out{</div>}}
-  }
+\subsection{Method \code{get_data()}}{
+get current data.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$get_data()}\if{html}{\out{</div>}}
 }
 
+}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-DualSimplexSolver-get_filtering_stats"></a>}}
 \if{latex}{\out{\hypertarget{method-DualSimplexSolver-get_filtering_stats}{}}}
-\subsection{\code{DualSimplexSolver$get_filtering_stats()}}{
-  get current filtering log.
-  \subsection{Usage}{
-    \if{html}{\out{<div class="r">}}
-    \preformatted{DualSimplexSolver$get_filtering_stats()}
-    \if{html}{\out{</div>}}
-  }
+\subsection{Method \code{get_filtering_stats()}}{
+get current filtering log.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$get_filtering_stats()}\if{html}{\out{</div>}}
 }
 
+}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-DualSimplexSolver-get_n_cell_types"></a>}}
 \if{latex}{\out{\hypertarget{method-DualSimplexSolver-get_n_cell_types}{}}}
-\subsection{\code{DualSimplexSolver$get_n_cell_types()}}{
-  get number of main components used (K)
-  \subsection{Usage}{
-    \if{html}{\out{<div class="r">}}
-    \preformatted{DualSimplexSolver$get_n_cell_types()}
-    \if{html}{\out{</div>}}
-  }
+\subsection{Method \code{get_n_cell_types()}}{
+get number of main components used (K)
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$get_n_cell_types()}\if{html}{\out{</div>}}
 }
 
+}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-DualSimplexSolver-get_n_iters"></a>}}
 \if{latex}{\out{\hypertarget{method-DualSimplexSolver-get_n_iters}{}}}
-\subsection{\code{DualSimplexSolver$get_n_iters()}}{
-  get number optimization iterations performed
-  \subsection{Usage}{
-    \if{html}{\out{<div class="r">}}
-    \preformatted{DualSimplexSolver$get_n_iters()}
-    \if{html}{\out{</div>}}
-  }
+\subsection{Method \code{get_n_iters()}}{
+get number optimization iterations performed
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$get_n_iters()}\if{html}{\out{</div>}}
 }
 
+}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-DualSimplexSolver-get_negative_ratios"></a>}}
 \if{latex}{\out{\hypertarget{method-DualSimplexSolver-get_negative_ratios}{}}}
-\subsection{\code{DualSimplexSolver$get_negative_ratios()}}{
-  get proportionality of negative elements for H and W
-  \subsection{Usage}{
-    \if{html}{\out{<div class="r">}}
-    \preformatted{DualSimplexSolver$get_negative_ratios()}
-    \if{html}{\out{</div>}}
-  }
+\subsection{Method \code{get_negative_ratios()}}{
+get proportionality of negative elements for H and W
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$get_negative_ratios()}\if{html}{\out{</div>}}
 }
 
+}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-DualSimplexSolver-get_solution"></a>}}
 \if{latex}{\out{\hypertarget{method-DualSimplexSolver-get_solution}{}}}
-\subsection{\code{DualSimplexSolver$get_solution()}}{
-  get current solution
-  \subsection{Usage}{
-    \if{html}{\out{<div class="r">}}
-    \preformatted{DualSimplexSolver$get_solution()}
-    \if{html}{\out{</div>}}
-  }
+\subsection{Method \code{get_solution()}}{
+get current solution
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$get_solution()}\if{html}{\out{</div>}}
 }
 
+}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-DualSimplexSolver-get_ct_names"></a>}}
 \if{latex}{\out{\hypertarget{method-DualSimplexSolver-get_ct_names}{}}}
-\subsection{\code{DualSimplexSolver$get_ct_names()}}{
-  get names for main components specified
-  \subsection{Usage}{
-    \if{html}{\out{<div class="r">}}
-    \preformatted{DualSimplexSolver$get_ct_names()}
-    \if{html}{\out{</div>}}
-  }
+\subsection{Method \code{get_ct_names()}}{
+get names for main components specified
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$get_ct_names()}\if{html}{\out{</div>}}
 }
 
+}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-DualSimplexSolver-get_marker_genes"></a>}}
 \if{latex}{\out{\hypertarget{method-DualSimplexSolver-get_marker_genes}{}}}
-\subsection{\code{DualSimplexSolver$get_marker_genes()}}{
-  get marker genes for current solution
-  \subsection{Usage}{
-    \if{html}{\out{<div class="r">}}
-    \preformatted{DualSimplexSolver$get_marker_genes()}
-    \if{html}{\out{</div>}}
-  }
+\subsection{Method \code{get_marker_genes()}}{
+get marker genes for current solution
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$get_marker_genes()}\if{html}{\out{</div>}}
 }
 
+}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-DualSimplexSolver-get_V_row"></a>}}
 \if{latex}{\out{\hypertarget{method-DualSimplexSolver-get_V_row}{}}}
-\subsection{\code{DualSimplexSolver$get_V_row()}}{
-  Calculate V_row on the fly.
-  \subsection{Usage}{
-    \if{html}{\out{<div class="r">}}
-    \preformatted{DualSimplexSolver$get_V_row()}
-    \if{html}{\out{</div>}}
-  }
+\subsection{Method \code{get_V_row()}}{
+Calculate V_row on the fly.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$get_V_row()}\if{html}{\out{</div>}}
 }
 
+}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-DualSimplexSolver-get_V_column"></a>}}
 \if{latex}{\out{\hypertarget{method-DualSimplexSolver-get_V_column}{}}}
-\subsection{\code{DualSimplexSolver$get_V_column()}}{
-  Calculate V_column on the fly.
-  \subsection{Usage}{
-    \if{html}{\out{<div class="r">}}
-    \preformatted{DualSimplexSolver$get_V_column()}
-    \if{html}{\out{</div>}}
-  }
+\subsection{Method \code{get_V_column()}}{
+Calculate V_column on the fly.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$get_V_column()}\if{html}{\out{</div>}}
 }
 
+}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-DualSimplexSolver-get_coordinates_from_external_matrices"></a>}}
 \if{latex}{\out{\hypertarget{method-DualSimplexSolver-get_coordinates_from_external_matrices}{}}}
-\subsection{\code{DualSimplexSolver$get_coordinates_from_external_matrices()}}{
-  Get coordinates from external W and H using extended sinkhorn procedure.
-  \subsection{Usage}{
-    \if{html}{\out{<div class="r">}}
-    \preformatted{DualSimplexSolver$get_coordinates_from_external_matrices(W, H)}
-    \if{html}{\out{</div>}}
-  }
-  \subsection{Arguments}{
-    \if{html}{\out{<div class="arguments">}}
-    \describe{
-      \item{\code{W}}{first factorization matrix for original V (V = WH). Rownames should match dso$st$data.}
-      \item{\code{H}}{second factorization matrix for original V (V = WH). Colnames should match dso$st$data.}
-    }
-    \if{html}{\out{</div>}}
-  }
+\subsection{Method \code{get_coordinates_from_external_matrices()}}{
+Get coordinates from external W and H using extended sinkhorn procedure.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$get_coordinates_from_external_matrices(W, H)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{W}}{first factorization matrix for original V (V = WH). Rownames should match dso$st$data.}
+
+\item{\code{H}}{second factorization matrix for original V (V = WH). Colnames should match dso$st$data.}
+}
+\if{html}{\out{</div>}}
+}
+}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-DualSimplexSolver-clone"></a>}}
 \if{latex}{\out{\hypertarget{method-DualSimplexSolver-clone}{}}}
-\subsection{\code{DualSimplexSolver$clone()}}{
-  The objects of this class are cloneable with this method.
-  \subsection{Usage}{
-    \if{html}{\out{<div class="r">}}
-    \preformatted{DualSimplexSolver$clone(deep = FALSE)}
-    \if{html}{\out{</div>}}
-  }
-  \subsection{Arguments}{
-    \if{html}{\out{<div class="arguments">}}
-    \describe{
-      \item{\code{deep}}{Whether to make a deep clone.}
-    }
-    \if{html}{\out{</div>}}
-  }
+\subsection{Method \code{clone()}}{
+The objects of this class are cloneable with this method.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DualSimplexSolver$clone(deep = FALSE)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{deep}}{Whether to make a deep clone.}
+}
+\if{html}{\out{</div>}}
+}
+}
 }

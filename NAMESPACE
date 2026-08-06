@@ -122,32 +122,26 @@ import(knitr)
 import(progress)
 import(reshape2)
 import(stringr)
-importFrom(Biobase,
-  AnnotatedDataFrame,
-  ExpressionSet,
-  exprs,
-  fData,
-  pData
-)
+importFrom(Biobase,AnnotatedDataFrame)
+importFrom(Biobase,ExpressionSet)
+importFrom(Biobase,exprs)
+importFrom(Biobase,fData)
+importFrom(Biobase,pData)
 importFrom(R6,R6Class)
 importFrom(Rcpp,evalCpp)
 importFrom(grDevices,adjustcolor)
 importFrom(grid,textGrob)
-importFrom(gridExtra,
-  arrangeGrob,
-  grid.arrange
-)
+importFrom(gridExtra,arrangeGrob)
+importFrom(gridExtra,grid.arrange)
 importFrom(lpSolve,lp.assign)
-importFrom(matrixStats,
-  colMads,
-  colMeans2,
-  colMedians,
-  colSds,
-  rowMads,
-  rowMeans2,
-  rowMedians,
-  rowSds
-)
+importFrom(matrixStats,colMads)
+importFrom(matrixStats,colMeans2)
+importFrom(matrixStats,colMedians)
+importFrom(matrixStats,colSds)
+importFrom(matrixStats,rowMads)
+importFrom(matrixStats,rowMeans2)
+importFrom(matrixStats,rowMedians)
+importFrom(matrixStats,rowSds)
 importFrom(rlang,parse_expr)
 importFrom(tidyr,pivot_longer)
 useDynLib(DualSimplex)
