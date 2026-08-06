@@ -127,11 +127,14 @@ optimize_solution <- function(
     block_name <- paste0("block_", nrow(solution_proj$optim_history$blocks_statistics) + 1)
   }
 
-  if (is.null(solution_proj$optim_history$errors_statistics)) {
-    from_idx <- 1
-  } else {
+  if (!is.null(solution_proj$optim_history$history)) {
+    from_idx <- max(solution_proj$optim_history$history$iteration) + 2
+  } else if (!is.null(solution_proj$optim_history$errors_statistics)) {
     from_idx <- nrow(solution_proj$optim_history$errors_statistics) + 1
+  } else {
+    from_idx <- 1
   }
+
 
   solution_proj$optim_history$blocks_statistics <- rbind(
     solution_proj$optim_history$blocks_statistics,
