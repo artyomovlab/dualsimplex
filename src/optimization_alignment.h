@@ -84,31 +84,26 @@ Rcpp::List optimize_alignment(
 //' @param N current N
 //' @param M current M
 //' @param iterations number of iterations
-//' @param total_regularization_weight total weight for the regularization terms
-//' @param reg_X proportion / regularization coefficient for X
-//' @param reg_Omega proportion / regularization coefficient for Omega.
 //' @param convergence_tol tolerance for convergence.
 //' @param stop_criteria_window how long error should be on plateu to decrease the learning rate
 //' @param debug_stats wether to save grad norm values.
 //' @return new parameters
-// Rcpp::List optimize_alignment_pgd(
-//     const arma::mat& initial_X,
-//     const arma::mat& initial_Omega,
-//     const arma::mat& initial_D_w,
-//     const arma::mat& SVRt,
-//     const arma::mat& R,
-//     const arma::mat& S,
-//     const double coef_der_X,
-//     double coef_hinge_W,
-//     double coef_hinge_H,
-//     const int k,
-//     const double N,
-//     const double M,
-//     const int iterations,
-//     double total_regularization_weight,
-//     const double reg_X,
-//     const double reg_Omega,
-//     const double convergence_tol,
-//     const int stop_criteria_window,
-//     const bool debug_stats
-// );
+// [[Rcpp::export]]
+Rcpp::List optimize_alignment_pgd(
+    const arma::mat& initial_X,
+    const arma::mat& initial_Omega,
+    const arma::mat& initial_D_w,
+    const arma::mat& SVRt,
+    const arma::mat& R,
+    const arma::mat& S,
+    const double coef_der_X,
+    double coef_hinge_W,
+    double coef_hinge_H,
+    const int k,
+    const double N,
+    const double M,
+    const int iterations,
+    const double convergence_tol,
+    const int stop_criteria_window,
+    const bool debug_stats
+);

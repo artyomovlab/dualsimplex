@@ -260,6 +260,22 @@ optimize_solution <- function(
     optimization_params[["cell_types"]] <- NULL
 
     do.call(optimize_alignment, optimization_params)
+  } else if (config$method == "alignment_pgd") {
+    optimization_params$convergence_tol <- config$convergence_tol
+    optimization_params$debug_stats <- config$debug_stats
+    optimization_params$stop_criteria_window <- config$stop_criteria_window
+
+    # for compatibility, might have some overhead
+    optimization_params[["initial_X"]] <- optimization_params$X
+    optimization_params[["X"]] <- NULL
+    optimization_params[["initial_Omega"]] <- optimization_params$Omega
+    optimization_params[["Omega"]] <- NULL
+    optimization_params[["initial_D_w"]] <- optimization_params$D_w
+    optimization_params[["D_w"]] <- NULL
+    optimization_params[["k"]] <- optimization_params$cell_types
+    optimization_params[["cell_types"]] <- NULL
+
+    do.call(optimize_alignment_pgd, optimization_params)
   } else {
     spdl::warn("Unknown optimization method. Will do the basic one")
     optimization_params$r_const_X <- r_limits$R_limit_X
