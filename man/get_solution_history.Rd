@@ -9,11 +9,11 @@ get_solution_history(solution_proj, step, from_iter = 0, to_iter = NULL)
 \arguments{
 \item{solution_proj}{dso$st$solution_proj object containing all optimization logs and result}
 
-\item{step}{step to skip some values}
+\item{step}{step to skip some values. selected values are calculated based on total values.}
 
-\item{from_iter}{starting point}
+\item{from_iter}{starting point from 0 to $get_n_iters()}
 
-\item{to_iter}{end point}
+\item{to_iter}{end point from 0 to $get_n_iters()}
 }
 \value{
 X and Omega values for desired timestamps
