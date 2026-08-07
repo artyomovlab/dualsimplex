@@ -26,7 +26,7 @@
 #' @return ready to use list with algorithm configuration
 #' @export
 optim_config <- function(
-  method = c("positivity", "coordinate_descent", "theta", "alignment"), # let R handel selection and checking
+  method = c("positivity", "coordinate_descent", "theta", "alignment", "alignment_pgd"), # let R handel selection and checking
   debug_stats = FALSE,
   coef_der_X = 0.01,
   coef_der_Omega = 0.01,
