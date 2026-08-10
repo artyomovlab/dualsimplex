@@ -93,6 +93,8 @@ dso$plot_projected("zero_distance",
     \item \href{#method-DualSimplexSolver-get_V_row}{\code{DualSimplexSolver$get_V_row()}}
     \item \href{#method-DualSimplexSolver-get_V_column}{\code{DualSimplexSolver$get_V_column()}}
     \item \href{#method-DualSimplexSolver-get_coordinates_from_external_matrices}{\code{DualSimplexSolver$get_coordinates_from_external_matrices()}}
+    \item \href{#method-DualSimplexSolver-get_history}{\code{DualSimplexSolver$get_history()}}
+    \item \href{#method-DualSimplexSolver-get_history_long}{\code{DualSimplexSolver$get_history_long()}}
     \item \href{#method-DualSimplexSolver-clone}{\code{DualSimplexSolver$clone()}}
   }
 }
@@ -1006,6 +1008,30 @@ Return from projection to sinkhorn transformed matrice.
       \item{\code{W}}{first factorization matrix for original V (V = WH). Rownames should match dso$st$data.}
       \item{\code{H}}{second factorization matrix for original V (V = WH). Colnames should match dso$st$data.}
     }
+    \if{html}{\out{</div>}}
+  }
+}
+
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-DualSimplexSolver-get_history"></a>}}
+\if{latex}{\out{\hypertarget{method-DualSimplexSolver-get_history}{}}}
+\subsection{\code{DualSimplexSolver$get_history()}}{
+  Get history of optimization.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{DualSimplexSolver$get_history()}
+    \if{html}{\out{</div>}}
+  }
+}
+
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-DualSimplexSolver-get_history_long"></a>}}
+\if{latex}{\out{\hypertarget{method-DualSimplexSolver-get_history_long}{}}}
+\subsection{\code{DualSimplexSolver$get_history_long()}}{
+  Get history of optimization in long format.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{DualSimplexSolver$get_history_long()}
     \if{html}{\out{</div>}}
   }
 }
