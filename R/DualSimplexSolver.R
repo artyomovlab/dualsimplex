@@ -1203,6 +1203,33 @@ DualSimplexSolver <- R6Class(
       W_gs <- extended_scaling_result$W_col
       res <- get_coordinates_from_scaled_matrices(H_ss = H_ss, W_gs = W_gs, proj = self$st$proj)
       return(res)
+    },
+
+
+    #' @description
+    #' Get history of optimization.
+    get_history = function() {
+      private$optimize_first()
+      if (is.null(self$st$solution_proj$optim_history$history)) {
+        warning("No history found! The used optimizer does not use the logger.")
+        return(NULL)
+      }
+      tidyr::pivot_wider(
+        self$st$solution_proj$optim_history$history,
+        names_from = "metric",
+        values_from = "value"
+      )
+    },
+
+    #' @description
+    #' Get history of optimization in long format.
+    get_history_long = function() {
+      private$optimize_first()
+      if (is.null(self$st$solution_proj$optim_history$history)) {
+        warning("No history found! The used optimizer does not use the logger.")
+        return(NULL)
+      }
+      self$st$solution_proj$optim_history$history
     }
   )
 )

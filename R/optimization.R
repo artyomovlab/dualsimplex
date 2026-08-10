@@ -440,11 +440,11 @@ plot_errors <- function(
   }
   history <- solution_proj$optim_history$history
   ggplot(
-    history[history$metric_name %in% variables, ],
+    history[history$metric %in% variables, ],
     mapping = aes(
       x = iteration,
       y = log10(value),
-      color = metric_name
+      color = metric
     )
   ) +
     geom_line() +
@@ -482,10 +482,10 @@ plot_negative_proportions_change <- function(proj, solution_proj) {
   }
 
   history <- solution_proj$optim_history$history
-  last_prop_percentage <- round(tail(history[history$metric_name == "neg_props", "value"], 1) / total_H, 6) * 100
+  last_prop_percentage <- round(tail(history[history$metric == "neg_props", "value"], 1) / total_H, 6) * 100
 
   ggplot(
-    history[history$metric_name == "neg_props", ],
+    history[history$metric == "neg_props", ],
     mapping = aes(
       x = iteration,
       y = value
@@ -529,10 +529,10 @@ plot_negative_basis_change <- function(proj, solution_proj) {
   }
 
   history <- solution_proj$optim_history$history
-  neg_basis_percentage <- round(tail(history[history$metric_name == "neg_basis", "value"], 1) / total_W, 6) * 100
+  neg_basis_percentage <- round(tail(history[history$metric == "neg_basis", "value"], 1) / total_W, 6) * 100
 
   ggplot(
-    history[history$metric_name == "neg_basis", ],
+    history[history$metric == "neg_basis", ],
     mapping = aes(
       x = iteration,
       y = value

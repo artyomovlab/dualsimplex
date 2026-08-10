@@ -16,7 +16,7 @@ public:
 class RcppLogger : public ILogger {
 private:
     std::vector<int> iterations_;
-    std::vector<std::string> metric_names_;
+    std::vector<std::string> metrics_;
     std::vector<double> values_;
     std::map<std::string, std::string> metadata_;
 
@@ -24,7 +24,7 @@ public:
     void log_metrics(int iteration, const std::vector<Metric>& metrics) override {
         for (const auto& m : metrics) {
             iterations_.push_back(iteration);
-            metric_names_.push_back(m.name);
+            metrics_.push_back(m.name);
             values_.push_back(m.value);
         }
     }
@@ -36,7 +36,7 @@ public:
     Rcpp::DataFrame to_dataframe() const {
         return Rcpp::DataFrame::create(
             Rcpp::Named("iteration") = iterations_,
-            Rcpp::Named("metric_name") = metric_names_,
+            Rcpp::Named("metric") = metrics_,
             Rcpp::Named("value") = values_
         );
     }
@@ -61,7 +61,7 @@ public:
 
         for (size_t i = 0; i < iterations_.size(); ++i) {
             int r = iterations_[i];
-            const std::string& name = metric_names_[i];
+            const std::string& name = metrics_[i];
             double val = values_[i];
 
             if (name == "deconv_error") mat(r, 0) = val;
