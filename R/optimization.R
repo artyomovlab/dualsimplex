@@ -26,7 +26,7 @@
 #' @return ready to use list with algorithm configuration
 #' @export
 optim_config <- function(
-  method = c("positivity", "coordinate_descent", "theta", "alignment", "alignment_pgd"), # let R handel selection and checking
+  method = c("positivity", "coordinate_descent", "theta", "alignment"), # let R handel selection and checking
   debug_stats = FALSE,
   coef_der_X = 0.01,
   coef_der_Omega = 0.01,
@@ -241,26 +241,6 @@ optimize_solution <- function(
     optimization_params$theta_threshold <- config$center_threshold # threshold for the angle
     do.call(optimize_theta, optimization_params)
   } else if (config$method == "alignment") {
-    optimization_params[["coef_alignment"]] <- config$coef_alignment
-    optimization_params$total_regularization_weight <- config$total_regularization_weight
-    optimization_params$reg_X <- config$reg_X
-    optimization_params$reg_Omega <- config$reg_Omega
-    optimization_params$convergence_tol <- config$convergence_tol
-    optimization_params$debug_stats <- config$debug_stats
-    optimization_params$stop_criteria_window <- config$stop_criteria_window
-
-    # for compatibility, might have some overhead
-    optimization_params[["initial_X"]] <- optimization_params$X
-    optimization_params[["X"]] <- NULL
-    optimization_params[["initial_Omega"]] <- optimization_params$Omega
-    optimization_params[["Omega"]] <- NULL
-    optimization_params[["initial_D_w"]] <- optimization_params$D_w
-    optimization_params[["D_w"]] <- NULL
-    optimization_params[["k"]] <- optimization_params$cell_types
-    optimization_params[["cell_types"]] <- NULL
-
-    do.call(optimize_alignment, optimization_params)
-  } else if (config$method == "alignment_pgd") {
     optimization_params$convergence_tol <- config$convergence_tol
     optimization_params$debug_stats <- config$debug_stats
     optimization_params$stop_criteria_window <- config$stop_criteria_window
