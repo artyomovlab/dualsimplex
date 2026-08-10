@@ -90,37 +90,3 @@ public:
         return mat;
     }
 };
-
-class CsvLogger : public ILogger {
-private:
-    std::string filename_;
-    std::ofstream out_;
-
-public:
-    explicit CsvLogger(const std::string& filename) : filename_(filename) {
-        out_.open(filename_);
-        if (out_.is_open()) {
-            out_ << "iteration,metric_name,value\n";
-        }
-    }
-
-    ~CsvLogger() override {
-        if (out_.is_open()) {
-            out_.close();
-        }
-    }
-
-    void log_metrics(int iteration, const std::vector<Metric>& metrics) override {
-        if (!out_.is_open()) return;
-        for (const auto& m : metrics) {
-            out_ << iteration << "," << m.name << "," << m.value << "\n";
-        }
-    }
-
-    void log_metadata(const std::map<std::string, std::string>& metadata) override {
-        if (!out_.is_open()) return;
-        for (const auto& kv : metadata) {
-            out_ << "# " << kv.first << ": " << kv.second << "\n";
-        }
-    }
-};
