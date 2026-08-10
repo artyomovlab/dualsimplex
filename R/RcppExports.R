@@ -110,37 +110,8 @@ nnls_nonzero_C__ <- function(A, b, max_iter = 500L, tol = 1e-6) {
     .Call('_DualSimplex_nnls_nonzero_C__', PACKAGE = 'DualSimplex', A, b, max_iter, tol)
 }
 
-#' Optimizing simplex alignment and positivitis.
-NULL
-
 #' Optimizing simplex alignment and positivitis. This algorithm enforce simplex alignment property.
 NULL
-
-#' 
-#' @param initial_X current X
-#' @param initial_Omega current Omega
-#' @param initial_D_w current D_w
-#' @param SVRt current SVRt (sigma_ss)
-#' @param R current R
-#' @param S current S
-#' @param coef_der_X learning rate X
-#' @param coef_hinge_W beta
-#' @param coef_hinge_H lambda
-#' @param coef_alignment gamma
-#' @param k number of components
-#' @param N current N
-#' @param M current M
-#' @param iterations number of iterations
-#' @param total_regularization_weight total weight for the regularization terms
-#' @param reg_X proportion / regularization coefficient for X
-#' @param reg_Omega proportion / regularization coefficient for Omega.
-#' @param convergence_tol tolerance for convergence.
-#' @param stop_criteria_window how long error should be on plateu to decrease the learning rate
-#' @param debug_stats wether to save grad norm values.
-#' @return new parameters
-optimize_alignment <- function(initial_X, initial_Omega, initial_D_w, SVRt, R, S, coef_der_X, coef_hinge_W, coef_hinge_H, coef_alignment, k, N, M, iterations, total_regularization_weight, reg_X, reg_Omega, convergence_tol, stop_criteria_window, debug_stats) {
-    .Call('_DualSimplex_optimize_alignment', PACKAGE = 'DualSimplex', initial_X, initial_Omega, initial_D_w, SVRt, R, S, coef_der_X, coef_hinge_W, coef_hinge_H, coef_alignment, k, N, M, iterations, total_regularization_weight, reg_X, reg_Omega, convergence_tol, stop_criteria_window, debug_stats)
-}
 
 #'
 #' @param initial_X current X

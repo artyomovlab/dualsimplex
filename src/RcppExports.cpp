@@ -138,36 +138,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// optimize_alignment
-Rcpp::List optimize_alignment(const arma::mat& initial_X, const arma::mat& initial_Omega, const arma::mat& initial_D_w, const arma::mat& SVRt, const arma::mat& R, const arma::mat& S, const double coef_der_X, double coef_hinge_W, double coef_hinge_H, double coef_alignment, const int k, const double N, const double M, const int iterations, double total_regularization_weight, const double reg_X, const double reg_Omega, const double convergence_tol, const int stop_criteria_window, const bool debug_stats);
-RcppExport SEXP _DualSimplex_optimize_alignment(SEXP initial_XSEXP, SEXP initial_OmegaSEXP, SEXP initial_D_wSEXP, SEXP SVRtSEXP, SEXP RSEXP, SEXP SSEXP, SEXP coef_der_XSEXP, SEXP coef_hinge_WSEXP, SEXP coef_hinge_HSEXP, SEXP coef_alignmentSEXP, SEXP kSEXP, SEXP NSEXP, SEXP MSEXP, SEXP iterationsSEXP, SEXP total_regularization_weightSEXP, SEXP reg_XSEXP, SEXP reg_OmegaSEXP, SEXP convergence_tolSEXP, SEXP stop_criteria_windowSEXP, SEXP debug_statsSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::mat& >::type initial_X(initial_XSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type initial_Omega(initial_OmegaSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type initial_D_w(initial_D_wSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type SVRt(SVRtSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type R(RSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type S(SSEXP);
-    Rcpp::traits::input_parameter< const double >::type coef_der_X(coef_der_XSEXP);
-    Rcpp::traits::input_parameter< double >::type coef_hinge_W(coef_hinge_WSEXP);
-    Rcpp::traits::input_parameter< double >::type coef_hinge_H(coef_hinge_HSEXP);
-    Rcpp::traits::input_parameter< double >::type coef_alignment(coef_alignmentSEXP);
-    Rcpp::traits::input_parameter< const int >::type k(kSEXP);
-    Rcpp::traits::input_parameter< const double >::type N(NSEXP);
-    Rcpp::traits::input_parameter< const double >::type M(MSEXP);
-    Rcpp::traits::input_parameter< const int >::type iterations(iterationsSEXP);
-    Rcpp::traits::input_parameter< double >::type total_regularization_weight(total_regularization_weightSEXP);
-    Rcpp::traits::input_parameter< const double >::type reg_X(reg_XSEXP);
-    Rcpp::traits::input_parameter< const double >::type reg_Omega(reg_OmegaSEXP);
-    Rcpp::traits::input_parameter< const double >::type convergence_tol(convergence_tolSEXP);
-    Rcpp::traits::input_parameter< const int >::type stop_criteria_window(stop_criteria_windowSEXP);
-    Rcpp::traits::input_parameter< const bool >::type debug_stats(debug_statsSEXP);
-    rcpp_result_gen = Rcpp::wrap(optimize_alignment(initial_X, initial_Omega, initial_D_w, SVRt, R, S, coef_der_X, coef_hinge_W, coef_hinge_H, coef_alignment, k, N, M, iterations, total_regularization_weight, reg_X, reg_Omega, convergence_tol, stop_criteria_window, debug_stats));
-    return rcpp_result_gen;
-END_RCPP
-}
 // optimize_alignment_pgd
 Rcpp::List optimize_alignment_pgd(const arma::mat& initial_X, const arma::mat& initial_Omega, const arma::mat& initial_D_w, const arma::mat& SVRt, const arma::mat& R, const arma::mat& S, const double coef_der_X, double coef_hinge_W, double coef_hinge_H, const int k, const double N, const double M, const int iterations, const double convergence_tol, const int stop_criteria_window, const bool debug_stats);
 RcppExport SEXP _DualSimplex_optimize_alignment_pgd(SEXP initial_XSEXP, SEXP initial_OmegaSEXP, SEXP initial_D_wSEXP, SEXP SVRtSEXP, SEXP RSEXP, SEXP SSEXP, SEXP coef_der_XSEXP, SEXP coef_hinge_WSEXP, SEXP coef_hinge_HSEXP, SEXP kSEXP, SEXP NSEXP, SEXP MSEXP, SEXP iterationsSEXP, SEXP convergence_tolSEXP, SEXP stop_criteria_windowSEXP, SEXP debug_statsSEXP) {
@@ -537,7 +507,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_DualSimplex_getNonnegativeLowRankApproximationWithTangentMethod", (DL_FUNC) &_DualSimplex_getNonnegativeLowRankApproximationWithTangentMethod, 5},
     {"_DualSimplex_nnls_C__", (DL_FUNC) &_DualSimplex_nnls_C__, 4},
     {"_DualSimplex_nnls_nonzero_C__", (DL_FUNC) &_DualSimplex_nnls_nonzero_C__, 4},
-    {"_DualSimplex_optimize_alignment", (DL_FUNC) &_DualSimplex_optimize_alignment, 20},
     {"_DualSimplex_optimize_alignment_pgd", (DL_FUNC) &_DualSimplex_optimize_alignment_pgd, 16},
     {"_DualSimplex_optimize_coordinate_descent", (DL_FUNC) &_DualSimplex_optimize_coordinate_descent, 24},
     {"_DualSimplex_ensure_D_integrity", (DL_FUNC) &_DualSimplex_ensure_D_integrity, 5},

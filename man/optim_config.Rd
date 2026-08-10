@@ -5,7 +5,7 @@
 \title{Make optimization config object for the training method}
 \usage{
 optim_config(
-  method = c("positivity", "coordinate_descent", "theta", "alignment", "alignment_pgd"),
+  method = c("positivity", "coordinate_descent", "theta", "alignment"),
   debug_stats = FALSE,
   coef_der_X = 0.01,
   coef_der_Omega = 0.01,
