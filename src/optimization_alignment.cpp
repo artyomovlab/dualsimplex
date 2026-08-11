@@ -42,15 +42,18 @@ Rcpp::List optimize_alignment_pgd(
     const int k,
     const double N,
     const double M,
-    const int iterations,
+    const int max_iteration,
     const double convergence_tol,
-    const int stop_criteria_window,
+    const int patience,
+    const double decade_rate,
+    const int max_drop,
+    const double epsilon,
     const bool debug_stats
 ) {
     // Setup local parameters, return variables, metrics, logger and intermediate variables
-    arma::mat points_statistics_X(iterations + 1, k * k, arma::fill::zeros);
-    arma::mat points_statistics_Omega(iterations + 1, k * k, arma::fill::zeros);
-    arma::mat points_statistics_Dw(iterations + 1, k, arma::fill::zeros);
+    arma::mat points_statistics_X(max_iteration + 1, k * k, arma::fill::zeros);
+    arma::mat points_statistics_Omega(max_iteration + 1, k * k, arma::fill::zeros);
+    arma::mat points_statistics_Dw(max_iteration + 1, k, arma::fill::zeros);
 
     CompositeErrorCalculator composite_calc;
     composite_calc.add_calculator(std::make_shared<DeconvErrorCalculator>());
@@ -64,7 +67,7 @@ Rcpp::List optimize_alignment_pgd(
     RcppLogger rcpp_logger;
     std::map<std::string, std::string> metadata;
     metadata["algorithm"] = "optimize_alignment_pgd";
-    metadata["iterations"] = std::to_string(iterations);
+    metadata["max_iteration"] = std::to_string(max_iteration);
     metadata["coef_hinge_H"] = std::to_string(coef_hinge_H);
     metadata["coef_hinge_W"] = std::to_string(coef_hinge_W);
     rcpp_logger.log_metadata(metadata);
@@ -73,6 +76,9 @@ Rcpp::List optimize_alignment_pgd(
     double best_error_value = arma::datum::inf;
     int best_error_iteration = 0;
     double current_error_value;
+    double prev_error_value;
+    int consecutive_small_changes = 0;
+    int num_drops = 0;
 
     double c = N / M;
     arma::mat X = initial_X;
@@ -101,6 +107,7 @@ Rcpp::List optimize_alignment_pgd(
     current_error_value = get_metric_value(init_metrics, "total_error");
     best_error_value = current_error_value;
     best_error_iteration = 0;
+    prev_error_value = current_error_value;
 
     init_metrics.push_back({"learning_rate", current_learning_rate});
     init_metrics.push_back({"sum_", accu(d_w) / M});
@@ -119,7 +126,7 @@ Rcpp::List optimize_alignment_pgd(
 
     // Start initial inverse search
     int itr_ = 1;
-    while ((itr_ < iterations + 1) && (current_learning_rate > convergence_tol)) {  // I thought `convergence_tol` is for total error, but clearly no here! We should give it a better name.
+    while (itr_ <= max_iteration) {
         // We use projected gradient descent for this optimization problem.
         // The other option is to use a smoothed hinge loss (c.f. https://mathoverflow.net/questions/51370/smooth-approximation-of-the-hinge-loss-function) paired
         // with Riemannian gradient descent.
@@ -170,7 +177,10 @@ Rcpp::List optimize_alignment_pgd(
         X = arma::diagmat(1 / arma::sqrt(c * d_w)) * Q;
         Omega = sigma_fs * X.t();
 
-        // Log errors
+
+        // -------------------------------------------------------------
+        // Logging
+        // -------------------------------------------------------------
         OptimizationState current_state{
             X, Omega, d_w, d_h, SVRt, R, S, coef_hinge_H, coef_hinge_W
         };
@@ -178,40 +188,58 @@ Rcpp::List optimize_alignment_pgd(
         metrics.push_back({"learning_rate", current_learning_rate});
         metrics.push_back({"sum_", accu(d_w) / M});
 
-        // -------------------------------------------------------------
-        // Optimization Control Flow & Adaptive Step Size
-        // -------------------------------------------------------------
         current_error_value = get_metric_value(metrics, "total_error");
-
+        // TODO: Do we still need to track best_error...?
         if (current_error_value < best_error_value) {
             best_error_iteration = itr_;
             best_error_value = current_error_value;
         }
-        if (itr_ - best_error_iteration > stop_criteria_window) {
-            // looks like best solution was not updated for stop_criteria_window iterations. reducing step size.
-            current_learning_rate = current_learning_rate / 2;
-            best_error_iteration = itr_; // reset iteration counter
-        }
-
         metrics.push_back({"best_error_value", best_error_value});
         metrics.push_back({"best_error_iteration", static_cast<double>(best_error_iteration)});
+
         rcpp_logger.log_metrics(itr_, metrics);
 
-        // -------------------------------------------------------------
-        // Solution Trajectory Recording
-        // -------------------------------------------------------------
+        // Log trajectory
         points_statistics_X.row(itr_) = X.as_row();
         points_statistics_Omega.row(itr_) = Omega.as_row();
         points_statistics_Dw.row(itr_) = d_w.as_row();
 
+
+        // -------------------------------------------------------------
+        // Optimization Control Flow & Learning Rate Scheduling
+        // -------------------------------------------------------------
+        double relative_change = (prev_error_value - current_error_value) / (std::abs(prev_error_value) + epsilon);
+        if (relative_change < convergence_tol) {
+            consecutive_small_changes++;
+        } else {
+            consecutive_small_changes = 0;
+        }
+
+        if (consecutive_small_changes >= patience) {
+            current_learning_rate *= decade_rate;
+            num_drops++;
+            consecutive_small_changes = 0;
+            spdl::info("Plateau detected at iteration {}. Reducing learning rate to {}", itr_, current_learning_rate);
+        }
+
+        prev_error_value = current_error_value;
+
+
+        if (num_drops >= max_drop) {
+            spdl::info("Learning rate dropped {} times (max_drop reached). Stopping optimization at iteration {}.", num_drops, itr_);
+            itr_++;
+            break;
+        }
+
         itr_++;
     }
     
-    spdl::info("Optimization completed with number of iterations perfomed: {}", itr_ - 1);
-    if (itr_ < iterations + 1) {
+    if (itr_ <= max_iteration) {
         points_statistics_X.resize(itr_, points_statistics_X.n_cols);
         points_statistics_Omega.resize(itr_, points_statistics_Omega.n_cols);
         points_statistics_Dw.resize(itr_, points_statistics_Dw.n_cols);
+    } else {
+        spdl::info("Reached maximum number of iterations: {}. Stopping optimization.", itr_ - 1);
     }
 
 

@@ -31,9 +31,12 @@
 //' @param k number of components
 //' @param N current N
 //' @param M current M
-//' @param iterations number of iterations
-//' @param convergence_tol tolerance for convergence.
-//' @param stop_criteria_window how long error should be on plateu to decrease the learning rate
+//' @param max_iteration maximum number of iterations
+//' @param convergence_tol relative loss change threshold for convergence / plateau detection
+//' @param patience number of consecutive iterations of small loss changes before reducing learning rate
+//' @param decade_rate multiplier factor to reduce learning rate when plateauing
+//' @param max_drop maximum allowed learning rate drops before stopping
+//' @param epsilon small constant to prevent division by zero in relative change
 //' @param debug_stats wether to save grad norm values.
 //' @return new parameters
 // [[Rcpp::export]]
@@ -50,8 +53,11 @@ Rcpp::List optimize_alignment_pgd(
     const int k,
     const double N,
     const double M,
-    const int iterations,
+    const int max_iteration,
     const double convergence_tol,
-    const int stop_criteria_window,
+    const int patience,
+    const double decade_rate,
+    const int max_drop,
+    const double epsilon,
     const bool debug_stats
 );

@@ -39,6 +39,10 @@ optim_config <- function(
   reg_Omega = 1,
   stop_criteria_window = 800,
   convergence_tol = 1e-9,
+  patience = 10,
+  decade_rate = 0.5,
+  max_drop = 10,
+  epsilon = 1e-8,
   # Theta optimization within angle
   x_center = NULL,
   omega_center = NULL,
@@ -63,6 +67,10 @@ optim_config <- function(
     reg_Omega = reg_Omega,
     convergence_tol = convergence_tol,
     stop_criteria_window = stop_criteria_window,
+    patience = patience,
+    decade_rate = decade_rate,
+    max_drop = max_drop,
+    epsilon = epsilon,
     x_center = x_center,
     omega_center = omega_center,
     center_threshold = center_threshold,
@@ -241,9 +249,16 @@ optimize_solution <- function(
     optimization_params$theta_threshold <- config$center_threshold # threshold for the angle
     do.call(optimize_theta, optimization_params)
   } else if (config$method == "alignment") {
-    optimization_params$convergence_tol <- config$convergence_tol
+    optimization_params$max_iteration <- optimization_params$iterations
+    optimization_params$iterations <- NULL
+
+    optimization_params$convergence_tol <- if (!is.null(config$convergence_tol)) config$convergence_tol else 1e-4
+    optimization_params$patience <- if (!is.null(config$patience)) as.integer(config$patience) else 10L
+    optimization_params$decade_rate <- if (!is.null(config$decade_rate)) config$decade_rate else 0.5
+    optimization_params$max_drop <- if (!is.null(config$max_drop)) as.integer(config$max_drop) else 10L
+    optimization_params$epsilon <- if (!is.null(config$epsilon)) config$epsilon else 1e-8
+
     optimization_params$debug_stats <- config$debug_stats
-    optimization_params$stop_criteria_window <- config$stop_criteria_window
 
     # for compatibility, might have some overhead
     optimization_params[["initial_X"]] <- optimization_params$X
