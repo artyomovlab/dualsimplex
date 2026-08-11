@@ -186,6 +186,7 @@ Rcpp::List optimize_alignment_pgd(
         };
         std::vector<Metric> metrics = composite_calc.calculate(current_state);
         metrics.push_back({"learning_rate", current_learning_rate});
+        metrics.push_back({"effective_learning_rate", current_lr});
         metrics.push_back({"sum_", accu(d_w) / M});
 
         current_error_value = get_metric_value(metrics, "total_error");
