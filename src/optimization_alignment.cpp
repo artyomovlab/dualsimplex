@@ -77,7 +77,7 @@ Rcpp::List optimize_alignment_pgd(
     int best_error_iteration = 0;
     double current_error_value;
     double prev_error_value;
-    int consecutive_small_changes = 0;
+    int patience_counter = 0;
     int num_drops = 0;
 
     double c = N / M;
@@ -94,7 +94,7 @@ Rcpp::List optimize_alignment_pgd(
     arma::mat grad_hinge_H(k, k, arma::fill::zeros);
 
     // CJLee(TODO): calculate our starting Q
-    arma::mat Q, Q_illegal, Q_cand, U_svd, V_svd;
+    arma::mat Q, Q_illegal, Q_cand, U_svd, V_svd, D_sqrt_inv;
     arma::vec s_svd;
     Q = arma::diagmat(arma::sqrt(c * d_w)) * X;
 
@@ -134,12 +134,15 @@ Rcpp::List optimize_alignment_pgd(
         // Following are the optimization logic using projected gradient descent:
         // Staring from a point, Q(t):
         // 1. Calculate (sub)graident from hinge loss.
+        //    Note that in the loss function, (cD_w)^(-0.5) is always accompanied with Q.
+        //    Since (cD_w)^(-0.5) Q = X, I will use X in subgradient calculation to save some computational cost.
         grad_Q.zeros();
+        D_sqrt_inv = arma::diagmat(1 / arma::sqrt(c * d_w));
         if (0 < coef_hinge_W) {
-            grad_Q += coef_hinge_W * subgradient(S.t() * sigma_ss * Q.t()).t() * S.t() * sigma_ss;
+            grad_Q += coef_hinge_W * c * D_sqrt_inv  * subgradient(S.t() * sigma_ss * X.t()).t() * S.t() * sigma_ss;
         }
         if (0 < coef_hinge_H) {
-            grad_Q +=  coef_hinge_H * subgradient(Q*R) * R.t();
+            grad_Q +=  coef_hinge_H * D_sqrt_inv * subgradient(X*R) * R.t();
         }
 
         // 2. Update to Q(t+1)
@@ -190,7 +193,6 @@ Rcpp::List optimize_alignment_pgd(
         metrics.push_back({"sum_", accu(d_w) / M});
 
         current_error_value = get_metric_value(metrics, "total_error");
-        // TODO: Do we still need to track best_error...?
         if (current_error_value < best_error_value) {
             best_error_iteration = itr_;
             best_error_value = current_error_value;
@@ -211,15 +213,15 @@ Rcpp::List optimize_alignment_pgd(
         // -------------------------------------------------------------
         double relative_change = (prev_error_value - current_error_value) / (std::abs(prev_error_value) + epsilon);
         if (relative_change < convergence_tol) {
-            consecutive_small_changes++;
+            patience_counter++;
         } else {
-            consecutive_small_changes = 0;
+            patience_counter = 0;
         }
 
-        if (consecutive_small_changes >= patience) {
+        if (patience_counter >= patience) {
             current_learning_rate *= decade_rate;
             num_drops++;
-            consecutive_small_changes = 0;
+            patience_counter = 0;
             spdl::info("Plateau detected at iteration {}. Reducing learning rate to {}", itr_, current_learning_rate);
         }
 
