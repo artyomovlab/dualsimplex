@@ -139,8 +139,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // optimize_alignment_pgd
-Rcpp::List optimize_alignment_pgd(const arma::mat& initial_X, const arma::mat& initial_Omega, const arma::mat& initial_D_w, const arma::mat& SVRt, const arma::mat& R, const arma::mat& S, const double coef_der_X, double coef_hinge_W, double coef_hinge_H, const int k, const double N, const double M, const int max_iteration, const double convergence_tol, const int patience, const double decade_rate, const int max_drop, const double epsilon, const bool debug_stats);
-RcppExport SEXP _DualSimplex_optimize_alignment_pgd(SEXP initial_XSEXP, SEXP initial_OmegaSEXP, SEXP initial_D_wSEXP, SEXP SVRtSEXP, SEXP RSEXP, SEXP SSEXP, SEXP coef_der_XSEXP, SEXP coef_hinge_WSEXP, SEXP coef_hinge_HSEXP, SEXP kSEXP, SEXP NSEXP, SEXP MSEXP, SEXP max_iterationSEXP, SEXP convergence_tolSEXP, SEXP patienceSEXP, SEXP decade_rateSEXP, SEXP max_dropSEXP, SEXP epsilonSEXP, SEXP debug_statsSEXP) {
+Rcpp::List optimize_alignment_pgd(const arma::mat& initial_X, const arma::mat& initial_Omega, const arma::mat& initial_D_w, const arma::mat& SVRt, const arma::mat& R, const arma::mat& S, const double coef_der_X, double coef_hinge_W, double coef_hinge_H, const int max_iteration, const double convergence_tol, const int patience, const double decade_rate, const int max_drop, const double epsilon, const bool debug_stats);
+RcppExport SEXP _DualSimplex_optimize_alignment_pgd(SEXP initial_XSEXP, SEXP initial_OmegaSEXP, SEXP initial_D_wSEXP, SEXP SVRtSEXP, SEXP RSEXP, SEXP SSEXP, SEXP coef_der_XSEXP, SEXP coef_hinge_WSEXP, SEXP coef_hinge_HSEXP, SEXP max_iterationSEXP, SEXP convergence_tolSEXP, SEXP patienceSEXP, SEXP decade_rateSEXP, SEXP max_dropSEXP, SEXP epsilonSEXP, SEXP debug_statsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -153,9 +153,6 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const double >::type coef_der_X(coef_der_XSEXP);
     Rcpp::traits::input_parameter< double >::type coef_hinge_W(coef_hinge_WSEXP);
     Rcpp::traits::input_parameter< double >::type coef_hinge_H(coef_hinge_HSEXP);
-    Rcpp::traits::input_parameter< const int >::type k(kSEXP);
-    Rcpp::traits::input_parameter< const double >::type N(NSEXP);
-    Rcpp::traits::input_parameter< const double >::type M(MSEXP);
     Rcpp::traits::input_parameter< const int >::type max_iteration(max_iterationSEXP);
     Rcpp::traits::input_parameter< const double >::type convergence_tol(convergence_tolSEXP);
     Rcpp::traits::input_parameter< const int >::type patience(patienceSEXP);
@@ -163,7 +160,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const int >::type max_drop(max_dropSEXP);
     Rcpp::traits::input_parameter< const double >::type epsilon(epsilonSEXP);
     Rcpp::traits::input_parameter< const bool >::type debug_stats(debug_statsSEXP);
-    rcpp_result_gen = Rcpp::wrap(optimize_alignment_pgd(initial_X, initial_Omega, initial_D_w, SVRt, R, S, coef_der_X, coef_hinge_W, coef_hinge_H, k, N, M, max_iteration, convergence_tol, patience, decade_rate, max_drop, epsilon, debug_stats));
+    rcpp_result_gen = Rcpp::wrap(optimize_alignment_pgd(initial_X, initial_Omega, initial_D_w, SVRt, R, S, coef_der_X, coef_hinge_W, coef_hinge_H, max_iteration, convergence_tol, patience, decade_rate, max_drop, epsilon, debug_stats));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -510,7 +507,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_DualSimplex_getNonnegativeLowRankApproximationWithTangentMethod", (DL_FUNC) &_DualSimplex_getNonnegativeLowRankApproximationWithTangentMethod, 5},
     {"_DualSimplex_nnls_C__", (DL_FUNC) &_DualSimplex_nnls_C__, 4},
     {"_DualSimplex_nnls_nonzero_C__", (DL_FUNC) &_DualSimplex_nnls_nonzero_C__, 4},
-    {"_DualSimplex_optimize_alignment_pgd", (DL_FUNC) &_DualSimplex_optimize_alignment_pgd, 19},
+    {"_DualSimplex_optimize_alignment_pgd", (DL_FUNC) &_DualSimplex_optimize_alignment_pgd, 16},
     {"_DualSimplex_optimize_coordinate_descent", (DL_FUNC) &_DualSimplex_optimize_coordinate_descent, 24},
     {"_DualSimplex_ensure_D_integrity", (DL_FUNC) &_DualSimplex_ensure_D_integrity, 5},
     {"_DualSimplex_optimize_positivity", (DL_FUNC) &_DualSimplex_optimize_positivity, 19},

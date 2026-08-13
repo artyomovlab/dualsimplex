@@ -134,8 +134,8 @@ NULL
 #' @param epsilon small constant to prevent division by zero in relative change
 #' @param debug_stats wether to save grad norm values.
 #' @return new parameters
-optimize_alignment_pgd <- function(initial_X, initial_Omega, initial_D_w, SVRt, R, S, coef_der_X, coef_hinge_W, coef_hinge_H, k, N, M, max_iteration, convergence_tol, patience, decade_rate, max_drop, epsilon, debug_stats) {
-    .Call('_DualSimplex_optimize_alignment_pgd', PACKAGE = 'DualSimplex', initial_X, initial_Omega, initial_D_w, SVRt, R, S, coef_der_X, coef_hinge_W, coef_hinge_H, k, N, M, max_iteration, convergence_tol, patience, decade_rate, max_drop, epsilon, debug_stats)
+optimize_alignment_pgd <- function(initial_X, initial_Omega, initial_D_w, SVRt, R, S, coef_der_X, coef_hinge_W, coef_hinge_H, max_iteration, convergence_tol, patience, decade_rate, max_drop, epsilon, debug_stats) {
+    .Call('_DualSimplex_optimize_alignment_pgd', PACKAGE = 'DualSimplex', initial_X, initial_Omega, initial_D_w, SVRt, R, S, coef_der_X, coef_hinge_W, coef_hinge_H, max_iteration, convergence_tol, patience, decade_rate, max_drop, epsilon, debug_stats)
 }
 
 #' Main training loop with all gradient steps. This is naive algorithm from version 1.0.
