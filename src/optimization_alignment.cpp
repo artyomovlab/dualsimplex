@@ -39,9 +39,6 @@ Rcpp::List optimize_alignment_pgd(
     const double coef_der_X,
     double coef_hinge_W,
     double coef_hinge_H,
-    const int k,
-    const double N,
-    const double M,
     const int max_iteration,
     const double convergence_tol,
     const int patience,
@@ -51,6 +48,10 @@ Rcpp::List optimize_alignment_pgd(
     const bool debug_stats
 ) {
     // Setup local parameters, return variables, metrics, logger and intermediate variables
+    const int k = initial_X.n_cols;
+    const int M = S.n_cols;
+    const int N = R.n_cols;
+
     arma::mat points_statistics_X(max_iteration + 1, k * k, arma::fill::zeros);
     arma::mat points_statistics_Omega(max_iteration + 1, k * k, arma::fill::zeros);
     arma::mat points_statistics_Dw(max_iteration + 1, k, arma::fill::zeros);
@@ -80,20 +81,16 @@ Rcpp::List optimize_alignment_pgd(
     int patience_counter = 0;
     int num_drops = 0;
 
-    double c = N / M;
+    const double c = static_cast<double>(N) / static_cast<double>(M);
     arma::mat X = initial_X;
     arma::mat Omega = initial_Omega;
     arma::vec d_w = arma::vectorise(initial_D_w);  // let's store diagonal matrix as a vector for convenience
     arma::vec d_h = d_w * c;
     arma::mat sigma_ss = SVRt;
     arma::mat sigma_fs = c * sigma_ss;
-    
+    arma::mat St_sigma_ss = S.t() * sigma_ss;  // it never changes, so let's save some time
 
     arma::mat grad_Q(k, k, arma::fill::zeros);
-    arma::mat grad_hinge_W(k, k, arma::fill::zeros);
-    arma::mat grad_hinge_H(k, k, arma::fill::zeros);
-
-    // CJLee(TODO): calculate our starting Q
     arma::mat Q, Q_illegal, Q_cand, U_svd, V_svd, D_sqrt_inv;
     arma::vec s_svd;
     Q = arma::diagmat(arma::sqrt(c * d_w)) * X;
@@ -128,18 +125,18 @@ Rcpp::List optimize_alignment_pgd(
     int itr_ = 1;
     while (itr_ <= max_iteration) {
         // We use projected gradient descent for this optimization problem.
-        // The other option is to use a smoothed hinge loss (c.f. https://mathoverflow.net/questions/51370/smooth-approximation-of-the-hinge-loss-function) paired
-        // with Riemannian gradient descent.
+        // The other option is to use a smoothed hinge loss (c.f. https://mathoverflow.net/questions/51370/smooth-approximation-of-the-hinge-loss-function)
+        // paired with Riemannian gradient descent.
 
         // Following are the optimization logic using projected gradient descent:
-        // Staring from a point, Q(t):
-        // 1. Calculate (sub)graident from hinge loss.
+        // Staring from points, Q(t):
+        // 1. Calculate (sub)gradients from hinge loss.
         //    Note that in the loss function, (cD_w)^(-0.5) is always accompanied with Q.
-        //    Since (cD_w)^(-0.5) Q = X, I will use X in subgradient calculation to save some computational cost.
+        //    Since (cD_w)^(-0.5) Q = X, I will use X in the calculation to save some computational cost.
         grad_Q.zeros();
         D_sqrt_inv = arma::diagmat(1 / arma::sqrt(c * d_w));
         if (0 < coef_hinge_W) {
-            grad_Q += coef_hinge_W * c * D_sqrt_inv  * subgradient(S.t() * sigma_ss * X.t()).t() * S.t() * sigma_ss;
+            grad_Q += coef_hinge_W * c * D_sqrt_inv  * subgradient(St_sigma_ss * X.t()).t() * St_sigma_ss;
         }
         if (0 < coef_hinge_H) {
             grad_Q +=  coef_hinge_H * D_sqrt_inv * subgradient(X*R) * R.t();
@@ -148,7 +145,7 @@ Rcpp::List optimize_alignment_pgd(
         // 2. Update to Q(t+1)
         double current_lr = current_learning_rate;
         bool step_accepted = false;
-        while (current_lr > 1e-16) {  // since we half the learning rate at each failure, it will terminate at arount 55th failure.
+        while (current_lr > 1e-16) {  // since we half the learning rate at each failure, it will terminate around the 55th failure.
             // 2a. Unconstrained Step (Euclidean Space)
             Q_illegal = Q - current_lr * grad_Q;
 
@@ -156,8 +153,10 @@ Rcpp::List optimize_alignment_pgd(
             // Q_illegal = U_s * Sigma * V_s^T  ->  Q_cand = U_s * V_s^T
             arma::svd(U_svd, s_svd, V_svd, Q_illegal);
             Q_cand = U_svd * V_svd.t();
-            
+
             // 2c. Hard constraint check (positivity of first column)
+            // TODO(cjlee): maybe we can also add Armijo style line search?
+            // c.f. https://en.wikipedia.org/wiki/Backtracking_line_search#Algorithm
             if (arma::all(Q_cand.col(0) > 0)) {
                 Q = Q_cand;
                 step_accepted = true;
@@ -211,6 +210,7 @@ Rcpp::List optimize_alignment_pgd(
         // -------------------------------------------------------------
         // Optimization Control Flow & Learning Rate Scheduling
         // -------------------------------------------------------------
+        // TODO(cjlee): maybe we should compare to best_error_value instead?
         double relative_change = (prev_error_value - current_error_value) / (std::abs(prev_error_value) + epsilon);
         if (relative_change < convergence_tol) {
             patience_counter++;

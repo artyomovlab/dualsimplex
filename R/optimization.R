@@ -267,8 +267,9 @@ optimize_solution <- function(
     optimization_params[["Omega"]] <- NULL
     optimization_params[["initial_D_w"]] <- optimization_params$D_w
     optimization_params[["D_w"]] <- NULL
-    optimization_params[["k"]] <- optimization_params$cell_types
     optimization_params[["cell_types"]] <- NULL
+    optimization_params[["M"]] <- NULL
+    optimization_params[["N"]] <- NULL
 
     do.call(optimize_alignment_pgd, optimization_params)
   } else {
