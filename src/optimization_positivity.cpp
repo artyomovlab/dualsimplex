@@ -114,10 +114,12 @@ Rcpp::List optimize_positivity(const arma::mat& X,
     // Start initial inverse search
   //  Rcpp::Rcout << "Check initial inverse matrix properties"  << std::endl;
                         
-    tmp_Omega = arma::pinv(new_X);
+    tmp_Omega = arma::inv(new_X, arma::inv_opts::allow_approx);
+
     if (arma::any( tmp_Omega.row(0) <= 0)) {
        spdl::warn("Couldn't find good initial inverse of X provided. Will try with Omega");
-       tmp_X = arma::pinv(new_Omega);
+       tmp_X = arma::inv(new_Omega, arma::inv_opts::allow_approx);
+
        if (arma::any( tmp_X.col(0) <= 0)) {
             spdl::warn("Couldn't find good initial inverse of Omega provided");
             Rcpp::stop("!!Start with different initialization or ensure X and Omega are inverse!! (try `random_invertible`)");
@@ -176,7 +178,8 @@ Rcpp::List optimize_positivity(const arma::mat& X,
                 spdl::warn("Any gradient step gives bad X, probably X was bad before");
             }
         }
-        tmp_Omega = arma::pinv(tmp_X);
+        tmp_Omega = arma::inv(tmp_X, arma::inv_opts::allow_approx);
+
 
         // Ensure if first row of Omega is all positive
         
@@ -190,7 +193,8 @@ Rcpp::List optimize_positivity(const arma::mat& X,
                         der_X /=  2;
                         der_X.row(c) *= 2;
                         tmp_X = (new_X - current_learning_rate * der_X);
-                        tmp_Omega = arma::pinv(tmp_X);
+                        tmp_Omega = arma::inv(tmp_X, arma::inv_opts::allow_approx);
+
                         matrix_value =  tmp_Omega(0,c); 
                     }
                 }
@@ -203,7 +207,7 @@ Rcpp::List optimize_positivity(const arma::mat& X,
             } else {
                 spdl::warn("Iteration {} Couldn't find good inverse X, Reject optimization step.", itr_);
                     tmp_X = new_X;
-                    tmp_Omega = arma::pinv(tmp_X); 
+                    tmp_Omega = arma::inv(tmp_X, arma::inv_opts::allow_approx);
             }
 
             new_Omega = tmp_Omega;
