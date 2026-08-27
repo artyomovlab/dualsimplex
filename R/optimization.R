@@ -181,12 +181,12 @@ optimize_solution <- function(
 
   # Running optimization
   mean_radius_X <-
-    mean(apply(proj$X[, -1], 1, function(x) {
+    mean(apply(proj$X[, -1, drop = FALSE], 1, function(x) {
       norm(x, "2")
     }))
 
   mean_radius_Omega <-
-    mean(apply(proj$Omega[, -1], 1, function(x) {
+    mean(apply(proj$Omega[, -1, drop = FALSE], 1, function(x) {
       norm(x, "2")
     }))
 
