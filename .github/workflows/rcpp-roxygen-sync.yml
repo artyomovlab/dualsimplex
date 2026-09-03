@@ -1,0 +1,55 @@
+name: Rcpp & Roxygen Synchronization
+
+on:
+  push:
+    paths-ignore:
+      - 'man/**'
+      - 'R/RcppExports.R'
+      - 'src/RcppExports.cpp'
+      - 'NAMESPACE'
+
+jobs:
+  update-rcpp-and-docs:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Check out the repository code
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      # 2. Set up R environment on the virtual runner
+      - name: Set up R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true # Speeds up package installation on Linux via binaries
+
+      # 3. Install required package dependencies (Rcpp, roxygen2, devtools, etc.)
+      - name: Install dependencies
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: |
+            any::Rcpp
+            any::roxygen2
+
+      # 4. Generate RcppExports and update roxygen documentation
+      - name: Generate Rcpp Exports and Documentation
+        run: |
+          Rscript -e "Rcpp::compileAttributes(verbose = TRUE)"
+          Rscript -e "roxygen2::roxygenise()"
+        shell: bash
+
+      # 5. Commit and push changes back if anything was altered
+      - name: Commit and push changes
+        run: |
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git add R/RcppExports.R src/RcppExports.cpp man/* NAMESPACE
+          
+          # Only commit if there are actually changes to prevent workflow errors
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: auto-update RcppExports and documentation [skip ci]"
+            git push
+          else
+            echo "No documentation or Rcpp changes detected."
+          fi
+        shell: bash

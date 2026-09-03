@@ -26,21 +26,23 @@
 #' @import progress
 #'
 #' @examples
-#' M <-  8000 # number of genes (rows)
-#' N <-  200 # number of samples (columns)
-#' K <-  3 # number of main components
-#' sim <- simulation_gene_expression(n_genes = M,
-#'                                   n_samples = N,
-#'                                   n_cell_types = K,
-#'                                   with_marker_genes = FALSE
-#'                                   )
+#' M <- 8000 # number of genes (rows)
+#' N <- 200 # number of samples (columns)
+#' K <- 3 # number of main components
+#' sim <- simulation_gene_expression(
+#'   n_genes = M,
+#'   n_samples = N,
+#'   n_cell_types = K,
+#'   with_marker_genes = FALSE
+#' )
 #' dso <- DualSimplexSolver$new()
 #' dso$set_data(sim$data) # run Sinkhorn procedure
 #' dso$project(K) # project to SVD space
 #' dso$plot_projected("zero_distance",
-#'                    "zero_distance",
-#'                    with_solution = TRUE,
-#'                    use_dims = list(2:3)) # visualize the projection
+#'   "zero_distance",
+#'   with_solution = TRUE,
+#'   use_dims = list(2:3)
+#' ) # visualize the projection
 DualSimplexSolver <- R6Class(
   classname = "DualSimplexSolver",
   private = list(
@@ -131,7 +133,7 @@ DualSimplexSolver <- R6Class(
           name <- color
           color <- anno[, color]
         } else if (color %in% rownames(anno)) {
-          name <-  "individual_highlight"
+          name <- "individual_highlight"
         } else {
           name <- "direct_single_color"
         }
@@ -145,10 +147,9 @@ DualSimplexSolver <- R6Class(
       if (max(dims) > self$st$proj_ops$max_dim) {
         spdl::error("Not enough dimension in ops. Run `set_data` or `project` with larger max_dim parameter")
         stop("Not enough dimension in ops. Run `calc_svd_ops` with larger max_dim parameter")
-      } 
+      }
     },
-
-    update_variables = function(data,feature_anno_lists = NULL, sample_anno_lists = NULL, ...) {
+    update_variables = function(data, feature_anno_lists = NULL, sample_anno_lists = NULL, ...) {
       if (!inherits(data, "ExpressionSet")) data <- create_eset(data)
       if (any(rowSums(Biobase::exprs(data)) == 0)) {
         spdl::error("The data matrix should not contain all zero rows. Use remove_zero_rows() method")
@@ -159,28 +160,28 @@ DualSimplexSolver <- R6Class(
         stop("The data matrix should not contain all zero rows. Use remove_zero_rows() method")
       }
       self$st$data <- add_default_anno(data, feature_anno_lists, sample_anno_lists)
-      self$st$scaling <- sinkhorn_scale(Biobase::exprs(self$st$data), max_iter = self$st$max_sinkhorn_iterations, epsilon=self$st$sinkhorn_tol)
+      self$st$scaling <- sinkhorn_scale(Biobase::exprs(self$st$data), max_iter = self$st$max_sinkhorn_iterations, epsilon = self$st$sinkhorn_tol)
       self$st$proj_ops <- calc_svd_ops(self$get_V_row(), max_dim = self$st$max_dim, self$st$svd_method, ...)
     }
   ),
   public = list(
     #' @field st contain the "state" of the current object. (data, solution, projections etc..).
     st = list(
-      data = NULL,                # Set by user
-      filtering_log = NULL,       # Auto calculated
-      max_dim = NULL,             # Can be set by user. Default is 50
+      data = NULL, # Set by user
+      filtering_log = NULL, # Auto calculated
+      max_dim = NULL, # Can be set by user. Default is 50
       max_sinkhorn_iterations = NULL, # Can be set by user. Default is 20
-      sinkhorn_tol = NULL,        # Can be set by user. Default is 1e-15
-      svd_method = NULL,          # Can be set by user. Default is 'svd'
-      scaling = NULL,             # Auto calculated
-      proj_ops = NULL,            # Auto calculated
-      n_cell_types = NULL,        # Set by user
-      dims = NULL,                # Auto calculated
-      proj = NULL,                # Auto calculated, proj$umap is triggered by user
-      solution_proj = NULL,       # Triggered by user
-      solution = NULL,            # Triggered by user
-      solution_orig = NULL,       # Auto calculated
-      marker_genes = NULL        # Auto calculated
+      sinkhorn_tol = NULL, # Can be set by user. Default is 1e-15
+      svd_method = NULL, # Can be set by user. Default is 'svd'
+      scaling = NULL, # Auto calculated
+      proj_ops = NULL, # Auto calculated
+      n_cell_types = NULL, # Set by user
+      dims = NULL, # Auto calculated
+      proj = NULL, # Auto calculated, proj$umap is triggered by user
+      solution_proj = NULL, # Triggered by user
+      solution = NULL, # Triggered by user
+      solution_orig = NULL, # Auto calculated
+      marker_genes = NULL # Auto calculated
     ),
 
     #' @description
@@ -195,16 +196,14 @@ DualSimplexSolver <- R6Class(
     #' @param sinkhorn_tol tolerance for Sinkhorn calculation. It is passed to `sinkhron_scale` function.
     #' @param svd_method which SVD algorithm to use.
     #' @param ... additional arguments passed to function `run_svd`
-    set_data = function(
-      data,
-      feature_anno_lists = NULL,
-      sample_anno_lists = NULL,
-      max_sinkhorn_iterations=20,
-      max_dim = 50L,
-      sinkhorn_tol = 1e-12,
-      svd_method = "svd",
-      ...
-    ) {
+    set_data = function(data,
+                        feature_anno_lists = NULL,
+                        sample_anno_lists = NULL,
+                        max_sinkhorn_iterations = 20,
+                        max_dim = 50L,
+                        sinkhorn_tol = 1e-12,
+                        svd_method = "svd",
+                        ...) {
       # Sanity checks
       if (any(sapply(dimnames(data), is.null))) {
         spdl::warn("All Rows and Columns should be named. Setting artificial names")
@@ -252,13 +251,11 @@ DualSimplexSolver <- R6Class(
     #' @param remove_true_cols_additional additional columns from annotation to use for "remove true" filter.
     #' @param keep_true_cols columns from annotation where we should keep instances with true value.
     #' @param for_features true if want remove rows otherwise columns
-    basic_filter = function(
-      log_mad_gt = 0,
-      remove_true_cols_default = NULL,
-      remove_true_cols_additional = c(),
-      keep_true_cols = c(),
-      for_features = T
-    ) {
+    basic_filter = function(log_mad_gt = 0,
+                            remove_true_cols_default = NULL,
+                            remove_true_cols_additional = c(),
+                            keep_true_cols = c(),
+                            for_features = T) {
       if (for_features && is.null(remove_true_cols_default)) {
         remove_true_cols_default <- c("RPLS", "LOC", "ORF", "SNOR")
       }
@@ -288,7 +285,7 @@ DualSimplexSolver <- R6Class(
     #' @param annotation_names_list names of annotation columns with TRUE/FALSE.
     #' @param for_features calculate for row annotations or sample annotations.
     #' @param k_neighbors a number of neighbors to calculate the distance on for the annotation
-    add_knn_distances_anno= function(annotation_names_list = NULL, for_features = T, k_neighbors = 20) {
+    add_knn_distances_anno = function(annotation_names_list = NULL, for_features = T, k_neighbors = 20) {
       self$st$data <- add_knn_distances_anno(
         self$st$data,
         self$st$proj,
@@ -302,8 +299,8 @@ DualSimplexSolver <- R6Class(
     #'
     #' @param anno_to_add annotation to add to the object.
     #' @param for_features row annotations or sample annotations.
-    updata_annotation = function(anno_to_add,  for_features = T) {
-      self$st$data <- update_annotation (self$st$data, anno_to_add, for_features = for_features)
+    updata_annotation = function(anno_to_add, for_features = T) {
+      self$st$data <- update_annotation(self$st$data, anno_to_add, for_features = for_features)
     },
 
     #' @description
@@ -311,7 +308,7 @@ DualSimplexSolver <- R6Class(
     #'
     #' @param radius radius to count neighbors within.
     #' @param for_features calculate for row annotations or sample annotations.
-    add_density_anno= function(radius = NULL, for_features = T) {
+    add_density_anno = function(radius = NULL, for_features = T) {
       self$st$data <- add_density_annotation(
         self$st$data,
         self$st$proj,
@@ -341,12 +338,10 @@ DualSimplexSolver <- R6Class(
     #' @param cumulative wether plot should be cumulative
     #' @param variance plot variance explained
     #' @return plot to work with
-    plot_svd_history = function(
-      steps_sel = NULL,
-      n_dims = NULL,
-      cumulative = T,
-      variance = T
-    ) {
+    plot_svd_history = function(steps_sel = NULL,
+                                n_dims = NULL,
+                                cumulative = T,
+                                variance = T) {
       svd_ds <- lapply(self$st$filtering_log$object_log, function(x) {
         diag(x$Sigma)
       })
@@ -362,7 +357,7 @@ DualSimplexSolver <- R6Class(
       if (!is.null(n_dims)) {
         svd_ds <- svd_ds[, 1:n_dims]
       }
-      return(plot_svd_ds_matrix(svd_ds, cumulative = cumulative, variance =  variance))
+      return(plot_svd_ds_matrix(svd_ds, cumulative = cumulative, variance = variance))
     },
 
     #' @description
@@ -390,7 +385,7 @@ DualSimplexSolver <- R6Class(
     #' @param optim_iteraitons number of optimization iterations.
     #' @param optim_config optimization configuration.
     #' @param ... additional arguments for initialization.
-    factorize = function(K, initialization_strategy = "random_invertible", optim_iteraitons = 10000, optim_config=OPTIM_CONFIG_DEFAULT, ...) {
+    factorize = function(K, initialization_strategy = "random_invertible", optim_iteraitons = 10000, optim_config = OPTIM_CONFIG_DEFAULT, ...) {
       private$set_data_first()
       self$project(K)
       self$init_solution(initialization_strategy, ...)
@@ -432,11 +427,9 @@ DualSimplexSolver <- R6Class(
     #' @param plane_d_lt threshold for plane distance.
     #' @param zero_d_lt threshold for zero distance.
     #' @param for_features TRUE if filter rows, otherwise columns.
-    distance_filter = function(
-      plane_d_lt = NULL,
-      zero_d_lt = NULL,
-      for_features = T
-    ) {
+    distance_filter = function(plane_d_lt = NULL,
+                               zero_d_lt = NULL,
+                               for_features = T) {
       private$project_first()
       if (is.null(plane_d_lt) && is.null(zero_d_lt)) {
         spdl::error("Choose at least one distance to filter b")
@@ -444,20 +437,22 @@ DualSimplexSolver <- R6Class(
       }
       new_data <- self$get_data()
 
-      if (!is.null(plane_d_lt))
+      if (!is.null(plane_d_lt)) {
         new_data <- threshold_filter(
           new_data,
           "plane_distance",
           plane_d_lt,
           for_features
         )
-      if (!is.null(zero_d_lt))
+      }
+      if (!is.null(zero_d_lt)) {
         new_data <- threshold_filter(
           new_data,
           "zero_distance",
           zero_d_lt,
           for_features
         )
+      }
       new_data <- remove_zero_cols(new_data)
       new_data <- remove_zero_rows(new_data)
 
@@ -479,12 +474,10 @@ DualSimplexSolver <- R6Class(
     #' @param zero_quantile quantile for zero distance.
     #' @param for_features TRUE if filter rows, otherwise columns.
     #' @param keep_lower TRUE if keep lower, FALSE to keep higher
-    distance_quantile_filter = function(
-      plane_quantile = NULL,
-      zero_quantile = NULL,
-      for_features = T,
-      keep_lower = T
-    ) {
+    distance_quantile_filter = function(plane_quantile = NULL,
+                                        zero_quantile = NULL,
+                                        for_features = T,
+                                        keep_lower = T) {
       private$project_first()
       if (is.null(plane_quantile) && is.null(zero_quantile)) {
         spdl::error("Choose at least one distance to filter by")
@@ -492,22 +485,24 @@ DualSimplexSolver <- R6Class(
       }
       new_data <- self$get_data()
 
-      if (!is.null(plane_quantile))
+      if (!is.null(plane_quantile)) {
         new_data <- quantile_filter(
           eset = new_data,
           annotation_feature = "plane_distance",
-          quant =  plane_quantile,
+          quant = plane_quantile,
           keep_lower = keep_lower,
           for_features = for_features
         )
-      if (!is.null(zero_quantile))
+      }
+      if (!is.null(zero_quantile)) {
         new_data <- quantile_filter(
           eset = new_data,
           annotation_feature = "zero_distance",
-          quant =  zero_quantile,
+          quant = zero_quantile,
           keep_lower = keep_lower,
           for_features = for_features
         )
+      }
       new_data <- remove_zero_cols(new_data)
       new_data <- remove_zero_rows(new_data)
 
@@ -530,12 +525,10 @@ DualSimplexSolver <- R6Class(
     #' @param n_sigma number of sigmas to keep.
     #' @param for_features TRUE if filter rows, otherwise columns.
     #' @param max_filtering_iterations maximum fitering iterations to be performed
-    iterative_n_sigma_filter = function(
-      annnotation_features = NULL,
-      n_sigma = 3,
-      max_filtering_iterations = 500,
-      for_features = T
-    ) {
+    iterative_n_sigma_filter = function(annnotation_features = NULL,
+                                        n_sigma = 3,
+                                        max_filtering_iterations = 500,
+                                        for_features = T) {
       private$project_first()
       if (is.null(annnotation_features)) {
         spdl::error("Choose feature names from fData and pData columns to filter by")
@@ -544,39 +537,39 @@ DualSimplexSolver <- R6Class(
       new_data <- self$get_data()
 
       if (!is.null(annnotation_features)) {
-        filtering_iteration <-  1
-        previous_count <-  if(for_features) dim(new_data)[[1]] else  dim(new_data)[[2]]
+        filtering_iteration <- 1
+        previous_count <- if (for_features) dim(new_data)[[1]] else dim(new_data)[[2]]
         new_count <- -1
-        while((new_count < previous_count) && (filtering_iteration < max_filtering_iterations) ) {
-          previous_count <-   if(new_count == -1) previous_count else  new_count
-          intermediate_count <-  previous_count
+        while ((new_count < previous_count) && (filtering_iteration < max_filtering_iterations)) {
+          previous_count <- if (new_count == -1) previous_count else new_count
+          intermediate_count <- previous_count
 
           # Filter all features by selected sigma
-          cell_types <-  self$st$n_cell_types
+          cell_types <- self$st$n_cell_types
           for (current_feature in annnotation_features) {
-              spdl::info("Feature: {}", current_feature)
-              new_data <- n_sigma_filter(eset = new_data, annotation_feature = current_feature,  n_sigma = n_sigma, for_features = for_features)
-              new_data <- remove_zero_cols(new_data)
-              new_data <- remove_zero_rows(new_data)
-              new_count <-  if(for_features) dim(new_data)[[1]] else  dim(new_data)[[2]]
-              spdl::info("Removed {} points", intermediate_count - new_count)
+            spdl::info("Feature: {}", current_feature)
+            new_data <- n_sigma_filter(eset = new_data, annotation_feature = current_feature, n_sigma = n_sigma, for_features = for_features)
+            new_data <- remove_zero_cols(new_data)
+            new_data <- remove_zero_rows(new_data)
+            new_count <- if (for_features) dim(new_data)[[1]] else dim(new_data)[[2]]
+            spdl::info("Removed {} points", intermediate_count - new_count)
           }
-          new_count <-  if(for_features) dim(new_data)[[1]] else  dim(new_data)[[2]]
+          new_count <- if (for_features) dim(new_data)[[1]] else dim(new_data)[[2]]
           private$update_variables(new_data)
           self$project(cell_types)
           new_data <- self$get_data()
-          filtering_iteration <-  filtering_iteration + 1
+          filtering_iteration <- filtering_iteration + 1
           spdl::info("Total removed {} points", previous_count - new_count)
         }
-      private$add_filtering_log_step(
-        "n_sigma_filter",
-        paste(
-          paste('annnotation_features =', paste0(annnotation_features, collapse=',')),
-          paste0("n_sigma = ", n_sigma),
-          paste0("iterations = ", filtering_iteration),
-          sep = ", "
+        private$add_filtering_log_step(
+          "n_sigma_filter",
+          paste(
+            paste("annnotation_features =", paste0(annnotation_features, collapse = ",")),
+            paste0("n_sigma = ", n_sigma),
+            paste0("iterations = ", filtering_iteration),
+            sep = ", "
+          )
         )
-      )
       }
     },
 
@@ -588,36 +581,34 @@ DualSimplexSolver <- R6Class(
     #' @param density_radius radius for density calculation.
     #' @param for_features TRUE if filter rows, otherwise columns.
     #' @param max_filtering_iterations maximum fitering iterations to be performed
-    iterative_density_filter = function(
-      threshold = 0,
-      max_filtering_iterations = 500,
-      density_radius = NULL,
-      for_features = TRUE
-    ) {
+    iterative_density_filter = function(threshold = 0,
+                                        max_filtering_iterations = 500,
+                                        density_radius = NULL,
+                                        for_features = TRUE) {
       private$project_first()
       new_data <- self$get_data()
       annotation_feature <- "density"
-      filtering_iteration <-  1
-      previous_count <-  if(for_features) dim(new_data)[[1]] else  dim(new_data)[[2]]
+      filtering_iteration <- 1
+      previous_count <- if (for_features) dim(new_data)[[1]] else dim(new_data)[[2]]
       new_count <- -1
-      while((new_count < previous_count) && (filtering_iteration < max_filtering_iterations) ) {
-        previous_count <-   if(new_count == -1) previous_count else  new_count
-        cell_types <-  self$st$n_cell_types
-        new_data <- threshold_filter(eset = new_data, annotation_feature = annotation_feature,  threshold = threshold, for_features = for_features, keep_lower = F)
+      while ((new_count < previous_count) && (filtering_iteration < max_filtering_iterations)) {
+        previous_count <- if (new_count == -1) previous_count else new_count
+        cell_types <- self$st$n_cell_types
+        new_data <- threshold_filter(eset = new_data, annotation_feature = annotation_feature, threshold = threshold, for_features = for_features, keep_lower = F)
         new_data <- remove_zero_cols(new_data)
         new_data <- remove_zero_rows(new_data)
-        new_count <-  if(for_features) dim(new_data)[[1]] else  dim(new_data)[[2]]
+        new_count <- if (for_features) dim(new_data)[[1]] else dim(new_data)[[2]]
         private$update_variables(new_data)
         self$project(cell_types)
-        self$add_density_anno(radius=density_radius, for_features=for_features)
+        self$add_density_anno(radius = density_radius, for_features = for_features)
         new_data <- self$get_data()
-        filtering_iteration <-  filtering_iteration + 1
+        filtering_iteration <- filtering_iteration + 1
         spdl::info("Removed {} points", previous_count - new_count)
       }
       private$add_filtering_log_step(
         "iterative_density_filter",
         paste(
-          paste('radius =', density_radius),
+          paste("radius =", density_radius),
           paste0("threshold = ", threshold),
           paste0("iterations = ", filtering_iteration),
           sep = ", "
@@ -632,12 +623,10 @@ DualSimplexSolver <- R6Class(
     #' @param n_sigma number of sigmas to keep.
     #' @param for_features TRUE if filter rows, otherwise columns.
     #' @param max_filtering_iterations maximum fitering iterations to be performed
-    iterative_mahalanobis_filter = function(
-      annotation_features = NULL,
-      n_sigma = 3,
-      max_filtering_iterations = 500,
-      for_features = T
-    ) {
+    iterative_mahalanobis_filter = function(annotation_features = NULL,
+                                            n_sigma = 3,
+                                            max_filtering_iterations = 500,
+                                            for_features = T) {
       private$project_first()
       if (is.null(annotation_features)) {
         spdl::error("Choose feature names from fData and pData columns to filter by")
@@ -646,31 +635,31 @@ DualSimplexSolver <- R6Class(
       new_data <- self$get_data()
 
       if (!is.null(annotation_features)) {
-        filtering_iteration <-  1
-        previous_count <-  if(for_features) dim(new_data)[[1]] else  dim(new_data)[[2]]
+        filtering_iteration <- 1
+        previous_count <- if (for_features) dim(new_data)[[1]] else dim(new_data)[[2]]
         new_count <- -1
-        while((new_count < previous_count) && (filtering_iteration < max_filtering_iterations) ) {
-        previous_count <-   if(new_count == -1) previous_count else  new_count
-        cell_types <-  self$st$n_cell_types
-        new_data <- mahalanobis_n_sigma_filter(eset = new_data, annotation_features = annotation_features,  n_sigma = n_sigma, for_features = for_features)
-        new_data <- remove_zero_cols(new_data)
-        new_data <- remove_zero_rows(new_data)
-        new_count <-  if(for_features) dim(new_data)[[1]] else  dim(new_data)[[2]]
-        private$update_variables(new_data)
-        self$project(cell_types)
-        new_data <- self$get_data()
-        filtering_iteration <-  filtering_iteration + 1
-        spdl::info("Removed {} points", previous_count - new_count)
-      }
-      private$add_filtering_log_step(
-        "mahalanobis_filter",
-        paste(
-          paste('annnotation_features =', paste0(annnotation_features, collapse=',')),
-          paste0("n_sigma = ", n_sigma),
-          paste0("iterations = ", filtering_iteration),
-          sep = ", "
+        while ((new_count < previous_count) && (filtering_iteration < max_filtering_iterations)) {
+          previous_count <- if (new_count == -1) previous_count else new_count
+          cell_types <- self$st$n_cell_types
+          new_data <- mahalanobis_n_sigma_filter(eset = new_data, annotation_features = annotation_features, n_sigma = n_sigma, for_features = for_features)
+          new_data <- remove_zero_cols(new_data)
+          new_data <- remove_zero_rows(new_data)
+          new_count <- if (for_features) dim(new_data)[[1]] else dim(new_data)[[2]]
+          private$update_variables(new_data)
+          self$project(cell_types)
+          new_data <- self$get_data()
+          filtering_iteration <- filtering_iteration + 1
+          spdl::info("Removed {} points", previous_count - new_count)
+        }
+        private$add_filtering_log_step(
+          "mahalanobis_filter",
+          paste(
+            paste("annnotation_features =", paste0(annnotation_features, collapse = ",")),
+            paste0("n_sigma = ", n_sigma),
+            paste0("iterations = ", filtering_iteration),
+            sep = ", "
+          )
         )
-      )
       }
     },
 
@@ -706,12 +695,10 @@ DualSimplexSolver <- R6Class(
     #' @param from_iter starting point for history of solutions.
     #' @param to_iter end point for history of solutions.
     #' @param ... any other params to be passed to plot_projected method.
-    plot_projected = function(
-      color_features = "zero_distance", color_samples = "zero_distance",
-      use_dims = private$display_dims, with_legend = NULL,
-      with_solution = TRUE, with_history = TRUE,
-      wrap = T, show_plots = T, from_iter = 0, to_iter = NULL, ...
-    ) {
+    plot_projected = function(color_features = "zero_distance", color_samples = "zero_distance",
+                              use_dims = private$display_dims, with_legend = NULL,
+                              with_solution = TRUE, with_history = TRUE,
+                              wrap = T, show_plots = T, from_iter = 0, to_iter = NULL, ...) {
       if (inherits(use_dims, "list")) {
         plotlist <- lapply(use_dims, function(this_use_dims) {
           self$plot_projected(
@@ -721,7 +708,9 @@ DualSimplexSolver <- R6Class(
           )
         })
         if (show_plots) {
-          for (plot in plotlist) { show(plot) }
+          for (plot in plotlist) {
+            show(plot)
+          }
           return(invisible(NULL))
         } else {
           return(plotlist)
@@ -775,7 +764,7 @@ DualSimplexSolver <- R6Class(
       }
 
       if (!is.null(with_legend) && with_legend) {
-          plt_X <- plt_X + theme(legend.position = "right")
+        plt_X <- plt_X + theme(legend.position = "right")
         plt_Omega <- plt_Omega + theme(legend.position = "right")
       }
 
@@ -803,10 +792,8 @@ DualSimplexSolver <- R6Class(
     #'
     #' @param iterations number of steps to perform
     #' @param config optimization config (result of optim_config method)
-    optim_solution = function(
-      iterations = 10000,
-      config = OPTIM_CONFIG_DEFAULT
-    ) {
+    optim_solution = function(iterations = 10000,
+                              config = OPTIM_CONFIG_DEFAULT) {
       private$initialize_first()
       self$st$solution_proj <- optimize_solution(
         self$st$proj,
@@ -820,37 +807,35 @@ DualSimplexSolver <- R6Class(
     #' This is best starting point to run optimization
     #' This is how we run optimization while performed comparison with other methods. you can use this method as a template for yourself
     #' @param config optimization config (coef_hinge_H, coef_hinge_W, coef_der_X, coef_der_Omega) will be overwritten.
-    default_optimization = function(
-    config = OPTIM_CONFIG_DEFAULT
-    ) {
+    default_optimization = function(config = OPTIM_CONFIG_DEFAULT) {
       private$initialize_first()
-      LR_DECAY_STEPS = 15
-      PARAMETERS_INCREASE_STEPS = 5
+      LR_DECAY_STEPS <- 15
+      PARAMETERS_INCREASE_STEPS <- 5
       lr_decay <- 0.5
       params_increase <- 10
-      original_lambda_term <- config$coef_hinge_H #coef_hinge_H
-      original_beta_term <- config$coef_hinge_W #coef_hinge_W
+      original_lambda_term <- config$coef_hinge_H # coef_hinge_H
+      original_beta_term <- config$coef_hinge_W # coef_hinge_W
       lr_x <- config$coef_der_X
       lr_omega <- config$coef_der_Omega
       RUNS_EACH_STEP <- 1000
       pb <- progress_bar$new(total = LR_DECAY_STEPS * PARAMETERS_INCREASE_STEPS)
       for (lr_step in 1:LR_DECAY_STEPS) {
-        lambda_term <-  original_lambda_term * lr_x * lr_x
-        beta_term <- original_beta_term   * lr_omega * lr_omega
-            for (x in 1:PARAMETERS_INCREASE_STEPS) {
-                # Main training method, you can just run this
-                config$coef_hinge_H <- lambda_term
-                config$coef_hinge_W <- beta_term
-                config$coef_der_X <- lr_x
-                config$coef_der_Omega <- lr_omega
-                self$optim_solution(RUNS_EACH_STEP, config)
-        lambda_term <- lambda_term * params_increase
-        beta_term <- beta_term * params_increase
-        pb$tick()
+        lambda_term <- original_lambda_term * lr_x * lr_x
+        beta_term <- original_beta_term * lr_omega * lr_omega
+        for (x in 1:PARAMETERS_INCREASE_STEPS) {
+          # Main training method, you can just run this
+          config$coef_hinge_H <- lambda_term
+          config$coef_hinge_W <- beta_term
+          config$coef_der_X <- lr_x
+          config$coef_der_Omega <- lr_omega
+          self$optim_solution(RUNS_EACH_STEP, config)
+          lambda_term <- lambda_term * params_increase
+          beta_term <- beta_term * params_increase
+          pb$tick()
+        }
+        lr_x <- lr_x * lr_decay
+        lr_omega <- lr_omega * lr_decay
       }
-      lr_x <- lr_x * lr_decay
-      lr_omega <- lr_omega * lr_decay
-    }
     },
 
     #' @description
@@ -862,15 +847,15 @@ DualSimplexSolver <- R6Class(
 
     #' @description
     #' Finalize solution.
-    #' Get result W and H matrices by going back from projection space and performing reverse sinkhorn 
+    #' Get result W and H matrices by going back from projection space and performing reverse sinkhorn
     #' Return from projection to sinkhorn transformed matrice.
     #' @param reverse_sinkhorn_type type of reverse sinkhorn to run  - clean/clean_H_norm/clean_V_norm/nnls/nnls_H_norm/geometric.
     finalize_solution = function(reverse_sinkhorn_type = "clean") {
       private$initialize_first()
       if (reverse_sinkhorn_type == "clean") {
         # Starts with H_fs, W_ss
-        # Basic version with clean matrix multiplications. Will return column normalized W. 
-        solution_scaled <-  reverse_solution_projection_geometrical(self$st$solution_proj, self$st$proj)
+        # Basic version with clean matrix multiplications. Will return column normalized W.
+        solution_scaled <- reverse_solution_projection_geometrical(self$st$solution_proj, self$st$proj)
         self$st$solution_no_corr <- clean_reverse_solution_sinkhorn(solution_scaled, self$st$scaling)
         self$st$solution <- list(
           W = self$st$solution_no_corr$W,
@@ -878,9 +863,9 @@ DualSimplexSolver <- R6Class(
         )
       } else if (reverse_sinkhorn_type == "clean_H_norm") {
         # Starts with H_fs, W_ss
-        # Once basic clean version performed will do NNLS to guess column normalized H. Will return H close to column normalized H. 
-        solution_scaled <-  reverse_solution_projection_geometrical(self$st$solution_proj, self$st$proj)
-        self$st$solution_no_corr <- clean_reverse_solution_sinkhorn(solution_scaled, self$st$scaling, enforce_sum_to_one_H=1) # nolint: line_length_linter.
+        # Once basic clean version performed will do NNLS to guess column normalized H. Will return H close to column normalized H.
+        solution_scaled <- reverse_solution_projection_geometrical(self$st$solution_proj, self$st$proj)
+        self$st$solution_no_corr <- clean_reverse_solution_sinkhorn(solution_scaled, self$st$scaling, enforce_sum_to_one_H = 1) # nolint: line_length_linter.
         self$st$solution <- list(
           W = self$st$solution_no_corr$W_2,
           H = self$st$solution_no_corr$H_2
@@ -888,8 +873,8 @@ DualSimplexSolver <- R6Class(
       } else if (reverse_sinkhorn_type == "clean_V_norm") {
         # Starts with H_fs, W_ss
         # Once basic clean version performed will column normalize V=WH ensuring H is column normalized.
-        solution_scaled <-  reverse_solution_projection_geometrical(self$st$solution_proj, self$st$proj)
-        self$st$solution_no_corr <- clean_reverse_solution_sinkhorn(solution_scaled, self$st$scaling, enforce_sum_to_one_V=1)
+        solution_scaled <- reverse_solution_projection_geometrical(self$st$solution_proj, self$st$proj)
+        self$st$solution_no_corr <- clean_reverse_solution_sinkhorn(solution_scaled, self$st$scaling, enforce_sum_to_one_V = 1)
         self$st$solution <- list(
           W = self$st$solution_no_corr$W_2,
           H = self$st$solution_no_corr$H_2
@@ -920,7 +905,7 @@ DualSimplexSolver <- R6Class(
         # Starts with H_fs, W_ss
         # The paired matrix for each step is claculated geometrically from respective V matrix projection.
         # Time consuming. Did not give any precision improvements
-        solution_scaled <-  reverse_solution_projection_geometrical(self$st$solution_proj, self$st$proj)
+        solution_scaled <- reverse_solution_projection_geometrical(self$st$solution_proj, self$st$proj)
         V_inf <- self$get_V_row()
         self$st$solution_no_corr <- geometrical_reverse_solution_sinkhorn(solution_scaled, self$st$scaling, V_inf)
         self$st$solution <- list(
@@ -1005,10 +990,9 @@ DualSimplexSolver <- R6Class(
     #' @param new_dir_path  path to save model
     getset_save_dir = function(new_dir_path = NULL) {
       if (is.null(private$save_dir)) {
-        if (is.null(new_dir_path))  {
+        if (is.null(new_dir_path)) {
           spdl::error("Specify save_dir or call set_save_dir")
           stop("Specify save_dir or call set_save_dir")
-
         }
         self$set_save_dir(new_dir_path)
       } else if (!is.null(new_dir_path) && !private$save_dir == new_dir_path) {
@@ -1079,11 +1063,9 @@ DualSimplexSolver <- R6Class(
     #' @param save_dir  path to save report
     #' @param seurat_obj  seurat object to use for markers visualization
     #' @param with_animated_optim TRUE to save gif with optimization process
-    generate_summary = function(
-      save_dir = NULL,
-      seurat_obj = NULL,
-      with_animated_optim = F
-    ) {
+    generate_summary = function(save_dir = NULL,
+                                seurat_obj = NULL,
+                                with_animated_optim = F) {
       out_dir <- self$getset_save_dir(save_dir)
 
       rmd_path <- system.file("extdata", "solver_summary.Rmd", package = "DualSimplex")
@@ -1129,7 +1111,12 @@ DualSimplexSolver <- R6Class(
     #' get number optimization iterations performed
     get_n_iters = function() {
       private$optimize_first()
-      return(nrow(self$st$solution_proj$optim_history$errors_statistics))
+      if (!is.null(self$st$solution_proj$optim_history$history)) {
+        return(max(self$st$solution_proj$optim_history$history$iteration))
+      } else {
+        # Now we track an additional initial state
+        return(nrow(self$st$solution_proj$optim_history$errors_statistics) - 1)
+      }
     },
     #' @description
     #' get proportionality of negative elements for H and W
@@ -1178,7 +1165,7 @@ DualSimplexSolver <- R6Class(
       colnames(res) <- colnames(self$get_data())
 
       res
-   },
+    },
 
     #' @description
     #' Calculate V_column on the fly.
@@ -1206,17 +1193,44 @@ DualSimplexSolver <- R6Class(
     #' @param H  second factorization matrix for original V (V = WH). Colnames should match dso$st$data.
     get_coordinates_from_external_matrices = function(W, H) {
       private$project_first()
-      extended_scaling_result <- extended_sinkhorn_scale(V = Biobase::exprs(self$st$data),
-                                                         W=W[rownames(self$st$data),],
-                                                         H=H[, colnames(self$st$data)],
-                                                         n_iter = self$st$scaling$iterations)
-      H_ss <-  extended_scaling_result$H_row
-      W_gs <-  extended_scaling_result$W_col
-      res <- get_coordinates_from_scaled_matrices(H_ss = H_ss, W_gs=W_gs, proj=self$st$proj)
+      extended_scaling_result <- extended_sinkhorn_scale(
+        V = Biobase::exprs(self$st$data),
+        W = W[rownames(self$st$data), ],
+        H = H[, colnames(self$st$data)],
+        n_iter = self$st$scaling$iterations
+      )
+      H_ss <- extended_scaling_result$H_row
+      W_gs <- extended_scaling_result$W_col
+      res <- get_coordinates_from_scaled_matrices(H_ss = H_ss, W_gs = W_gs, proj = self$st$proj)
       return(res)
+    },
+
+
+    #' @description
+    #' Get history of optimization.
+    get_history = function() {
+      private$optimize_first()
+      if (is.null(self$st$solution_proj$optim_history$history)) {
+        warning("No history found! The used optimizer does not use the logger.")
+        return(NULL)
+      }
+      tidyr::pivot_wider(
+        self$st$solution_proj$optim_history$history,
+        names_from = "metric",
+        values_from = "value"
+      )
+    },
+
+    #' @description
+    #' Get history of optimization in long format.
+    get_history_long = function() {
+      private$optimize_first()
+      if (is.null(self$st$solution_proj$optim_history$history)) {
+        warning("No history found! The used optimizer does not use the logger.")
+        return(NULL)
+      }
+      self$st$solution_proj$optim_history$history
     }
-
-
   )
 )
 

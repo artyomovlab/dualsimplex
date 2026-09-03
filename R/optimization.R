@@ -9,6 +9,7 @@
 #' @param coef_der_Omega learning rate for Omega space
 #' @param coef_hinge_H positiviy penalty for X space (lambda)
 #' @param coef_hinge_W positiviy penalty for Omega space (beta)
+#' @param coef_alignment alignment penalty (gamma)
 #' @param total_regularization_weight regularization weight for optimization
 #' @param reg_X regularization weight for X
 #' @param reg_Omega regularization weight for Omega
@@ -25,18 +26,23 @@
 #' @return ready to use list with algorithm configuration
 #' @export
 optim_config <- function(
-  method = "positivity", # positivity/coordinate_descent/theta
+  method = c("positivity", "coordinate_descent", "theta", "alignment"), # let R handel selection and checking
   debug_stats = FALSE,
   coef_der_X = 0.01,
   coef_der_Omega = 0.01,
   coef_hinge_H = 0.5,
   coef_hinge_W = 0.5,
+  coef_alignment = 0.5, # [CJLee] first try default as 0.5
   # Positivity method with fair gradients and stopping criteria
   total_regularization_weight = 0,
   reg_X = 1,
   reg_Omega = 1,
   stop_criteria_window = 800,
   convergence_tol = 1e-9,
+  patience = 10,
+  decade_rate = 0.5,
+  max_drop = 10,
+  epsilon = 1e-8,
   # Theta optimization within angle
   x_center = NULL,
   omega_center = NULL,
@@ -49,19 +55,22 @@ optim_config <- function(
   coef_pos_D_w = 0
 ) {
   return(list(
-    method = method,
+    method = match.arg(method), # this will check if user provide proper method name, otherwise use the default `positivity`
     debug_stats = debug_stats,
     coef_der_X = coef_der_X,
     coef_der_Omega = coef_der_Omega,
     coef_hinge_H = coef_hinge_H,
     coef_hinge_W = coef_hinge_W,
-
+    coef_alignment = coef_alignment,
     total_regularization_weight = total_regularization_weight,
     reg_X = reg_X,
     reg_Omega = reg_Omega,
     convergence_tol = convergence_tol,
     stop_criteria_window = stop_criteria_window,
-
+    patience = patience,
+    decade_rate = decade_rate,
+    max_drop = max_drop,
+    epsilon = epsilon,
     x_center = x_center,
     omega_center = omega_center,
     center_threshold = center_threshold,
@@ -116,7 +125,9 @@ optimize_solution <- function(
       points_statistics_X_dtilda = NULL,
       points_statistics_Omega_dtilda = NULL,
       points_statistics_X_dtilda_uncorrected = NULL,
-      points_statistics_Omega_dtilda_uncorrected = NULL
+      points_statistics_Omega_dtilda_uncorrected = NULL,
+      history = NULL,
+      metadata = NULL
     )
   }
 
@@ -124,11 +135,14 @@ optimize_solution <- function(
     block_name <- paste0("block_", nrow(solution_proj$optim_history$blocks_statistics) + 1)
   }
 
-  if (is.null(solution_proj$optim_history$errors_statistics)) {
-    from_idx <- 1
-  } else {
+  if (!is.null(solution_proj$optim_history$history)) {
+    from_idx <- max(solution_proj$optim_history$history$iteration) + 2
+  } else if (!is.null(solution_proj$optim_history$errors_statistics)) {
     from_idx <- nrow(solution_proj$optim_history$errors_statistics) + 1
+  } else {
+    from_idx <- 1
   }
+
 
   solution_proj$optim_history$blocks_statistics <- rbind(
     solution_proj$optim_history$blocks_statistics,
@@ -167,12 +181,12 @@ optimize_solution <- function(
 
   # Running optimization
   mean_radius_X <-
-    mean(apply(proj$X[, -1], 1, function(x) {
+    mean(apply(proj$X[, -1, drop = FALSE], 1, function(x) {
       norm(x, "2")
     }))
 
   mean_radius_Omega <-
-    mean(apply(proj$Omega[, -1], 1, function(x) {
+    mean(apply(proj$Omega[, -1, drop = FALSE], 1, function(x) {
       norm(x, "2")
     }))
 
@@ -195,59 +209,81 @@ optimize_solution <- function(
   )
   optimization_result <- if (config$method == "positivity") {
     optimization_params$total_regularization_weight <- config$total_regularization_weight
-    optimization_params$reg_X  <- config$reg_X
-    optimization_params$reg_Omega  <- config$reg_Omega
+    optimization_params$reg_X <- config$reg_X
+    optimization_params$reg_Omega <- config$reg_Omega
     optimization_params$convergence_tol <- config$convergence_tol
     optimization_params$debug_stats <- config$debug_stats
-    optimization_params$stop_criteria_window  <- config$stop_criteria_window
-
+    optimization_params$stop_criteria_window <- config$stop_criteria_window
     do.call(optimize_positivity, optimization_params)
   } else if (config$method == "coordinate_descent") {
-    optimization_params$r_const_X <-  r_limits$R_limit_X
-    optimization_params$r_const_Omega <-  r_limits$R_limit_Omega
+    optimization_params$r_const_X <- r_limits$R_limit_X
+    optimization_params$r_const_Omega <- r_limits$R_limit_Omega
     optimization_params$thresh <- config$cosine_thresh
-    optimization_params$coef_pos_D_h <-  config$coef_pos_D_h
-    optimization_params$coef_pos_D_w <-  config$coef_pos_D_w
+    optimization_params$coef_pos_D_h <- config$coef_pos_D_h
+    optimization_params$coef_pos_D_w <- config$coef_pos_D_w
     optimization_params$coef_der_Omega <- config$coef_der_Omega
-    optimization_params$mean_radius_X <-  mean_radius_X
-    optimization_params$mean_radius_Omega  <- mean_radius_Omega
+    optimization_params$mean_radius_X <- mean_radius_X
+    optimization_params$mean_radius_Omega <- mean_radius_Omega
     optimization_params$convergence_tol <- config$convergence_tol
     optimization_params$debug_stats <- config$debug_stats
-    optimization_params$stop_criteria_window  <- config$stop_criteria_window
+    optimization_params$stop_criteria_window <- config$stop_criteria_window
     do.call(optimize_coordinate_descent, optimization_params)
   } else if (config$method == "theta") {
-    optimization_params$r_const_X <-  r_limits$R_limit_X
-    optimization_params$r_const_Omega <-  r_limits$R_limit_Omega
+    optimization_params$r_const_X <- r_limits$R_limit_X
+    optimization_params$r_const_Omega <- r_limits$R_limit_Omega
     optimization_params$thresh <- config$cosine_thresh
-    optimization_params$coef_pos_D_h <-  config$coef_pos_D_h
-    optimization_params$coef_pos_D_w <-  config$coef_pos_D_w
+    optimization_params$coef_pos_D_h <- config$coef_pos_D_h
+    optimization_params$coef_pos_D_w <- config$coef_pos_D_w
     optimization_params$coef_der_Omega <- config$coef_der_Omega
-    optimization_params$mean_radius_X <-  mean_radius_X
-    optimization_params$mean_radius_Omega  <- mean_radius_Omega
+    optimization_params$mean_radius_X <- mean_radius_X
+    optimization_params$mean_radius_Omega <- mean_radius_Omega
 
     # this optimization ensures that solution points are not going away to far from the predefined center points.
     # the distance is measured as cosine distance between rays originating from 0.
     optimization_params$X_center <- config$x_center # predefined center point for X space. could be NULL
-    if (! is.null(config$omega_center)) {
-        optimization_params$Omega_center <- t(config$omega_center) # predefined center point for Omega space. could be NULL
+    if (!is.null(config$omega_center)) {
+      optimization_params$Omega_center <- t(config$omega_center) # predefined center point for Omega space. could be NULL
     } else {
-        optimization_params$Omega_center  <- config$omega_center
+      optimization_params$Omega_center <- config$omega_center
     }
     optimization_params$theta_threshold <- config$center_threshold # threshold for the angle
     do.call(optimize_theta, optimization_params)
+  } else if (config$method == "alignment") {
+    optimization_params$max_iteration <- optimization_params$iterations
+    optimization_params$iterations <- NULL
+
+    optimization_params$convergence_tol <- if (!is.null(config$convergence_tol)) config$convergence_tol else 1e-4
+    optimization_params$patience <- if (!is.null(config$patience)) as.integer(config$patience) else 10L
+    optimization_params$decade_rate <- if (!is.null(config$decade_rate)) config$decade_rate else 0.5
+    optimization_params$max_drop <- if (!is.null(config$max_drop)) as.integer(config$max_drop) else 10L
+    optimization_params$epsilon <- if (!is.null(config$epsilon)) config$epsilon else 1e-8
+
+    optimization_params$debug_stats <- config$debug_stats
+
+    # for compatibility, might have some overhead
+    optimization_params[["initial_X"]] <- optimization_params$X
+    optimization_params[["X"]] <- NULL
+    optimization_params[["initial_Omega"]] <- optimization_params$Omega
+    optimization_params[["Omega"]] <- NULL
+    optimization_params[["initial_D_w"]] <- optimization_params$D_w
+    optimization_params[["D_w"]] <- NULL
+    optimization_params[["cell_types"]] <- NULL
+    optimization_params[["M"]] <- NULL
+    optimization_params[["N"]] <- NULL
+
+    do.call(optimize_alignment_pgd, optimization_params)
   } else {
     spdl::warn("Unknown optimization method. Will do the basic one")
-    optimization_params$r_const_X <-  r_limits$R_limit_X
-    optimization_params$r_const_Omega <-  r_limits$R_limit_Omega
+    optimization_params$r_const_X <- r_limits$R_limit_X
+    optimization_params$r_const_Omega <- r_limits$R_limit_Omega
     optimization_params$thresh <- config$cosine_thresh
-    optimization_params$coef_pos_D_h <-  config$coef_pos_D_h
-    optimization_params$coef_pos_D_w <-  config$coef_pos_D_w
+    optimization_params$coef_pos_D_h <- config$coef_pos_D_h
+    optimization_params$coef_pos_D_w <- config$coef_pos_D_w
     optimization_params$coef_der_Omega <- config$coef_der_Omega
     optimization_params$convergence_tol <- config$convergence_tol
     optimization_params$debug_stats <- config$debug_stats
-    optimization_params$stop_criteria_window  <- config$stop_criteria_window
+    optimization_params$stop_criteria_window <- config$stop_criteria_window
     do.call(optimize_coordinate_descent, optimization_params)
-
   }
 
   solution_proj$X <- optimization_result$new_X
@@ -258,7 +294,7 @@ optimize_solution <- function(
   colnames(solution_proj$Omega) <- rownames(proj$meta$R)
   colnames(solution_proj$X) <- rownames(proj$meta$R)
 
-  target_iterations <-  ifelse(from_idx == 1, iterations + 1, iterations) 
+  target_iterations <- ifelse(from_idx == 1, iterations + 1, iterations)
 
   solution_proj$optim_history$errors_statistics <- rbind(
     solution_proj$optim_history$errors_statistics,
@@ -267,62 +303,85 @@ optimize_solution <- function(
 
   solution_proj$optim_history$points_statistics_X <- rbind(
     solution_proj$optim_history$points_statistics_X,
-    tail(optimization_result$points_statistics_X,  target_iterations)
+    tail(optimization_result$points_statistics_X, target_iterations)
   )
   solution_proj$optim_history$points_statistics_Omega <- rbind(
     solution_proj$optim_history$points_statistics_Omega,
     tail(optimization_result$points_statistics_Omega, target_iterations)
   )
   solution_proj$optim_history$points_statistics_Dw <- rbind(
-  solution_proj$optim_history$points_statistics_Dw,
-           tail(optimization_result$points_statistics_Dw, target_iterations)
+    solution_proj$optim_history$points_statistics_Dw,
+    tail(optimization_result$points_statistics_Dw, target_iterations)
   )
-  if (config$method == "positivity")  {
-  #   solution_proj$optim_history$points_statistics_X_dtilda <- rbind(
-  #     solution_proj$optim_history$points_statistics_X_dtilda,
-  #     tail(optimization_result$points_statistics_X_dtilda, target_iterations)
-  # )
-  #   solution_proj$optim_history$points_statistics_X_dtilda_uncorrected <- rbind(
-  #     solution_proj$optim_history$points_statistics_X_dtilda_uncorrected,
-  #     tail(optimization_result$points_statistics_X_dtilda_uncorrected, target_iterations)
-  # )
-  #   solution_proj$optim_history$points_statistics_Omega_dtilda <- rbind(
-  #     solution_proj$optim_history$points_statistics_Omega_dtilda,
-  #     tail(optimization_result$points_statistics_Omega_dtilda, target_iterations)
-  # )
-  #   solution_proj$optim_history$points_statistics_Omega_dtilda_uncorrected <- rbind(
-  #     solution_proj$optim_history$points_statistics_Omega_dtilda_uncorrected,
-  #     tail(optimization_result$points_statistics_Omega_dtilda_uncorrected, target_iterations)
-  # )
+  if (!is.null(optimization_result$history)) {
+    new_history <- optimization_result$history
+    # Continue iteration numbers from previous run
+    if (from_idx > 1 && !is.null(solution_proj$optim_history$history)) {
+      # Drop the overlapping first iteration (iteration 0 of the new run)
+      new_history <- new_history[new_history$iteration > 0, , drop = FALSE]
 
+      # Offset the iteration numbers so they continue from the previous run
+      last_iter <- max(solution_proj$optim_history$history$iteration)
+      new_history$iteration <- new_history$iteration + last_iter
+    }
+    solution_proj$optim_history$history <- rbind(
+      solution_proj$optim_history$history,
+      new_history
+    )
+  }
+  if (!is.null(optimization_result$metadata)) {
+    solution_proj$optim_history$metadata <- optimization_result$metadata
+  }
+  if (config$method == "positivity") {
+    #   solution_proj$optim_history$points_statistics_X_dtilda <- rbind(
+    #     solution_proj$optim_history$points_statistics_X_dtilda,
+    #     tail(optimization_result$points_statistics_X_dtilda, target_iterations)
+    # )
+    #   solution_proj$optim_history$points_statistics_X_dtilda_uncorrected <- rbind(
+    #     solution_proj$optim_history$points_statistics_X_dtilda_uncorrected,
+    #     tail(optimization_result$points_statistics_X_dtilda_uncorrected, target_iterations)
+    # )
+    #   solution_proj$optim_history$points_statistics_Omega_dtilda <- rbind(
+    #     solution_proj$optim_history$points_statistics_Omega_dtilda,
+    #     tail(optimization_result$points_statistics_Omega_dtilda, target_iterations)
+    # )
+    #   solution_proj$optim_history$points_statistics_Omega_dtilda_uncorrected <- rbind(
+    #     solution_proj$optim_history$points_statistics_Omega_dtilda_uncorrected,
+    #     tail(optimization_result$points_statistics_Omega_dtilda_uncorrected, target_iterations)
+    # )
   }
 
-  colnames(solution_proj$optim_history$errors_statistics) <-
-    head(c(
-      "deconv_error",
-      "lambda_error",
-      "beta_error",
-      "D_h_error",
-      "D_w_error",
-      "total_error",
-      "scaled_total_error",
-      "neg_props_count",
-      "neg_basis_count",
-      "sum_d_w",
-      "average_norm",
-      "learning_rate",
-      "gradient_norm",
-      "average_hinge_H_gradient_norm",
-      "average_hinge_W_gradient_norm",
-      "average_reg_X_gradient_norm",
-      "average_reg_Omega_gradient_norm",
-      "best_error_value",
-      "best_error_iteration",
-      "scaled_lambda_error",
-      "scaled_beta_error",
-      "average_final_gradient_norm",
-      "total_shrink_iterations"
-    ), ncol(solution_proj$optim_history$errors_statistics))
+  if (!is.null(solution_proj$optim_history$errors_statistics)) { # for compatibility
+    colnames(solution_proj$optim_history$errors_statistics) <- head(
+      c(
+        "deconv_error",
+        "lambda_error",
+        "beta_error",
+        "D_h_error",
+        "D_w_error",
+        "total_error",
+        "scaled_total_error",
+        "neg_props_count",
+        "neg_basis_count",
+        "sum_d_w",
+        "average_norm",
+        "learning_rate",
+        "gradient_norm",
+        "average_hinge_H_gradient_norm",
+        "average_hinge_W_gradient_norm",
+        "average_reg_X_gradient_norm",
+        "average_reg_Omega_gradient_norm",
+        "best_error_value",
+        "best_error_iteration",
+        "scaled_lambda_error",
+        "scaled_beta_error",
+        "average_final_gradient_norm",
+        "total_shrink_iterations"
+      ),
+      ncol(solution_proj$optim_history$errors_statistics)
+    )
+  }
+
   return(solution_proj)
 }
 
@@ -376,21 +435,36 @@ plot_errors <- function(
     "total_error"
   )
 ) {
-  to_plot <- data.frame(solution_proj$optim_history$errors_statistics[, variables, drop=F])
-  if (nrow(solution_proj$optim_history$errors_statistics) == 0) {
-    spdl::warn("Nothing to plot, errors_statistics was empty")
-  } else {
-    to_plot$iteration <- 0:(nrow(solution_proj$optim_history$errors_statistics) - 1)
-    to_plot <- reshape2::melt(to_plot, id.vars = "iteration", measure.vars = variables)
-    plt <-
-      ggplot(to_plot, aes(
-        x = .data$iteration,
-        y = log10(.data$value),
-        color = .data$variable
-      )) +
-      geom_line() + theme_minimal()
-    plt
+  # for compatibility
+  if (is.null(solution_proj$optim_history$history)) { # for compatibility
+    to_plot <- data.frame(solution_proj$optim_history$errors_statistics[, variables, drop = F])
+    if (nrow(solution_proj$optim_history$errors_statistics) == 0) {
+      spdl::warn("Nothing to plot, errors_statistics was empty")
+    } else {
+      to_plot$iteration <- 0:(nrow(solution_proj$optim_history$errors_statistics) - 1)
+      to_plot <- reshape2::melt(to_plot, id.vars = "iteration", measure.vars = variables)
+      plt <-
+        ggplot(to_plot, aes(
+          x = .data$iteration,
+          y = log10(.data$value),
+          color = .data$variable
+        )) +
+        geom_line() +
+        theme_minimal()
+      return(plt) # early return so we can skip else clause
+    }
   }
+  history <- solution_proj$optim_history$history
+  ggplot(
+    history[history$metric %in% variables, ],
+    mapping = aes(
+      x = iteration,
+      y = log10(value),
+      color = metric
+    )
+  ) +
+    geom_line() +
+    theme_minimal()
 }
 
 
@@ -406,16 +480,39 @@ plot_negative_proportions_change <- function(proj, solution_proj) {
   N <- proj$meta$N
   M <- proj$meta$M
   K <- proj$meta$K
-  errors_statistics <- solution_proj$optim_history$errors_statistics
   total_H <- N * K
-  toPlot <- as.data.frame(errors_statistics[, "neg_props_count",drop=F])
-  last_prop_count <- round(toPlot[nrow(toPlot), "neg_props_count"] / total_H,6) * 100
-  toPlot$iteration <- 0:(nrow(toPlot) - 1)
-  plt <- ggplot(toPlot,aes(y=.data$neg_props_count,x=.data$iteration)) + geom_line() + theme_minimal() +
-      xlab("Iteration") + ylab("Negative proportions")+
-    annotate("text",  x=Inf, y = Inf, label = paste0(last_prop_count,"%"), vjust=1, hjust=1) +
+
+  if (is.null(solution_proj$optim_history$history)) { # for compatibility
+    errors_statistics <- solution_proj$optim_history$errors_statistics
+    toPlot <- as.data.frame(errors_statistics[, "neg_props_count", drop = F])
+    last_prop_count <- round(toPlot[nrow(toPlot), "neg_props_count"] / total_H, 6) * 100
+    toPlot$iteration <- 0:(nrow(toPlot) - 1)
+    plt <- ggplot(toPlot, aes(y = .data$neg_props_count, x = .data$iteration)) +
+      geom_line() +
+      theme_minimal() +
+      xlab("Iteration") +
+      ylab("Negative proportions") +
+      annotate("text", x = Inf, y = Inf, label = paste0(last_prop_count, "%"), vjust = 1, hjust = 1) +
+      ggtitle("Number of negative proportions")
+    return(plt)
+  }
+
+  history <- solution_proj$optim_history$history
+  last_prop_percentage <- round(tail(history[history$metric == "neg_props", "value"], 1) / total_H, 6) * 100
+
+  ggplot(
+    history[history$metric == "neg_props", ],
+    mapping = aes(
+      x = iteration,
+      y = value
+    )
+  ) +
+    geom_line() +
+    theme_minimal() +
+    xlab("Iteration") +
+    ylab("Negative proportions") +
+    annotate("text", x = Inf, y = Inf, label = paste0(last_prop_percentage, "%"), vjust = 1, hjust = 1) +
     ggtitle("Number of negative proportions")
-  return(plt)
 }
 
 #' Plot changes in negativity of matrix W
@@ -430,16 +527,37 @@ plot_negative_basis_change <- function(proj, solution_proj) {
   N <- proj$meta$N
   M <- proj$meta$M
   K <- proj$meta$K
-  errors_statistics <- solution_proj$optim_history$errors_statistics
   total_W <- M * K
-  toPlot <- as.data.frame(errors_statistics[,"neg_basis_count",drop=F])
-  last_basis_count <- round(toPlot[nrow(toPlot),"neg_basis_count"] / total_W,6) * 100
-  toPlot$iteration <- 0:(nrow(toPlot) - 1)
-  plt <- ggplot(toPlot,aes(y=.data$neg_basis_count,x=.data$iteration)) + geom_line() + theme_minimal() +
-      xlab("Iteration") + ylab("Negative basis")+
-      annotate("text",  x=Inf, y = Inf, label = paste0(last_basis_count,"%"), vjust=1, hjust=1) +
+
+  if (is.null(solution_proj$optim_history$history)) { # for compatibility
+    errors_statistics <- solution_proj$optim_history$errors_statistics
+    toPlot <- as.data.frame(errors_statistics[, "neg_basis_count", drop = F])
+    last_basis_count <- round(toPlot[nrow(toPlot), "neg_basis_count"] / total_W, 6) * 100
+    toPlot$iteration <- 0:(nrow(toPlot) - 1)
+    plt <- ggplot(toPlot, aes(y = .data$neg_basis_count, x = .data$iteration)) +
+      geom_line() +
+      theme_minimal() +
+      xlab("Iteration") +
+      ylab("Negative basis") +
+      annotate("text", x = Inf, y = Inf, label = paste0(last_basis_count, "%"), vjust = 1, hjust = 1) +
+      ggtitle("Number of negative basis elements")
+    return(plt)
+  }
+
+  history <- solution_proj$optim_history$history
+  neg_basis_percentage <- round(tail(history[history$metric == "neg_basis", "value"], 1) / total_W, 6) * 100
+
+  ggplot(
+    history[history$metric == "neg_basis", ],
+    mapping = aes(
+      x = iteration,
+      y = value
+    )
+  ) +
+    geom_line() +
+    theme_minimal() +
+    xlab("Iteration") +
+    ylab("Negative basis") +
+    annotate("text", x = Inf, y = Inf, label = paste0(neg_basis_percentage, "%"), vjust = 1, hjust = 1) +
     ggtitle("Number of negative basis elements")
-  return(plt)
 }
-
-

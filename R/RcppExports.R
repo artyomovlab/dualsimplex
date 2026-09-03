@@ -110,6 +110,34 @@ nnls_nonzero_C__ <- function(A, b, max_iter = 500L, tol = 1e-6) {
     .Call('_DualSimplex_nnls_nonzero_C__', PACKAGE = 'DualSimplex', A, b, max_iter, tol)
 }
 
+#' Optimizing simplex alignment and positivitis. This algorithm enforce simplex alignment property.
+NULL
+
+#'
+#' @param initial_X current X
+#' @param initial_Omega current Omega
+#' @param initial_D_w current D_w
+#' @param SVRt current SVRt (sigma_ss)
+#' @param R current R
+#' @param S current S
+#' @param coef_der_X learning rate X
+#' @param coef_hinge_W beta
+#' @param coef_hinge_H lambda
+#' @param k number of components
+#' @param N current N
+#' @param M current M
+#' @param max_iteration maximum number of iterations
+#' @param convergence_tol relative loss change threshold for convergence / plateau detection
+#' @param patience number of consecutive iterations of small loss changes before reducing learning rate
+#' @param decade_rate multiplier factor to reduce learning rate when plateauing
+#' @param max_drop maximum allowed learning rate drops before stopping
+#' @param epsilon small constant to prevent division by zero in relative change
+#' @param debug_stats wether to save grad norm values.
+#' @return new parameters
+optimize_alignment_pgd <- function(initial_X, initial_Omega, initial_D_w, SVRt, R, S, coef_der_X, coef_hinge_W, coef_hinge_H, max_iteration, convergence_tol, patience, decade_rate, max_drop, epsilon, debug_stats) {
+    .Call('_DualSimplex_optimize_alignment_pgd', PACKAGE = 'DualSimplex', initial_X, initial_Omega, initial_D_w, SVRt, R, S, coef_der_X, coef_hinge_W, coef_hinge_H, max_iteration, convergence_tol, patience, decade_rate, max_drop, epsilon, debug_stats)
+}
+
 #' Main training loop with all gradient steps. This is naive algorithm from version 1.0.
 #' It optimizes 3 terms (5 in experimental version). 
 #' Gradient steps performed in X and Omega spaces separatelly with NNLS used to merge them together into deconvolution term.
