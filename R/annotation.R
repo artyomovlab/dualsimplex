@@ -266,13 +266,16 @@ plot_annotation_feature <- function(eset, annotation_feature, for_features = T, 
   anno <- get_anno(eset, for_features)
   fill <- if (is.null(col_by)) "grey40" else "white"
   plt <- if (is.numeric(anno[, annotation_feature])) {
-    ggplot(anno, aes( x=.data[[annotation_feature]], color = .data[[col_by]])) +
+    ggplot(anno, aes( x=.data[[annotation_feature]])) +
       geom_histogram(bins = bins, fill = fill) +
       theme_minimal() +
       ggtitle(paste0(nrow(anno), if (for_features) " Features" else " Samples"))
   } else {
     spdl::error("Non-numeric features are not supported")
     stop("Non-numeric features are not supported")
+  }
+  if (!is.null(col_by)) {
+    plt <-  plt + aes(color = .data[[col_by]])
   }
   return(plt)
 }

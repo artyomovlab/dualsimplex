@@ -158,6 +158,7 @@ DualSimplexSolver <- R6Class(
         spdl::error("The data matrix should not contain all zero rows. Use remove_zero_rows() method")
         stop("The data matrix should not contain all zero rows. Use remove_zero_rows() method")
       }
+      private$reset_since("n_cell_types")
       self$st$data <- add_default_anno(data, feature_anno_lists, sample_anno_lists)
       self$st$scaling <- sinkhorn_scale(Biobase::exprs(self$st$data), max_iter = self$st$max_sinkhorn_iterations, epsilon=self$st$sinkhorn_tol)
       self$st$proj_ops <- calc_svd_ops(self$get_V_row(), max_dim = self$st$max_dim, self$st$svd_method, ...)
