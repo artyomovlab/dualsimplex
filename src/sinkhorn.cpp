@@ -330,6 +330,68 @@ Rcpp::List efficient_sinkhorn(const arma::mat& V,
 
 }
 
+Rcpp::List weighted_efficient_sinkhorn(const arma::mat& V,
+                              const int max_iter,
+                              const int iter_start_check,
+                              const int check_every_iter,
+                              const double epsilon) {
+    // Setup
+    double M = V.n_rows;
+    double N = V.n_cols;
+    double delta = M / N;
+
+    arma::vec target_row = arma::mean(V, 1);
+    arma::rowvec target_col = arma::mean(V, 0);
+    double total_mass = arma::accu(target_row);
+    target_col = target_col * (total_mass / arma::accu(target_col));
+
+
+    // Initial normalization matrix with 1s.
+    arma::vec D_row_sum_current(M);
+    arma::mat D_row(M, max_iter + 1, arma::fill::ones);
+
+    arma::rowvec D_col_sum_current(N);
+    arma::mat D_col(max_iter + 1, N, arma::fill::ones);
+
+    arma::mat V_ = V;
+
+    // for convergence check
+    arma::rowvec converged_col_sum(N, arma::fill::ones);
+    bool converged = false;
+
+    // Main algorithm
+    int i;
+    for (i = 0; i < max_iter; i++) {
+        // Row normalize
+        D_row_sum_current = target_row / arma::sum(V_, 1);
+        D_row.col(i) = D_row_sum_current;
+        V_.each_col() %= D_row_sum_current;
+
+        // Column normalize
+        D_col_sum_current = target_col / arma::sum(V_, 0);
+        D_col.row(i) = D_col_sum_current;
+        V_.each_row() %= D_col_sum_current;
+
+        // Check convergence
+        if ((i+1) >= iter_start_check && ((i + 1 -iter_start_check) % check_every_iter) == 0) {
+            converged = arma::approx_equal(D_col_sum_current, converged_col_sum, "absdiff", epsilon);
+            if (converged) break;  // Only check convergence as the state is updated 
+        }
+    }
+
+    if (converged) {
+        spdl::info("Sinkhorn transformation converge at iteration: {}", i);
+    } else {
+        spdl::info("Sinkhorn transformation does not converge at iteration {}", i);
+    }
+
+    // will return all 1 columns for D_vs_row and D_vs_col if no normalizations performed
+    return Rcpp::List::create(Rcpp::Named("D_vs_row") = (i > 0) ? D_row.cols(0, i - 1) :  D_row.cols(0,0),
+                              Rcpp::Named("D_vs_col") = (i > 0) ? D_col.rows(0, i - 1).t() : D_col.rows(0,0).t(),
+                              Rcpp::Named("iterations") = i);
+
+}
+
 arma::mat sinkhorn_sweep_c(const arma::mat& V,
                            const arma::mat& D_vs_row,
                            const arma::mat& D_vs_col,
