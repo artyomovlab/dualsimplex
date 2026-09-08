@@ -358,6 +358,7 @@ Rcpp::List weighted_efficient_sinkhorn(const arma::mat& V,
     // for convergence check
     arma::rowvec converged_col_sum(N, arma::fill::ones);
     bool converged = false;
+    double esilon_reg = 1e-19;
 
     // Main algorithm
     int i;

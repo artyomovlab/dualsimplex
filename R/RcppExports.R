@@ -370,6 +370,19 @@ efficient_sinkhorn <- function(V, max_iter = 20L, iter_start_check = 5L, check_e
     .Call('_DualSimplex_efficient_sinkhorn', PACKAGE = 'DualSimplex', V, max_iter, iter_start_check, check_every_iter, epsilon)
 }
 
+#' More efficient forward Sinkhorn scaling algorithm which check the convergence
+#'
+#' @param V matrix to scale.
+#' @param max_iter Maximum iterations of the Sinkhorn scaling. Default is 20 iterations.
+#' @param iter_start_check From which iteration should the function checks the convergence. By default, check started from iteration 5.
+#' @param check_every_iter How offeten should we check the convergence. The default is check every 3 iterations.
+#' @param epsilon The tolerance for convergece. Default value is 1.490116e-08, which is similar to R's built in `all.equal` function.
+#' @return named list of V_row, V_col, D_row, D_col, iterations.
+#' @export
+weighted_efficient_sinkhorn <- function(V, max_iter = 20L, iter_start_check = 5L, check_every_iter = 3L, epsilon = 1.490116e-08) {
+    .Call('_DualSimplex_weighted_efficient_sinkhorn', PACKAGE = 'DualSimplex', V, max_iter, iter_start_check, check_every_iter, epsilon)
+}
+
 #' Extended version of sinkhorn transformation, returning all matrices produced. (time/memory consuming)
 #' Matrices include V_ss, W_ss, H_ss, V_gs, W_gs, H_gs, D_v_col, D_v_row, D_h_row, D_h_col
 #'
