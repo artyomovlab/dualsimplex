@@ -441,9 +441,9 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// weighted_efficient_sinkhorn
-Rcpp::List weighted_efficient_sinkhorn(const arma::mat& V, const int max_iter, const int iter_start_check, const int check_every_iter, const double epsilon);
-RcppExport SEXP _DualSimplex_weighted_efficient_sinkhorn(SEXP VSEXP, SEXP max_iterSEXP, SEXP iter_start_checkSEXP, SEXP check_every_iterSEXP, SEXP epsilonSEXP) {
+// prescribed_efficient_sinkhorn
+Rcpp::List prescribed_efficient_sinkhorn(const arma::mat& V, const int max_iter, const int iter_start_check, const int check_every_iter, const double epsilon, const Rcpp::Nullable<Rcpp::NumericVector> target_row, const Rcpp::Nullable<Rcpp::NumericVector> target_col);
+RcppExport SEXP _DualSimplex_prescribed_efficient_sinkhorn(SEXP VSEXP, SEXP max_iterSEXP, SEXP iter_start_checkSEXP, SEXP check_every_iterSEXP, SEXP epsilonSEXP, SEXP target_rowSEXP, SEXP target_colSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -452,7 +452,9 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const int >::type iter_start_check(iter_start_checkSEXP);
     Rcpp::traits::input_parameter< const int >::type check_every_iter(check_every_iterSEXP);
     Rcpp::traits::input_parameter< const double >::type epsilon(epsilonSEXP);
-    rcpp_result_gen = Rcpp::wrap(weighted_efficient_sinkhorn(V, max_iter, iter_start_check, check_every_iter, epsilon));
+    Rcpp::traits::input_parameter< const Rcpp::Nullable<Rcpp::NumericVector> >::type target_row(target_rowSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::Nullable<Rcpp::NumericVector> >::type target_col(target_colSEXP);
+    rcpp_result_gen = Rcpp::wrap(prescribed_efficient_sinkhorn(V, max_iter, iter_start_check, check_every_iter, epsilon, target_row, target_col));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -471,17 +473,15 @@ BEGIN_RCPP
 END_RCPP
 }
 // sinkhorn_sweep_c
-arma::mat sinkhorn_sweep_c(const arma::mat& V, const arma::mat& D_vs_row, const arma::mat& D_vs_col, unsigned int iter, unsigned int do_last_step);
-RcppExport SEXP _DualSimplex_sinkhorn_sweep_c(SEXP VSEXP, SEXP D_vs_rowSEXP, SEXP D_vs_colSEXP, SEXP iterSEXP, SEXP do_last_stepSEXP) {
+arma::mat sinkhorn_sweep_c(const arma::mat& V, const arma::vec& d_r, const arma::vec& d_c);
+RcppExport SEXP _DualSimplex_sinkhorn_sweep_c(SEXP VSEXP, SEXP d_rSEXP, SEXP d_cSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::mat& >::type V(VSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type D_vs_row(D_vs_rowSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type D_vs_col(D_vs_colSEXP);
-    Rcpp::traits::input_parameter< unsigned int >::type iter(iterSEXP);
-    Rcpp::traits::input_parameter< unsigned int >::type do_last_step(do_last_stepSEXP);
-    rcpp_result_gen = Rcpp::wrap(sinkhorn_sweep_c(V, D_vs_row, D_vs_col, iter, do_last_step));
+    Rcpp::traits::input_parameter< const arma::vec& >::type d_r(d_rSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type d_c(d_cSEXP);
+    rcpp_result_gen = Rcpp::wrap(sinkhorn_sweep_c(V, d_r, d_c));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -514,9 +514,9 @@ static const R_CallMethodDef CallEntries[] = {
     {"_DualSimplex_geometrical_reverse_sinkhorn_c", (DL_FUNC) &_DualSimplex_geometrical_reverse_sinkhorn_c, 6},
     {"_DualSimplex_sinkhorn_scale_c", (DL_FUNC) &_DualSimplex_sinkhorn_scale_c, 2},
     {"_DualSimplex_efficient_sinkhorn", (DL_FUNC) &_DualSimplex_efficient_sinkhorn, 5},
-    {"_DualSimplex_weighted_efficient_sinkhorn", (DL_FUNC) &_DualSimplex_weighted_efficient_sinkhorn, 5},
+    {"_DualSimplex_prescribed_efficient_sinkhorn", (DL_FUNC) &_DualSimplex_prescribed_efficient_sinkhorn, 7},
     {"_DualSimplex_extended_sinkhorn", (DL_FUNC) &_DualSimplex_extended_sinkhorn, 4},
-    {"_DualSimplex_sinkhorn_sweep_c", (DL_FUNC) &_DualSimplex_sinkhorn_sweep_c, 5},
+    {"_DualSimplex_sinkhorn_sweep_c", (DL_FUNC) &_DualSimplex_sinkhorn_sweep_c, 3},
     {NULL, NULL, 0}
 };
 

@@ -379,8 +379,8 @@ efficient_sinkhorn <- function(V, max_iter = 20L, iter_start_check = 5L, check_e
 #' @param epsilon The tolerance for convergece. Default value is 1.490116e-08, which is similar to R's built in `all.equal` function.
 #' @return named list of V_row, V_col, D_row, D_col, iterations.
 #' @export
-weighted_efficient_sinkhorn <- function(V, max_iter = 20L, iter_start_check = 5L, check_every_iter = 3L, epsilon = 1.490116e-08) {
-    .Call('_DualSimplex_weighted_efficient_sinkhorn', PACKAGE = 'DualSimplex', V, max_iter, iter_start_check, check_every_iter, epsilon)
+prescribed_efficient_sinkhorn <- function(V, max_iter = 20L, iter_start_check = 5L, check_every_iter = 3L, epsilon = 1.490116e-08, target_row = NULL, target_col = NULL) {
+    .Call('_DualSimplex_prescribed_efficient_sinkhorn', PACKAGE = 'DualSimplex', V, max_iter, iter_start_check, check_every_iter, epsilon, target_row, target_col)
 }
 
 #' Extended version of sinkhorn transformation, returning all matrices produced. (time/memory consuming)
@@ -404,7 +404,7 @@ extended_sinkhorn <- function(V, W, H, n_iter) {
 #' @param do_last_step whether to perform  very last normalization
 #' @return scaled matrix
 #' @export
-sinkhorn_sweep_c <- function(V, D_vs_row, D_vs_col, iter, do_last_step) {
-    .Call('_DualSimplex_sinkhorn_sweep_c', PACKAGE = 'DualSimplex', V, D_vs_row, D_vs_col, iter, do_last_step)
+sinkhorn_sweep_c <- function(V, d_r, d_c) {
+    .Call('_DualSimplex_sinkhorn_sweep_c', PACKAGE = 'DualSimplex', V, d_r, d_c)
 }
 

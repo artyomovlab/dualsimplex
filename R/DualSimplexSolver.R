@@ -159,7 +159,7 @@ DualSimplexSolver <- R6Class(
         stop("The data matrix should not contain all zero rows. Use remove_zero_rows() method")
       }
       self$st$data <- add_default_anno(data, feature_anno_lists, sample_anno_lists)
-      self$st$scaling <- sinkhorn_scale_weighted(Biobase::exprs(self$st$data), max_iter = self$st$max_sinkhorn_iterations, epsilon=self$st$sinkhorn_tol)
+      self$st$scaling <- sinkhorn_scale(Biobase::exprs(self$st$data), max_iter = self$st$max_sinkhorn_iterations, epsilon=self$st$sinkhorn_tol)
       self$st$proj_ops <- calc_svd_ops(self$get_V_row(), max_dim = self$st$max_dim, self$st$svd_method, ...)
     }
   ),
@@ -1168,10 +1168,8 @@ DualSimplexSolver <- R6Class(
 
       res <- sinkhorn_sweep_c(
         V = Biobase::exprs(self$get_data()),
-        D_vs_row = self$st$scaling$D_vs_row,
-        D_vs_col = self$st$scaling$D_vs_col,
-        iter = self$st$scaling$iterations,
-        do_last_step = 0
+        d_r = self$st$scaling$d_r,
+        d_c = self$st$scaling$d_c
       )
 
       rownames(res) <- rownames(self$get_data())
@@ -1187,10 +1185,8 @@ DualSimplexSolver <- R6Class(
 
       res <- sinkhorn_sweep_c(
         V = Biobase::exprs(self$get_data()),
-        D_vs_row = self$st$scaling$D_vs_row,
-        D_vs_col = self$st$scaling$D_vs_col,
-        iter = self$st$scaling$iterations,
-        do_last_step = 1
+        d_r = self$st$scaling$d_r,
+        d_c = self$st$scaling$d_c
       )
 
       rownames(res) <- rownames(self$get_data())

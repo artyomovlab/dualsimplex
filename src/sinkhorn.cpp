@@ -330,94 +330,103 @@ Rcpp::List efficient_sinkhorn(const arma::mat& V,
 
 }
 
-Rcpp::List weighted_efficient_sinkhorn(const arma::mat& V,
+Rcpp::List prescribed_efficient_sinkhorn(const arma::mat& V,
                               const int max_iter,
                               const int iter_start_check,
                               const int check_every_iter,
-                              const double epsilon) {
+                              const double epsilon,
+                              const Rcpp::Nullable<Rcpp::NumericVector> target_row,
+                              const Rcpp::Nullable<Rcpp::NumericVector> target_col) {
     // Setup
     double M = V.n_rows;
     double N = V.n_cols;
-    double delta = M / N;
 
-    arma::vec target_row = arma::mean(V, 1);
-    arma::rowvec target_col = arma::mean(V, 0);
-    double total_mass = arma::accu(target_row);
-    target_col = target_col * (total_mass / arma::accu(target_col));
+    arma::vec scaled_row ;
+    if (target_row.isNotNull()) {
+        scaled_row = Rcpp::as<arma::vec>(target_row);
+    } else {
+        scaled_row = arma::ones(M) / (double)M;
+    }
+    arma::vec scaled_col;
+    if (target_col.isNotNull()) {
+        scaled_col = Rcpp::as<arma::vec>(target_col);
+    } else {
+        scaled_col = arma::ones(N) / (double)N;
+    }
+    scaled_col *= (arma::accu(scaled_row) / arma::accu(scaled_col));
 
 
-    // Initial normalization matrix with 1s.
-    arma::vec D_row_sum_current(M);
-    arma::mat D_row(M, max_iter + 1, arma::fill::ones);
+    arma::vec d_r(M, arma::fill::ones);
+    arma::vec d_c(N, arma::fill::ones);
 
-    arma::rowvec D_col_sum_current(N);
-    arma::mat D_col(max_iter + 1, N, arma::fill::ones);
+    arma::vec row_denom = V * d_c;
+    arma::vec col_denom(N);
 
-    arma::mat V_ = V;
+    arma::vec scaled_row_safe = arma::max(scaled_row, 1e-15 * arma::ones(M));
+    auto apply_floor = [](double val) { return (val < 1e-300) ? 1e-300 : val; };
 
-    // for convergence check
-    arma::rowvec converged_col_sum(N, arma::fill::ones);
+
     bool converged = false;
-    double esilon_reg = 1e-19;
-
-    // Main algorithm
     int i;
+
     for (i = 0; i < max_iter; i++) {
-        // Row normalize
-        D_row_sum_current = target_row / arma::sum(V_, 1);
-        D_row.col(i) = D_row_sum_current;
-        V_.each_col() %= D_row_sum_current;
+        // Row update
+        row_denom.transform(apply_floor);
+        d_r = scaled_row / row_denom;
 
-        // Column normalize
-        D_col_sum_current = target_col / arma::sum(V_, 0);
-        D_col.row(i) = D_col_sum_current;
-        V_.each_row() %= D_col_sum_current;
+        // column update
+        col_denom = V.t() * d_r;
+        col_denom.transform(apply_floor);
+        d_c = scaled_col / col_denom;
 
-        // Check convergence
-        if ((i+1) >= iter_start_check && ((i + 1 -iter_start_check) % check_every_iter) == 0) {
-            converged = arma::approx_equal(D_col_sum_current, converged_col_sum, "absdiff", epsilon);
-            if (converged) break;  // Only check convergence as the state is updated 
+        // variance drift to ensure stability
+        if (i % 10 == 0) {
+            double drift = arma::mean(d_r);
+            if (std::isfinite(drift) && drift > 0) {
+                d_r /= drift;
+                d_c *= drift;
+            }
+        }
+
+        row_denom = V * d_c;
+
+        // check convergence
+        if ((i + 1) >= iter_start_check && ((i + 1 - iter_start_check) % check_every_iter) == 0) {
+            // Because v was just updated, the columns perfectly match b.
+            // We only need to check if the rows have converged to a.
+            arma::vec achieved_a = d_r % row_denom;
+            double max_error = arma::max(arma::abs(achieved_a - scaled_row) / scaled_row_safe);
+            if (max_error < epsilon) {
+                converged = true;
+                break;
+            }
         }
     }
 
+    // finalizing the results
     if (converged) {
-        spdl::info("Sinkhorn transformation converge at iteration: {}", i);
+        Rcpp::Rcout << "Sinkhorn transformation converged at iteration: " << i + 1 << "\n";
     } else {
-        spdl::info("Sinkhorn transformation does not converge at iteration {}", i);
+        Rcpp::Rcout << "Sinkhorn transformation did NOT converge by iteration: " << i + 1 << "\n";
     }
-
+    // at each iteration caled matrix elements equal  d_r*v*d_c
+    // arma::mat V_scaled = V;
+    // V_scaled.each_col() %= d_r;
+    // V_scaled.each_row() %= d_c.t();
     // will return all 1 columns for D_vs_row and D_vs_col if no normalizations performed
-    return Rcpp::List::create(Rcpp::Named("D_vs_row") = (i > 0) ? D_row.cols(0, i - 1) :  D_row.cols(0,0),
-                              Rcpp::Named("D_vs_col") = (i > 0) ? D_col.rows(0, i - 1).t() : D_col.rows(0,0).t(),
-                              Rcpp::Named("iterations") = i);
+    return Rcpp::List::create(Rcpp::Named("d_r") = d_r,
+                              Rcpp::Named("d_c") = d_c,
+                              Rcpp::Named("iterations") = i + 1);
 
 }
 
 arma::mat sinkhorn_sweep_c(const arma::mat& V,
-                           const arma::mat& D_vs_row,
-                           const arma::mat& D_vs_col,
-                           unsigned int iter,
-                           unsigned int do_last_step) {
-    // This function simply does D_v_2n-2 * D_v_2n-4 * ... * D_v_0 * V * D_v_1 * ... * D_v_2n-1
-    // iteratively. Iterative scaling is to prevent potential floating-point underflow (remember
-    // that during scaling, the value getting smaller and smaller).
-
-    arma::mat V_ = V;
-    if (iter > 0) {
-        iter -= 1;  // adjust 1-base to 0-base
-        // scaling till iter-1 round of normalization
-        for (unsigned int i = 0; i < iter; i++) {
-            V_.each_col() %= D_vs_row.col(i);
-            V_.each_row() %= D_vs_col.col(i).t();
-        }
-        // Last normalization, returning V_row or V_column is controled by the size of D_vs_row and D_vs_col
-        V_.each_col() %= D_vs_row.col(iter);
-        if (do_last_step == 1) {
-            V_.each_row() %= D_vs_col.col(iter).t();
-        }
-    }
-
-    return(V_);
+                           const arma::vec& d_r,
+                           const arma::vec& d_c) {
+    arma::mat V_scaled = V;
+    V_scaled.each_col() %= d_r;
+    V_scaled.each_row() %= d_c.t();
+    return(V_scaled);
 }
 
 Rcpp::List extended_sinkhorn(const arma::mat& V,

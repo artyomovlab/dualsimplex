@@ -103,12 +103,14 @@ Rcpp::List efficient_sinkhorn(
 //' @return named list of V_row, V_col, D_row, D_col, iterations.
 //' @export
 // [[Rcpp::export]]
-Rcpp::List weighted_efficient_sinkhorn(
+Rcpp::List prescribed_efficient_sinkhorn(
     const arma::mat& V,
     const int max_iter = 20,
     const int iter_start_check = 5,
     const int check_every_iter = 3,
-    const double epsilon = 1.490116e-08 // similar to R's all.equal
+    const double epsilon = 1.490116e-08, // similar to R's all.equal,
+    const Rcpp::Nullable<Rcpp::NumericVector> target_row = R_NilValue,
+    const Rcpp::Nullable<Rcpp::NumericVector> target_col = R_NilValue
 );
 
 
@@ -139,10 +141,8 @@ Rcpp::List extended_sinkhorn(const arma::mat& V,
 // [[Rcpp::export]]
 arma::mat sinkhorn_sweep_c(
     const arma::mat& V,
-    const arma::mat& D_vs_row,
-    const arma::mat& D_vs_col,
-    unsigned int iter,
-    unsigned int do_last_step
+    const arma::vec& d_r,
+    const arma::vec& d_c
 );
 
 
