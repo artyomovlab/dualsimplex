@@ -10,7 +10,8 @@ sinkhorn_scale(
   iter_start_check = 5L,
   check_every_iter = 3L,
   epsilon = sqrt(.Machine$double.eps),
-  return_scaled_matrix = FALSE
+  return_scaled_matrix = FALSE,
+  sinkhorn_type = c("uniform", "marginal")
 )
 }
 \arguments{

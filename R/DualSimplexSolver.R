@@ -169,6 +169,7 @@ DualSimplexSolver <- R6Class(
       data = NULL,                # Set by user
       filtering_log = NULL,       # Auto calculated
       max_dim = NULL,             # Can be set by user. Default is 50
+      sinkhorn_type = "uniform", 
       max_sinkhorn_iterations = NULL, # Can be set by user. Default is 20
       sinkhorn_tol = NULL,        # Can be set by user. Default is 1e-15
       svd_method = NULL,          # Can be set by user. Default is 'svd'
