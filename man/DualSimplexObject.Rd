@@ -109,6 +109,7 @@ In general it could be any matrix with names on columns and rows. Expression set
   max_dim = 50L,
   sinkhorn_tol = 1e-12,
   svd_method = "svd",
+  sinkhorn_type = "maginal",
   ...
 )}\if{html}{\out{</div>}}
 }
@@ -129,6 +130,8 @@ In general it could be any matrix with names on columns and rows. Expression set
 \item{\code{sinkhorn_tol}}{tolerance for Sinkhorn calculation. It is passed to `sinkhron_scale` function.}
 
 \item{\code{svd_method}}{which SVD algorithm to use.}
+
+\item{\code{sinkhorn_type}}{sinkhorn type marginal or uniform}
 
 \item{\code{...}}{additional arguments passed to function `run_svd`}
 }
