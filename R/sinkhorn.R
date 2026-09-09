@@ -14,19 +14,30 @@ sinkhorn_scale <- function(
   iter_start_check = 5L,
   check_every_iter = 3L,
   epsilon = sqrt(.Machine$double.eps),
-  return_scaled_matrix = FALSE
-) {
-  scaling <- prescribed_efficient_sinkhorn(V, max_iter, iter_start_check, check_every_iter, epsilon)
-  if (return_scaled_matrix) {
-  scaling$V_row  <- sinkhorn_sweep_c(V = V,
-                                     d_r = scaling$d_r,
-                                     d_c = scaling$d_c)
-  scaling$V_column  <- sinkhorn_sweep_c(V = V,
-                                 d_r = scaling$d_r,
-                                 d_c = scaling$d_c
-                                 )
-  }
-  return(scaling)
+  return_scaled_matrix = FALSE,
+  sinkhorn_type = c("uniform", "marginal")
+  ) {
+    sinkhorn_type <- match.arg(sinkhorn_type)
+    target_r <- NULL
+    target_c <- NULL
+    if (sinkhorn_type == "marginal") {
+      target_r <- rowMeans(V)
+      target_c <- colMeans(V)
+      }
+    scaling <- prescribed_efficient_sinkhorn(
+      V,
+      max_iter, 
+      iter_start_check, 
+      check_every_iter, 
+      epsilon,
+      target_row = target_r,
+      target_col = target_c
+    )
+    if (return_scaled_matrix) {
+      scaling$V_row  <- sinkhorn_sweep_c(V = V, d_r = scaling$d_r, d_c = scaling$d_c)
+      scaling$V_column  <- sinkhorn_sweep_c(V = V, d_r = scaling$d_r, d_c = scaling$d_c)
+    }
+    return(scaling)
 }
 
 #' reverse Sinkhorn transform scaled matrix
