@@ -353,7 +353,8 @@ Rcpp::List prescribed_efficient_sinkhorn(const arma::mat& V,
     } else {
         scaled_col = arma::ones(N) / (double)N;
     }
-    scaled_col *= (arma::accu(scaled_row) / arma::accu(scaled_col));
+    scaled_row /= arma::accu(scaled_row);
+    scaled_col /= arma::accu(scaled_col);
 
 
     arma::vec d_r(M, arma::fill::ones);
@@ -381,7 +382,8 @@ Rcpp::List prescribed_efficient_sinkhorn(const arma::mat& V,
 
         // variance drift to ensure stability
         if (i % 10 == 0) {
-            double drift = arma::mean(d_r);
+            arma::vec d_r_safe = arma::max(d_r, 1e-300 * arma::ones(M));
+            double drift = std::exp(arma::mean(arma::log(d_r_safe)));
             if (std::isfinite(drift) && drift > 0) {
                 d_r /= drift;
                 d_c *= drift;

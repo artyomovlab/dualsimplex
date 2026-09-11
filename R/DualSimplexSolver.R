@@ -208,7 +208,7 @@ DualSimplexSolver <- R6Class(
       max_dim = 50L,
       sinkhorn_tol = 1e-12,
       svd_method = "svd",
-      sinkhorn_type = "maginal",
+      sinkhorn_type = "uniform",
       ...
     ) {
       # Sanity checks
