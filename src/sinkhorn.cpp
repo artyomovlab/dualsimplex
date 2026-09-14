@@ -433,6 +433,9 @@ arma::mat sinkhorn_sweep_c(const arma::mat& V,
     if (get_row_norm) {
         arma::mat D_v_row_sum_current = 1 / arma::sum(V_scaled, 1);
         V_scaled.each_col() %= D_v_row_sum_current;
+    } else {
+        arma::mat D_v_col_sum_current = 1 / arma::sum(V_scaled, 0).t();
+        V_scaled.each_row() %= D_v_col_sum_current.t();
     }
 
 
