@@ -424,10 +424,18 @@ Rcpp::List prescribed_efficient_sinkhorn(const arma::mat& V,
 
 arma::mat sinkhorn_sweep_c(const arma::mat& V,
                            const arma::vec& d_r,
-                           const arma::vec& d_c) {
+                           const arma::vec& d_c,
+                           unsigned int get_row_norm) {
     arma::mat V_scaled = V;
     V_scaled.each_col() %= d_r;
     V_scaled.each_row() %= d_c.t();
+
+    if (get_row_norm) {
+        arma::mat D_v_row_sum_current = 1 / arma::sum(V_scaled, 1);
+        V_scaled.each_col() %= D_v_row_sum_current;
+    }
+
+
     return(V_scaled);
 }
 

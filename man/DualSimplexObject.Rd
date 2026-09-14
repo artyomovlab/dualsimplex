@@ -109,7 +109,7 @@ In general it could be any matrix with names on columns and rows. Expression set
   max_dim = 50L,
   sinkhorn_tol = 1e-12,
   svd_method = "svd",
-  sinkhorn_type = "maginal",
+  sinkhorn_type = "uniform",
   ...
 )}\if{html}{\out{</div>}}
 }

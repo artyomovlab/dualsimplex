@@ -398,13 +398,12 @@ extended_sinkhorn <- function(V, W, H, n_iter) {
 #' Helper function to perfrom iteration scaling
 #'
 #' @param V matrix to scale.
-#' @param D_vs_row matrix stroing row scaling at each iteration  
-#' @param D_vs_col matrix stroing column scaling at each iteration
-#' @param iter iteration at which Sinkhorn is converged
-#' @param do_last_step whether to perform  very last normalization
+#' @param D_r left scaling matrix  
+#' @param D_c right scaling matrix
+#' @param get_row_norm wither to perform column normalization
 #' @return scaled matrix
 #' @export
-sinkhorn_sweep_c <- function(V, d_r, d_c) {
-    .Call('_DualSimplex_sinkhorn_sweep_c', PACKAGE = 'DualSimplex', V, d_r, d_c)
+sinkhorn_sweep_c <- function(V, d_r, d_c, get_row_norm) {
+    .Call('_DualSimplex_sinkhorn_sweep_c', PACKAGE = 'DualSimplex', V, d_r, d_c, get_row_norm)
 }
 

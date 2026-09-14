@@ -473,15 +473,16 @@ BEGIN_RCPP
 END_RCPP
 }
 // sinkhorn_sweep_c
-arma::mat sinkhorn_sweep_c(const arma::mat& V, const arma::vec& d_r, const arma::vec& d_c);
-RcppExport SEXP _DualSimplex_sinkhorn_sweep_c(SEXP VSEXP, SEXP d_rSEXP, SEXP d_cSEXP) {
+arma::mat sinkhorn_sweep_c(const arma::mat& V, const arma::vec& d_r, const arma::vec& d_c, unsigned int get_row_norm);
+RcppExport SEXP _DualSimplex_sinkhorn_sweep_c(SEXP VSEXP, SEXP d_rSEXP, SEXP d_cSEXP, SEXP get_row_normSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::mat& >::type V(VSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type d_r(d_rSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type d_c(d_cSEXP);
-    rcpp_result_gen = Rcpp::wrap(sinkhorn_sweep_c(V, d_r, d_c));
+    Rcpp::traits::input_parameter< unsigned int >::type get_row_norm(get_row_normSEXP);
+    rcpp_result_gen = Rcpp::wrap(sinkhorn_sweep_c(V, d_r, d_c, get_row_norm));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -516,7 +517,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_DualSimplex_efficient_sinkhorn", (DL_FUNC) &_DualSimplex_efficient_sinkhorn, 5},
     {"_DualSimplex_prescribed_efficient_sinkhorn", (DL_FUNC) &_DualSimplex_prescribed_efficient_sinkhorn, 7},
     {"_DualSimplex_extended_sinkhorn", (DL_FUNC) &_DualSimplex_extended_sinkhorn, 4},
-    {"_DualSimplex_sinkhorn_sweep_c", (DL_FUNC) &_DualSimplex_sinkhorn_sweep_c, 3},
+    {"_DualSimplex_sinkhorn_sweep_c", (DL_FUNC) &_DualSimplex_sinkhorn_sweep_c, 4},
     {NULL, NULL, 0}
 };
 

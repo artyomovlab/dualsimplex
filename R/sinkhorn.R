@@ -34,7 +34,7 @@ sinkhorn_scale <- function(
       target_col = target_c
     )
     if (return_scaled_matrix) {
-      scaling$V_row  <- sinkhorn_sweep_c(V = V, d_r = scaling$d_r, d_c = scaling$d_c)
+      scaling$V_row  <- sinkhorn_sweep_c(V = V, d_r = scaling$d_r, d_c = scaling$d_c, get_row_norm = 1)
       scaling$V_column  <- sinkhorn_sweep_c(V = V, d_r = scaling$d_r, d_c = scaling$d_c)
     }
     return(scaling)

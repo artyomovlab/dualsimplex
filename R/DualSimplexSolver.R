@@ -1176,7 +1176,8 @@ DualSimplexSolver <- R6Class(
       res <- sinkhorn_sweep_c(
         V = Biobase::exprs(self$get_data()),
         d_r = self$st$scaling$d_r,
-        d_c = self$st$scaling$d_c
+        d_c = self$st$scaling$d_c,
+        get_row_norm = 1
       )
 
       rownames(res) <- rownames(self$get_data())

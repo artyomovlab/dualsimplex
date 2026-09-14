@@ -132,17 +132,17 @@ Rcpp::List extended_sinkhorn(const arma::mat& V,
 //' Helper function to perfrom iteration scaling
 //'
 //' @param V matrix to scale.
-//' @param D_vs_row matrix stroing row scaling at each iteration  
-//' @param D_vs_col matrix stroing column scaling at each iteration
-//' @param iter iteration at which Sinkhorn is converged
-//' @param do_last_step whether to perform  very last normalization
+//' @param D_r left scaling matrix  
+//' @param D_c right scaling matrix
+//' @param get_row_norm wither to perform column normalization
 //' @return scaled matrix
 //' @export
 // [[Rcpp::export]]
 arma::mat sinkhorn_sweep_c(
     const arma::mat& V,
     const arma::vec& d_r,
-    const arma::vec& d_c
+    const arma::vec& d_c,
+    unsigned int get_row_norm
 );
 
 
