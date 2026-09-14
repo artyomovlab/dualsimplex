@@ -403,7 +403,7 @@ extended_sinkhorn <- function(V, W, H, n_iter) {
 #' @param get_row_norm wither to perform column normalization
 #' @return scaled matrix
 #' @export
-sinkhorn_sweep_c <- function(V, d_r, d_c, get_row_norm) {
+sinkhorn_sweep_c <- function(V, d_r, d_c, get_row_norm = 0L) {
     .Call('_DualSimplex_sinkhorn_sweep_c', PACKAGE = 'DualSimplex', V, d_r, d_c, get_row_norm)
 }
 

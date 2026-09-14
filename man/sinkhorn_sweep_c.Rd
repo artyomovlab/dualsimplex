@@ -4,7 +4,7 @@
 \alias{sinkhorn_sweep_c}
 \title{Helper function to perfrom iteration scaling}
 \usage{
-sinkhorn_sweep_c(V, d_r, d_c, get_row_norm)
+sinkhorn_sweep_c(V, d_r, d_c, get_row_norm = 0L)
 }
 \arguments{
 \item{V}{matrix to scale.}

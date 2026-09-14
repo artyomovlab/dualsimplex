@@ -142,7 +142,7 @@ arma::mat sinkhorn_sweep_c(
     const arma::mat& V,
     const arma::vec& d_r,
     const arma::vec& d_c,
-    unsigned int get_row_norm
+    unsigned int get_row_norm = 0
 );
 
 
