@@ -5,17 +5,22 @@
 \title{Make optimization config object for the training method}
 \usage{
 optim_config(
-  method = "positivity",
+  method = c("positivity", "coordinate_descent", "theta", "alignment"),
   debug_stats = FALSE,
   coef_der_X = 0.01,
   coef_der_Omega = 0.01,
   coef_hinge_H = 0.5,
   coef_hinge_W = 0.5,
+  coef_alignment = 0.5,
   total_regularization_weight = 0,
   reg_X = 1,
   reg_Omega = 1,
   stop_criteria_window = 800,
   convergence_tol = 1e-09,
+  patience = 10,
+  decade_rate = 0.5,
+  max_drop = 10,
+  epsilon = 1e-08,
   x_center = NULL,
   omega_center = NULL,
   center_threshold = 0,
@@ -38,6 +43,8 @@ optim_config(
 \item{coef_hinge_H}{positiviy penalty for X space (lambda)}
 
 \item{coef_hinge_W}{positiviy penalty for Omega space (beta)}
+
+\item{coef_alignment}{alignment penalty (gamma)}
 
 \item{total_regularization_weight}{regularization weight for optimization}
 
