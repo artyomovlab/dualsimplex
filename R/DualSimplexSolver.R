@@ -158,9 +158,15 @@ DualSimplexSolver <- R6Class(
         spdl::error("The data matrix should not contain all zero rows. Use remove_zero_rows() method")
         stop("The data matrix should not contain all zero rows. Use remove_zero_rows() method")
       }
-      private$reset_since("n_cell_types")
       self$st$data <- add_default_anno(data, feature_anno_lists, sample_anno_lists)
-      self$st$scaling <- sinkhorn_scale(Biobase::exprs(self$st$data), max_iter = self$st$max_sinkhorn_iterations, epsilon=self$st$sinkhorn_tol)
+      self$st$scaling <- sinkhorn_scale(Biobase::exprs(self$st$data), 
+      max_iter = self$st$max_sinkhorn_iterations, epsilon=self$st$sinkhorn_tol,
+      sinkhorn_type = self$st$sinkhorn_type
+      )
+      if (self$st$max_dim > min(dim(self$st$data))) {
+        self$st$max_dim <- min(dim(self$st$data))
+        spdl::warn("Current `max_dim` is bigger than smallest dimension of the `data`. Setting `max_dim` to ", self$st$max_dim, ".")
+      }
       self$st$proj_ops <- calc_svd_ops(self$get_V_row(), max_dim = self$st$max_dim, self$st$svd_method, ...)
     }
   ),
@@ -170,6 +176,7 @@ DualSimplexSolver <- R6Class(
       data = NULL,                # Set by user
       filtering_log = NULL,       # Auto calculated
       max_dim = NULL,             # Can be set by user. Default is 50
+      sinkhorn_type = "uniform", 
       max_sinkhorn_iterations = NULL, # Can be set by user. Default is 20
       sinkhorn_tol = NULL,        # Can be set by user. Default is 1e-15
       svd_method = NULL,          # Can be set by user. Default is 'svd'
@@ -195,6 +202,7 @@ DualSimplexSolver <- R6Class(
     #' @param max_dim maximum dimention we want the projection operation. It is passed to `calc_svd_ops` function.
     #' @param sinkhorn_tol tolerance for Sinkhorn calculation. It is passed to `sinkhron_scale` function.
     #' @param svd_method which SVD algorithm to use.
+    #' @param sinkhorn_type sinkhorn type marginal or uniform
     #' @param ... additional arguments passed to function `run_svd`
     set_data = function(
       data,
@@ -204,6 +212,7 @@ DualSimplexSolver <- R6Class(
       max_dim = 50L,
       sinkhorn_tol = 1e-12,
       svd_method = "svd",
+      sinkhorn_type = "uniform",
       ...
     ) {
       # Sanity checks
@@ -229,6 +238,7 @@ DualSimplexSolver <- R6Class(
         spdl::warn("Provided `max_dim` is bigger than smallest dimention of `data`. Setting `max_dim` to ", self$st$max_dim, ".")
         self$st$max_dim <- min(dim(data))
       }
+      self$st$sinkhorn_type <- sinkhorn_type
       self$st$sinkhorn_tol <- sinkhorn_tol
       self$st$svd_method <- svd_method
 
@@ -1169,10 +1179,9 @@ DualSimplexSolver <- R6Class(
 
       res <- sinkhorn_sweep_c(
         V = Biobase::exprs(self$get_data()),
-        D_vs_row = self$st$scaling$D_vs_row,
-        D_vs_col = self$st$scaling$D_vs_col,
-        iter = self$st$scaling$iterations,
-        do_last_step = 0
+        d_r = self$st$scaling$d_r,
+        d_c = self$st$scaling$d_c,
+        get_row_norm = 1
       )
 
       rownames(res) <- rownames(self$get_data())
@@ -1188,10 +1197,8 @@ DualSimplexSolver <- R6Class(
 
       res <- sinkhorn_sweep_c(
         V = Biobase::exprs(self$get_data()),
-        D_vs_row = self$st$scaling$D_vs_row,
-        D_vs_col = self$st$scaling$D_vs_col,
-        iter = self$st$scaling$iterations,
-        do_last_step = 1
+        d_r = self$st$scaling$d_r,
+        d_c = self$st$scaling$d_c
       )
 
       rownames(res) <- rownames(self$get_data())

@@ -370,6 +370,19 @@ efficient_sinkhorn <- function(V, max_iter = 20L, iter_start_check = 5L, check_e
     .Call('_DualSimplex_efficient_sinkhorn', PACKAGE = 'DualSimplex', V, max_iter, iter_start_check, check_every_iter, epsilon)
 }
 
+#' More efficient forward Sinkhorn scaling algorithm which check the convergence
+#'
+#' @param V matrix to scale.
+#' @param max_iter Maximum iterations of the Sinkhorn scaling. Default is 20 iterations.
+#' @param iter_start_check From which iteration should the function checks the convergence. By default, check started from iteration 5.
+#' @param check_every_iter How offeten should we check the convergence. The default is check every 3 iterations.
+#' @param epsilon The tolerance for convergece. Default value is 1.490116e-08, which is similar to R's built in `all.equal` function.
+#' @return named list of V_row, V_col, D_row, D_col, iterations.
+#' @export
+prescribed_efficient_sinkhorn <- function(V, max_iter = 20L, iter_start_check = 5L, check_every_iter = 3L, epsilon = 1.490116e-08, target_row = NULL, target_col = NULL) {
+    .Call('_DualSimplex_prescribed_efficient_sinkhorn', PACKAGE = 'DualSimplex', V, max_iter, iter_start_check, check_every_iter, epsilon, target_row, target_col)
+}
+
 #' Extended version of sinkhorn transformation, returning all matrices produced. (time/memory consuming)
 #' Matrices include V_ss, W_ss, H_ss, V_gs, W_gs, H_gs, D_v_col, D_v_row, D_h_row, D_h_col
 #'
@@ -385,13 +398,12 @@ extended_sinkhorn <- function(V, W, H, n_iter) {
 #' Helper function to perfrom iteration scaling
 #'
 #' @param V matrix to scale.
-#' @param D_vs_row matrix stroing row scaling at each iteration  
-#' @param D_vs_col matrix stroing column scaling at each iteration
-#' @param iter iteration at which Sinkhorn is converged
-#' @param do_last_step whether to perform  very last normalization
+#' @param D_r left scaling matrix  
+#' @param D_c right scaling matrix
+#' @param get_row_norm wither to perform column normalization
 #' @return scaled matrix
 #' @export
-sinkhorn_sweep_c <- function(V, D_vs_row, D_vs_col, iter, do_last_step) {
-    .Call('_DualSimplex_sinkhorn_sweep_c', PACKAGE = 'DualSimplex', V, D_vs_row, D_vs_col, iter, do_last_step)
+sinkhorn_sweep_c <- function(V, d_r, d_c, get_row_norm = 0L) {
+    .Call('_DualSimplex_sinkhorn_sweep_c', PACKAGE = 'DualSimplex', V, d_r, d_c, get_row_norm)
 }
 
