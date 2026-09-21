@@ -303,7 +303,7 @@ plot_annotation_feature_pair <- function(
   anno <- get_anno(eset, for_features)
   fill <- if (is.null(col_by)) "grey40" else "white"
   plt <- if (is.numeric(anno[,   annotation_feature_1,]) && is.numeric(anno[, annotation_feature_2])) {
-    ggplot(anno, aes(x = .data[[annotation_feature_2]], y = .data[[annotation_feature_2]] )) +
+    ggplot(anno, aes(x = .data[[annotation_feature_1]], y = .data[[annotation_feature_2]] )) +
       geom_point(...) +
       theme_minimal() +
       ggtitle(paste0(nrow(anno), if (for_features) " Features" else " Samples"))
