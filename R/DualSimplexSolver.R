@@ -163,6 +163,10 @@ DualSimplexSolver <- R6Class(
       max_iter = self$st$max_sinkhorn_iterations, epsilon=self$st$sinkhorn_tol,
       sinkhorn_type = self$st$sinkhorn_type
       )
+      if (self$st$max_dim > min(dim(self$st$data))) {
+        self$st$max_dim <- min(dim(self$st$data))
+        spdl::warn("Current `max_dim` is bigger than smallest dimension of the `data`. Setting `max_dim` to ", self$st$max_dim, ".")
+      }
       self$st$proj_ops <- calc_svd_ops(self$get_V_row(), max_dim = self$st$max_dim, self$st$svd_method, ...)
     }
   ),
