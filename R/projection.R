@@ -337,7 +337,7 @@ plot_svd_d <- function(svd_d, dims = NULL, cumulative = T, variance = T) {
 #' @return ggplot object
 #' @importFrom tidyr pivot_longer
 #' @export
-plot_svd_ds_matrix <- function(svd_ds, cumulative = T, variance = T) {
+plot_svd_ds_matrix <- function(svd_ds, cumulative = TRUE, variance = TRUE) {
   vars <- svd_ds
   if (variance) {
     vars <- vars ^ 2
@@ -358,8 +358,27 @@ plot_svd_ds_matrix <- function(svd_ds, cumulative = T, variance = T) {
     values_to = "explained_variance"
   )
   to_plot$component <- as.integer(to_plot$component)
-  
-  return(ggplot(to_plot, aes(x = .data$component, y = .data$explained_variance, col = .data$step)) + geom_line())
+  plot <- ggplot(to_plot, aes(x = .data$component, y = .data$explained_variance, col = .data$step)) + 
+  geom_line(size = 0.5) + geom_point(size = 0.5) +
+  theme_minimal(base_size = 8) +
+    theme(
+      axis.line.x = element_line(
+        colour = "black",
+        size = 0.5,
+        linetype = "solid"
+      ),
+      axis.line.y = element_line(
+        colour = "black",
+        size = 0.5,
+        linetype = "solid"
+      )
+    ) +
+    scale_x_continuous(
+      minor_breaks = min(to_plot$component): max(to_plot$component),
+      limits = c(min(to_plot$component), max(to_plot$component))
+    )
+
+  return(plot)
 }
 
 #' SVD wrapper function
